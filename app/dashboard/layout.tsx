@@ -14,8 +14,8 @@ const navItems = [
   { href: "/dashboard/integrations", label: "Integrations" },
 ];
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { userId } = auth();
+export default async function DashboardLayout({ children }: DashboardLayoutProps) {
+  const { userId } = await auth();
 
   if (!userId) {
     redirect("/sign-in");

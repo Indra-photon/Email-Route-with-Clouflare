@@ -6,7 +6,7 @@ import { Integration } from "@/app/api/models/IntegrationModel";
 
 export async function GET() {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -37,7 +37,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
