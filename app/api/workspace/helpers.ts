@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { Workspace } from "@/app/api/models/WorkspaceModel";
 
 export async function getOrCreateWorkspaceForCurrentUser() {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     throw new Error("Unauthorized");
