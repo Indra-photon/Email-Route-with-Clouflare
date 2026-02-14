@@ -173,17 +173,13 @@ export async function POST(request: Request) {
 
     console.log("🔍 Looking up alias:", { localPart, domain: domainPart, email: emailLower });
 
-    // 5. Look up alias in MongoDB
+    // 5. Look up alias in MongoDB (NO POPULATE)
     await dbConnect();
     
     const alias = await Alias.findOne({ 
       localPart: localPart,
       email: emailLower 
-    })
-      .populate("domainId")
-      .populate("integrationId")
-      .lean()
-      .exec();
+    }).lean().exec();
 
     if (!alias) {
       console.warn("⚠️ No alias found for:", emailLower);
@@ -192,11 +188,16 @@ export async function POST(request: Request) {
 
     console.log("✅ Found alias:", alias.email);
 
-    // 6. Check if integration exists
-    const integration = (alias as any).integrationId;
+    // 6. Manually fetch integration (instead of populate)
+    if (!alias.integrationId) {
+      console.warn("⚠️ No integration configured for alias:", alias.email);
+      return NextResponse.json({ message: "No integration" }, { status: 200 });
+    }
+
+    const integration = await Integration.findById(alias.integrationId).lean().exec();
     
     if (!integration || !integration.webhookUrl) {
-      console.warn("⚠️ No integration configured for alias:", alias.email);
+      console.warn("⚠️ Integration not found or has no webhook:", alias.email);
       return NextResponse.json({ message: "No integration" }, { status: 200 });
     }
 
@@ -205,7 +206,6 @@ export async function POST(request: Request) {
     const subject = emailData.subject || "(no subject)";
     
     // Try multiple possible body fields from Resend
-    // Resend may send body in different formats depending on email type
     const textBody = 
       emailData.text || 
       emailData.html || 
@@ -215,27 +215,21 @@ export async function POST(request: Request) {
       emailData.body?.html ||
       "";
       
-    const snippet = textBody.slice(0, 500); // First 500 chars
+    const snippet = textBody.slice(0, 500);
 
-    // Debug log to see what fields Resend is sending
+    // Debug log
     console.log("📝 Email body extraction:", {
       hasText: !!emailData.text,
       hasHtml: !!emailData.html,
-      hasParsedText: !!emailData.parsedData?.textBody,
-      hasParsedHtml: !!emailData.parsedData?.htmlBody,
-      hasBodyText: !!emailData.body?.text,
-      hasBodyHtml: !!emailData.body?.html,
       bodyLength: snippet.length,
       bodyPreview: snippet.slice(0, 100),
     });
 
     const messagePayload = integration.type === "slack" 
       ? {
-          // Slack format
           text: `📧 New email to *${emailLower}*\n*From:* ${fromEmail}\n*Subject:* ${subject}\n\n${snippet}`
         }
       : {
-          // Discord format
           content: `📧 **New email to ${emailLower}**\n**From:** ${fromEmail}\n**Subject:** ${subject}\n\n${snippet}`
         };
 
@@ -254,7 +248,6 @@ export async function POST(request: Request) {
       const errorText = await webhookResponse.text();
       console.error("❌ Webhook post failed:", {
         status: webhookResponse.status,
-        statusText: webhookResponse.statusText,
         error: errorText,
       });
       return NextResponse.json(
