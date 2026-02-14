@@ -126,6 +126,8 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import { Alias } from "@/app/api/models/AliasModel";
+import { Domain } from "@/app/api/models/DomainModel";
+import { Integration } from "@/app/api/models/IntegrationModel";
 
 export async function POST(request: Request) {
   try {
