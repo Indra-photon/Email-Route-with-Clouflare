@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { HelpSlideOver } from "@/components/HelpSlideOver";
 
 type DashboardLayoutProps = {
   children: ReactNode;
@@ -41,6 +42,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
         </nav>
       </aside>
       <main className="flex-1 px-6 py-6">{children}</main>
+      <HelpSlideOver />
     </div>
   );
 }
