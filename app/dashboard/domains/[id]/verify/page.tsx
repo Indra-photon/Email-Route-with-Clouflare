@@ -183,13 +183,35 @@ export default function DomainVerifyPage() {
         </div>
       )}
 
-      <div className="flex gap-3 mt-4">
+      {!isVerified && domain.resendDomainId && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <p className="text-blue-800 dark:text-blue-200 text-sm">
+            <strong>Next steps:</strong> Add the DNS records below at your domain provider. 
+            Verification typically takes 5-30 minutes. This page auto-checks every 30 seconds.
+          </p>
+        </div>
+      )}
+
+      {/* <div className="flex gap-3 mt-4">
         <Button
           onClick={handleCheckVerification}
           disabled={checking}
         >
           {checking ? "Checking..." : "Check Verification"}
         </Button>
+        <Link href="/dashboard/domains">
+          <Button variant="outline">Back to Domains</Button>
+        </Link>
+      </div> */}
+      <div className="flex gap-3 mt-4">
+        {domain.resendDomainId && (
+          <Button
+            onClick={handleCheckVerification}
+            disabled={checking || !domain.resendDomainId}
+          >
+            {checking ? "Checking..." : "Check Verification"}
+          </Button>
+        )}
         <Link href="/dashboard/domains">
           <Button variant="outline">Back to Domains</Button>
         </Link>

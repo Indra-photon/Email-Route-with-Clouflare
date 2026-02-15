@@ -27,7 +27,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.indrabuildswebsites.com/"),
-  title: "Indranil Maiti | Full Stack & GenAI Developer",
+  title: "Email Router - Build and manage your email sending domains with ease",
   description: "I am a Full Stack Developer and Gen AI specialist with expertise in React, Next.js, Node.js, and AI integration for scalable web applications. I build modern, responsive, and fast websites that drive results. I focus on microinteractions, animations , and user-centric design to create engaging digital experiences. I integrate AI technologies, Google Search Console, Google Analytics, Google Tag Manager, and SEO best practices to enhance website performance and user engagement.",
   keywords: [
     "GenAI developer",
