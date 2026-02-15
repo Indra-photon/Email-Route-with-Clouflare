@@ -152,6 +152,7 @@ import dbConnect from "@/lib/dbConnect";
 import { Alias } from "@/app/api/models/AliasModel";
 import { Domain } from "@/app/api/models/DomainModel";
 import { Integration } from "@/app/api/models/IntegrationModel";
+import { EmailThread } from "@/app/api/models/EmailThreadModel";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -249,22 +250,51 @@ export async function POST(request: Request) {
       // Continue without body - better to send notification without body than fail
     }
 
-    // 8. Format message for Slack/Discord
+    // 8. Format message data
     const fromEmail = emailData.from || "Unknown";
     const subject = emailData.subject || "(no subject)";
     const snippet = textBody.slice(0, 500) || htmlBody.slice(0, 500) || "(No body content)";
 
-    const messagePayload = integration.type === "slack" 
+    // 9. Save email to database
+    const emailThread = await EmailThread.create({
+      workspaceId: alias.workspaceId,
+      aliasId: alias._id,
+      originalEmailId: emailData.email_id,
+      messageId: emailData.message_id || `<${emailData.email_id}@resend.app>`,
+      inReplyTo: null,
+      references: [],
+      from: fromEmail,
+      to: emailLower,
+      subject,
+      textBody,
+      htmlBody,
+      direction: "inbound",
+      status: "open",
+      receivedAt: new Date(emailData.created_at || Date.now()),
+    });
+    console.log("💾 Email saved to database:", emailThread._id);
+
+    // 10. Generate reply link
+    const replyUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/reply/${emailThread._id}`;
+
+    // 11. Format Discord/Slack message with reply link
+    const messagePayload = integration.type === "slack"
       ? {
-          text: `📧 New email to *${emailLower}*\n*From:* ${fromEmail}\n*Subject:* ${subject}\n\n${snippet}`
+          text: `📧 New email to *${emailLower}*\n*From:* ${fromEmail}\n*Subject:* ${subject}\n\n${snippet}\n\n🔗 [Click here to reply](${replyUrl})`,
         }
       : {
-          content: `📧 **New email to ${emailLower}**\n**From:** ${fromEmail}\n**Subject:** ${subject}\n\n${snippet}`
+          content: `📧 **New email to ${emailLower}**
+**From:** ${fromEmail}
+**Subject:** ${subject}
+
+${snippet}
+
+🔗 [Click here to reply](${replyUrl})`,
         };
 
     console.log("📤 Posting to", integration.type, "webhook");
 
-    // 9. Post to Slack/Discord
+    // 12. Post to Slack/Discord
     const webhookResponse = await fetch(integration.webhookUrl, {
       method: "POST",
       headers: {
@@ -285,7 +315,7 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log("✨ Successfully posted to", integration.type);
+    console.log("✨ Successfully posted to", integration.type, "with reply link");
 
     return NextResponse.json({ 
       success: true,
