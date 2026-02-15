@@ -1,5 +1,15 @@
 import mongoose, { Schema, type Document, type Model, Types } from "mongoose";
 
+export interface IDnsRecord {
+  record: string;
+  name: string;
+  type: string;
+  value?: string;
+  status: string;
+  ttl?: string;
+  priority?: number;
+}
+
 export interface IDomain extends Document {
   workspaceId: Types.ObjectId;
   domain: string;
@@ -7,6 +17,8 @@ export interface IDomain extends Document {
   verifiedForSending?: boolean;
   verifiedForReceiving?: boolean;
   resendDomainId?: string;
+  dnsRecords?: IDnsRecord[];
+  lastCheckedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -38,6 +50,24 @@ const DomainSchema = new Schema<IDomain>(
     },
     resendDomainId: {
       type: String,
+      default: null,
+    },
+    dnsRecords: {
+      type: [
+        {
+          record: String,
+          name: String,
+          type: String,
+          value: String,
+          status: String,
+          ttl: String,
+          priority: Number,
+        },
+      ],
+      default: [],
+    },
+    lastCheckedAt: {
+      type: Date,
       default: null,
     },
   },

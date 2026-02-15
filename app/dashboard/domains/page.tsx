@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 type Domain = {
@@ -11,6 +13,7 @@ type Domain = {
 };
 
 export default function DomainsPage() {
+  const router = useRouter();
   const [domains, setDomains] = useState<Domain[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,14 +57,45 @@ export default function DomainsPage() {
         body: JSON.stringify({ domain: newDomain.trim() }),
       });
 
+      const body = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || "Failed to create domain");
+        const msg =
+          body.error ||
+          (res.status === 400 ? "Invalid domain" : res.status === 409 ? "Domain already exists" : "Failed to create domain");
+        throw new Error(msg);
       }
 
       const created: Domain = await res.json();
       setDomains((prev) => [created, ...prev]);
       setNewDomain("");
+
+      // Add domain to Resend and redirect to verification page
+      try {
+        const addRes = await fetch("/api/domains/add-to-resend", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ domainId: created.id }),
+        });
+        const addData = await addRes.json();
+        if (addRes.ok && addData.domain) {
+          setDomains((prev) =>
+            prev.map((d) =>
+              d.id === created.id
+                ? { ...d, status: addData.domain?.status ?? d.status }
+                : d
+            )
+          );
+          router.push(`/dashboard/domains/${created.id}/verify`);
+          return;
+        }
+        if (!addRes.ok && addData.error?.toLowerCase().includes("already")) {
+          router.push(`/dashboard/domains/${created.id}/verify`);
+          return;
+        }
+      } catch {
+        // Still redirect so user can add to Resend manually or retry
+        router.push(`/dashboard/domains/${created.id}/verify`);
+      }
     } catch (err) {
       console.error(err);
       setError(
@@ -114,18 +148,21 @@ export default function DomainsPage() {
               <th className="px-4 py-2 text-left font-medium text-neutral-700">
                 Created
               </th>
+              <th className="px-4 py-2 text-left font-medium text-neutral-700">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={3} className="px-4 py-6 text-center text-neutral-500">
+                <td colSpan={4} className="px-4 py-6 text-center text-neutral-500">
                   Loading domains...
                 </td>
               </tr>
             ) : domains.length === 0 ? (
               <tr>
-                <td colSpan={3} className="px-4 py-6 text-center text-neutral-500">
+                <td colSpan={4} className="px-4 py-6 text-center text-neutral-500">
                   No domains yet. Add your first domain above.
                 </td>
               </tr>
@@ -134,8 +171,15 @@ export default function DomainsPage() {
                 <tr key={d.id} className="border-t border-neutral-200">
                   <td className="px-4 py-2">{d.domain}</td>
                   <td className="px-4 py-2 capitalize">{d.status}</td>
-                  <td className="px-4 py-2 text-neutral-500">
+                  <td className="px-4 py-2 text-neutral-500 tabular-nums">
                     {new Date(d.createdAt).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-2">
+                    <Link href={`/dashboard/domains/${d.id}/verify`}>
+                      <Button variant="outline" size="sm">
+                        Verify
+                      </Button>
+                    </Link>
                   </td>
                 </tr>
               ))

@@ -1,339 +1,419 @@
-# Domain Verification Task List
-## Setup Custom Sending Domain (git-cv.com)
+# Automated Domain Verification - Task List
+## Self-Service Domain Setup
 
-**Goal:** Enable sending emails from support@git-cv.com (or any verified domain)  
-**Time Estimate:** 4-6 hours  
-**Detailed Plan:** See `DOMAIN_VERIFICATION_PLAN.md` for complete instructions
-
----
-
-## Quick Overview
-
-**Problem:**
-```
-❌ Current: Reply FROM onboarding@resend.dev (test only)
-✅ Goal: Reply FROM support@git-cv.com (professional)
-```
-
-**Solution:**
-1. Verify domain with Resend
-2. Update database schema
-3. Update reply API to use verified domain
-4. Test end-to-end
+**Goal:** Customers verify their own domains without your help  
+**Time:** 2-3 days  
+**Plan:** See `AUTOMATED_DOMAIN_VERIFICATION_PLAN.md` for details
 
 ---
 
-## Task Checklist
+## Day 1: Backend APIs (4 tasks)
 
-### Task 1: Add Domain to Resend
+### Task 1.1: Update Domain Model
 **Time:** 30 minutes  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Go to https://resend.com/domains
-- [ ] Click "Add Domain"
-- [ ] Enter: `git-cv.com`
-- [ ] Copy DNS records shown (DKIM, verification, MX)
-- [ ] See **DOMAIN_VERIFICATION_PLAN.md → Step 1** for details
+- [ ] Open `app/api/models/DomainModel.ts`
+- [ ] Add `dnsRecords` field (dkim, verification, mx)
+- [ ] Add `resendDomainId` field
+- [ ] Add `lastCheckedAt` field
+- [ ] See **Plan → Step 1.1** for schema
 
-**Result:** Resend shows DNS records to add
+**Result:** Database can store DNS records
 
 ---
 
-### Task 2: Add DNS Records
-**Time:** 20 minutes  
+### Task 1.2: Create Add-to-Resend API
+**Time:** 1.5 hours  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Login to your domain registrar (Namecheap/Cloudflare/etc.)
-- [ ] Add DKIM TXT record: `resend._domainkey`
-- [ ] Add Verification TXT record: `_resend`
-- [ ] Add MX records: `mx1.resend.dev` (priority 10), `mx2.resend.dev` (priority 20)
-- [ ] Save all records
-- [ ] See **DOMAIN_VERIFICATION_PLAN.md → Step 2** for exact values
+- [ ] Create `app/api/domains/add-to-resend/route.ts`
+- [ ] Import Resend SDK
+- [ ] Call `resend.domains.create({ name: domain })`
+- [ ] Store DNS records in database
+- [ ] Return records to frontend
+- [ ] See **Plan → Step 1.2** for code structure
 
-**Result:** DNS records live (may take 5-30 min to propagate)
+**Result:** API that adds domain to Resend
 
 ---
 
-### Task 3: Wait for DNS Propagation
-**Time:** 5-30 minutes (passive waiting)  
+### Task 1.3: Create Check Verification API
+**Time:** 1 hour  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Wait 5-30 minutes
-- [ ] Check propagation: `dig TXT resend._domainkey.git-cv.com`
-- [ ] Or use: https://dnschecker.org
-- [ ] See **DOMAIN_VERIFICATION_PLAN.md → Step 3** for checking
+- [ ] Create `app/api/domains/check-verification/route.ts`
+- [ ] Call `resend.domains.get(domainId)`
+- [ ] Check each record status
+- [ ] Update database with results
+- [ ] Return verification status
+- [ ] See **Plan → Step 1.3** for logic
 
-**Result:** DNS records visible globally
+**Result:** API that checks if domain verified
 
 ---
 
-### Task 4: Verify in Resend Dashboard
+### Task 1.4: Create Get Domain Details API
+**Time:** 30 minutes  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Create `app/api/domains/[id]/route.ts`
+- [ ] Implement GET endpoint
+- [ ] Fetch domain with DNS records
+- [ ] Return to frontend
+- [ ] See **Plan → Step 1.4** for endpoint
+
+**Result:** API to get single domain data
+
+---
+
+## Day 2: Frontend UI (3 tasks)
+
+### Task 2.1: Create Verification Page
+**Time:** 2 hours  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Create `app/dashboard/domains/[id]/verify/page.tsx`
+- [ ] Fetch domain data on load
+- [ ] Show domain name and status
+- [ ] Include DNS instructions component
+- [ ] Add "Check Verification" button
+- [ ] See **Plan → Step 2.1** for layout
+
+**Result:** Page showing DNS instructions
+
+---
+
+### Task 2.2: Create DNS Instructions Component
+**Time:** 2 hours  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Create `components/DomainVerificationInstructions.tsx`
+- [ ] Display DKIM record with copy button
+- [ ] Display verification record with copy button
+- [ ] Display MX records with copy buttons
+- [ ] Add visual status indicators (✅⏳❌)
+- [ ] Style with Tailwind
+- [ ] See **Plan → Step 2.2** for structure
+
+**Result:** Reusable DNS display component
+
+---
+
+### Task 2.3: Update Domain Creation Flow
+**Time:** 1 hour  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Open domain creation handler (wherever domains are added)
+- [ ] After creating domain, call add-to-resend API
+- [ ] Redirect to verification page
+- [ ] Update domains list to show "Verify" button
+- [ ] See **Plan → Step 3.1** for flow
+
+**Result:** Seamless flow from add → verify
+
+---
+
+## Day 3: Integration & Polish (4 tasks)
+
+### Task 3.1: Add Auto-Refresh
+**Time:** 30 minutes  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] In verification page, add useEffect
+- [ ] Poll check-verification API every 30 seconds
+- [ ] Stop when status becomes "verified"
+- [ ] Show loading indicator during check
+- [ ] See **Plan → Step 3.2** for polling logic
+
+**Result:** Page auto-updates when DNS verified
+
+---
+
+### Task 3.2: Add Error Handling
+**Time:** 1 hour  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Handle "domain already exists" error
+- [ ] Handle "invalid domain" error
+- [ ] Handle "Resend API error"
+- [ ] Handle "rate limit" error
+- [ ] Show user-friendly error messages
+- [ ] See **Plan → Error Handling** section
+
+**Result:** Graceful error handling
+
+---
+
+### Task 3.3: Test End-to-End
+**Time:** 2 hours  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Add test domain
+- [ ] Verify DNS instructions show
+- [ ] Copy DNS records
+- [ ] Add to DNS provider
+- [ ] Check verification
+- [ ] Verify status updates
+- [ ] Send test email from verified domain
+- [ ] Follow **Plan → Testing Plan** (Tests 1-6)
+
+**Result:** Fully working verification flow
+
+---
+
+### Task 3.4: Create Help Documentation
+**Time:** 30 minutes  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Write "How to Verify Your Domain" guide
+- [ ] Include screenshots
+- [ ] Add troubleshooting section
+- [ ] Link from verification page
+- [ ] See **Plan → Customer Documentation**
+
+**Result:** Customer help article ready
+
+---
+
+## Environment Setup
+
+### Environment Variables
 **Time:** 5 minutes  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Go back to https://resend.com/domains
-- [ ] Find `git-cv.com`
-- [ ] Click "Verify" or wait for auto-verification
-- [ ] Status should show: ✅ Verified
-- [ ] See **DOMAIN_VERIFICATION_PLAN.md → Step 4** for troubleshooting
+- [ ] Verify `RESEND_API_KEY` in `.env.local`
+- [ ] Verify `NEXT_PUBLIC_SITE_URL` in `.env.local`
+- [ ] Add both to Vercel environment variables
+- [ ] Mark RESEND_API_KEY as secret
 
-**Result:** Domain verified in Resend ✅
-
----
-
-### Task 5: Update Database Schema
-**Time:** 30 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Update `app/api/models/DomainModel.ts`
-- [ ] Add fields: `verifiedForSending`, `verifiedForReceiving`, `resendDomainId`
-- [ ] Copy schema from **DOMAIN_VERIFICATION_PLAN.md → Database Schema Updates**
-- [ ] Restart dev server to load new schema
-
-**Result:** Database model supports verification tracking
-
----
-
-### Task 6: Mark Domain as Verified in Database
-**Time:** 10 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Open MongoDB Compass (or use script)
-- [ ] Find `git-cv.com` in `domains` collection
-- [ ] Set: `verifiedForSending: true`, `status: "verified"`
-- [ ] See **DOMAIN_VERIFICATION_PLAN.md → Step: Update Existing Domain** for methods
-
-**Result:** Database knows domain is verified
-
----
-
-### Task 7: Update Reply API
-**Time:** 45 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Open `app/api/emails/reply/route.ts`
-- [ ] Add imports: `Alias`, `Domain`
-- [ ] Add logic to fetch alias and domain
-- [ ] Check `domain.verifiedForSending`
-- [ ] Use customer domain if verified, fallback if not
-- [ ] Copy code from **DOMAIN_VERIFICATION_PLAN.md → Reply API Updates**
-
-**Result:** API sends from verified domain
-
----
-
-### Task 8: Add Environment Variables
-**Time:** 5 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Add to `.env.local`:
-  ```
-  REPLY_FROM_EMAIL=onboarding@resend.dev
-  REPLY_FROM_NAME=Email Router
-  ```
-- [ ] Add same to Vercel environment variables
-- [ ] See **DOMAIN_VERIFICATION_PLAN.md → Environment Variables**
-
-**Result:** Fallback sender configured
-
----
-
-### Task 9: Test Full Flow
-**Time:** 30 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Send email to: `support@git-cv.com`
-- [ ] Check Discord for notification
-- [ ] Click reply link
-- [ ] Fill form and send reply
-- [ ] Check your email - should receive from `support@git-cv.com`
-- [ ] Verify headers show correct domain
-- [ ] Follow **DOMAIN_VERIFICATION_PLAN.md → Testing Plan**
-
-**Result:** End-to-end flow working ✅
-
----
-
-### Task 10: Verify Email Quality
-**Time:** 15 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Check email source/headers
-- [ ] Verify From: `support@git-cv.com` ✅
-- [ ] Verify DKIM signature present
-- [ ] Verify email threads correctly
-- [ ] Verify no spam warnings
-- [ ] See **DOMAIN_VERIFICATION_PLAN.md → Test 2** for details
-
-**Result:** Professional emails with no issues ✅
+**Result:** Environment configured
 
 ---
 
 ## Progress Tracking
 
-**Setup:** ⬜⬜⬜⬜ (Tasks 1-4)  
-**Code:** ⬜⬜⬜ (Tasks 5-7)  
-**Config:** ⬜ (Task 8)  
-**Testing:** ⬜⬜ (Tasks 9-10)  
+**Day 1 (Backend):** ⬜⬜⬜⬜ (4 tasks)  
+**Day 2 (Frontend):** ⬜⬜⬜ (3 tasks)  
+**Day 3 (Integration):** ⬜⬜⬜⬜ (4 tasks)  
+**Setup:** ⬜ (1 task)
 
-**Total:** 0/10 tasks completed
+**Total:** 0/12 tasks completed
+
+---
+
+## Files Summary
+
+### New Files to Create (7 files)
+
+**Backend APIs:**
+1. `app/api/domains/add-to-resend/route.ts`
+2. `app/api/domains/check-verification/route.ts`
+3. `app/api/domains/[id]/route.ts`
+
+**Frontend Pages:**
+4. `app/dashboard/domains/[id]/verify/page.tsx`
+
+**Frontend Components:**
+5. `components/DomainVerificationInstructions.tsx`
+6. `components/DNSRecord.tsx` (helper)
+7. `components/VerificationStatusBadge.tsx` (helper)
+
+### Files to Modify (2 files)
+
+1. `app/api/models/DomainModel.ts` - Add DNS fields
+2. Domain creation page - Add redirect to verify
 
 ---
 
 ## Quick Reference
 
-### Files to Modify
+### API Endpoints Created
 
-**1. Domain Model:**
-- File: `app/api/models/DomainModel.ts`
-- Add: `verifiedForSending`, `verifiedForReceiving`, `resendDomainId`
-
-**2. Reply API:**
-- File: `app/api/emails/reply/route.ts`
-- Add: Domain verification check logic
-- Use: Customer domain if verified
-
-**3. Environment:**
-- File: `.env.local`
-- Add: `REPLY_FROM_EMAIL`, `REPLY_FROM_NAME`
-
----
-
-### DNS Records Needed
-
-**DKIM (for email signing):**
 ```
-Type: TXT
-Host: resend._domainkey
-Value: [from Resend dashboard]
+POST /api/domains/add-to-resend
+  → Add domain to Resend, store DNS records
+
+POST /api/domains/check-verification
+  → Check Resend API, update status
+
+GET /api/domains/[id]
+  → Get domain with DNS records
 ```
 
-**Verification (for ownership):**
-```
-Type: TXT
-Host: _resend
-Value: [from Resend dashboard]
-```
+### Key Functions
 
-**MX (for receiving):**
-```
-Type: MX
-Host: @
-Value: mx1.resend.dev
-Priority: 10
-
-Type: MX
-Host: @
-Value: mx2.resend.dev
-Priority: 20
+**Add to Resend:**
+```typescript
+const { data } = await resend.domains.create({
+  name: domain.domain
+});
 ```
 
----
-
-### Database Updates
-
-**Mark domain as verified:**
-```javascript
-db.domains.updateOne(
-  { domain: "git-cv.com" },
-  { 
-    $set: { 
-      verifiedForSending: true,
-      verifiedForReceiving: true,
-      status: "verified"
-    }
-  }
+**Check Verification:**
+```typescript
+const { data } = await resend.domains.get(
+  domain.resendDomainId
 );
 ```
 
----
-
-### Testing Commands
-
-**Check DNS propagation:**
-```bash
-dig TXT resend._domainkey.git-cv.com
-dig MX git-cv.com
-```
-
-**Verify domain in database:**
-```javascript
-db.domains.findOne({ domain: "git-cv.com" })
+**Update Database:**
+```typescript
+await Domain.findByIdAndUpdate(domainId, {
+  verifiedForSending: data.status === 'verified',
+  'dnsRecords.dkim.status': data.records[0].status
+});
 ```
 
 ---
 
-## Troubleshooting Quick Guide
+## Testing Checklist
 
-### Issue: Domain not verified in Resend
-**Fix:** 
-- Wait longer (DNS can take 24 hours)
-- Check DNS records are correct
-- Click "Verify" button in Resend
-
-### Issue: Still sending from onboarding@resend.dev
-**Fix:**
-- Check database: `verifiedForSending: true`
-- Check logs show "Using customer domain"
-- Restart application
-
-### Issue: Emails go to spam
-**Fix:**
-- Add SPF record: `v=spf1 include:_spf.resend.com ~all`
-- Wait for DKIM to fully propagate
-- Ask recipient to mark as "Not Spam"
-
-**Full troubleshooting:** See DOMAIN_VERIFICATION_PLAN.md → Troubleshooting
+**Before Deployment:**
+- [ ] Can add domain via UI
+- [ ] DNS records display correctly
+- [ ] Copy buttons work
+- [ ] Can add DNS records to provider
+- [ ] Check verification button works
+- [ ] Status updates correctly
+- [ ] Verified domain shows ✅
+- [ ] Can send email from verified domain
+- [ ] Unverified domain falls back correctly
+- [ ] Error handling works
+- [ ] Help documentation clear
 
 ---
 
 ## Success Criteria
 
 ✅ Feature is done when:
-- [ ] Domain verified in Resend dashboard
-- [ ] DNS records all showing as verified
-- [ ] Database shows `verifiedForSending: true`
-- [ ] Reply API uses customer domain
-- [ ] Test email sends from `support@git-cv.com`
-- [ ] Email headers show correct domain
-- [ ] No spam warnings
-- [ ] Email threads correctly
-- [ ] Customer can reply back (full loop)
+- [ ] Customer can add domain in dashboard
+- [ ] DNS instructions show automatically
+- [ ] Customer can copy all records
+- [ ] "Check Verification" button works
+- [ ] Status updates from pending → verified
+- [ ] Customer never contacts Resend directly
+- [ ] Customer never contacts you for help
+- [ ] Emails send from verified domain
+- [ ] Zero manual work required
+
+---
+
+## Customer Journey (Final)
+
+**What customer experiences:**
+
+```
+1. I login to dashboard
+2. I click "Add Domain"
+3. I enter: mycustomer.com
+4. I see DNS instructions
+5. I copy each record
+6. I add to GoDaddy (or my DNS provider)
+7. I wait 10 minutes
+8. I click "Check Verification"
+9. I see "✅ Verified!"
+10. I create alias: support@mycustomer.com
+11. I send emails professionally!
+
+Everything self-service! 🎉
+```
+
+---
+
+## Troubleshooting Quick Fixes
+
+### DNS not propagating
+**Solution:** Wait 30 minutes, check again
+
+### Verification fails
+**Solution:** Verify DNS records match exactly
+
+### API errors
+**Solution:** Check Resend API key, check logs
+
+### Copy button not working
+**Solution:** Check navigator.clipboard permissions
+
+**Full troubleshooting:** See Plan → Error Handling
 
 ---
 
 ## After Completion
 
 **You'll have:**
-- ✅ Professional email sending from your domain
-- ✅ Full email loop (receive → reply → customer replies back)
-- ✅ No "via resend.dev" warnings
-- ✅ Proper DKIM signatures
-- ✅ Production-ready setup
+- ✅ Fully automated domain verification
+- ✅ Self-service for customers
+- ✅ Professional onboarding experience
+- ✅ Scales to 1000+ customers
+- ✅ Zero manual work
 
 **Next steps:**
-- Add more aliases (sales@, billing@, etc.)
-- Test with different domains
-- Build automated verification UI (Phase 3)
+- Monitor verification success rate
+- Gather customer feedback
+- Build advanced features (Phase 4)
+
+---
+
+## Daily Schedule
+
+### Day 1 Schedule
+```
+Morning (3 hours):
+- Task 1.1: Update domain model
+- Task 1.2: Add-to-Resend API
+
+Afternoon (3 hours):
+- Task 1.3: Check verification API
+- Task 1.4: Get domain API
+- Testing APIs
+```
+
+### Day 2 Schedule
+```
+Morning (3 hours):
+- Task 2.1: Verification page
+- Task 2.2: DNS instructions component (start)
+
+Afternoon (3 hours):
+- Task 2.2: DNS instructions component (finish)
+- Task 2.3: Update domain creation flow
+- Testing UI
+```
+
+### Day 3 Schedule
+```
+Morning (2 hours):
+- Task 3.1: Auto-refresh
+- Task 3.2: Error handling
+
+Afternoon (3 hours):
+- Task 3.3: End-to-end testing
+- Task 3.4: Documentation
+- Final polish
+```
 
 ---
 
 ## Need Help?
 
-**For detailed instructions:** `DOMAIN_VERIFICATION_PLAN.md`  
-**For code examples:** See plan sections with full code  
-**For troubleshooting:** Plan has extensive troubleshooting section  
+**For code examples:** See `AUTOMATED_DOMAIN_VERIFICATION_PLAN.md`  
+**For API details:** See Plan → API Endpoints Summary  
+**For UI layout:** See Plan → UI Components Structure  
+**For testing:** See Plan → Testing Plan  
 
 ---
 
-**Let's verify your domain! 🚀**
+**Let's build automated domain verification! 🚀**
