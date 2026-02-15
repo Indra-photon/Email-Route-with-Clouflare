@@ -72,10 +72,17 @@ export async function POST(request: Request) {
     );
   } catch (error: unknown) {
     console.error("Error creating domain", error);
-
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Failed to create domain";
+    const status =
+      message.toLowerCase().includes("duplicate") || message.toLowerCase().includes("e11000")
+        ? 409
+        : 500;
     return NextResponse.json(
-      { error: "Failed to create domain" },
-      { status: 500 }
+      { error: message },
+      { status }
     );
   }
 }
