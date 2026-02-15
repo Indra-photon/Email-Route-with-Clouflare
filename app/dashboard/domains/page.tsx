@@ -65,7 +65,7 @@ export default function DomainsPage() {
         throw new Error(msg);
       }
 
-      const created: Domain = await res.json();
+      const created: Domain = body as Domain;
       setDomains((prev) => [created, ...prev]);
       setNewDomain("");
 
