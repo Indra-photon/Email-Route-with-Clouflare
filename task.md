@@ -1,197 +1,339 @@
-# Feature 2.1 - Reply from Discord
-## Quick Task List
+# Domain Verification Task List
+## Setup Custom Sending Domain (git-cv.com)
 
-**Goal:** Enable users to reply to customer emails from Discord via web link  
-**Time Estimate:** 2-3 days  
-**Detailed Plan:** See `FEATURE_2.1_PLAN.md` for complete code and instructions
-
----
-
-## Day 1: Database & Storage Setup
-
-### Task 1.1: Create Email Storage Model
-**Time:** 1 hour  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create `app/api/models/EmailThreadModel.ts`
-- [ ] Copy schema from **FEATURE_2.1_PLAN.md → Step 1.1**
-- [ ] Test: Start dev server, verify no errors
-
-**Result:** Database model for storing emails
+**Goal:** Enable sending emails from support@git-cv.com (or any verified domain)  
+**Time Estimate:** 4-6 hours  
+**Detailed Plan:** See `DOMAIN_VERIFICATION_PLAN.md` for complete instructions
 
 ---
 
-### Task 1.2: Create Auth Helper
+## Quick Overview
+
+**Problem:**
+```
+❌ Current: Reply FROM onboarding@resend.dev (test only)
+✅ Goal: Reply FROM support@git-cv.com (professional)
+```
+
+**Solution:**
+1. Verify domain with Resend
+2. Update database schema
+3. Update reply API to use verified domain
+4. Test end-to-end
+
+---
+
+## Task Checklist
+
+### Task 1: Add Domain to Resend
 **Time:** 30 minutes  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Create `lib/authHelpers.ts`
-- [ ] Copy helper functions from **FEATURE_2.1_PLAN.md → Step 1.2**
-- [ ] Test: Import in any file, verify TypeScript happy
+- [ ] Go to https://resend.com/domains
+- [ ] Click "Add Domain"
+- [ ] Enter: `git-cv.com`
+- [ ] Copy DNS records shown (DKIM, verification, MX)
+- [ ] See **DOMAIN_VERIFICATION_PLAN.md → Step 1** for details
 
-**Result:** Reusable workspace auth checking
+**Result:** Resend shows DNS records to add
 
 ---
 
-### Task 1.3: Add Environment Variable
+### Task 2: Add DNS Records
+**Time:** 20 minutes  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Login to your domain registrar (Namecheap/Cloudflare/etc.)
+- [ ] Add DKIM TXT record: `resend._domainkey`
+- [ ] Add Verification TXT record: `_resend`
+- [ ] Add MX records: `mx1.resend.dev` (priority 10), `mx2.resend.dev` (priority 20)
+- [ ] Save all records
+- [ ] See **DOMAIN_VERIFICATION_PLAN.md → Step 2** for exact values
+
+**Result:** DNS records live (may take 5-30 min to propagate)
+
+---
+
+### Task 3: Wait for DNS Propagation
+**Time:** 5-30 minutes (passive waiting)  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Wait 5-30 minutes
+- [ ] Check propagation: `dig TXT resend._domainkey.git-cv.com`
+- [ ] Or use: https://dnschecker.org
+- [ ] See **DOMAIN_VERIFICATION_PLAN.md → Step 3** for checking
+
+**Result:** DNS records visible globally
+
+---
+
+### Task 4: Verify in Resend Dashboard
 **Time:** 5 minutes  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Add `NEXT_PUBLIC_SITE_URL=http://localhost:3000` to `.env.local`
-- [ ] See **FEATURE_2.1_PLAN.md → Step 1.3** for instructions
-- [ ] Restart dev server
+- [ ] Go back to https://resend.com/domains
+- [ ] Find `git-cv.com`
+- [ ] Click "Verify" or wait for auto-verification
+- [ ] Status should show: ✅ Verified
+- [ ] See **DOMAIN_VERIFICATION_PLAN.md → Step 4** for troubleshooting
 
-**Result:** Reply URLs will work correctly
-
----
-
-### Task 1.4: Update Webhook to Save Emails
-**Time:** 1.5 hours  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Open `app/api/webhooks/resend/route.ts`
-- [ ] Follow changes in **FEATURE_2.1_PLAN.md → Step 1.4**
-- [ ] Add EmailThread import
-- [ ] Save email to database after receiving
-- [ ] Add reply link to Discord message
-- [ ] Test: Send email, check MongoDB for new EmailThread, check Discord for link
-
-**Result:** Emails saved to database, Discord messages have reply links
+**Result:** Domain verified in Resend ✅
 
 ---
 
-## Day 2: Reply Page & Form
-
-### Task 2.1: Create Reply Page
-**Time:** 1.5 hours  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create `app/reply/[threadId]/page.tsx`
-- [ ] Copy code from **FEATURE_2.1_PLAN.md → Step 2.1**
-- [ ] Test auth: Try without login → should redirect
-- [ ] Test access: Try with wrong workspace → should show error
-- [ ] Test success: Try with valid thread → should show form
-
-**Result:** Auth-protected page showing original email
-
----
-
-### Task 2.2: Create Reply Form Component
-**Time:** 1 hour  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create `components/ReplyForm.tsx`
-- [ ] Copy code from **FEATURE_2.1_PLAN.md → Step 2.2**
-- [ ] Test: Form renders, can type, shows validation
-
-**Result:** Working form for composing replies
-
----
-
-## Day 3: Email Sending API
-
-### Task 3.1: Create Reply API
-**Time:** 2 hours  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create `app/api/emails/reply/route.ts`
-- [ ] Copy code from **FEATURE_2.1_PLAN.md → Step 3.1**
-- [ ] Test: Submit form, check console logs
-- [ ] Verify: Email sent via Resend
-- [ ] Verify: Customer receives email
-- [ ] Verify: Database has outbound EmailThread
-- [ ] Verify: Original thread status = "replied"
-
-**Result:** Full reply flow working end-to-end
-
----
-
-## Testing & Deployment
-
-### Testing Checklist
-**Time:** 1 hour  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Follow **Manual Testing Checklist** in FEATURE_2.1_PLAN.md
-- [ ] Test all 15 items
-- [ ] Fix any bugs found
-
-**Result:** Feature fully tested
-
----
-
-### Deployment
+### Task 5: Update Database Schema
 **Time:** 30 minutes  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Follow **Deployment Checklist** in FEATURE_2.1_PLAN.md
-- [ ] Set `NEXT_PUBLIC_SITE_URL` in Vercel
-- [ ] Commit and push code
-- [ ] Verify deployment successful
-- [ ] Run post-deployment tests
+- [ ] Update `app/api/models/DomainModel.ts`
+- [ ] Add fields: `verifiedForSending`, `verifiedForReceiving`, `resendDomainId`
+- [ ] Copy schema from **DOMAIN_VERIFICATION_PLAN.md → Database Schema Updates**
+- [ ] Restart dev server to load new schema
 
-**Result:** Feature live in production
+**Result:** Database model supports verification tracking
 
 ---
 
-## Quick Reference
+### Task 6: Mark Domain as Verified in Database
+**Time:** 10 minutes  
+**Status:** ⬜ Not Started
 
-**Files Created:**
-1. `app/api/models/EmailThreadModel.ts` - Database model
-2. `lib/authHelpers.ts` - Auth checking
-3. `app/reply/[threadId]/page.tsx` - Reply page
-4. `components/ReplyForm.tsx` - Reply form
-5. `app/api/emails/reply/route.ts` - Reply API
+**What to do:**
+- [ ] Open MongoDB Compass (or use script)
+- [ ] Find `git-cv.com` in `domains` collection
+- [ ] Set: `verifiedForSending: true`, `status: "verified"`
+- [ ] See **DOMAIN_VERIFICATION_PLAN.md → Step: Update Existing Domain** for methods
 
-**Files Modified:**
-1. `app/api/webhooks/resend/route.ts` - Save emails, add links
-2. `.env.local` - Add NEXT_PUBLIC_SITE_URL
+**Result:** Database knows domain is verified
 
-**Environment Variables:**
-- `NEXT_PUBLIC_SITE_URL` - For reply links
+---
+
+### Task 7: Update Reply API
+**Time:** 45 minutes  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Open `app/api/emails/reply/route.ts`
+- [ ] Add imports: `Alias`, `Domain`
+- [ ] Add logic to fetch alias and domain
+- [ ] Check `domain.verifiedForSending`
+- [ ] Use customer domain if verified, fallback if not
+- [ ] Copy code from **DOMAIN_VERIFICATION_PLAN.md → Reply API Updates**
+
+**Result:** API sends from verified domain
+
+---
+
+### Task 8: Add Environment Variables
+**Time:** 5 minutes  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Add to `.env.local`:
+  ```
+  REPLY_FROM_EMAIL=onboarding@resend.dev
+  REPLY_FROM_NAME=Email Router
+  ```
+- [ ] Add same to Vercel environment variables
+- [ ] See **DOMAIN_VERIFICATION_PLAN.md → Environment Variables**
+
+**Result:** Fallback sender configured
+
+---
+
+### Task 9: Test Full Flow
+**Time:** 30 minutes  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Send email to: `support@git-cv.com`
+- [ ] Check Discord for notification
+- [ ] Click reply link
+- [ ] Fill form and send reply
+- [ ] Check your email - should receive from `support@git-cv.com`
+- [ ] Verify headers show correct domain
+- [ ] Follow **DOMAIN_VERIFICATION_PLAN.md → Testing Plan**
+
+**Result:** End-to-end flow working ✅
+
+---
+
+### Task 10: Verify Email Quality
+**Time:** 15 minutes  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Check email source/headers
+- [ ] Verify From: `support@git-cv.com` ✅
+- [ ] Verify DKIM signature present
+- [ ] Verify email threads correctly
+- [ ] Verify no spam warnings
+- [ ] See **DOMAIN_VERIFICATION_PLAN.md → Test 2** for details
+
+**Result:** Professional emails with no issues ✅
 
 ---
 
 ## Progress Tracking
 
-**Day 1:** ⬜⬜⬜⬜ (4 tasks)  
-**Day 2:** ⬜⬜ (2 tasks)  
-**Day 3:** ⬜ (1 task)  
-**Testing:** ⬜ (1 task)  
-**Deploy:** ⬜ (1 task)  
+**Setup:** ⬜⬜⬜⬜ (Tasks 1-4)  
+**Code:** ⬜⬜⬜ (Tasks 5-7)  
+**Config:** ⬜ (Task 8)  
+**Testing:** ⬜⬜ (Tasks 9-10)  
 
-**Total:** 0/9 tasks completed
+**Total:** 0/10 tasks completed
 
 ---
 
-## Need Help?
+## Quick Reference
 
-**For detailed code:** See `FEATURE_2.1_PLAN.md`  
-**For overall context:** See `PRD.md` (Phase 2, Feature 2.1)  
-**For debugging:** Check Vercel logs, MongoDB, Resend dashboard
+### Files to Modify
+
+**1. Domain Model:**
+- File: `app/api/models/DomainModel.ts`
+- Add: `verifiedForSending`, `verifiedForReceiving`, `resendDomainId`
+
+**2. Reply API:**
+- File: `app/api/emails/reply/route.ts`
+- Add: Domain verification check logic
+- Use: Customer domain if verified
+
+**3. Environment:**
+- File: `.env.local`
+- Add: `REPLY_FROM_EMAIL`, `REPLY_FROM_NAME`
+
+---
+
+### DNS Records Needed
+
+**DKIM (for email signing):**
+```
+Type: TXT
+Host: resend._domainkey
+Value: [from Resend dashboard]
+```
+
+**Verification (for ownership):**
+```
+Type: TXT
+Host: _resend
+Value: [from Resend dashboard]
+```
+
+**MX (for receiving):**
+```
+Type: MX
+Host: @
+Value: mx1.resend.dev
+Priority: 10
+
+Type: MX
+Host: @
+Value: mx2.resend.dev
+Priority: 20
+```
+
+---
+
+### Database Updates
+
+**Mark domain as verified:**
+```javascript
+db.domains.updateOne(
+  { domain: "git-cv.com" },
+  { 
+    $set: { 
+      verifiedForSending: true,
+      verifiedForReceiving: true,
+      status: "verified"
+    }
+  }
+);
+```
+
+---
+
+### Testing Commands
+
+**Check DNS propagation:**
+```bash
+dig TXT resend._domainkey.git-cv.com
+dig MX git-cv.com
+```
+
+**Verify domain in database:**
+```javascript
+db.domains.findOne({ domain: "git-cv.com" })
+```
+
+---
+
+## Troubleshooting Quick Guide
+
+### Issue: Domain not verified in Resend
+**Fix:** 
+- Wait longer (DNS can take 24 hours)
+- Check DNS records are correct
+- Click "Verify" button in Resend
+
+### Issue: Still sending from onboarding@resend.dev
+**Fix:**
+- Check database: `verifiedForSending: true`
+- Check logs show "Using customer domain"
+- Restart application
+
+### Issue: Emails go to spam
+**Fix:**
+- Add SPF record: `v=spf1 include:_spf.resend.com ~all`
+- Wait for DKIM to fully propagate
+- Ask recipient to mark as "Not Spam"
+
+**Full troubleshooting:** See DOMAIN_VERIFICATION_PLAN.md → Troubleshooting
 
 ---
 
 ## Success Criteria
 
 ✅ Feature is done when:
-- [ ] Email arrives → Discord notification with link
-- [ ] Click link → Reply form shows
-- [ ] Submit form → Email sent to customer
-- [ ] Customer receives email (check inbox)
-- [ ] Database has both emails (inbound + outbound)
-- [ ] Auth works (can't access other workspace's emails)
-- [ ] No errors in production
+- [ ] Domain verified in Resend dashboard
+- [ ] DNS records all showing as verified
+- [ ] Database shows `verifiedForSending: true`
+- [ ] Reply API uses customer domain
+- [ ] Test email sends from `support@git-cv.com`
+- [ ] Email headers show correct domain
+- [ ] No spam warnings
+- [ ] Email threads correctly
+- [ ] Customer can reply back (full loop)
 
 ---
 
-**Let's build this! 🚀**
+## After Completion
+
+**You'll have:**
+- ✅ Professional email sending from your domain
+- ✅ Full email loop (receive → reply → customer replies back)
+- ✅ No "via resend.dev" warnings
+- ✅ Proper DKIM signatures
+- ✅ Production-ready setup
+
+**Next steps:**
+- Add more aliases (sales@, billing@, etc.)
+- Test with different domains
+- Build automated verification UI (Phase 3)
+
+---
+
+## Need Help?
+
+**For detailed instructions:** `DOMAIN_VERIFICATION_PLAN.md`  
+**For code examples:** See plan sections with full code  
+**For troubleshooting:** Plan has extensive troubleshooting section  
+
+---
+
+**Let's verify your domain! 🚀**

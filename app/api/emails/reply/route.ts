@@ -3,6 +3,8 @@ import { auth } from "@clerk/nextjs/server";
 import dbConnect from "@/lib/dbConnect";
 import { EmailThread } from "@/app/api/models/EmailThreadModel";
 import { Workspace } from "@/app/api/models/WorkspaceModel";
+import { Alias } from "@/app/api/models/AliasModel";
+import { Domain } from "@/app/api/models/DomainModel";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -80,8 +82,28 @@ export async function POST(request: Request) {
     const references = [thread.messageId, ...(thread.references || [])].filter(Boolean);
     const referencesHeader = references.join(" ");
 
+    // Resolve "from" address: use customer domain if verified for sending, else fallback
+    const alias = await Alias.findById(thread.aliasId).lean();
+    const domain = alias
+      ? await Domain.findOne({ _id: alias.domainId, workspaceId: workspace._id }).lean()
+      : null;
+
+    const fallbackEmail = process.env.REPLY_FROM_EMAIL || "onboarding@resend.dev";
+    const fallbackName = process.env.REPLY_FROM_NAME || "Email Router";
+
+    let fromAddress: string;
+    if (domain?.verifiedForSending) {
+      fromAddress = thread.to; // reply from the alias (e.g. support@git-cv.com)
+      console.log("Using customer domain for reply:", fromAddress);
+    } else {
+      fromAddress = fallbackName
+        ? `${fallbackName} <${fallbackEmail}>`
+        : fallbackEmail;
+      console.log("Using fallback sender for reply:", fromAddress);
+    }
+
     const { data: sentEmail, error: sendError } = await resend.emails.send({
-      from: thread.to,
+      from: fromAddress,
       to: thread.from,
       subject: replySubject,
       text: trimmedReply,
@@ -99,6 +121,11 @@ export async function POST(request: Request) {
       );
     }
 
+    const storedFromEmail =
+      fromAddress.includes("<") && fromAddress.includes(">")
+        ? fromAddress.slice(fromAddress.indexOf("<") + 1, fromAddress.indexOf(">")).trim()
+        : fromAddress;
+
     const outboundThread = await EmailThread.create({
       workspaceId: workspace._id,
       aliasId: thread.aliasId,
@@ -106,7 +133,7 @@ export async function POST(request: Request) {
       messageId: `<${sentEmail.id}@resend.app>`,
       inReplyTo: thread.messageId,
       references: references,
-      from: thread.to,
+      from: storedFromEmail,
       to: thread.from,
       subject: replySubject,
       textBody: trimmedReply,

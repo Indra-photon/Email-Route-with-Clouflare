@@ -3,7 +3,10 @@ import mongoose, { Schema, type Document, type Model, Types } from "mongoose";
 export interface IDomain extends Document {
   workspaceId: Types.ObjectId;
   domain: string;
-  status: "pending_verification" | "active";
+  status: "pending_verification" | "active" | "verified";
+  verifiedForSending?: boolean;
+  verifiedForReceiving?: boolean;
+  resendDomainId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,8 +25,20 @@ const DomainSchema = new Schema<IDomain>(
     },
     status: {
       type: String,
-      enum: ["pending_verification", "active"],
+      enum: ["pending_verification", "active", "verified"],
       default: "pending_verification",
+    },
+    verifiedForSending: {
+      type: Boolean,
+      default: false,
+    },
+    verifiedForReceiving: {
+      type: Boolean,
+      default: false,
+    },
+    resendDomainId: {
+      type: String,
+      default: null,
     },
   },
   {
