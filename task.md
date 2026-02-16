@@ -1,672 +1,671 @@
-# Feature 2.2: Ticket Assignment - Task List
+# Feature 2.2: Ticket Assignment - Completion Task List
 
-**Goal:** Build ticket claiming/assignment system to prevent duplicate work and dropped tickets  
-**Time:** 3-4 days  
-**Plan:** See `ticket-assignment-plan.md` for architecture details
+**Goal:** Complete the remaining 9 tasks to finish ticket assignment feature  
+**Time:** 4-6 hours  
+**Status:** 59% complete (13/22 done), need to finish last 41%
 
 ---
 
-## Day 1: Database & Backend APIs (6 tasks)
+## ✅ Already Completed (13/22 tasks)
 
-### Task 1.1: Update EmailThread Model
+- ✅ Day 1: All backend APIs (6/6 tasks)
+- ✅ Day 2: All UI components (5/5 tasks)
+- ✅ Day 3: Loading states & error handling (2/6 tasks)
+
+---
+
+## 🔨 Remaining Tasks (9 tasks)
+
+### Day 3 Completion: Integration & Polish (4 tasks)
+
+**Status:** Need to finish 4 more tasks
+
+---
+
+### Task 3.1: Add Navigation Links
 **Time:** 30 minutes  
+**Priority:** ⭐⭐⭐⭐⭐ CRITICAL  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Open file: `app/api/models/EmailThreadModel.ts`
-- [ ] Add to interface `IEmailThread`:
-  - `assignedTo?: string` (Clerk userId)
-  - `assignedToEmail?: string` (display email)
-  - `assignedToName?: string` (display name)
-  - `claimedAt?: Date` (when claimed)
-- [ ] Add fields to Mongoose schema with optional: true
-- [ ] Save file
-- [ ] See **Plan → Database Changes**
+- [ ] Find navigation/sidebar component in codebase
+- [ ] Look for files like:
+  - `app/dashboard/layout.tsx`
+  - `components/Sidebar.tsx`
+  - `components/Navigation.tsx`  
+  - `components/DashboardNav.tsx`
+- [ ] Add two new navigation links:
+  - "My Tickets" → `/dashboard/tickets/mine`
+  - "Unassigned" → `/dashboard/tickets/unassigned`
+- [ ] Add icons (📧 for My Tickets, 📥 for Unassigned)
+- [ ] Add active state highlighting
+- [ ] Test navigation works
+- [ ] See **Plan → Part 2: Navigation Links**
 
-**Result:** EmailThread model supports assignment
+**How to find navigation component:**
+```bash
+# Search for navigation-related files
+find app -name "*layout*" -o -name "*nav*" -o -name "*sidebar*"
 
-**Example:**
-```typescript
-export interface IEmailThread extends Document {
-  // ... existing fields ...
-  assignedTo?: string;
-  assignedToEmail?: string;
-  assignedToName?: string;
-  claimedAt?: Date;
-  // ... existing fields ...
-}
+# Or search for existing nav links like "Domains"
+grep -r "Domains" app/dashboard --include="*.tsx"
 ```
+
+**Expected structure:**
+```typescript
+const navigation = [
+  { name: 'Dashboard', href: '/dashboard', icon: '📊' },
+  { name: 'My Tickets', href: '/dashboard/tickets/mine', icon: '📧' },     // NEW
+  { name: 'Unassigned', href: '/dashboard/tickets/unassigned', icon: '📥' }, // NEW
+  { name: 'Domains', href: '/dashboard/domains', icon: '🌐' },
+  // ... other links
+];
+```
+
+**Result:** Users can navigate to ticket pages from sidebar
 
 ---
 
-### Task 1.2: Create Claim API Endpoint
+### Task 3.2: Update Discord Notification Message  
 **Time:** 1 hour  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create file: `app/api/emails/claim/route.ts`
-- [ ] Import dependencies: auth (Clerk), dbConnect, EmailThread
-- [ ] Create POST handler
-- [ ] Get userId from Clerk auth
-- [ ] Get user email and name from Clerk
-- [ ] Get threadId from request body
-- [ ] Validate threadId exists
-- [ ] Check if ticket is already claimed
-- [ ] Update EmailThread with assignment fields
-- [ ] Return success response
-- [ ] Add error handling
-- [ ] See **Plan → API Endpoints → Claim**
-
-**Result:** POST /api/emails/claim works
-
-**Example:**
-```typescript
-export async function POST(request: Request) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  
-  const { threadId } = await request.json();
-  
-  await dbConnect();
-  
-  const thread = await EmailThread.findById(threadId);
-  if (!thread) return NextResponse.json({ error: "Thread not found" }, { status: 404 });
-  
-  if (thread.assignedTo) {
-    return NextResponse.json({ error: "Already claimed" }, { status: 400 });
-  }
-  
-  // Get user details from Clerk
-  const user = await clerkClient.users.getUser(userId);
-  
-  await EmailThread.findByIdAndUpdate(threadId, {
-    assignedTo: userId,
-    assignedToEmail: user.emailAddresses[0].emailAddress,
-    assignedToName: user.firstName + " " + user.lastName,
-    claimedAt: new Date()
-  });
-  
-  return NextResponse.json({ success: true });
-}
-```
-
----
-
-### Task 1.3: Create Unclaim API Endpoint
-**Time:** 45 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create file: `app/api/emails/unclaim/route.ts`
-- [ ] Import dependencies
-- [ ] Create POST handler
-- [ ] Get userId from Clerk auth
-- [ ] Get threadId from request body
-- [ ] Find ticket in database
-- [ ] Check if current user owns this ticket
-- [ ] Set assignedTo fields to null
-- [ ] Return success
-- [ ] See **Plan → API Endpoints → Unclaim**
-
-**Result:** POST /api/emails/unclaim works
-
-**Security:** Only ticket owner can unclaim their own tickets
-
----
-
-### Task 1.4: Update Reply API for Auto-Claim
-**Time:** 30 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Open file: `app/api/emails/reply/route.ts`
-- [ ] Find where email is sent successfully
-- [ ] Add auto-claim logic AFTER email sent
-- [ ] Check if thread.assignedTo is null
-- [ ] If null, update with current user
-- [ ] If already assigned, do nothing
-- [ ] See **Plan → User Flow → Auto-Claim**
-
-**Result:** Replying to unclaimed ticket auto-assigns it
-
-**Example:**
-```typescript
-// After email sent successfully
-if (!thread.assignedTo) {
-  const user = await clerkClient.users.getUser(userId);
-  await EmailThread.findByIdAndUpdate(threadId, {
-    assignedTo: userId,
-    assignedToEmail: user.emailAddresses[0].emailAddress,
-    assignedToName: user.firstName + " " + user.lastName,
-    claimedAt: new Date()
-  });
-}
-```
-
----
-
-### Task 1.5: Create "My Tickets" API
-**Time:** 45 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create file: `app/api/emails/tickets/mine/route.ts`
-- [ ] Create GET handler
-- [ ] Get userId from Clerk auth
-- [ ] Get workspace for user
-- [ ] Find all EmailThreads where assignedTo = userId
-- [ ] Sort by receivedAt (newest first)
-- [ ] Include: from, subject, status, claimedAt, receivedAt
-- [ ] Return array of tickets
-- [ ] See **Plan → API Endpoints → Get My Tickets**
-
-**Result:** GET /api/emails/tickets/mine returns user's tickets
-
----
-
-### Task 1.6: Create "Unassigned Tickets" API
-**Time:** 45 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create file: `app/api/emails/tickets/unassigned/route.ts`
-- [ ] Create GET handler
-- [ ] Get workspace for current user
-- [ ] Find all EmailThreads where assignedTo = null
-- [ ] Only include direction = "inbound"
-- [ ] Sort by receivedAt (oldest first = highest priority)
-- [ ] Return array of tickets
-- [ ] See **Plan → API Endpoints → Get Unassigned**
-
-**Result:** GET /api/emails/tickets/unassigned returns unclaimed tickets
-
----
-
-## Day 2: Dashboard UI Components (5 tasks)
-
-### Task 2.1: Create ClaimButton Component
-**Time:** 1 hour  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create file: `components/tickets/ClaimButton.tsx`
-- [ ] Make it a client component ("use client")
-- [ ] Accept props: threadId, onSuccess callback
-- [ ] Create claim handler calling POST /api/emails/claim
-- [ ] Show loading state while claiming
-- [ ] Show success/error toast messages
-- [ ] Disable button while loading
-- [ ] Call onSuccess after successful claim
-- [ ] Style with Tailwind
-
-**Result:** Reusable claim button component
-
-**Example:**
-```typescript
-"use client";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-
-export default function ClaimButton({ 
-  threadId, 
-  onSuccess 
-}: { 
-  threadId: string; 
-  onSuccess: () => void;
-}) {
-  const [claiming, setClaiming] = useState(false);
-  
-  const handleClaim = async () => {
-    setClaiming(true);
-    try {
-      const res = await fetch("/api/emails/claim", {
-        method: "POST",
-        body: JSON.stringify({ threadId })
-      });
-      if (!res.ok) throw new Error("Failed to claim");
-      onSuccess();
-    } catch (err) {
-      alert("Error claiming ticket");
-    } finally {
-      setClaiming(false);
-    }
-  };
-  
-  return (
-    <Button onClick={handleClaim} disabled={claiming}>
-      {claiming ? "Claiming..." : "Claim"}
-    </Button>
-  );
-}
-```
-
----
-
-### Task 2.2: Create UnclaimButton Component
-**Time:** 45 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create file: `components/tickets/UnclaimButton.tsx`
-- [ ] Similar structure to ClaimButton
-- [ ] Call POST /api/emails/unclaim
-- [ ] Add confirmation dialog before unclaim
-- [ ] Show loading state
-- [ ] Handle errors
-
-**Result:** Reusable unclaim button
-
----
-
-### Task 2.3: Create TicketsList Component
-**Time:** 2 hours  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create file: `components/tickets/TicketsList.tsx`
-- [ ] Accept props: tickets array, showClaimButton, showUnclaimButton
-- [ ] Create table with columns:
-  - From (email)
-  - Subject
-  - Received (time ago)
-  - Status
-  - Actions (Claim/Unclaim/Reply buttons)
-- [ ] Use ClaimButton component
-- [ ] Use UnclaimButton component
-- [ ] Add Reply link to /reply/[threadId]
-- [ ] Style with Tailwind
-- [ ] Make responsive for mobile
-- [ ] Show empty state if no tickets
-
-**Result:** Reusable ticket list table
-
-**Columns:**
-- From: customer@email.com
-- Subject: Need help with billing
-- Received: 2 hours ago
-- Status: Open
-- Actions: [Claim] [Reply]
-
----
-
-### Task 2.4: Create "My Tickets" Page
-**Time:** 1.5 hours  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create file: `app/dashboard/tickets/mine/page.tsx`
-- [ ] Make it server component
-- [ ] Fetch data from GET /api/emails/tickets/mine
-- [ ] Pass data to TicketsList component
-- [ ] Set showUnclaimButton = true
-- [ ] Add page title: "My Tickets"
-- [ ] Show count: "My Tickets (5)"
-- [ ] Add refresh button
-- [ ] Handle empty state: "No tickets assigned to you"
-- [ ] See **Plan → Dashboard Pages → My Tickets**
-
-**Result:** /dashboard/tickets/mine shows user's tickets
-
----
-
-### Task 2.5: Create "Unassigned Tickets" Page
-**Time:** 1.5 hours  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create file: `app/dashboard/tickets/unassigned/page.tsx`
-- [ ] Fetch from GET /api/emails/tickets/unassigned
-- [ ] Pass to TicketsList component
-- [ ] Set showClaimButton = true
-- [ ] Add page title: "Unassigned Tickets"
-- [ ] Show count: "Unassigned Tickets (12)"
-- [ ] Sort by oldest first (FIFO)
-- [ ] Add refresh button
-- [ ] Empty state: "All tickets are assigned! 🎉"
-
-**Result:** /dashboard/tickets/unassigned shows claimable tickets
-
----
-
-## Day 3: Integration & Polish (6 tasks)
-
-### Task 3.1: Update Discord Notification Message
-**Time:** 1 hour  
+**Priority:** ⭐⭐⭐⭐ HIGH  
 **Status:** ⬜ Not Started
 
 **What to do:**
 - [ ] Open file: `app/api/webhooks/resend/route.ts`
-- [ ] Find where Discord message is created
-- [ ] After saving EmailThread, check if thread.assignedTo exists
-- [ ] If assigned, add line: "👤 Claimed by: {email}"
-- [ ] If not assigned, don't show claim status
-- [ ] Test with assigned and unassigned tickets
-- [ ] See **Plan → Discord Integration**
+- [ ] Find where `emailThread` is created (line ~165-180)
+- [ ] Find where Discord message is formatted (line ~195-210)
+- [ ] After creating EmailThread, add claim check
+- [ ] Add claim status line to Discord message IF claimed
+- [ ] Test with new incoming email
+- [ ] See **Plan → Part 1: Discord Integration**
 
-**Result:** Discord shows who claimed each ticket
+**Where to add code:**
 
-**Before:**
+```typescript
+// After saving email to database (around line 180)
+const emailThread = await EmailThread.create({
+  workspaceId: alias.workspaceId,
+  aliasId: alias._id,
+  // ... other fields
+});
+
+// NEW CODE - Check if claimed
+let claimStatus = "";
+if (emailThread.assignedTo && emailThread.assignedToEmail) {
+  claimStatus = `👤 **Claimed by:** ${emailThread.assignedToEmail}\n`;
+}
+
+// Update Discord message format (around line 205)
+const messagePayload = integration.type === "slack"
+  ? {
+      text: `📧 New email to *${emailLower}*\n${claimStatus}*From:* ${fromEmail}\n*Subject:* ${subject}\n\n${snippet}\n\n🔗 [Click here to reply](${replyUrl})`,
+    }
+  : {
+      content: `📧 **New email to ${emailLower}**
+${claimStatus}**From:** ${fromEmail}
+**Subject:** ${subject}
+
+${snippet}
+
+🔗 [Click here to reply](${replyUrl})`,
+    };
 ```
-📧 New email to support@git-cv.com
-From: customer@email.com
-Subject: Need help
-```
 
-**After:**
-```
-📧 New email to support@git-cv.com
-👤 Claimed by: john@company.com
-From: customer@email.com
-Subject: Need help
-```
+**Important Notes:**
+- New incoming emails are NEVER pre-claimed
+- This will only show claim status IF somehow the emailThread has assignedTo
+- In practice, this will rarely show for NEW emails
+- But it's good to have for consistency
 
----
+**Alternative Approach (More Complex):**
+If you want to show if PREVIOUS emails from same sender are claimed:
+- Look up previous threads from same sender
+- Check their claim status
+- Show in notification
+- **Skip this for now** - not in original plan
 
-### Task 3.2: Add Navigation Links
-**Time:** 30 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Open dashboard layout or navigation component
-- [ ] Add link: "My Tickets" → /dashboard/tickets/mine
-- [ ] Add link: "Unassigned" → /dashboard/tickets/unassigned
-- [ ] Style as active when on current page
-- [ ] Add icons (📧 for My Tickets, 📥 for Unassigned)
-
-**Result:** Easy navigation to ticket pages
+**Result:** Discord shows "👤 Claimed by: email" if ticket is claimed
 
 ---
 
 ### Task 3.3: Update Reply Page to Show Claim Status
 **Time:** 45 minutes  
+**Priority:** ⭐⭐⭐ MEDIUM  
 **Status:** ⬜ Not Started
 
 **What to do:**
 - [ ] Open file: `app/reply/[threadId]/page.tsx`
-- [ ] After fetching thread data
-- [ ] Show claim status in UI:
-  - If assignedTo = current user: "👤 Assigned to you"
-  - If assignedTo = other user: "👤 Assigned to {name}"
-  - If not assigned: "⚠️ Not claimed yet"
-- [ ] Add styling
-- [ ] Position near email subject
+- [ ] Find where thread data is displayed (around line 60-90)
+- [ ] Get current userId from Clerk auth
+- [ ] Add claim status component ABOVE email content
+- [ ] Show different messages based on claim status:
+  - Not claimed: "⚠️ Not claimed yet"
+  - Claimed by you: "👤 Assigned to you"
+  - Claimed by other: "👤 Assigned to: {name}"
+- [ ] Style with background colors
+- [ ] Test with claimed and unclaimed tickets
+- [ ] See **Plan → Part 3: Update Reply Page**
 
-**Result:** Reply page shows ownership
+**Where to add code:**
+
+```typescript
+// At the top of the component, after auth
+const { userId } = await auth();
+
+// After fetching thread data
+const thread = result.thread;
+
+// Determine claim status UI
+let claimStatusBadge = null;
+
+if (!thread.assignedTo) {
+  // Unclaimed
+  claimStatusBadge = (
+    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6">
+      <div className="flex items-center gap-2">
+        <span className="text-yellow-800 font-medium">⚠️ Not claimed yet</span>
+      </div>
+      <p className="text-xs text-yellow-700 mt-1">
+        This ticket hasn't been assigned to anyone
+      </p>
+    </div>
+  );
+} else if (thread.assignedTo === userId) {
+  // Claimed by current user
+  claimStatusBadge = (
+    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+      <div className="flex items-center gap-2">
+        <span className="text-blue-800 font-medium">👤 Assigned to you</span>
+      </div>
+      <p className="text-xs text-blue-700 mt-1">
+        Claimed {new Date(thread.claimedAt).toLocaleString()}
+      </p>
+    </div>
+  );
+} else {
+  // Claimed by someone else
+  claimStatusBadge = (
+    <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-3 mb-6">
+      <div className="flex items-center gap-2">
+        <span className="text-neutral-800 font-medium">
+          👤 Assigned to: {thread.assignedToName || thread.assignedToEmail}
+        </span>
+      </div>
+      <p className="text-xs text-neutral-600 mt-1">
+        Claimed {new Date(thread.claimedAt).toLocaleString()}
+      </p>
+    </div>
+  );
+}
+
+// Render it above the email content
+return (
+  <div>
+    {claimStatusBadge}  {/* NEW - Add this */}
+    
+    {/* Existing email content */}
+    <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <h2>Original Email</h2>
+      ...
+    </div>
+  </div>
+);
+```
+
+**Result:** Reply page shows who (if anyone) claimed the ticket
 
 ---
 
-### Task 3.4: Add Loading States
-**Time:** 45 minutes  
+### Task 3.4: Quick Smoke Test
+**Time:** 15 minutes  
+**Priority:** ⭐⭐⭐⭐⭐ CRITICAL  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Add loading spinners to all buttons
-- [ ] Add skeleton loaders to ticket lists
-- [ ] Show "Loading..." text while fetching
-- [ ] Disable buttons during API calls
-- [ ] Use consistent loading UI across all pages
+- [ ] Restart dev server
+- [ ] Login to dashboard
+- [ ] Check navigation links appear
+- [ ] Click "My Tickets" - should load
+- [ ] Click "Unassigned" - should load
+- [ ] Try claiming a ticket
+- [ ] Try unclaiming a ticket
+- [ ] Send test email - check Discord
+- [ ] Fix any obvious bugs
 
-**Result:** Better UX during async operations
+**Quick checks:**
+- ✅ Navigation links visible?
+- ✅ Pages load without errors?
+- ✅ Claim button works?
+- ✅ Unclaim button works?
+- ✅ Discord message looks right?
 
----
+**If any errors:**
+- Check browser console
+- Check terminal logs
+- Fix syntax errors
+- Retry
 
-### Task 3.5: Add Error Handling
-**Time:** 1 hour  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Wrap all API calls in try/catch
-- [ ] Show user-friendly error messages
-- [ ] Handle specific errors:
-  - Already claimed → "This ticket was just claimed by someone else"
-  - Not found → "Ticket not found"
-  - Unauthorized → "Please log in"
-- [ ] Add error toast notifications
-- [ ] Log errors to console for debugging
-
-**Result:** Graceful error handling
-
----
-
-### Task 3.6: Add "All Tickets" Page (Optional)
-**Time:** 1 hour  
-**Status:** 📋 Optional
-
-**What to do:**
-- [ ] Create file: `app/dashboard/tickets/page.tsx`
-- [ ] Fetch ALL tickets (assigned + unassigned)
-- [ ] Show filters:
-  - All / Mine / Unassigned
-  - Open / In Progress / Resolved
-- [ ] Use TicketsList component
-- [ ] Add search by sender email
-- [ ] Show assignee name in list
-
-**Result:** Team-wide view of all tickets
+**Result:** Basic functionality works, no crashes
 
 ---
 
 ## Day 4: Testing & Documentation (5 tasks)
 
-### Task 4.1: Test Claim Flow
+### Task 4.1: Test Claim Flow (End-to-End)
 **Time:** 30 minutes  
+**Priority:** ⭐⭐⭐⭐⭐ CRITICAL  
 **Status:** ⬜ Not Started
 
 **What to do:**
 - [ ] Login to dashboard
-- [ ] Go to "Unassigned Tickets"
+- [ ] Navigate to "Unassigned Tickets"
+- [ ] Verify you see unassigned tickets in the list
 - [ ] Click "Claim" on a ticket
-- [ ] Verify it moves to "My Tickets"
-- [ ] Check database: assignedTo field populated
-- [ ] Check Discord: shows claimed status
-- [ ] Test with multiple users if possible
+- [ ] Wait for success toast notification
+- [ ] Navigate to "My Tickets"
+- [ ] Verify the claimed ticket now appears there
+- [ ] Refresh the page - ticket still there
+- [ ] Check "Unassigned Tickets" - ticket gone from there
+- [ ] Check MongoDB (optional) - verify assignedTo field set
+- [ ] Document any issues found
+- [ ] See **Plan → Part 4: Testing → Test 1**
+
+**How to check database (optional):**
+```bash
+# Connect to MongoDB
+# Find the ticket
+db.emailthreads.findOne({ _id: ObjectId("YOUR_TICKET_ID") })
+
+# Should show:
+# assignedTo: "user_xyz123"
+# assignedToEmail: "your@email.com"
+# assignedToName: "Your Name"
+# claimedAt: ISODate("2026-02-16...")
+```
+
+**Success criteria:**
+- ✅ Ticket moves from "Unassigned" to "My Tickets"
+- ✅ Toast notification shows
+- ✅ Refresh doesn't break it
+- ✅ Database updated correctly
+
+**If it fails:**
+- Check browser console for errors
+- Check network tab for API errors
+- Check terminal for backend errors
+- Fix and retry
 
 **Result:** Claim flow works end-to-end
 
 ---
 
-### Task 4.2: Test Auto-Claim on Reply
-**Time:** 30 minutes  
+### Task 4.2: Test Unclaim Flow (End-to-End)
+**Time:** 20 minutes  
+**Priority:** ⭐⭐⭐⭐ HIGH  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Find unassigned ticket
-- [ ] Click "Reply" link
-- [ ] Send reply
-- [ ] Check database: assignedTo auto-set
-- [ ] Check "My Tickets": ticket appears
-- [ ] Verify email was sent
+- [ ] Go to "My Tickets"
+- [ ] Find a claimed ticket (or claim one first if empty)
+- [ ] Click "Unclaim" button
+- [ ] Confirm in the dialog popup
+- [ ] Wait for success toast
+- [ ] Verify ticket removed from "My Tickets"
+- [ ] Navigate to "Unassigned Tickets"
+- [ ] Verify ticket now appears there
+- [ ] Refresh both pages - changes persist
+- [ ] Check database (optional) - assignedTo should be null
+- [ ] See **Plan → Part 4: Testing → Test 2**
 
-**Result:** Auto-claim works
+**Success criteria:**
+- ✅ Confirmation dialog appears
+- ✅ Ticket moves from "My Tickets" to "Unassigned"
+- ✅ Toast notification shows
+- ✅ Changes persist after refresh
+- ✅ Database updated (assignedTo = null)
+
+**Result:** Unclaim flow works end-to-end
 
 ---
 
-### Task 4.3: Test Unclaim Flow
-**Time:** 20 minutes  
+### Task 4.3: Test Auto-Claim on Reply
+**Time:** 30 minutes  
+**Priority:** ⭐⭐⭐⭐⭐ CRITICAL  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Claim a ticket
-- [ ] Go to "My Tickets"
-- [ ] Click "Unclaim"
-- [ ] Confirm action
-- [ ] Verify ticket in "Unassigned"
-- [ ] Check database: assignedTo = null
+- [ ] Go to "Unassigned Tickets"
+- [ ] Find a ticket (or send yourself a test email to create one)
+- [ ] Note the ticket ID or subject
+- [ ] Click "View" to go to reply page
+- [ ] Type a test reply (e.g., "Testing auto-claim")
+- [ ] Click "Send Reply"
+- [ ] Wait for success message
+- [ ] Navigate to "My Tickets"
+- [ ] Verify the ticket NOW appears in "My Tickets"
+- [ ] Check it's no longer in "Unassigned Tickets"
+- [ ] Verify email was actually sent (check inbox if using real email)
+- [ ] See **Plan → Part 4: Testing → Test 3**
 
-**Result:** Unclaim works
+**Success criteria:**
+- ✅ Email sends successfully
+- ✅ Ticket auto-assigned to you
+- ✅ Appears in "My Tickets" immediately
+- ✅ Removed from "Unassigned"
+- ✅ Actual email delivered
+
+**Alternative test (if no tickets):**
+1. Send a test email to your alias email
+2. Check Discord - should get notification
+3. Click "Click here to reply" link
+4. Reply to it
+5. Check "My Tickets" - should auto-appear
+
+**Result:** Auto-claim on reply works correctly
 
 ---
 
 ### Task 4.4: Test Edge Cases
 **Time:** 45 minutes  
+**Priority:** ⭐⭐⭐⭐ HIGH  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Try claiming already-claimed ticket → Should error
-- [ ] Try unclaiming someone else's ticket → Should error
-- [ ] Try claiming with no auth → Should error
-- [ ] Try claiming invalid threadId → Should error
-- [ ] Refresh pages multiple times → Should work
-- [ ] Test with 0 tickets → Empty states work
+- [ ] Test 1: Try claiming already-claimed ticket
+  - User A claims ticket
+  - User B tries to claim same ticket
+  - Should show error: "Already claimed"
+- [ ] Test 2: Try unclaiming someone else's ticket
+  - User A claims ticket
+  - User B tries to unclaim via different account
+  - Should show error: "Can only unclaim your own"
+- [ ] Test 3: Try claiming with no auth
+  - Logout
+  - Try to access API directly
+  - Should show 401 Unauthorized
+- [ ] Test 4: Refresh pages multiple times
+  - Claim/unclaim tickets
+  - Refresh pages
+  - Data should persist correctly
+- [ ] Test 5: Test with 0 tickets
+  - Clear all tickets or use fresh account
+  - Both pages should show empty states
+  - Empty states should be user-friendly
+- [ ] See **Plan → Part 4: Testing → Test 5**
 
-**Result:** Edge cases handled
+**How to test with multiple users:**
+
+**Option 1:** Use incognito window
+- Main browser: User A (signed in)
+- Incognito: User B (sign in with different account)
+
+**Option 2:** Different browsers
+- Chrome: User A
+- Firefox: User B
+
+**Option 3:** Just test API directly
+```bash
+# Try to claim ticket that's already claimed
+curl -X POST http://localhost:3000/api/emails/claim \
+  -H "Content-Type: application/json" \
+  -d '{"threadId": "already_claimed_ticket_id"}'
+  
+# Should return error
+```
+
+**Success criteria:**
+- ✅ Can't double-claim tickets
+- ✅ Can't unclaim others' tickets
+- ✅ Auth is required
+- ✅ Refreshing pages works
+- ✅ Empty states look good
+
+**Result:** All edge cases handled correctly
 
 ---
 
-### Task 4.5: Write Documentation
+### Task 4.5: Write Documentation (Optional)
 **Time:** 1 hour  
+**Priority:** ⭐⭐ LOW  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Create user guide: How to claim tickets
-- [ ] Document keyboard shortcuts (if any)
-- [ ] Update README with new features
-- [ ] Add screenshots to docs
-- [ ] Document API endpoints for developers
+- [ ] Create file: `docs/TICKET_ASSIGNMENT.md` or add to README
+- [ ] Write user guide section
+- [ ] Add section: "What is Ticket Assignment?"
+- [ ] Add section: "How to Claim a Ticket"
+- [ ] Add section: "How to View Your Tickets"
+- [ ] Add section: "How to Unclaim a Ticket"
+- [ ] Add section: "Auto-Claim on Reply"
+- [ ] Add FAQ section
+- [ ] Take screenshots (optional)
+- [ ] Add developer notes (API endpoints, database schema)
+- [ ] See **Plan → Part 5: Documentation**
 
-**Result:** Feature documented
+**User guide template:**
+
+```markdown
+# Ticket Assignment
+
+## What is Ticket Assignment?
+
+Ticket assignment lets you "claim" support tickets so your team knows who's handling what. This prevents:
+- Duplicate work (two people replying to same ticket)
+- Dropped tickets (nobody taking ownership)
+- Confusion about workload
+
+## How to Use
+
+### Viewing Tickets
+
+**My Tickets:** See all tickets assigned to you
+- Click "My Tickets" in the sidebar
+- Shows tickets you've claimed or auto-claimed
+
+**Unassigned Tickets:** See tickets waiting to be claimed
+- Click "Unassigned" in the sidebar
+- Shows tickets nobody has claimed yet
+
+### Claiming Tickets
+
+1. Go to "Unassigned Tickets"
+2. Find a ticket you want to handle
+3. Click "Claim"
+4. Ticket moves to "My Tickets"
+
+### Unclaiming Tickets
+
+1. Go to "My Tickets"
+2. Find the ticket
+3. Click "Unclaim"
+4. Confirm in dialog
+5. Ticket returns to "Unassigned"
+
+### Auto-Claim
+
+When you reply to any ticket, it automatically gets assigned to you. No need to manually claim first!
+
+## FAQ
+
+**Q: What if I claim by mistake?**
+A: Just click "Unclaim" to release it back
+
+**Q: Can I see all team tickets?**
+A: Currently shows only yours and unassigned. "All Tickets" view coming soon!
+
+**Q: What if someone claims my ticket?**
+A: Only the person who claimed can unclaim. Contact them or admin.
+```
+
+**Developer documentation:**
+
+```markdown
+## For Developers
+
+### API Endpoints
+
+POST /api/emails/claim
+POST /api/emails/unclaim  
+GET /api/emails/tickets/mine
+GET /api/emails/tickets/unassigned
+
+### Database Schema
+
+EmailThread {
+  assignedTo?: string        // Clerk userId
+  assignedToEmail?: string   // Display email
+  assignedToName?: string    // Display name
+  claimedAt?: Date          // Timestamp
+}
+```
+
+**Result:** Feature is documented for users and developers
 
 ---
 
 ## Quick Reference
 
-### Files to Create (11 files)
+### Files Modified
 
-**Backend APIs (6 files):**
-1. `app/api/emails/claim/route.ts`
-2. `app/api/emails/unclaim/route.ts`
-3. `app/api/emails/tickets/mine/route.ts`
-4. `app/api/emails/tickets/unassigned/route.ts`
+**Day 3 Completion:**
+1. Navigation component (find and update)
+2. `app/api/webhooks/resend/route.ts` - Discord integration
+3. `app/reply/[threadId]/page.tsx` - Show claim status
 
-**Components (3 files):**
-5. `components/tickets/ClaimButton.tsx`
-6. `components/tickets/UnclaimButton.tsx`
-7. `components/tickets/TicketsList.tsx`
+**Day 4:**
+4. No files - just testing
+5. `docs/TICKET_ASSIGNMENT.md` or README (optional)
 
-**Pages (3 files):**
-8. `app/dashboard/tickets/mine/page.tsx`
-9. `app/dashboard/tickets/unassigned/page.tsx`
-10. `app/dashboard/tickets/page.tsx` (optional)
+### Total New Files: 0
+### Total Edited Files: 3
+
+---
+
+## Testing Checklist
+
+Before marking feature as complete, verify:
+
+**Functionality:**
+- [ ] Can navigate to ticket pages from sidebar
+- [ ] Can claim unassigned tickets
+- [ ] Can unclaim my tickets
+- [ ] Auto-claim works when replying
+- [ ] "My Tickets" shows correct tickets
+- [ ] "Unassigned" shows correct tickets
+
+**Edge Cases:**
+- [ ] Can't claim already-claimed ticket
+- [ ] Can't unclaim someone else's ticket
+- [ ] Auth required for all actions
+- [ ] Pages handle 0 tickets gracefully
+- [ ] Refresh doesn't break anything
+
+**UI/UX:**
+- [ ] Navigation links are visible
+- [ ] Loading states show properly
+- [ ] Error messages are clear
+- [ ] Toast notifications work
+- [ ] Dialogs are user-friendly
 
 **Optional:**
-11. Navigation component updates
-
-### Files to Edit (3 files)
-
-1. `app/api/models/EmailThreadModel.ts` - Add assignment fields
-2. `app/api/emails/reply/route.ts` - Add auto-claim logic
-3. `app/api/webhooks/resend/route.ts` - Show claim status in Discord
+- [ ] Discord shows claim status (if implemented)
+- [ ] Reply page shows claim status (if implemented)
+- [ ] Documentation complete (if implemented)
 
 ---
 
-## Success Criteria
+## Completion Criteria
 
-✅ Feature is done when:
-- [ ] EmailThread model has assignment fields
-- [ ] Can claim tickets via API
-- [ ] Can unclaim tickets via API
-- [ ] Auto-claim works on reply
-- [ ] "My Tickets" page shows assigned tickets
-- [ ] "Unassigned" page shows claimable tickets
-- [ ] Discord shows claim status
-- [ ] All tests pass
-- [ ] No duplicate work happening
-- [ ] Documentation complete
+Feature is **DONE** when:
 
----
+**Minimum (Fast Track):**
+- ✅ Navigation links added
+- ✅ Basic claim/unclaim tests pass
+- ✅ No critical bugs found
 
-## Environment Variables
+**Recommended (Complete):**
+- ✅ Navigation links added
+- ✅ Discord integration done
+- ✅ Reply page updated
+- ✅ All tests pass
+- ✅ Edge cases handled
 
-No new environment variables needed!
-
-Uses existing:
-- `MONGODB_URI` - Database
-- Clerk auth (already configured)
+**Full (Production Ready):**
+- ✅ All of the above
+- ✅ Documentation written
+- ✅ Screenshots added
+- ✅ README updated
 
 ---
 
-## Daily Schedule
+## Estimated Time by Track
 
-### Day 1 (6 hours)
+### Fast Track (Minimum)
 ```
-Morning (3 hours):
-- Task 1.1: Update EmailThread model (30min)
-- Task 1.2: Create claim API (1h)
-- Task 1.3: Create unclaim API (45min)
-- Break (15min)
-- Task 1.4: Update reply API (45min)
+Task 3.1: Navigation links (30 min)
+Task 3.4: Smoke test (15 min)
+Task 4.1: Test claim (30 min)
+Task 4.2: Test unclaim (20 min)
+Task 4.3: Test auto-claim (30 min)
 
-Afternoon (3 hours):
-- Task 1.5: My tickets API (45min)
-- Task 1.6: Unassigned tickets API (45min)
-- Testing backend APIs (1.5h)
+Total: 2 hours 5 minutes
 ```
 
-### Day 2 (6 hours)
+### Recommended Track
 ```
-Morning (3 hours):
-- Task 2.1: ClaimButton component (1h)
-- Task 2.2: UnclaimButton component (45min)
-- Task 2.3: TicketsList component (2h start)
+Task 3.1: Navigation links (30 min)
+Task 3.2: Discord integration (1 hour)
+Task 3.3: Reply page (45 min)
+Task 3.4: Smoke test (15 min)
+Task 4.1: Test claim (30 min)
+Task 4.2: Test unclaim (20 min)
+Task 4.3: Test auto-claim (30 min)
+Task 4.4: Edge cases (45 min)
 
-Afternoon (3 hours):
-- Task 2.3: TicketsList component (finish)
-- Task 2.4: My Tickets page (1.5h)
-- Task 2.5: Unassigned page (1.5h)
-```
-
-### Day 3 (6 hours)
-```
-Morning (3 hours):
-- Task 3.1: Discord integration (1h)
-- Task 3.2: Navigation links (30min)
-- Task 3.3: Reply page updates (45min)
-- Task 3.4: Loading states (45min)
-
-Afternoon (3 hours):
-- Task 3.5: Error handling (1h)
-- Task 3.6: All tickets page (1h, optional)
-- Integration testing (1h)
+Total: 4 hours 35 minutes
 ```
 
-### Day 4 (4 hours)
+### Full Track
 ```
-Morning (2 hours):
-- Task 4.1: Test claim flow (30min)
-- Task 4.2: Test auto-claim (30min)
-- Task 4.3: Test unclaim (20min)
-- Task 4.4: Edge cases (40min)
+All recommended tasks +
+Task 4.5: Documentation (1 hour)
 
-Afternoon (2 hours):
-- Task 4.5: Documentation (1h)
-- Final testing (1h)
-- Deploy to production
+Total: 5 hours 35 minutes
 ```
 
 ---
 
 ## Troubleshooting
 
-### Issue: Claim button doesn't work
-**Check:**
-- Is user logged in? (Clerk auth)
-- Is threadId correct?
-- Check browser console for errors
-- Check API response
+### Issue: Can't find navigation component
+**Solution:** 
+```bash
+# Search for existing nav items
+grep -r "Domains" app --include="*.tsx"
+grep -r "navigation" app --include="*.tsx"
 
-### Issue: Ticket doesn't show in "My Tickets"
-**Check:**
-- Is assignedTo = userId? (check database)
-- Refresh the page
-- Check API is returning correct data
+# Check common locations
+ls app/dashboard/layout.tsx
+ls components/*nav*.tsx
+ls components/*sidebar*.tsx
+```
 
-### Issue: Auto-claim not working
-**Check:**
-- Is reply API being called?
-- Check logs after sending reply
-- Verify database updated
-- Check condition: if (!thread.assignedTo)
+### Issue: Discord integration breaks webhook
+**Solution:**
+- Test thoroughly before deploying
+- Keep backup of original code
+- Make sure syntax is correct
+- Check Discord actually receives messages
+
+### Issue: Tests fail
+**Solution:**
+- Check browser console
+- Check network tab
+- Check terminal logs
+- Fix one issue at a time
+- Restart dev server
 
 ---
 
-**Let's build ticket assignment! Start with Day 1, Task 1.1** 🚀
+**Start with Task 3.1 and work through sequentially!** 🚀

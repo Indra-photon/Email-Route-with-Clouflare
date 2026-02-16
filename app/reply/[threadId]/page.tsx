@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
 import { checkThreadAccess } from "@/lib/authHelpers";
 import ReplyForm from "@/components/ReplyForm";
 
@@ -9,6 +10,7 @@ type PageProps = {
 
 export default async function ReplyPage({ params }: PageProps) {
   const { threadId } = await params;
+  const { userId } = await auth();
 
   const result = await checkThreadAccess(threadId);
 
@@ -40,6 +42,49 @@ export default async function ReplyPage({ params }: PageProps) {
   const thread = result.thread;
   if (!thread) return null;
 
+  // Determine claim status badge
+  let claimStatusBadge = null;
+
+  if (!thread.assignedTo) {
+    // Unclaimed
+    claimStatusBadge = (
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6">
+        <div className="flex items-center gap-2">
+          <span className="text-yellow-800 font-medium">⚠️ Not claimed yet</span>
+        </div>
+        <p className="text-xs text-yellow-700 mt-1">
+          This ticket hasn't been assigned to anyone. Replying will auto-assign it to you.
+        </p>
+      </div>
+    );
+  } else if (thread.assignedTo === userId) {
+    // Claimed by current user
+    claimStatusBadge = (
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+        <div className="flex items-center gap-2">
+          <span className="text-blue-800 font-medium">👤 Assigned to you</span>
+        </div>
+        <p className="text-xs text-blue-700 mt-1">
+          Claimed {thread.claimedAt ? new Date(thread.claimedAt).toLocaleString() : ""}
+        </p>
+      </div>
+    );
+  } else {
+    // Claimed by someone else
+    claimStatusBadge = (
+      <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-3 mb-6">
+        <div className="flex items-center gap-2">
+          <span className="text-neutral-800 font-medium">
+            👤 Assigned to: {thread.assignedToName || thread.assignedToEmail}
+          </span>
+        </div>
+        <p className="text-xs text-neutral-600 mt-1">
+          Claimed {thread.claimedAt ? new Date(thread.claimedAt).toLocaleString() : ""}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-dvh bg-neutral-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
@@ -51,6 +96,8 @@ export default async function ReplyPage({ params }: PageProps) {
             Send a response to this customer email
           </p>
         </div>
+
+        {claimStatusBadge}
 
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <h2 className="text-lg font-semibold text-neutral-900 mb-4">
