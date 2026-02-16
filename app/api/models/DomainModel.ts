@@ -10,6 +10,14 @@ export interface IDnsRecord {
   priority?: number;
 }
 
+export interface IMxRecord {
+  type: string;
+  name: string;
+  value: string;
+  priority: number;
+  ttl: string;
+}
+
 export interface IDomain extends Document {
   workspaceId: Types.ObjectId;
   domain: string;
@@ -18,6 +26,10 @@ export interface IDomain extends Document {
   verifiedForReceiving?: boolean;
   resendDomainId?: string;
   dnsRecords?: IDnsRecord[];
+  receivingEnabled?: boolean;
+  receivingEnabledAt?: Date | null;
+  receivingRequestId?: Types.ObjectId;
+  receivingMxRecords?: IMxRecord[];
   lastCheckedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -52,6 +64,39 @@ const DomainSchema = new Schema<IDomain>(
       type: String,
       default: null,
     },
+    receivingEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    receivingEnabledAt: {
+      type: Date,
+      default: null,
+    },
+    receivingRequestId: {
+      type: Schema.Types.ObjectId,
+      ref: "ReceivingRequest",
+      default: null,
+    },
+    receivingMxRecords: [
+      {
+        type: {
+          type: String,
+          default: "MX",
+        },
+        name: {
+          type: String,
+        },
+        value: {
+          type: String,
+        },
+        priority: {
+          type: Number,
+        },
+        ttl: {
+          type: String,
+        },
+      },
+    ],
     dnsRecords: {
       type: [Schema.Types.Mixed],
       default: [],
