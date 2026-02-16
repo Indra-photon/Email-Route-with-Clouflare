@@ -1,72 +1,61 @@
-# Admin-Managed Receiving Email Verification - Plan
+# Feature 2.2: Ticket Assignment (Claim) - Implementation Plan
 
-**Goal:** Allow admins to manually verify and enable email receiving for customer domains with security checks and notification system.
+**Goal:** Enable team members to claim/assign tickets to prevent duplicate work and dropped tickets
 
 **Time Estimate:** 3-4 days  
-**Priority:** HIGH - Required for secure receiving email setup
+**Priority:** CRITICAL - Required for multi-person support workflow
 
 ---
 
 ## Overview
 
-### Current Flow (Sending - Automated)
+### Current Problem
 
 ```
-User adds domain → API calls Resend → DNS records returned → User sees records → User adds to DNS → Domain verified for SENDING ✅
+Email arrives → Everyone sees it in Discord/Slack
+    ↓
+Nobody knows who's handling it
+    ↓
+Result: Either 3 people reply (duplicate work)
+        OR nobody replies (dropped ticket)
 ```
 
-### New Flow (Receiving - Admin Managed)
+### Solution Flow
 
 ```
-User adds domain → Gets SENDING records immediately ✅
+Email arrives → Discord notification sent
     ↓
-User sees: "Admin will verify for receiving" 
+Team member clicks "Claim" 
     ↓
-User clicks: "Request Receiving Access"
+Database updated: assignedTo = userId
     ↓
-Request stored in database (status: pending)
+Discord shows: "👤 Claimed by @username"
     ↓
-Admin gets email notification
+Everyone knows it's being handled
     ↓
-Admin goes to admin panel
+Team member replies
     ↓
-Admin reviews domain (security check)
+Auto-updates: status = "in_progress"
     ↓
-Admin enables receiving in Resend dashboard
-    ↓
-Admin copies MX records from Resend
-    ↓
-Admin updates database (status: approved, adds MX records)
-    ↓
-User gets email: "Receiving enabled! Here are your MX records"
-    ↓
-User sees MX records in dashboard
-    ↓
-User adds MX records to DNS
-    ↓
-Emails received! 🎉
+Zero duplicate work! Zero dropped tickets! ✅
 ```
 
 ---
 
-## Why Admin Verification?
+## Why Ticket Assignment?
 
-**Security Reasons:**
-- Prevent spam/abuse domains
-- Verify legitimate business use
-- Check domain reputation
-- Control resource usage
-- Manual quality check
+**Problem it solves:**
+- **Duplicate work:** Multiple people replying to same ticket
+- **Dropped tickets:** Nobody taking ownership
+- **No accountability:** Can't track who's doing what
+- **Manager chaos:** Can't see team workload distribution
 
-**Technical Reasons:**
-- MX records are region-specific (can't hardcode)
-- Need to manually enable in Resend per domain
-- Get actual MX records from Resend for each domain
-
-**Business Reasons:**
-- Know your customers
-- Premium feature control
-- Prevent free tier abuse
+**Benefits:**
+- **Zero duplicate responses** (down from 15%)
+- **Zero dropped tickets** (down from 10%)
+- **Clear ownership** of every ticket
+- **Workload visibility** for managers
+- **Auto-assignment** on reply (saves clicks)
 
 ---
 
@@ -74,619 +63,331 @@ Emails received! 🎉
 
 ### Database Changes
 
-**New Collection: ReceivingRequests**
+**Update EmailThread Model:**
 
 ```javascript
-{
-  _id: ObjectId,
-  domainId: ObjectId, // Reference to Domain
-  workspaceId: ObjectId,
-  requestedBy: String, // User email/name
-  status: String, // 'pending' | 'approved' | 'rejected'
-  requestedAt: Date,
-  reviewedAt: Date,
-  reviewedBy: String, // Admin email
-  rejectionReason: String,
-  mxRecords: [
-    {
-      type: String, // 'MX'
-      name: String, // '@'
-      value: String, // 'inbound-smtp.us-east-1.amazonaws.com'
-      priority: Number, // 10
-      ttl: String, // 'Auto'
-    }
-  ],
-  notes: String, // Admin notes
-}
-```
-
-**Updated Domain Model:**
-
-```javascript
-{
+EmailThread {
   // ... existing fields ...
-  receivingEnabled: Boolean, // default: false
-  receivingEnabledAt: Date,
-  receivingRequestId: ObjectId, // Reference to ReceivingRequest
-  receivingMxRecords: [
-    {
-      type: String,
-      name: String, 
-      value: String,
-      priority: Number,
-      ttl: String,
-    }
-  ],
+  
+  // NEW ASSIGNMENT FIELDS:
+  assignedTo: String,           // Clerk userId who claimed it
+  assignedToEmail: String,      // Email for display
+  assignedToName: String,       // Display name
+  claimedAt: Date,             // When it was claimed
+  
+  // ... existing fields ...
 }
 ```
 
+**No new collections needed!** Just updating existing EmailThread model.
+
 ---
 
-## User Flow (Customer Side)
+## User Flow (Team Member Side)
 
-### Step 1: Domain Verification Page
+### Scenario 1: Claim Before Reply
 
-**When domain verified for sending:**
-
-```
-┌─────────────────────────────────────┐
-│ ✅ Domain Verified for Sending      │
-├─────────────────────────────────────┤
-│                                     │
-│ DNS Records (Sending):              │
-│ [Table with DKIM, SPF records]      │
-│                                     │
-│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
-│                                     │
-│ 📬 Receiving Emails (Optional)      │
-│                                     │
-│ To receive emails at this domain,   │
-│ admin verification is required for  │
-│ security.                           │
-│                                     │
-│ Status: ⏳ Not Requested            │
-│                                     │
-│ [Request Receiving Access]          │
-│                                     │
-└─────────────────────────────────────┘
-```
-
-**After clicking "Request Receiving Access":**
+**Dashboard View:**
 
 ```
-┌─────────────────────────────────────┐
-│ Status: ⏳ Pending Admin Approval   │
-│                                     │
-│ Your request has been submitted.    │
-│ You'll receive an email when        │
-│ approved (typically 1-2 hours).     │
-│                                     │
-│ Requested: Feb 15, 2026 at 2:30 PM │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│ 📥 Unassigned Tickets (12)                      │
+├─────────────────────────────────────────────────┤
+│ From                 Subject          Actions   │
+├─────────────────────────────────────────────────┤
+│ mike@startup.com    Payment failed   [Claim]    │
+│ lisa@corp.com       API question     [Claim]    │
+│ john@acme.com       Login issue      [Claim]    │
+└─────────────────────────────────────────────────┘
 ```
 
-**After admin approval:**
+**After clicking "Claim":**
 
 ```
-┌─────────────────────────────────────┐
-│ Status: ✅ Receiving Enabled        │
-│                                     │
-│ MX Records (Receiving):             │
-│ [Table with MX records]             │
-│                                     │
-│ Add these records at your DNS       │
-│ provider to start receiving emails. │
-│                                     │
-│ Enabled: Feb 15, 2026 at 3:45 PM   │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│ 📧 My Tickets (1)                                │
+├─────────────────────────────────────────────────┤
+│ From                 Subject          Actions   │
+├─────────────────────────────────────────────────┤
+│ mike@startup.com    Payment failed   [Reply]    │
+│                                      [Unclaim]  │
+└─────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Admin Flow (Admin Panel)
+### Scenario 2: Auto-Claim on Reply
 
-### Admin Panel Structure
-
-```
-/admin
-  ├── /dashboard (Overview stats)
-  ├── /receiving-requests (Main page)
-  ├── /domains (All domains)
-  └── /settings (Admin settings)
-```
-
-### Main Page: Receiving Requests
+**User clicks "Reply" from Discord:**
 
 ```
-┌────────────────────────────────────────────────────┐
-│ Receiving Requests                   [Refresh]      │
-├────────────────────────────────────────────────────┤
-│                                                     │
-│ Filters: [All] [Pending] [Approved] [Rejected]     │
-│                                                     │
-│ ┌──────────────────────────────────────────────┐  │
-│ │ Domain          Requested By    Status  Date │  │
-│ ├──────────────────────────────────────────────┤  │
-│ │ git-cv.com      john@doe.com    🟡 Pending   │  │
-│ │                                  2h ago       │  │
-│ │                 [Review]  [Reject]            │  │
-│ ├──────────────────────────────────────────────┤  │
-│ │ acme.com        jane@acme.com   ✅ Approved  │  │
-│ │                                  1d ago       │  │
-│ │                 [View Details]                │  │
-│ ├──────────────────────────────────────────────┤  │
-│ │ spam.com        bad@spam.com    ❌ Rejected  │  │
-│ │                                  3d ago       │  │
-│ │                 [View Details]                │  │
-│ └──────────────────────────────────────────────┘  │
-│                                                     │
-└────────────────────────────────────────────────────┘
+1. User clicks "🔗 Click here to reply"
+2. Reply page loads
+3. User types response
+4. User clicks "Send Reply"
+    ↓
+5. Backend checks: Is ticket claimed?
+    ↓
+6. If NO: Auto-assign to current user
+    ↓
+7. Email sent + ticket claimed automatically
 ```
 
-### Review Modal
+**No need to click both "Claim" AND "Reply"** - replying auto-claims!
 
-**When admin clicks "Review" on pending request:**
+---
 
-```
-┌────────────────────────────────────────┐
-│ Review Receiving Request               │
-├────────────────────────────────────────┤
-│                                        │
-│ Domain: git-cv.com                     │
-│ Requested by: john@doe.com             │
-│ Workspace: Acme Corp                   │
-│ Requested: Feb 15, 2026 2:30 PM       │
-│                                        │
-│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
-│                                        │
-│ Domain Info:                           │
-│ • Created: 2 days ago                  │
-│ • Verified for sending: Yes ✅         │
-│ • Aliases created: 2                   │
-│ • Emails sent: 15                      │
-│                                        │
-│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
-│                                        │
-│ Security Checks:                       │
-│ [Check domain reputation]              │
-│ [Check WHOIS info]                     │
-│ [Check existing MX records]            │
-│                                        │
-│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
-│                                        │
-│ Admin Notes (optional):                │
-│ [                                   ]  │
-│                                        │
-│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
-│                                        │
-│ Actions:                               │
-│ [Reject] [Approve & Enable Receiving]  │
-│                                        │
-└────────────────────────────────────────┘
-```
+### Scenario 3: Unclaim/Reassign
 
-**After clicking "Approve & Enable Receiving":**
+**Use cases:**
+- Claimed wrong ticket by mistake
+- Team member goes on vacation
+- Need to redistribute workload
+- Escalate to senior team member
+
+**Action:**
 
 ```
-┌────────────────────────────────────────┐
-│ Enable Receiving for git-cv.com        │
-├────────────────────────────────────────┤
-│                                        │
-│ Step 1: Enable in Resend Dashboard     │
-│                                        │
-│ 1. Open Resend dashboard               │
-│ 2. Go to Domains → git-cv.com          │
-│ 3. Enable Receiving                    │
-│ 4. Copy MX records shown               │
-│                                        │
-│ [Open Resend Dashboard]                │
-│                                        │
-│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
-│                                        │
-│ Step 2: Enter MX Records               │
-│                                        │
-│ MX Record 1:                           │
-│ Priority: [10]                         │
-│ Value: [________________________]      │
-│                                        │
-│ MX Record 2 (optional):                │
-│ Priority: [20]                         │
-│ Value: [________________________]      │
-│                                        │
-│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
-│                                        │
-│ Step 3: Notify User                    │
-│                                        │
-│ ☑ Send email notification to user     │
-│                                        │
-│ [Cancel]  [Save & Approve]             │
-│                                        │
-└────────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│ 📧 Ticket Details                                │
+├─────────────────────────────────────────────────┤
+│ From: customer@email.com                         │
+│ Subject: Billing issue                          │
+│ Claimed by: You                                 │
+│ Claimed at: 2 hours ago                         │
+│                                                 │
+│ [Reply]  [Unclaim]                              │
+└─────────────────────────────────────────────────┘
 ```
+
+**After unclaim:**
+- assignedTo = null
+- Ticket back in "Unassigned" pool
+- Available for anyone to claim
+
+---
+
+## Discord/Slack Integration
+
+### Before Claiming
+
+```
+┌────────────────────────────────────────────┐
+│ 📧 New email to support@git-cv.com         │
+│ From: customer@email.com                   │
+│ Subject: Need help with billing            │
+│                                            │
+│ Hi, I need help with my invoice...         │
+│                                            │
+│ 🔗 Click here to reply                     │
+└────────────────────────────────────────────┘
+```
+
+### After Claiming
+
+```
+┌────────────────────────────────────────────┐
+│ 📧 New email to support@git-cv.com         │
+│ 👤 Claimed by: indranil@email.com          │ ← NEW
+│ From: customer@email.com                   │
+│ Subject: Need help with billing            │
+│                                            │
+│ Hi, I need help with my invoice...         │
+│                                            │
+│ 🔗 Click here to reply                     │
+└────────────────────────────────────────────┘
+```
+
+**Note:** Discord doesn't support interactive buttons like Slack, so we show claim status in the message text. The actual claiming happens in the web dashboard.
+
+---
+
+## Dashboard Pages
+
+### Page 1: My Tickets
+
+**URL:** `/dashboard/tickets/mine`
+
+**Shows:**
+- All tickets assigned to current user
+- Filter by status (Open/In Progress/Waiting/Resolved)
+- Quick reply button
+- Unclaim option
+
+**Purpose:** See MY workload at a glance
+
+---
+
+### Page 2: All Tickets
+
+**URL:** `/dashboard/tickets`
+
+**Shows:**
+- All tickets (assigned + unassigned)
+- Filter by assignee
+- Filter by status
+- Claim button for unassigned tickets
+
+**Purpose:** Team-wide view of all work
+
+---
+
+### Page 3: Unassigned Tickets
+
+**URL:** `/dashboard/tickets/unassigned`
+
+**Shows:**
+- Only tickets with NO assignee
+- Big "Claim" button
+- Sorted by received date (oldest first)
+
+**Purpose:** Pick up new work quickly
 
 ---
 
 ## API Endpoints
 
-### Customer-Facing APIs
+### 1. Claim Ticket
 
-**1. Request Receiving Access**
+**Endpoint:** `POST /api/emails/claim`
 
-```
-POST /api/receiving-requests
-
-Body:
+**Request:**
+```json
 {
-  domainId: string
-}
-
-Response:
-{
-  success: true,
-  request: {
-    id: string,
-    status: "pending",
-    requestedAt: Date
-  }
+  "threadId": "507f1f77bcf86cd799439011"
 }
 ```
 
-**2. Get Receiving Request Status**
-
-```
-GET /api/receiving-requests/:domainId
-
-Response:
+**Response:**
+```json
 {
-  status: "pending" | "approved" | "rejected",
-  requestedAt: Date,
-  reviewedAt?: Date,
-  mxRecords?: [...],
-  rejectionReason?: string
+  "success": true,
+  "assignedTo": "user_2abc123",
+  "assignedToEmail": "john@company.com",
+  "assignedToName": "John Smith",
+  "claimedAt": "2026-02-16T12:00:00.000Z"
 }
 ```
+
+**What it does:**
+1. Get current user from Clerk auth
+2. Update EmailThread with assignedTo fields
+3. Return success
 
 ---
 
-### Admin-Only APIs
+### 2. Unclaim Ticket
 
-**1. List All Receiving Requests**
+**Endpoint:** `POST /api/emails/unclaim`
 
-```
-GET /api/admin/receiving-requests?status=pending
-
-Headers:
-Authorization: Bearer [admin-token]
-
-Response:
+**Request:**
+```json
 {
-  requests: [
+  "threadId": "507f1f77bcf86cd799439011"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Ticket unclaimed successfully"
+}
+```
+
+**What it does:**
+1. Verify current user owns this ticket
+2. Set assignedTo = null
+3. Return success
+
+---
+
+### 3. Get My Tickets
+
+**Endpoint:** `GET /api/emails/tickets/mine`
+
+**Response:**
+```json
+{
+  "tickets": [
     {
-      id: string,
-      domain: string,
-      requestedBy: string,
-      workspace: string,
-      status: string,
-      requestedAt: Date,
-      domainInfo: {
-        aliasCount: number,
-        emailsSent: number,
-        verifiedForSending: boolean
-      }
+      "_id": "507f1f77bcf86cd799439011",
+      "from": "customer@email.com",
+      "subject": "Billing issue",
+      "status": "open",
+      "assignedToEmail": "john@company.com",
+      "claimedAt": "2026-02-16T12:00:00.000Z",
+      "receivedAt": "2026-02-16T11:00:00.000Z"
     }
-  ],
-  total: number
+  ]
 }
 ```
 
-**2. Approve Receiving Request**
+---
 
-```
-POST /api/admin/receiving-requests/:id/approve
+### 4. Get Unassigned Tickets
 
-Headers:
-Authorization: Bearer [admin-token]
+**Endpoint:** `GET /api/emails/tickets/unassigned`
 
-Body:
+**Response:**
+```json
 {
-  mxRecords: [
+  "tickets": [
     {
-      type: "MX",
-      name: "@",
-      value: "inbound-smtp.us-east-1.amazonaws.com",
-      priority: 10,
-      ttl: "Auto"
+      "_id": "507f1f77bcf86cd799439012",
+      "from": "customer2@email.com",
+      "subject": "Login problem",
+      "status": "open",
+      "assignedTo": null,
+      "receivedAt": "2026-02-16T10:00:00.000Z"
     }
-  ],
-  notes: string
-}
-
-Response:
-{
-  success: true,
-  message: "Request approved and user notified"
-}
-```
-
-**3. Reject Receiving Request**
-
-```
-POST /api/admin/receiving-requests/:id/reject
-
-Headers:
-Authorization: Bearer [admin-token]
-
-Body:
-{
-  reason: string
-}
-
-Response:
-{
-  success: true,
-  message: "Request rejected and user notified"
+  ]
 }
 ```
 
 ---
 
-## Email Notifications
+## Implementation Phases
 
-### User Notification: Request Received
+### Phase 1: Database & Backend (Day 1)
 
-**Sent:** Immediately after user submits request
-
-**Subject:** Your Receiving Request for [domain] is Being Reviewed
-
-**Body:**
-```
-Hi [User Name],
-
-We've received your request to enable email receiving for:
-• Domain: git-cv.com
-
-Our team will review your request and enable receiving within 1-2 hours.
-
-You'll receive another email with MX records once approved.
-
-Request ID: #12345
-Requested: Feb 15, 2026 at 2:30 PM
-
-Questions? Reply to this email.
-
-Best,
-The Team
-```
+- ✅ Update EmailThread model schema
+- ✅ Create claim API endpoint
+- ✅ Create unclaim API endpoint
+- ✅ Update reply API for auto-claim
+- ✅ Create "my tickets" API
+- ✅ Create "unassigned tickets" API
 
 ---
 
-### User Notification: Request Approved
+### Phase 2: Dashboard UI (Day 2-3)
 
-**Sent:** When admin approves request
-
-**Subject:** ✅ Receiving Enabled for [domain]
-
-**Body:**
-```
-Hi [User Name],
-
-Great news! Email receiving has been enabled for:
-• Domain: git-cv.com
-
-Here are your MX records to add at your DNS provider:
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-MX Record:
-Type: MX
-Name: @ (or leave blank)
-Priority: 10
-Value: inbound-smtp.us-east-1.amazonaws.com
-TTL: 1 Hour (or Auto)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Next Steps:
-1. Login to your DNS provider (GoDaddy, Cloudflare, etc.)
-2. Add the MX record above
-3. Wait 10-30 minutes for DNS propagation
-4. Test by sending an email to support@git-cv.com
-
-View full details: [Link to dashboard]
-
-Questions? Reply to this email.
-
-Best,
-The Team
-```
+- ✅ Create "My Tickets" page
+- ✅ Create "All Tickets" page
+- ✅ Create "Unassigned Tickets" page
+- ✅ Build ClaimButton component
+- ✅ Build UnclaimButton component
+- ✅ Build TicketsList component
+- ✅ Add filters (status, assignee)
 
 ---
 
-### User Notification: Request Rejected
+### Phase 3: Discord Integration (Day 3)
 
-**Sent:** When admin rejects request
-
-**Subject:** Receiving Request for [domain] - Update Needed
-
-**Body:**
-```
-Hi [User Name],
-
-We've reviewed your request for email receiving on:
-• Domain: git-cv.com
-
-Unfortunately, we need more information before enabling:
-
-Reason: [Admin's rejection reason]
-
-Please reply to this email to discuss next steps.
-
-Request ID: #12345
-Reviewed: Feb 15, 2026 at 3:45 PM
-
-Best,
-The Team
-```
+- ✅ Update webhook to show claimed status
+- ✅ Format message with assignee name
+- ✅ Test Discord notifications
 
 ---
 
-### Admin Notification: New Request
+### Phase 4: Testing & Polish (Day 4)
 
-**Sent:** When user submits receiving request
-
-**To:** admin@yourapp.com
-
-**Subject:** 🔔 New Receiving Request: git-cv.com
-
-**Body:**
-```
-New receiving request received:
-
-Domain: git-cv.com
-Requested by: john@doe.com
-Workspace: Acme Corp
-Requested: Feb 15, 2026 at 2:30 PM
-
-Review now: [Link to admin panel]
-```
-
----
-
-## Admin Panel Pages
-
-### Page 1: Admin Dashboard
-
-**File:** `app/admin/dashboard/page.tsx`
-
-**Shows:**
-- Total pending requests (big number)
-- Approved this week
-- Rejected this week
-- Recent activity list
-- Quick actions
-
----
-
-### Page 2: Receiving Requests List
-
-**File:** `app/admin/receiving-requests/page.tsx`
-
-**Features:**
-- Filterable table (All/Pending/Approved/Rejected)
-- Search by domain
-- Sort by date, status
-- Bulk actions (future)
-- Pagination
-
----
-
-### Page 3: Review Request Detail
-
-**File:** `app/admin/receiving-requests/[id]/page.tsx`
-
-**Shows:**
-- Request details
-- Domain information
-- User/workspace info
-- Security check tools
-- Approve/Reject form
-- Activity timeline
-
----
-
-### Page 4: All Domains
-
-**File:** `app/admin/domains/page.tsx`
-
-**Shows:**
-- All domains in system
-- Sending status
-- Receiving status
-- Actions (view, edit, disable)
-
----
-
-## Security & Authentication
-
-### Admin Authentication
-
-**Options:**
-
-**Option 1: Simple Password (MVP)**
-```typescript
-// Hardcoded admin credentials
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-```
-
-**Option 2: Clerk Role-Based**
-```typescript
-// Check if user has admin role
-const { userId } = await auth();
-const user = await clerkClient.users.getUser(userId);
-if (user.publicMetadata.role !== 'admin') {
-  throw new Error('Unauthorized');
-}
-```
-
-**Option 3: Separate Admin Auth**
-```typescript
-// Separate login for admin panel
-// Admin session stored separately
-```
-
-**Recommendation:** Option 2 (Clerk role-based) for scalability
-
----
-
-### API Route Protection
-
-```typescript
-// Middleware for admin routes
-export async function adminOnly(request: Request) {
-  const { userId } = await auth();
-  
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  
-  const user = await clerkClient.users.getUser(userId);
-  
-  if (user.publicMetadata.role !== 'admin') {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-  
-  return null; // Authorized
-}
-```
-
----
-
-## Email Service Integration
-
-### Using Resend for Notifications
-
-```typescript
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-// Send user notification
-await resend.emails.send({
-  from: 'notifications@yourapp.com',
-  to: userEmail,
-  subject: 'Receiving Enabled for git-cv.com',
-  html: emailTemplate,
-});
-
-// Send admin notification
-await resend.emails.send({
-  from: 'system@yourapp.com',
-  to: 'admin@yourapp.com',
-  subject: '🔔 New Receiving Request',
-  html: adminNotificationTemplate,
-});
-```
+- ✅ Test claim/unclaim flow
+- ✅ Test auto-claim on reply
+- ✅ Test dashboard filters
+- ✅ Test with multiple users
+- ✅ Error handling
+- ✅ Loading states
 
 ---
 
@@ -694,296 +395,230 @@ await resend.emails.send({
 
 ```
 app/
-├── admin/
-│   ├── layout.tsx (Admin layout with auth)
-│   ├── dashboard/
-│   │   └── page.tsx (Overview)
-│   ├── receiving-requests/
-│   │   ├── page.tsx (List)
-│   │   └── [id]/
-│   │       └── page.tsx (Review detail)
-│   └── domains/
-│       └── page.tsx (All domains)
-│
 ├── api/
-│   ├── receiving-requests/
-│   │   ├── route.ts (POST - user creates request)
-│   │   └── [id]/
-│   │       └── route.ts (GET - user checks status)
-│   │
-│   └── admin/
-│       ├── receiving-requests/
-│       │   ├── route.ts (GET - list all)
-│       │   └── [id]/
-│       │       ├── approve/
-│       │       │   └── route.ts (POST)
-│       │       └── reject/
-│       │           └── route.ts (POST)
-│       └── middleware.ts (Admin auth check)
+│   └── emails/
+│       ├── claim/
+│       │   └── route.ts (POST - claim ticket)
+│       ├── unclaim/
+│       │   └── route.ts (POST - unclaim ticket)
+│       ├── tickets/
+│       │   ├── mine/
+│       │   │   └── route.ts (GET - my tickets)
+│       │   └── unassigned/
+│       │       └── route.ts (GET - unassigned tickets)
+│       └── reply/
+│           └── route.ts (UPDATE - add auto-claim logic)
 │
-├── models/
-│   └── ReceivingRequestModel.ts (New model)
+├── dashboard/
+│   └── tickets/
+│       ├── page.tsx (All tickets)
+│       ├── mine/
+│       │   └── page.tsx (My tickets)
+│       └── unassigned/
+│           └── page.tsx (Unassigned tickets)
 │
-├── components/
-│   ├── admin/
-│   │   ├── ReceivingRequestsTable.tsx
-│   │   ├── ReviewRequestModal.tsx
-│   │   ├── ApproveMXRecordsForm.tsx
-│   │   └── AdminNav.tsx
-│   │
-│   └── ReceivingRequestButton.tsx (User-facing)
-│
-└── lib/
-    ├── email-templates/
-    │   ├── receiving-request-received.tsx
-    │   ├── receiving-approved.tsx
-    │   └── receiving-rejected.tsx
-    │
-    └── admin-auth.ts (Admin authentication helper)
+└── models/
+    └── EmailThreadModel.ts (UPDATE - add assignment fields)
+
+components/
+├── tickets/
+│   ├── TicketsList.tsx (Reusable table)
+│   ├── ClaimButton.tsx (Claim action)
+│   ├── UnclaimButton.tsx (Unclaim action)
+│   └── TicketFilters.tsx (Status/assignee filters)
+└── ReplyForm.tsx (UPDATE - show claimed status)
 ```
 
 ---
 
-## Implementation Phases
+## Security Considerations
 
-### Phase 1: Database & Basic Flow (Day 1)
+**Authorization Rules:**
 
-- ✅ Create ReceivingRequest model
-- ✅ Update Domain model
-- ✅ User API: Request receiving
-- ✅ User API: Check status
-- ✅ Show request button in UI
-- ✅ Show status in UI
+1. **Claim:** Any authenticated user can claim any unassigned ticket
+2. **Unclaim:** Only the assigned user OR admin can unclaim
+3. **View My Tickets:** Users only see their own tickets
+4. **View All Tickets:** All users can see all tickets (team visibility)
 
----
+**Implementation:**
 
-### Phase 2: Admin Panel (Day 2)
+```javascript
+// In unclaim API
+const thread = await EmailThread.findById(threadId);
+const { userId } = await auth();
 
-- ✅ Admin authentication setup
-- ✅ Admin layout
-- ✅ Receiving requests list page
-- ✅ Review request detail page
-- ✅ Approve/reject forms
-- ✅ Admin APIs
-
----
-
-### Phase 3: Email Notifications (Day 3)
-
-- ✅ Email templates
-- ✅ Send on request submitted
-- ✅ Send on approved
-- ✅ Send on rejected
-- ✅ Admin notifications
-
----
-
-### Phase 4: Polish & Testing (Day 4)
-
-- ✅ Error handling
-- ✅ Loading states
-- ✅ Validation
-- ✅ End-to-end testing
-- ✅ Documentation
-
----
-
-## Testing Plan
-
-### Test 1: User Requests Receiving
-
-**Steps:**
-1. Login as customer
-2. Go to verified domain
-3. Click "Request Receiving Access"
-4. Check database: request created with status "pending"
-5. Check email: confirmation email received
-
-**Expected:**
-- ✅ Request stored in database
-- ✅ User sees "Pending" status
-- ✅ Email received
-
----
-
-### Test 2: Admin Reviews Request
-
-**Steps:**
-1. Login as admin
-2. Go to /admin/receiving-requests
-3. See pending request
-4. Click "Review"
-5. Check domain info displayed
-6. Enter MX records
-7. Click "Approve"
-
-**Expected:**
-- ✅ Admin sees all request details
-- ✅ Can enter MX records
-- ✅ Database updated with status "approved"
-- ✅ Domain.receivingEnabled = true
-- ✅ MX records stored
-
----
-
-### Test 3: User Notified of Approval
-
-**Steps:**
-1. After admin approves
-2. Check user email
-3. Check user dashboard
-
-**Expected:**
-- ✅ User receives approval email with MX records
-- ✅ Dashboard shows "Receiving Enabled"
-- ✅ MX records visible in UI
-- ✅ Instructions clear
-
----
-
-### Test 4: Admin Rejects Request
-
-**Steps:**
-1. Admin reviews request
-2. Clicks "Reject"
-3. Enters reason
-4. Submits
-
-**Expected:**
-- ✅ Request status = "rejected"
-- ✅ User receives rejection email
-- ✅ Dashboard shows rejected status
-- ✅ Reason displayed
-
----
-
-### Test 5: End-to-End Flow
-
-**Steps:**
-1. User adds domain
-2. Domain verified for sending
-3. User requests receiving
-4. Admin approves with MX records
-5. User adds MX records to DNS
-6. Test email sent to domain
-7. Webhook receives email
-8. Discord notification appears
-
-**Expected:**
-- ✅ Complete flow works
-- ✅ Emails received successfully
-- ✅ No manual Resend dashboard access needed
-
----
-
-## Environment Variables
-
-```env
-# Admin Authentication
-ADMIN_EMAIL=admin@yourapp.com
-ADMIN_PASSWORD=secure_password_here
-
-# Or for Clerk-based
-CLERK_ADMIN_USER_IDS=user_abc123,user_xyz789
-
-# Email Notifications
-RESEND_API_KEY=re_abc123...
-NOTIFICATION_FROM_EMAIL=notifications@yourapp.com
-ADMIN_NOTIFICATION_EMAIL=admin@yourapp.com
-
-# App URL
-NEXT_PUBLIC_SITE_URL=https://your-app.vercel.app
+// Check if current user owns this ticket
+if (thread.assignedTo !== userId) {
+  return NextResponse.json(
+    { error: "You can only unclaim your own tickets" },
+    { status: 403 }
+  );
+}
 ```
-
----
-
-## Future Enhancements
-
-### Phase 5 (Future)
-
-**Auto-Approve for Trusted Domains:**
-- Whitelist certain domains
-- Auto-approve if criteria met
-- Still send MX records via email
-
-**Bulk Actions:**
-- Approve multiple requests at once
-- Export requests to CSV
-- Batch notifications
-
-**Analytics:**
-- Request approval rate
-- Average review time
-- Most common rejection reasons
-- Domain activity stats
-
-**Webhook Integration:**
-- Notify external systems
-- Slack integration for new requests
-- Auto-populate MX records from Resend API (if possible)
 
 ---
 
 ## Success Metrics
 
-**Track:**
-- Average time from request to approval
-- Approval rate (% approved vs rejected)
-- User satisfaction (did they successfully add MX records?)
-- Support tickets related to receiving setup
+**Adoption:**
+- 80% of tickets claimed within 5 minutes
+- 100% of replied tickets have an assignee
+- 90% of team uses claim feature
 
-**Goals:**
-- Average approval time: < 2 hours
-- Approval rate: > 80%
-- User success rate: > 90%
-- Support tickets: < 5% of requests
+**Quality:**
+- Zero duplicate responses (currently 15%)
+- Zero dropped tickets (currently 10%)
+- 100% of tickets have clear owner
 
----
-
-## FAQs for Users
-
-**Q: How long does approval take?**
-A: Typically 1-2 hours during business hours.
-
-**Q: Why do you need to approve manually?**
-A: For security - we verify each domain to prevent spam and abuse.
-
-**Q: What if my request is rejected?**
-A: We'll email you the reason. Reply to discuss and resubmit.
-
-**Q: Can I speed up the process?**
-A: Contact support if urgent. We'll prioritize.
-
-**Q: Do I need to verify for both sending and receiving?**
-A: Sending is automatic. Receiving requires admin approval for security.
+**Efficiency:**
+- Managers spend 50% less time asking "who's handling what?"
+- Team handles 30% more tickets (no duplicate work)
 
 ---
 
-## Summary
+## Testing Plan
 
-**What Gets Built:**
+### Test 1: Claim Flow
 
-**For Users:**
-- ✅ Request receiving button
-- ✅ Status tracking
-- ✅ Email notifications
-- ✅ Clear MX record instructions
+**Steps:**
+1. Login as user
+2. Go to /dashboard/tickets/unassigned
+3. See unassigned ticket
+4. Click "Claim"
+5. Check it moves to "My Tickets"
+6. Check assignedTo field in database
 
-**For Admins:**
-- ✅ Admin panel for reviews
-- ✅ Domain information display
-- ✅ MX record input form
-- ✅ Approve/reject workflow
-- ✅ Email notifications
-
-**Result:** 
-- Secure receiving setup
-- Manual quality control
-- Professional user experience
-- Scalable to 100+ customers
-
-**Time:** 3-4 days for complete implementation
+**Expected:**
+- ✅ Ticket assigned to current user
+- ✅ Shows in "My Tickets"
+- ✅ Removed from "Unassigned"
+- ✅ Discord message updated
 
 ---
 
-**END OF PLAN**
+### Test 2: Auto-Claim on Reply
+
+**Steps:**
+1. Click reply link from Discord
+2. Type response
+3. Click "Send Reply"
+4. Check database
+
+**Expected:**
+- ✅ Email sent
+- ✅ assignedTo = current user (auto-set)
+- ✅ claimedAt = now
+- ✅ Shows in "My Tickets"
+
+---
+
+### Test 3: Unclaim Flow
+
+**Steps:**
+1. Go to "My Tickets"
+2. Click "Unclaim" on a ticket
+3. Confirm action
+4. Check ticket moved to "Unassigned"
+
+**Expected:**
+- ✅ assignedTo = null
+- ✅ Ticket in "Unassigned" list
+- ✅ Available for others to claim
+
+---
+
+### Test 4: Multi-User
+
+**Steps:**
+1. User A claims ticket
+2. User B tries to claim same ticket
+3. Check only User A sees it in "My Tickets"
+
+**Expected:**
+- ✅ Only one user can claim
+- ✅ Other users see it as "Claimed by User A"
+- ✅ Cannot double-claim
+
+---
+
+## Edge Cases
+
+**Scenario 1:** User claims ticket, then logs out before replying
+- **Solution:** Unclaim button available, or auto-unclaim after 24 hours
+
+**Scenario 2:** Two users click "Claim" simultaneously
+- **Solution:** Database handles race condition, first write wins
+
+**Scenario 3:** User goes on vacation with 10 claimed tickets
+- **Solution:** Admin can bulk unclaim, or add "Reassign" feature
+
+**Scenario 4:** Reply API fails after claiming
+- **Solution:** Ticket stays claimed, user can retry reply
+
+---
+
+## Future Enhancements
+
+**Phase 3 (Later):**
+- Bulk claim/unclaim
+- Auto-reassign inactive tickets
+- Assign to specific team member (not just self)
+- Team member permissions
+- Claim limits (max 10 tickets per person)
+- Slack interactive buttons (claim from Slack)
+
+---
+
+## Questions & Decisions
+
+**Q1:** Should we allow claiming tickets that are already claimed?
+**A:** No - prevents confusion. Must unclaim first.
+
+**Q2:** Auto-unclaim after X hours of inactivity?
+**A:** Not in MVP - add later if needed.
+
+**Q3:** Claim limit per user?
+**A:** Not in MVP - can add later if abuse happens.
+
+**Q4:** Show assignee name or email in Discord?
+**A:** Email - more recognizable for small teams.
+
+---
+
+## Environment Variables
+
+No new environment variables needed! Uses existing:
+- `MONGODB_URI` - Database connection
+- Clerk auth (already configured)
+
+---
+
+## Deployment Notes
+
+**Database Migration:**
+- EmailThread model updated (backward compatible)
+- Existing threads will have assignedTo = null
+- No data migration needed
+
+**Backward Compatibility:**
+- ✅ Old emails without assignedTo still work
+- ✅ Reply API works with/without assignment
+- ✅ No breaking changes
+
+---
+
+## Documentation Updates
+
+**User Documentation:**
+- How to claim tickets
+- How to see your workload
+- How to unclaim/reassign
+
+**Admin Documentation:**
+- Understanding team dashboard
+- Workload distribution
+- Handling edge cases
+
+---
+
+**Ready to build! See task.md for step-by-step implementation.**

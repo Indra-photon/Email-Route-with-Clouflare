@@ -69,12 +69,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if domain is verified for sending
-    if (!domain.verifiedForSending) {
-      return NextResponse.json(
-        { error: "Domain must be verified for sending first" },
-        { status: 400 }
-      );
-    }
+    // if (!domain.verifiedForSending) {
+    //   return NextResponse.json(
+    //     { error: "Domain must be verified for sending first" },
+    //     { status: 400 }
+    //   );
+    // }
 
     // Check if receiving is already enabled
     if (domain.receivingEnabled) {
