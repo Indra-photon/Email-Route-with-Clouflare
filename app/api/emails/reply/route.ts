@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import dbConnect from "@/lib/dbConnect";
 import { EmailThread } from "@/app/api/models/EmailThreadModel";
 import { Workspace } from "@/app/api/models/WorkspaceModel";
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const thread = await EmailThread.findById(threadId).lean();
+    const thread = await EmailThread.findById(threadId);
 
     if (!thread) {
       return NextResponse.json(
@@ -73,6 +73,23 @@ export async function POST(request: Request) {
         { error: "Can only reply to inbound emails" },
         { status: 400 }
       );
+    }
+
+    // Auto-claim ticket if not already claimed
+    if (!thread.assignedTo) {
+      const clerk = await clerkClient();
+      const user = await clerk.users.getUser(userId);
+      const userEmail = user.emailAddresses[0]?.emailAddress || "Unknown";
+      const userName = user.firstName
+        ? `${user.firstName} ${user.lastName || ""}`.trim()
+        : userEmail;
+
+      thread.assignedTo = userId;
+      thread.assignedToEmail = userEmail;
+      thread.assignedToName = userName;
+      thread.claimedAt = new Date();
+
+      console.log(`✅ Auto-claimed ticket ${threadId} by ${userName}`);
     }
 
     const replySubject = thread.subject.startsWith("Re:")
@@ -144,10 +161,10 @@ export async function POST(request: Request) {
       repliedAt: new Date(),
     });
 
-    await EmailThread.findByIdAndUpdate(threadId, {
-      status: "replied",
-      repliedAt: new Date(),
-    });
+    // Save thread updates (including auto-claim)
+    thread.status = "replied";
+    thread.repliedAt = new Date();
+    await thread.save();
 
     return NextResponse.json({
       success: true,

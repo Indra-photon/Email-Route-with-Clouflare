@@ -22,6 +22,12 @@ export interface IEmailThread extends Document {
   discordMessageId: string | null;
   discordChannelId: string | null;
 
+  // Ticket assignment fields
+  assignedTo?: string;
+  assignedToEmail?: string;
+  assignedToName?: string;
+  claimedAt?: Date;
+
   receivedAt: Date;
   repliedAt: Date | null;
   createdAt: Date;
@@ -102,6 +108,25 @@ const EmailThreadSchema = new Schema<IEmailThread>(
     },
     discordChannelId: {
       type: String,
+      default: null,
+    },
+
+    // Ticket assignment fields
+    assignedTo: {
+      type: String,
+      default: null,
+      index: true,
+    },
+    assignedToEmail: {
+      type: String,
+      default: null,
+    },
+    assignedToName: {
+      type: String,
+      default: null,
+    },
+    claimedAt: {
+      type: Date,
       default: null,
     },
 

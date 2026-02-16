@@ -1,723 +1,587 @@
-# Admin-Managed Receiving Verification - Task List
+# Feature 2.2: Ticket Assignment - Task List
 
-**Goal:** Build admin panel for manual receiving verification  
+**Goal:** Build ticket claiming/assignment system to prevent duplicate work and dropped tickets  
 **Time:** 3-4 days  
-**Plan:** See `ADMIN_RECEIVING_VERIFICATION_PLAN.md` for details
+**Plan:** See `ticket-assignment-plan.md` for architecture details
 
 ---
 
-## Day 1: Database & User Flow (8 tasks)
+## Day 1: Database & Backend APIs (6 tasks)
 
-### Task 1.1: Create ReceivingRequest Model
+### Task 1.1: Update EmailThread Model
 **Time:** 30 minutes  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Create file: `app/api/models/ReceivingRequestModel.ts`
-- [ ] Define interface `IReceivingRequest`
-- [ ] Create Mongoose schema with fields:
-  - `domainId` (ObjectId, required)
-  - `workspaceId` (ObjectId, required)
-  - `requestedBy` (String - user email)
-  - `status` (enum: pending/approved/rejected)
-  - `requestedAt` (Date)
-  - `reviewedAt` (Date, nullable)
-  - `reviewedBy` (String - admin email)
-  - `rejectionReason` (String, nullable)
-  - `mxRecords` (Array of objects)
-  - `notes` (String)
-- [ ] Export model
-- [ ] See **Plan → Database Changes** for schema
-
-**Result:** New model for tracking requests
-
----
-
-### Task 1.2: Update Domain Model
-**Time:** 15 minutes  
-**Status:** ✅ Done (partially)
-
-**What to do:**
-- [ ] Open: `app/api/models/DomainModel.ts`
-- [ ] Add fields to interface:
-  - `receivingRequestId?: ObjectId`
-  - `receivingMxRecords?: Array<MxRecord>`
-- [ ] Add fields to schema:
-  - `receivingRequestId` (ObjectId, ref: 'ReceivingRequest')
-  - `receivingMxRecords` (Array)
+- [ ] Open file: `app/api/models/EmailThreadModel.ts`
+- [ ] Add to interface `IEmailThread`:
+  - `assignedTo?: string` (Clerk userId)
+  - `assignedToEmail?: string` (display email)
+  - `assignedToName?: string` (display name)
+  - `claimedAt?: Date` (when claimed)
+- [ ] Add fields to Mongoose schema with optional: true
 - [ ] Save file
 - [ ] See **Plan → Database Changes**
 
-**Result:** Domain model tracks receiving status
+**Result:** EmailThread model supports assignment
+
+**Example:**
+```typescript
+export interface IEmailThread extends Document {
+  // ... existing fields ...
+  assignedTo?: string;
+  assignedToEmail?: string;
+  assignedToName?: string;
+  claimedAt?: Date;
+  // ... existing fields ...
+}
+```
 
 ---
 
-### Task 1.3: Create User Request API
+### Task 1.2: Create Claim API Endpoint
 **Time:** 1 hour  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Create: `app/api/receiving-requests/route.ts`
-- [ ] Implement POST handler
-- [ ] Check user authentication
-- [ ] Validate domainId
-- [ ] Check domain exists and verified for sending
-- [ ] Check if request already exists (prevent duplicates)
-- [ ] Create ReceivingRequest document
-- [ ] Update domain.receivingRequestId
+- [ ] Create file: `app/api/emails/claim/route.ts`
+- [ ] Import dependencies: auth (Clerk), dbConnect, EmailThread
+- [ ] Create POST handler
+- [ ] Get userId from Clerk auth
+- [ ] Get user email and name from Clerk
+- [ ] Get threadId from request body
+- [ ] Validate threadId exists
+- [ ] Check if ticket is already claimed
+- [ ] Update EmailThread with assignment fields
 - [ ] Return success response
-- [ ] See **Plan → API Endpoints → Request Receiving Access**
-
-**Result:** User can request receiving
-
----
-
-### Task 1.4: Create Get Status API
-**Time:** 30 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create: `app/api/receiving-requests/[domainId]/route.ts`
-- [ ] Implement GET handler
-- [ ] Check user authentication
-- [ ] Find request by domainId
-- [ ] Return status, dates, MX records if approved
-- [ ] See **Plan → API Endpoints → Get Status**
-
-**Result:** User can check request status
-
----
-
-### Task 1.5: Create Request Button Component
-**Time:** 45 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create: `components/ReceivingRequestButton.tsx`
-- [ ] Add button with loading state
-- [ ] Call `/api/receiving-requests` on click
-- [ ] Handle success/error states
-- [ ] Show confirmation message
-- [ ] Disable if already requested
-- [ ] See **Plan → User Flow → Step 1**
-
-**Result:** Reusable request button
-
----
-
-### Task 1.6: Update Verification Page
-**Time:** 1 hour  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Open: `app/dashboard/domains/[id]/verify/page.tsx`
-- [ ] Fetch receiving request status on load
-- [ ] Show different UI based on status:
-  - Not requested: Show request button
-  - Pending: Show "Awaiting approval" message
-  - Approved: Show MX records table
-  - Rejected: Show rejection reason
-- [ ] Add `<ReceivingRequestButton />` component
-- [ ] Style according to design
-- [ ] See **Plan → User Flow**
-
-**Result:** User sees receiving status in dashboard
-
----
-
-### Task 1.7: Update Domain Verification Instructions
-**Time:** 30 minutes  
-**Status:** ✅ Done (partially)
-
-**What to do:**
-- [ ] Open: `components/DomainVerificationInstructions.tsx`
-- [ ] Accept `receivingRequest` prop
-- [ ] Conditionally show receiving section:
-  - If approved: Show MX records from request
-  - If not approved: Show message about admin verification
-- [ ] Remove hardcoded MX records
-- [ ] Use dynamic MX records from database
-- [ ] See **Plan → User Flow**
-
-**Result:** Dynamic MX records display
-
----
-
-### Task 1.8: Send User Notification Email (Request Received)
-**Time:** 45 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create: `lib/email-templates/receiving-request-received.tsx`
-- [ ] Create email template with request details
-- [ ] Update request API to send email after creating request
-- [ ] Use Resend to send email
-- [ ] Test email delivery
-- [ ] See **Plan → Email Notifications → Request Received**
-
-**Result:** User gets confirmation email
-
----
-
-## Day 2: Admin Panel (10 tasks)
-
-### Task 2.1: Set Up Admin Authentication
-**Time:** 1 hour  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Choose auth method (Clerk roles recommended)
-- [ ] Add admin role to your Clerk user
-- [ ] Create: `lib/admin-auth.ts`
-- [ ] Create `checkAdminAuth()` helper function
-- [ ] Test admin check works
-- [ ] See **Plan → Security & Authentication**
-
-**Result:** Admin auth system ready
-
----
-
-### Task 2.2: Create Admin Layout
-**Time:** 45 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create: `app/admin/layout.tsx`
-- [ ] Add authentication check (redirect if not admin)
-- [ ] Create admin navigation sidebar
-- [ ] Add links: Dashboard, Requests, Domains
-- [ ] Style admin UI differently from user UI
-- [ ] See **Plan → Admin Panel Pages**
-
-**Result:** Admin panel layout
-
----
-
-### Task 2.3: Create Admin Dashboard
-**Time:** 1 hour  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create: `app/admin/dashboard/page.tsx`
-- [ ] Show stats:
-  - Total pending requests
-  - Approved this week
-  - Rejected this week
-- [ ] Show recent activity list
-- [ ] Add quick action buttons
-- [ ] See **Plan → Admin Dashboard**
-
-**Result:** Admin overview page
-
----
-
-### Task 2.4: Create List Requests API (Admin)
-**Time:** 1 hour  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create: `app/api/admin/receiving-requests/route.ts`
-- [ ] Implement GET handler
-- [ ] Check admin authentication
-- [ ] Accept query params: `status` filter
-- [ ] Fetch requests from database
-- [ ] Populate domain and workspace details
-- [ ] Return formatted list
-- [ ] See **Plan → Admin APIs → List All**
-
-**Result:** Admin can fetch all requests
-
----
-
-### Task 2.5: Create Requests List Page
-**Time:** 2 hours  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create: `app/admin/receiving-requests/page.tsx`
-- [ ] Fetch requests via API
-- [ ] Create table with columns:
-  - Domain
-  - Requested by
-  - Status
-  - Date
-  - Actions
-- [ ] Add filter tabs (All/Pending/Approved/Rejected)
-- [ ] Add search functionality
-- [ ] Style with Tailwind
-- [ ] See **Plan → Receiving Requests List**
-
-**Result:** Admin sees all requests
-
----
-
-### Task 2.6: Create Review Detail Page
-**Time:** 2 hours  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create: `app/admin/receiving-requests/[id]/page.tsx`
-- [ ] Fetch single request details
-- [ ] Show request information
-- [ ] Show domain information (alias count, emails sent, etc.)
-- [ ] Add approve/reject forms
-- [ ] Add notes textarea
-- [ ] See **Plan → Review Modal**
-
-**Result:** Admin can review request details
-
----
-
-### Task 2.7: Create Approve API
-**Time:** 1.5 hours  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create: `app/api/admin/receiving-requests/[id]/approve/route.ts`
-- [ ] Implement POST handler
-- [ ] Check admin authentication
-- [ ] Validate MX records input
-- [ ] Update ReceivingRequest:
-  - status = 'approved'
-  - reviewedAt = now
-  - reviewedBy = admin email
-  - mxRecords = from input
-- [ ] Update Domain:
-  - receivingEnabled = true
-  - receivingEnabledAt = now
-  - receivingMxRecords = from input
-- [ ] Send user notification email (approval)
-- [ ] Return success
-- [ ] See **Plan → Approve API**
-
-**Result:** Admin can approve requests
-
----
-
-### Task 2.8: Create Reject API
-**Time:** 1 hour  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create: `app/api/admin/receiving-requests/[id]/reject/route.ts`
-- [ ] Implement POST handler
-- [ ] Check admin authentication
-- [ ] Validate rejection reason
-- [ ] Update ReceivingRequest:
-  - status = 'rejected'
-  - reviewedAt = now
-  - reviewedBy = admin email
-  - rejectionReason = from input
-- [ ] Send user notification email (rejection)
-- [ ] Return success
-- [ ] See **Plan → Reject API**
-
-**Result:** Admin can reject requests
-
----
-
-### Task 2.9: Create Approve Form Component
-**Time:** 1.5 hours  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create: `components/admin/ApproveMXRecordsForm.tsx`
-- [ ] Create form with:
-  - MX record priority input
-  - MX record value input
-  - Option to add second MX record
-  - Notes textarea
-  - Submit button
-- [ ] Add validation
-- [ ] Handle form submission
-- [ ] Call approve API
-- [ ] Show success/error message
-- [ ] See **Plan → Review Modal → Approve Form**
-
-**Result:** Form to enter MX records
-
----
-
-### Task 2.10: Create Admin Navigation
-**Time:** 30 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create: `components/admin/AdminNav.tsx`
-- [ ] Add links to:
-  - Dashboard
-  - Receiving Requests
-  - All Domains
-  - Settings (future)
-- [ ] Highlight active page
-- [ ] Add logout button
-- [ ] Style with Tailwind
-
-**Result:** Admin sidebar navigation
-
----
-
-## Day 3: Email Notifications (6 tasks)
-
-### Task 3.1: Create Email Template: Request Received
-**Time:** 45 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create: `lib/email-templates/receiving-request-received.tsx`
-- [ ] Design HTML email template
-- [ ] Include:
-  - Domain name
-  - Request ID
-  - Expected review time
-  - Link to dashboard
-- [ ] Test email rendering
-- [ ] See **Plan → Email Notifications → Request Received**
-
-**Result:** Request confirmation email
-
----
-
-### Task 3.2: Create Email Template: Approved
-**Time:** 1 hour  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create: `lib/email-templates/receiving-approved.tsx`
-- [ ] Design HTML email with:
-  - Success message
-  - MX records table (formatted)
-  - Step-by-step instructions
-  - Link to dashboard
-- [ ] Make MX records copyable
-- [ ] Test rendering
-- [ ] See **Plan → Email Notifications → Approved**
-
-**Result:** Approval email with MX records
-
----
-
-### Task 3.3: Create Email Template: Rejected
-**Time:** 30 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create: `lib/email-templates/receiving-rejected.tsx`
-- [ ] Design email with:
-  - Rejection message
-  - Reason from admin
-  - Contact support CTA
-  - Request ID for reference
-- [ ] Use sympathetic tone
-- [ ] Test rendering
-- [ ] See **Plan → Email Notifications → Rejected**
-
-**Result:** Rejection notification email
-
----
-
-### Task 3.4: Create Admin Email Template: New Request
-**Time:** 30 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create: `lib/email-templates/admin-new-request.tsx`
-- [ ] Design email with:
-  - Domain name
-  - User email
-  - Workspace name
-  - Request timestamp
-  - Direct link to review page
-- [ ] Keep it concise
-- [ ] Test rendering
-- [ ] See **Plan → Email Notifications → Admin**
-
-**Result:** Admin notification email
-
----
-
-### Task 3.5: Integrate Email Sending
-**Time:** 1 hour  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Create: `lib/send-notification.ts`
-- [ ] Create helper function for each email type:
-  - `sendRequestReceivedEmail()`
-  - `sendApprovedEmail()`
-  - `sendRejectedEmail()`
-  - `sendAdminNotification()`
-- [ ] Use Resend SDK
 - [ ] Add error handling
-- [ ] Test each email type
+- [ ] See **Plan → API Endpoints → Claim**
 
-**Result:** Email sending helpers
+**Result:** POST /api/emails/claim works
+
+**Example:**
+```typescript
+export async function POST(request: Request) {
+  const { userId } = await auth();
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  
+  const { threadId } = await request.json();
+  
+  await dbConnect();
+  
+  const thread = await EmailThread.findById(threadId);
+  if (!thread) return NextResponse.json({ error: "Thread not found" }, { status: 404 });
+  
+  if (thread.assignedTo) {
+    return NextResponse.json({ error: "Already claimed" }, { status: 400 });
+  }
+  
+  // Get user details from Clerk
+  const user = await clerkClient.users.getUser(userId);
+  
+  await EmailThread.findByIdAndUpdate(threadId, {
+    assignedTo: userId,
+    assignedToEmail: user.emailAddresses[0].emailAddress,
+    assignedToName: user.firstName + " " + user.lastName,
+    claimedAt: new Date()
+  });
+  
+  return NextResponse.json({ success: true });
+}
+```
 
 ---
 
-### Task 3.6: Update APIs to Send Emails
+### Task 1.3: Create Unclaim API Endpoint
+**Time:** 45 minutes  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Create file: `app/api/emails/unclaim/route.ts`
+- [ ] Import dependencies
+- [ ] Create POST handler
+- [ ] Get userId from Clerk auth
+- [ ] Get threadId from request body
+- [ ] Find ticket in database
+- [ ] Check if current user owns this ticket
+- [ ] Set assignedTo fields to null
+- [ ] Return success
+- [ ] See **Plan → API Endpoints → Unclaim**
+
+**Result:** POST /api/emails/unclaim works
+
+**Security:** Only ticket owner can unclaim their own tickets
+
+---
+
+### Task 1.4: Update Reply API for Auto-Claim
 **Time:** 30 minutes  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Update `POST /api/receiving-requests`: Send user + admin emails
-- [ ] Update `POST /api/admin/.../approve`: Send approval email
-- [ ] Update `POST /api/admin/.../reject`: Send rejection email
-- [ ] Add try-catch for email errors
-- [ ] Log email sending attempts
+- [ ] Open file: `app/api/emails/reply/route.ts`
+- [ ] Find where email is sent successfully
+- [ ] Add auto-claim logic AFTER email sent
+- [ ] Check if thread.assignedTo is null
+- [ ] If null, update with current user
+- [ ] If already assigned, do nothing
+- [ ] See **Plan → User Flow → Auto-Claim**
 
-**Result:** Automatic email notifications
+**Result:** Replying to unclaimed ticket auto-assigns it
+
+**Example:**
+```typescript
+// After email sent successfully
+if (!thread.assignedTo) {
+  const user = await clerkClient.users.getUser(userId);
+  await EmailThread.findByIdAndUpdate(threadId, {
+    assignedTo: userId,
+    assignedToEmail: user.emailAddresses[0].emailAddress,
+    assignedToName: user.firstName + " " + user.lastName,
+    claimedAt: new Date()
+  });
+}
+```
 
 ---
 
-## Day 4: Polish & Testing (8 tasks)
+### Task 1.5: Create "My Tickets" API
+**Time:** 45 minutes  
+**Status:** ⬜ Not Started
 
-### Task 4.1: Add Loading States
+**What to do:**
+- [ ] Create file: `app/api/emails/tickets/mine/route.ts`
+- [ ] Create GET handler
+- [ ] Get userId from Clerk auth
+- [ ] Get workspace for user
+- [ ] Find all EmailThreads where assignedTo = userId
+- [ ] Sort by receivedAt (newest first)
+- [ ] Include: from, subject, status, claimedAt, receivedAt
+- [ ] Return array of tickets
+- [ ] See **Plan → API Endpoints → Get My Tickets**
+
+**Result:** GET /api/emails/tickets/mine returns user's tickets
+
+---
+
+### Task 1.6: Create "Unassigned Tickets" API
+**Time:** 45 minutes  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Create file: `app/api/emails/tickets/unassigned/route.ts`
+- [ ] Create GET handler
+- [ ] Get workspace for current user
+- [ ] Find all EmailThreads where assignedTo = null
+- [ ] Only include direction = "inbound"
+- [ ] Sort by receivedAt (oldest first = highest priority)
+- [ ] Return array of tickets
+- [ ] See **Plan → API Endpoints → Get Unassigned**
+
+**Result:** GET /api/emails/tickets/unassigned returns unclaimed tickets
+
+---
+
+## Day 2: Dashboard UI Components (5 tasks)
+
+### Task 2.1: Create ClaimButton Component
 **Time:** 1 hour  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Add loading spinners to all forms
-- [ ] Add skeleton loaders to tables
-- [ ] Disable buttons during API calls
-- [ ] Show progress indicators
-- [ ] Test UX feels responsive
+- [ ] Create file: `components/tickets/ClaimButton.tsx`
+- [ ] Make it a client component ("use client")
+- [ ] Accept props: threadId, onSuccess callback
+- [ ] Create claim handler calling POST /api/emails/claim
+- [ ] Show loading state while claiming
+- [ ] Show success/error toast messages
+- [ ] Disable button while loading
+- [ ] Call onSuccess after successful claim
+- [ ] Style with Tailwind
 
-**Result:** Smooth loading experience
+**Result:** Reusable claim button component
+
+**Example:**
+```typescript
+"use client";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+
+export default function ClaimButton({ 
+  threadId, 
+  onSuccess 
+}: { 
+  threadId: string; 
+  onSuccess: () => void;
+}) {
+  const [claiming, setClaiming] = useState(false);
+  
+  const handleClaim = async () => {
+    setClaiming(true);
+    try {
+      const res = await fetch("/api/emails/claim", {
+        method: "POST",
+        body: JSON.stringify({ threadId })
+      });
+      if (!res.ok) throw new Error("Failed to claim");
+      onSuccess();
+    } catch (err) {
+      alert("Error claiming ticket");
+    } finally {
+      setClaiming(false);
+    }
+  };
+  
+  return (
+    <Button onClick={handleClaim} disabled={claiming}>
+      {claiming ? "Claiming..." : "Claim"}
+    </Button>
+  );
+}
+```
 
 ---
 
-### Task 4.2: Add Error Handling
-**Time:** 1 hour  
+### Task 2.2: Create UnclaimButton Component
+**Time:** 45 minutes  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Add error boundaries to admin pages
-- [ ] Show user-friendly error messages
-- [ ] Handle API errors gracefully
-- [ ] Add retry mechanisms
-- [ ] Log errors for debugging
+- [ ] Create file: `components/tickets/UnclaimButton.tsx`
+- [ ] Similar structure to ClaimButton
+- [ ] Call POST /api/emails/unclaim
+- [ ] Add confirmation dialog before unclaim
+- [ ] Show loading state
+- [ ] Handle errors
 
-**Result:** Robust error handling
-
----
-
-### Task 4.3: Add Validation
-**Time:** 1 hour  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Validate MX record format in approve form
-- [ ] Validate rejection reason required
-- [ ] Validate domain exists before requesting
-- [ ] Add client-side + server-side validation
-- [ ] Show validation errors clearly
-
-**Result:** Prevent invalid data
+**Result:** Reusable unclaim button
 
 ---
 
-### Task 4.4: Test User Flow
-**Time:** 1 hour  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Test: User requests receiving
-- [ ] Verify: Database updated
-- [ ] Verify: User email sent
-- [ ] Verify: Admin email sent
-- [ ] Verify: Status shows in dashboard
-- [ ] See **Plan → Testing → Test 1**
-
-**Result:** User flow works end-to-end
-
----
-
-### Task 4.5: Test Admin Approval Flow
-**Time:** 1 hour  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Test: Admin reviews request
-- [ ] Test: Admin enters MX records
-- [ ] Test: Admin approves
-- [ ] Verify: Database updated
-- [ ] Verify: User receives email with MX records
-- [ ] Verify: User sees MX records in dashboard
-- [ ] See **Plan → Testing → Test 2 & 3**
-
-**Result:** Approval flow works
-
----
-
-### Task 4.6: Test Admin Rejection Flow
-**Time:** 30 minutes  
-**Status:** ⬜ Not Started
-
-**What to do:**
-- [ ] Test: Admin rejects with reason
-- [ ] Verify: Database updated
-- [ ] Verify: User receives rejection email
-- [ ] Verify: User sees rejection in dashboard
-- [ ] See **Plan → Testing → Test 4**
-
-**Result:** Rejection flow works
-
----
-
-### Task 4.7: End-to-End Integration Test
+### Task 2.3: Create TicketsList Component
 **Time:** 2 hours  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Complete flow: User requests → Admin approves → User adds MX records → Email received
-- [ ] Test with real domain
-- [ ] Send test email
-- [ ] Verify webhook receives
-- [ ] Verify Discord notification
-- [ ] See **Plan → Testing → Test 5**
+- [ ] Create file: `components/tickets/TicketsList.tsx`
+- [ ] Accept props: tickets array, showClaimButton, showUnclaimButton
+- [ ] Create table with columns:
+  - From (email)
+  - Subject
+  - Received (time ago)
+  - Status
+  - Actions (Claim/Unclaim/Reply buttons)
+- [ ] Use ClaimButton component
+- [ ] Use UnclaimButton component
+- [ ] Add Reply link to /reply/[threadId]
+- [ ] Style with Tailwind
+- [ ] Make responsive for mobile
+- [ ] Show empty state if no tickets
 
-**Result:** Complete system works
+**Result:** Reusable ticket list table
+
+**Columns:**
+- From: customer@email.com
+- Subject: Need help with billing
+- Received: 2 hours ago
+- Status: Open
+- Actions: [Claim] [Reply]
 
 ---
 
-### Task 4.8: Create Documentation
+### Task 2.4: Create "My Tickets" Page
+**Time:** 1.5 hours  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Create file: `app/dashboard/tickets/mine/page.tsx`
+- [ ] Make it server component
+- [ ] Fetch data from GET /api/emails/tickets/mine
+- [ ] Pass data to TicketsList component
+- [ ] Set showUnclaimButton = true
+- [ ] Add page title: "My Tickets"
+- [ ] Show count: "My Tickets (5)"
+- [ ] Add refresh button
+- [ ] Handle empty state: "No tickets assigned to you"
+- [ ] See **Plan → Dashboard Pages → My Tickets**
+
+**Result:** /dashboard/tickets/mine shows user's tickets
+
+---
+
+### Task 2.5: Create "Unassigned Tickets" Page
+**Time:** 1.5 hours  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Create file: `app/dashboard/tickets/unassigned/page.tsx`
+- [ ] Fetch from GET /api/emails/tickets/unassigned
+- [ ] Pass to TicketsList component
+- [ ] Set showClaimButton = true
+- [ ] Add page title: "Unassigned Tickets"
+- [ ] Show count: "Unassigned Tickets (12)"
+- [ ] Sort by oldest first (FIFO)
+- [ ] Add refresh button
+- [ ] Empty state: "All tickets are assigned! 🎉"
+
+**Result:** /dashboard/tickets/unassigned shows claimable tickets
+
+---
+
+## Day 3: Integration & Polish (6 tasks)
+
+### Task 3.1: Update Discord Notification Message
 **Time:** 1 hour  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Write admin guide: How to review requests
-- [ ] Write user guide: How to request receiving
-- [ ] Document MX record setup process
-- [ ] Create FAQ
-- [ ] Add troubleshooting section
+- [ ] Open file: `app/api/webhooks/resend/route.ts`
+- [ ] Find where Discord message is created
+- [ ] After saving EmailThread, check if thread.assignedTo exists
+- [ ] If assigned, add line: "👤 Claimed by: {email}"
+- [ ] If not assigned, don't show claim status
+- [ ] Test with assigned and unassigned tickets
+- [ ] See **Plan → Discord Integration**
 
-**Result:** Documentation complete
+**Result:** Discord shows who claimed each ticket
+
+**Before:**
+```
+📧 New email to support@git-cv.com
+From: customer@email.com
+Subject: Need help
+```
+
+**After:**
+```
+📧 New email to support@git-cv.com
+👤 Claimed by: john@company.com
+From: customer@email.com
+Subject: Need help
+```
 
 ---
 
-## Environment Variables Setup
-
-**Time:** 10 minutes  
+### Task 3.2: Add Navigation Links
+**Time:** 30 minutes  
 **Status:** ⬜ Not Started
 
 **What to do:**
-- [ ] Add to `.env.local`:
-  ```
-  ADMIN_EMAIL=your-admin@email.com
-  ADMIN_PASSWORD=secure_password
-  NOTIFICATION_FROM_EMAIL=notifications@yourapp.com
-  ADMIN_NOTIFICATION_EMAIL=admin@yourapp.com
-  ```
-- [ ] Add to Vercel environment variables
-- [ ] Restart dev server
+- [ ] Open dashboard layout or navigation component
+- [ ] Add link: "My Tickets" → /dashboard/tickets/mine
+- [ ] Add link: "Unassigned" → /dashboard/tickets/unassigned
+- [ ] Style as active when on current page
+- [ ] Add icons (📧 for My Tickets, 📥 for Unassigned)
 
-**Result:** Environment configured
+**Result:** Easy navigation to ticket pages
 
 ---
 
-## Progress Tracking
+### Task 3.3: Update Reply Page to Show Claim Status
+**Time:** 45 minutes  
+**Status:** ⬜ Not Started
 
-**Day 1 (Database & User):** ⬜⬜⬜⬜⬜⬜⬜⬜ (8 tasks)  
-**Day 2 (Admin Panel):** ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜ (10 tasks)  
-**Day 3 (Email Notifications):** ⬜⬜⬜⬜⬜⬜ (6 tasks)  
-**Day 4 (Polish & Testing):** ⬜⬜⬜⬜⬜⬜⬜⬜ (8 tasks)  
-**Environment:** ⬜ (1 task)
+**What to do:**
+- [ ] Open file: `app/reply/[threadId]/page.tsx`
+- [ ] After fetching thread data
+- [ ] Show claim status in UI:
+  - If assignedTo = current user: "👤 Assigned to you"
+  - If assignedTo = other user: "👤 Assigned to {name}"
+  - If not assigned: "⚠️ Not claimed yet"
+- [ ] Add styling
+- [ ] Position near email subject
 
-**Total:** 0/33 tasks completed
+**Result:** Reply page shows ownership
 
 ---
 
-## Files Summary
+### Task 3.4: Add Loading States
+**Time:** 45 minutes  
+**Status:** ⬜ Not Started
 
-### New Files to Create (25 files)
+**What to do:**
+- [ ] Add loading spinners to all buttons
+- [ ] Add skeleton loaders to ticket lists
+- [ ] Show "Loading..." text while fetching
+- [ ] Disable buttons during API calls
+- [ ] Use consistent loading UI across all pages
 
-**Models:**
-1. `app/api/models/ReceivingRequestModel.ts`
+**Result:** Better UX during async operations
 
-**User APIs:**
-2. `app/api/receiving-requests/route.ts`
-3. `app/api/receiving-requests/[domainId]/route.ts`
+---
 
-**Admin APIs:**
-4. `app/api/admin/receiving-requests/route.ts`
-5. `app/api/admin/receiving-requests/[id]/approve/route.ts`
-6. `app/api/admin/receiving-requests/[id]/reject/route.ts`
+### Task 3.5: Add Error Handling
+**Time:** 1 hour  
+**Status:** ⬜ Not Started
 
-**Admin Pages:**
-7. `app/admin/layout.tsx`
-8. `app/admin/dashboard/page.tsx`
-9. `app/admin/receiving-requests/page.tsx`
-10. `app/admin/receiving-requests/[id]/page.tsx`
+**What to do:**
+- [ ] Wrap all API calls in try/catch
+- [ ] Show user-friendly error messages
+- [ ] Handle specific errors:
+  - Already claimed → "This ticket was just claimed by someone else"
+  - Not found → "Ticket not found"
+  - Unauthorized → "Please log in"
+- [ ] Add error toast notifications
+- [ ] Log errors to console for debugging
 
-**User Components:**
-11. `components/ReceivingRequestButton.tsx`
+**Result:** Graceful error handling
 
-**Admin Components:**
-12. `components/admin/ReceivingRequestsTable.tsx`
-13. `components/admin/ApproveMXRecordsForm.tsx`
-14. `components/admin/AdminNav.tsx`
+---
 
-**Email Templates:**
-15. `lib/email-templates/receiving-request-received.tsx`
-16. `lib/email-templates/receiving-approved.tsx`
-17. `lib/email-templates/receiving-rejected.tsx`
-18. `lib/email-templates/admin-new-request.tsx`
+### Task 3.6: Add "All Tickets" Page (Optional)
+**Time:** 1 hour  
+**Status:** 📋 Optional
 
-**Utilities:**
-19. `lib/admin-auth.ts`
-20. `lib/send-notification.ts`
+**What to do:**
+- [ ] Create file: `app/dashboard/tickets/page.tsx`
+- [ ] Fetch ALL tickets (assigned + unassigned)
+- [ ] Show filters:
+  - All / Mine / Unassigned
+  - Open / In Progress / Resolved
+- [ ] Use TicketsList component
+- [ ] Add search by sender email
+- [ ] Show assignee name in list
 
-### Files to Modify (3 files)
+**Result:** Team-wide view of all tickets
 
-1. `app/api/models/DomainModel.ts` - Add receiving fields
-2. `app/dashboard/domains/[id]/verify/page.tsx` - Add receiving UI
-3. `components/DomainVerificationInstructions.tsx` - Show dynamic MX records
+---
+
+## Day 4: Testing & Documentation (5 tasks)
+
+### Task 4.1: Test Claim Flow
+**Time:** 30 minutes  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Login to dashboard
+- [ ] Go to "Unassigned Tickets"
+- [ ] Click "Claim" on a ticket
+- [ ] Verify it moves to "My Tickets"
+- [ ] Check database: assignedTo field populated
+- [ ] Check Discord: shows claimed status
+- [ ] Test with multiple users if possible
+
+**Result:** Claim flow works end-to-end
+
+---
+
+### Task 4.2: Test Auto-Claim on Reply
+**Time:** 30 minutes  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Find unassigned ticket
+- [ ] Click "Reply" link
+- [ ] Send reply
+- [ ] Check database: assignedTo auto-set
+- [ ] Check "My Tickets": ticket appears
+- [ ] Verify email was sent
+
+**Result:** Auto-claim works
+
+---
+
+### Task 4.3: Test Unclaim Flow
+**Time:** 20 minutes  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Claim a ticket
+- [ ] Go to "My Tickets"
+- [ ] Click "Unclaim"
+- [ ] Confirm action
+- [ ] Verify ticket in "Unassigned"
+- [ ] Check database: assignedTo = null
+
+**Result:** Unclaim works
+
+---
+
+### Task 4.4: Test Edge Cases
+**Time:** 45 minutes  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Try claiming already-claimed ticket → Should error
+- [ ] Try unclaiming someone else's ticket → Should error
+- [ ] Try claiming with no auth → Should error
+- [ ] Try claiming invalid threadId → Should error
+- [ ] Refresh pages multiple times → Should work
+- [ ] Test with 0 tickets → Empty states work
+
+**Result:** Edge cases handled
+
+---
+
+### Task 4.5: Write Documentation
+**Time:** 1 hour  
+**Status:** ⬜ Not Started
+
+**What to do:**
+- [ ] Create user guide: How to claim tickets
+- [ ] Document keyboard shortcuts (if any)
+- [ ] Update README with new features
+- [ ] Add screenshots to docs
+- [ ] Document API endpoints for developers
+
+**Result:** Feature documented
 
 ---
 
 ## Quick Reference
 
-### API Endpoints
+### Files to Create (11 files)
 
-**User-Facing:**
-```
-POST /api/receiving-requests
-GET  /api/receiving-requests/[domainId]
-```
+**Backend APIs (6 files):**
+1. `app/api/emails/claim/route.ts`
+2. `app/api/emails/unclaim/route.ts`
+3. `app/api/emails/tickets/mine/route.ts`
+4. `app/api/emails/tickets/unassigned/route.ts`
 
-**Admin-Only:**
-```
-GET  /api/admin/receiving-requests
-POST /api/admin/receiving-requests/[id]/approve
-POST /api/admin/receiving-requests/[id]/reject
-```
+**Components (3 files):**
+5. `components/tickets/ClaimButton.tsx`
+6. `components/tickets/UnclaimButton.tsx`
+7. `components/tickets/TicketsList.tsx`
 
-### Admin Routes
+**Pages (3 files):**
+8. `app/dashboard/tickets/mine/page.tsx`
+9. `app/dashboard/tickets/unassigned/page.tsx`
+10. `app/dashboard/tickets/page.tsx` (optional)
 
-```
-/admin/dashboard
-/admin/receiving-requests
-/admin/receiving-requests/[id]
-```
+**Optional:**
+11. Navigation component updates
+
+### Files to Edit (3 files)
+
+1. `app/api/models/EmailThreadModel.ts` - Add assignment fields
+2. `app/api/emails/reply/route.ts` - Add auto-claim logic
+3. `app/api/webhooks/resend/route.ts` - Show claim status in Discord
 
 ---
 
 ## Success Criteria
 
 ✅ Feature is done when:
-- [ ] User can request receiving access
-- [ ] User receives confirmation email
-- [ ] Admin receives notification email
-- [ ] Admin can see all requests
-- [ ] Admin can approve with MX records
-- [ ] Admin can reject with reason
-- [ ] User receives approval email with MX records
-- [ ] User sees MX records in dashboard
-- [ ] User can add MX records and receive emails
-- [ ] All emails are sent correctly
-- [ ] Error handling works
+- [ ] EmailThread model has assignment fields
+- [ ] Can claim tickets via API
+- [ ] Can unclaim tickets via API
+- [ ] Auto-claim works on reply
+- [ ] "My Tickets" page shows assigned tickets
+- [ ] "Unassigned" page shows claimable tickets
+- [ ] Discord shows claim status
+- [ ] All tests pass
+- [ ] No duplicate work happening
 - [ ] Documentation complete
+
+---
+
+## Environment Variables
+
+No new environment variables needed!
+
+Uses existing:
+- `MONGODB_URI` - Database
+- Clerk auth (already configured)
 
 ---
 
@@ -726,79 +590,83 @@ POST /api/admin/receiving-requests/[id]/reject
 ### Day 1 (6 hours)
 ```
 Morning (3 hours):
-- Task 1.1: ReceivingRequest model
-- Task 1.2: Update Domain model
-- Task 1.3: User request API
+- Task 1.1: Update EmailThread model (30min)
+- Task 1.2: Create claim API (1h)
+- Task 1.3: Create unclaim API (45min)
+- Break (15min)
+- Task 1.4: Update reply API (45min)
 
 Afternoon (3 hours):
-- Task 1.4: Get status API
-- Task 1.5: Request button component
-- Task 1.6: Update verification page
-- Task 1.7: Update instructions component
-- Task 1.8: Send notification email
+- Task 1.5: My tickets API (45min)
+- Task 1.6: Unassigned tickets API (45min)
+- Testing backend APIs (1.5h)
 ```
 
 ### Day 2 (6 hours)
 ```
 Morning (3 hours):
-- Task 2.1: Admin auth
-- Task 2.2: Admin layout
-- Task 2.3: Admin dashboard
-- Task 2.4: List requests API
+- Task 2.1: ClaimButton component (1h)
+- Task 2.2: UnclaimButton component (45min)
+- Task 2.3: TicketsList component (2h start)
 
 Afternoon (3 hours):
-- Task 2.5: Requests list page
-- Task 2.6: Review detail page
-- Task 2.7: Approve API
-- Task 2.8: Reject API
-- Task 2.9: Approve form
-- Task 2.10: Admin navigation
+- Task 2.3: TicketsList component (finish)
+- Task 2.4: My Tickets page (1.5h)
+- Task 2.5: Unassigned page (1.5h)
 ```
 
-### Day 3 (5 hours)
-```
-Morning (2 hours):
-- Task 3.1: Email template: Request received
-- Task 3.2: Email template: Approved
-- Task 3.3: Email template: Rejected
-
-Afternoon (3 hours):
-- Task 3.4: Email template: Admin notification
-- Task 3.5: Email sending integration
-- Task 3.6: Update APIs with emails
-```
-
-### Day 4 (6 hours)
+### Day 3 (6 hours)
 ```
 Morning (3 hours):
-- Task 4.1: Loading states
-- Task 4.2: Error handling
-- Task 4.3: Validation
-- Task 4.4: Test user flow
+- Task 3.1: Discord integration (1h)
+- Task 3.2: Navigation links (30min)
+- Task 3.3: Reply page updates (45min)
+- Task 3.4: Loading states (45min)
 
 Afternoon (3 hours):
-- Task 4.5: Test admin approval
-- Task 4.6: Test admin rejection
-- Task 4.7: End-to-end integration test
-- Task 4.8: Documentation
+- Task 3.5: Error handling (1h)
+- Task 3.6: All tickets page (1h, optional)
+- Integration testing (1h)
+```
+
+### Day 4 (4 hours)
+```
+Morning (2 hours):
+- Task 4.1: Test claim flow (30min)
+- Task 4.2: Test auto-claim (30min)
+- Task 4.3: Test unclaim (20min)
+- Task 4.4: Edge cases (40min)
+
+Afternoon (2 hours):
+- Task 4.5: Documentation (1h)
+- Final testing (1h)
+- Deploy to production
 ```
 
 ---
 
 ## Troubleshooting
 
-### Issue: Admin can't login
-**Solution:** Check admin role in Clerk, verify environment variables
+### Issue: Claim button doesn't work
+**Check:**
+- Is user logged in? (Clerk auth)
+- Is threadId correct?
+- Check browser console for errors
+- Check API response
 
-### Issue: Emails not sending
-**Solution:** Check Resend API key, check email templates, check logs
+### Issue: Ticket doesn't show in "My Tickets"
+**Check:**
+- Is assignedTo = userId? (check database)
+- Refresh the page
+- Check API is returning correct data
 
-### Issue: MX records not showing
-**Solution:** Verify database updated, check API response, check frontend state
-
-### Issue: Webhook not receiving
-**Solution:** Verify MX records added to DNS, check webhook URL, test with curl
+### Issue: Auto-claim not working
+**Check:**
+- Is reply API being called?
+- Check logs after sending reply
+- Verify database updated
+- Check condition: if (!thread.assignedTo)
 
 ---
 
-**Let's build the admin receiving verification system! 🚀**
+**Let's build ticket assignment! Start with Day 1, Task 1.1** 🚀

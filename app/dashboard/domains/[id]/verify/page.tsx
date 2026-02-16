@@ -225,7 +225,6 @@ export default function DomainVerifyPage() {
       />
 
       {/* Receiving Email Section */}
-      {isVerified && (
         <div className="mt-8 border-t pt-8">
           <div className="space-y-4">
             <div>
@@ -328,7 +327,6 @@ export default function DomainVerifyPage() {
             )}
           </div>
         </div>
-      )}
 
       {(!domain.dnsRecords?.length || domain.dnsRecords.length === 0) && !domain.resendDomainId && (
         <div className="mt-4">
