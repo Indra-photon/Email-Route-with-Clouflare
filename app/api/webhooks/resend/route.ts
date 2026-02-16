@@ -277,14 +277,22 @@ export async function POST(request: Request) {
     // 10. Generate reply link
     const replyUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/reply/${emailThread._id}`;
 
-    // 11. Format Discord/Slack message with reply link
+    // 10.5. Check if ticket is claimed (for consistency, though new emails won't be claimed)
+    let claimStatus = "";
+    if (emailThread.assignedTo && emailThread.assignedToEmail) {
+      claimStatus = integration.type === "slack"
+        ? `👤 *Claimed by:* ${emailThread.assignedToEmail}\n`
+        : `👤 **Claimed by:** ${emailThread.assignedToEmail}\n`;
+    }
+
+    // 11. Format Discord/Slack message with reply link and claim status
     const messagePayload = integration.type === "slack"
       ? {
-          text: `📧 New email to *${emailLower}*\n*From:* ${fromEmail}\n*Subject:* ${subject}\n\n${snippet}\n\n🔗 [Click here to reply](${replyUrl})`,
+          text: `📧 New email to *${emailLower}*\n${claimStatus}*From:* ${fromEmail}\n*Subject:* ${subject}\n\n${snippet}\n\n🔗 [Click here to reply](${replyUrl})`,
         }
       : {
           content: `📧 **New email to ${emailLower}**
-**From:** ${fromEmail}
+${claimStatus}**From:** ${fromEmail}
 **Subject:** ${subject}
 
 ${snippet}

@@ -9,10 +9,12 @@ type DashboardLayoutProps = {
 };
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/dashboard/domains", label: "Domains" },
-  { href: "/dashboard/aliases", label: "Aliases" },
-  { href: "/dashboard/integrations", label: "Integrations" },
+  { href: "/dashboard", label: "Dashboard", icon: "📊" },
+  { href: "/dashboard/tickets/mine", label: "My Tickets", icon: "📧" },
+  { href: "/dashboard/tickets/unassigned", label: "Unassigned", icon: "📥" },
+  { href: "/dashboard/domains", label: "Domains", icon: "🌐" },
+  { href: "/dashboard/aliases", label: "Aliases", icon: "📮" },
+  { href: "/dashboard/integrations", label: "Integrations", icon: "🔗" },
 ];
 
 export default async function DashboardLayout({ children }: DashboardLayoutProps) {
@@ -32,8 +34,9 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="block rounded-md px-3 py-2 text-neutral-700 hover:bg-neutral-200"
+                  className="block rounded-md px-3 py-2 text-neutral-700 hover:bg-neutral-200 transition-colors"
                 >
+                  <span className="mr-2">{item.icon}</span>
                   {item.label}
                 </Link>
               </li>
