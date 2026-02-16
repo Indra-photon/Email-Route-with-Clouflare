@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import dbConnect from "@/lib/dbConnect";
 import ReceivingRequest from "@/app/api/models/ReceivingRequestModel";
 import { Domain } from "@/app/api/models/DomainModel";
-import Workspace from "@/app/api/models/WorkspaceModel";
+import { Workspace } from "@/app/api/models/WorkspaceModel";
 
 export async function GET(request: NextRequest) {
   try {
