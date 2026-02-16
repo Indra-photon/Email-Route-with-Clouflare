@@ -6,7 +6,6 @@ import ReceivingRequest from "@/app/api/models/ReceivingRequestModel";
 import { getOrCreateWorkspaceForCurrentUser } from "@/app/api/workspace/helpers";
 import { currentUser } from "@clerk/nextjs/server";
 import { Resend } from "resend";
-import ReceivingRequestReceivedEmail from "@/lib/email-templates/receiving-request-received";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -127,16 +126,28 @@ export async function POST(request: NextRequest) {
         from: process.env.NOTIFICATION_FROM_EMAIL || "notifications@yourdomain.com",
         to: userEmail,
         subject: `Your Receiving Request for ${domain.domain} is Being Reviewed`,
-        react: ReceivingRequestReceivedEmail({
-          userName,
-          domain: domain.domain,
-          requestId: receivingRequest._id.toString().slice(-6),
-          requestedAt: receivingRequest.requestedAt.toLocaleString("en-US", {
-            dateStyle: "long",
-            timeStyle: "short",
-          }),
-          dashboardUrl,
-        }),
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; line-height: 1.6; color: #333;">
+            <h2 style="color: #2563eb;">Your Receiving Request for ${domain.domain} is Being Reviewed</h2>
+            <p>Hi ${userName},</p>
+            <p>We've received your request to enable email receiving for:</p>
+            <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 5px 0;"><strong>Domain:</strong> ${domain.domain}</p>
+              <p style="margin: 5px 0;"><strong>Request ID:</strong> #${receivingRequest._id.toString().slice(-6)}</p>
+              <p style="margin: 5px 0;"><strong>Requested:</strong> ${receivingRequest.requestedAt.toLocaleString()}</p>
+            </div>
+            <p>Our team will review your request and enable receiving within 1-2 hours during business hours.</p>
+            <p>You'll receive another email with MX records once your request is approved.</p>
+            <div style="margin: 30px 0;">
+              <a href="${dashboardUrl}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                View in Dashboard
+              </a>
+            </div>
+            <hr style="border-top: 1px solid #e5e7eb; margin: 30px 0;">
+            <p style="font-size: 14px; color: #6b7280;">Questions? Reply to this email and we'll be happy to help.</p>
+            <p style="font-size: 14px; color: #6b7280;">Best,<br>The Team</p>
+          </div>
+        `,
       });
 
       console.log(`User notification email sent to ${userEmail}`);
