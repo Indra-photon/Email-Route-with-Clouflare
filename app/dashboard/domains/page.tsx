@@ -70,6 +70,33 @@ export default function DomainsPage() {
       setNewDomain("");
 
       // Add domain to Resend and redirect to verification page
+      // try {
+      //   const addRes = await fetch("/api/domains/add-to-resend", {
+      //     method: "POST",
+      //     headers: { "Content-Type": "application/json" },
+      //     body: JSON.stringify({ domainId: created.id }),
+      //   });
+      //   const addData = await addRes.json();
+      //   if (addRes.ok && addData.domain) {
+      //     setDomains((prev) =>
+      //       prev.map((d) =>
+      //         d.id === created.id
+      //           ? { ...d, status: addData.domain?.status ?? d.status }
+      //           : d
+      //       )
+      //     );
+      //     router.push(`/dashboard/domains/${created.id}/verify`);
+      //     return;
+      //   }
+      //   if (!addRes.ok && addData.error?.toLowerCase().includes("already")) {
+      //     router.push(`/dashboard/domains/${created.id}/verify`);
+      //     return;
+      //   }
+      // } catch {
+      //   // Still redirect so user can add to Resend manually or retry
+      //   router.push(`/dashboard/domains/${created.id}/verify`);
+      // }
+
       try {
         const addRes = await fetch("/api/domains/add-to-resend", {
           method: "POST",
@@ -85,15 +112,10 @@ export default function DomainsPage() {
                 : d
             )
           );
-          router.push(`/dashboard/domains/${created.id}/verify`);
-          return;
-        }
-        if (!addRes.ok && addData.error?.toLowerCase().includes("already")) {
-          router.push(`/dashboard/domains/${created.id}/verify`);
-          return;
         }
       } catch {
-        // Still redirect so user can add to Resend manually or retry
+        // ignore, still redirect
+      } finally {
         router.push(`/dashboard/domains/${created.id}/verify`);
       }
     } catch (err) {

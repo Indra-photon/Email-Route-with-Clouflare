@@ -102,7 +102,7 @@ export default function DomainVerifyPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to add to Resend");
-      setDomain(data.domain ?? domain);
+      await fetchDomain();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add to Resend");
     } finally {
@@ -328,12 +328,28 @@ export default function DomainVerifyPage() {
           </div>
         </div>
 
-      {(!domain.dnsRecords?.length || domain.dnsRecords.length === 0) && !domain.resendDomainId && (
+      {/* {(!domain.dnsRecords?.length || domain.dnsRecords.length === 0) && !domain.resendDomainId && (
         <div className="mt-4">
           <Button onClick={handleAddToResend} disabled={addingToResend}>
             {addingToResend ? "Adding to Resend..." : "Add to Resend"}
           </Button>
           <p className="text-sm text-neutral-500 mt-2">Get DNS records from Resend to add at your domain provider.</p>
+        </div>
+      )} */}
+      {(!domain.dnsRecords?.length || domain.dnsRecords.length === 0) && (
+        <div className="mt-4">
+          <Button onClick={handleAddToResend} disabled={addingToResend}>
+            {addingToResend
+              ? "Loading..."
+              : domain.resendDomainId
+                ? "Refresh DNS Records"
+                : "Add to Resend"}
+          </Button>
+          <p className="text-sm text-neutral-500 mt-2">
+            {domain.resendDomainId
+              ? "Domain is registered but DNS records are missing. Click to refresh."
+              : "Get DNS records from Resend to add at your domain provider."}
+          </p>
         </div>
       )}
 
