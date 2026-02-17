@@ -88,6 +88,8 @@ export async function POST(request: Request) {
       thread.assignedToEmail = userEmail;
       thread.assignedToName = userName;
       thread.claimedAt = new Date();
+      thread.status = "in_progress";
+      thread.statusUpdatedAt = new Date();
 
       console.log(`✅ Auto-claimed ticket ${threadId} by ${userName}`);
     }
@@ -156,13 +158,15 @@ export async function POST(request: Request) {
       textBody: trimmedReply,
       htmlBody: "",
       direction: "outbound",
-      status: "replied",
+      status: "waiting",
+      statusUpdatedAt: new Date(),
       receivedAt: new Date(),
       repliedAt: new Date(),
     });
 
     // Save thread updates (including auto-claim)
-    thread.status = "replied";
+    thread.status = "waiting";
+    thread.statusUpdatedAt = new Date();
     thread.repliedAt = new Date();
     await thread.save();
 

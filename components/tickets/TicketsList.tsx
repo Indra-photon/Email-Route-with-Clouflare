@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import StatusBadge from "@/components/StatusBadge";
+import MarkResolvedButton from "@/components/MarkResolvedButton";
 import ClaimButton from "./ClaimButton";
 import UnclaimButton from "./UnclaimButton";
 
@@ -31,15 +32,6 @@ export default function TicketsList({
   type,
   onRefresh,
 }: TicketsListProps) {
-  const getStatusBadge = (status: string) => {
-    const badges = {
-      open: <Badge variant="outline">Open</Badge>,
-      replied: <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">Replied</Badge>,
-      resolved: <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Resolved</Badge>,
-    };
-    return badges[status as keyof typeof badges] || <Badge>{status}</Badge>;
-  };
-
   const getTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -121,7 +113,9 @@ export default function TicketsList({
                     {ticket.subject}
                   </div>
                 </td>
-                <td className="p-3">{getStatusBadge(ticket.status)}</td>
+                <td className="p-3">
+                  <StatusBadge status={ticket.status as any} size="sm" />
+                </td>
                 <td className="p-3 text-neutral-600 dark:text-neutral-400">
                   <div>{getTimeAgo(ticket.receivedAt)}</div>
                   <div className="text-xs text-neutral-500">
@@ -148,10 +142,17 @@ export default function TicketsList({
                       <ClaimButton threadId={ticket.id} onClaimed={onRefresh} />
                     )}
                     {type === "mine" && (
-                      <UnclaimButton
-                        threadId={ticket.id}
-                        onUnclaimed={onRefresh}
-                      />
+                      <>
+                        <MarkResolvedButton
+                          threadId={ticket.id}
+                          currentStatus={ticket.status}
+                          onResolved={onRefresh}
+                        />
+                        <UnclaimButton
+                          threadId={ticket.id}
+                          onUnclaimed={onRefresh}
+                        />
+                      </>
                     )}
                   </div>
                 </td>

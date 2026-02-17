@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import TicketsList from "@/components/tickets/TicketsList";
+import StatusFilter from "@/components/StatusFilter";
 import Link from "next/link";
 
 interface Ticket {
@@ -23,6 +24,14 @@ export default function MyTicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentFilter, setCurrentFilter] = useState('all');
+  const [statusCounts, setStatusCounts] = useState({
+    all: 0,
+    open: 0,
+    in_progress: 0,
+    waiting: 0,
+    resolved: 0
+  });
 
   const fetchMyTickets = async () => {
     setLoading(true);
@@ -37,6 +46,16 @@ export default function MyTicketsPage() {
 
       const data = await response.json();
       setTickets(data.tickets || []);
+
+      // Calculate status counts
+      const counts = {
+        all: data.tickets.length,
+        open: data.tickets.filter((t: Ticket) => t.status === 'open').length,
+        in_progress: data.tickets.filter((t: Ticket) => t.status === 'in_progress').length,
+        waiting: data.tickets.filter((t: Ticket) => t.status === 'waiting').length,
+        resolved: data.tickets.filter((t: Ticket) => t.status === 'resolved').length,
+      };
+      setStatusCounts(counts);
     } catch (err) {
       console.error("Error fetching my tickets:", err);
       setError(err instanceof Error ? err.message : "Failed to load tickets");
@@ -48,6 +67,11 @@ export default function MyTicketsPage() {
   useEffect(() => {
     fetchMyTickets();
   }, []);
+
+  // Filter tickets based on current filter
+  const filteredTickets = currentFilter === 'all'
+    ? tickets
+    : tickets.filter(t => t.status === currentFilter);
 
   return (
     <div className="space-y-6">
@@ -76,12 +100,20 @@ export default function MyTicketsPage() {
         </div>
       )}
 
+      {!loading && (
+        <StatusFilter
+          currentFilter={currentFilter}
+          counts={statusCounts}
+          onFilterChange={setCurrentFilter}
+        />
+      )}
+
       {loading ? (
         <div className="text-center py-12 text-neutral-500">
           Loading your tickets...
         </div>
       ) : (
-        <TicketsList tickets={tickets} type="mine" onRefresh={fetchMyTickets} />
+        <TicketsList tickets={filteredTickets} type="mine" onRefresh={fetchMyTickets} />
       )}
     </div>
   );

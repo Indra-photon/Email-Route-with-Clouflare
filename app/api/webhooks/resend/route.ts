@@ -270,6 +270,7 @@ export async function POST(request: Request) {
       htmlBody,
       direction: "inbound",
       status: "open",
+      statusUpdatedAt: new Date(),
       receivedAt: new Date(emailData.created_at || Date.now()),
     });
     console.log("💾 Email saved to database:", emailThread._id);
@@ -285,14 +286,37 @@ export async function POST(request: Request) {
         : `👤 **Claimed by:** ${emailThread.assignedToEmail}\n`;
     }
 
+    // 10.6. Add status line
+    const statusEmojis = {
+      open: '🆕',
+      in_progress: '🔄',
+      waiting: '⏸️',
+      resolved: '✅'
+    } as const;
+    const statusLabels = {
+      open: 'Open',
+      in_progress: 'In Progress',
+      waiting: 'Waiting',
+      resolved: 'Resolved'
+    } as const;
+
+    type StatusType = keyof typeof statusEmojis;
+    const currentStatus = (emailThread.status || 'open') as StatusType;
+    const statusEmoji = statusEmojis[currentStatus] || '🆕';
+    const statusLabel = statusLabels[currentStatus] || 'Open';
+
+    const statusLine = integration.type === "slack"
+      ? `${statusEmoji} *Status:* ${statusLabel}\n`
+      : `${statusEmoji} **Status:** ${statusLabel}\n`;
+
     // 11. Format Discord/Slack message with reply link and claim status
     const messagePayload = integration.type === "slack"
       ? {
-          text: `📧 New email to *${emailLower}*\n${claimStatus}*From:* ${fromEmail}\n*Subject:* ${subject}\n\n${snippet}\n\n🔗 [Click here to reply](${replyUrl})`,
+          text: `📧 New email to *${emailLower}*\n${claimStatus}${statusLine}*From:* ${fromEmail}\n*Subject:* ${subject}\n\n${snippet}\n\n🔗 [Click here to reply](${replyUrl})`,
         }
       : {
           content: `📧 **New email to ${emailLower}**
-${claimStatus}**From:** ${fromEmail}
+${claimStatus}${statusLine}**From:** ${fromEmail}
 **Subject:** ${subject}
 
 ${snippet}
