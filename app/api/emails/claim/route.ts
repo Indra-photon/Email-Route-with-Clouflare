@@ -68,6 +68,11 @@ export async function POST(request: NextRequest) {
     thread.assignedToEmail = userEmail;
     thread.assignedToName = userName;
     thread.claimedAt = new Date();
+
+    // Update status to in_progress
+    thread.status = "in_progress";
+    thread.statusUpdatedAt = new Date();
+
     await thread.save();
 
     return NextResponse.json(

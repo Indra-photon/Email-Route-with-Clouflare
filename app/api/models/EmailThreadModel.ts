@@ -17,7 +17,7 @@ export interface IEmailThread extends Document {
   htmlBody: string;
 
   direction: "inbound" | "outbound";
-  status: "open" | "replied" | "resolved";
+  status: "open" | "in_progress" | "waiting" | "resolved";
 
   discordMessageId: string | null;
   discordChannelId: string | null;
@@ -27,6 +27,11 @@ export interface IEmailThread extends Document {
   assignedToEmail?: string;
   assignedToName?: string;
   claimedAt?: Date;
+
+  // Status tracking fields
+  statusUpdatedAt?: Date;
+  resolvedAt?: Date;
+  resolvedBy?: string;
 
   receivedAt: Date;
   repliedAt: Date | null;
@@ -98,8 +103,9 @@ const EmailThreadSchema = new Schema<IEmailThread>(
     },
     status: {
       type: String,
-      enum: ["open", "replied", "resolved"],
+      enum: ["open", "in_progress", "waiting", "resolved"],
       default: "open",
+      index: true,
     },
 
     discordMessageId: {
@@ -127,6 +133,20 @@ const EmailThreadSchema = new Schema<IEmailThread>(
     },
     claimedAt: {
       type: Date,
+      default: null,
+    },
+
+    // Status tracking fields
+    statusUpdatedAt: {
+      type: Date,
+      default: Date.now,
+    },
+    resolvedAt: {
+      type: Date,
+      default: null,
+    },
+    resolvedBy: {
+      type: String,
       default: null,
     },
 

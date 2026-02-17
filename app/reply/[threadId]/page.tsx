@@ -3,6 +3,8 @@ import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { checkThreadAccess } from "@/lib/authHelpers";
 import ReplyForm from "@/components/ReplyForm";
+import StatusBadge from "@/components/StatusBadge";
+import MarkResolvedButton from "@/components/MarkResolvedButton";
 
 type PageProps = {
   params: Promise<{ threadId: string }>;
@@ -98,6 +100,19 @@ export default async function ReplyPage({ params }: PageProps) {
         </div>
 
         {claimStatusBadge}
+
+        <div className="bg-white border border-neutral-200 rounded-lg p-3 mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-neutral-700 font-medium">Status:</span>
+            <StatusBadge status={(thread.status || 'open') as any} />
+          </div>
+          {thread.status !== 'resolved' && (
+            <MarkResolvedButton
+              threadId={threadId}
+              currentStatus={thread.status || 'open'}
+            />
+          )}
+        </div>
 
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <h2 className="text-lg font-semibold text-neutral-900 mb-4">
