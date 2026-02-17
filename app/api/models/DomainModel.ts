@@ -113,15 +113,15 @@ const DomainSchema = new Schema<IDomain>(
 
 DomainSchema.index({ workspaceId: 1, domain: 1 }, { unique: true });
 
-// export const Domain: Model<IDomain> =
-//   (mongoose.models.Domain as Model<IDomain>) ||
-//   mongoose.model<IDomain>("Domain", DomainSchema);
+export const Domain: Model<IDomain> =
+  (mongoose.models.Domain as Model<IDomain>) ||
+  mongoose.model<IDomain>("Domain", DomainSchema);
 
 // Delete old cached model if it exists
-if (mongoose.models.Domain) {
-  delete mongoose.models.Domain;
-}
+// if (mongoose.models.Domain) {
+//   delete mongoose.models.Domain;
+// }
 
-// Always create fresh model with new schema
-export const Domain: Model<IDomain> = mongoose.model<IDomain>("Domain", DomainSchema);
+// // Always create fresh model with new schema
+// export const Domain: Model<IDomain> = mongoose.model<IDomain>("Domain", DomainSchema);
 

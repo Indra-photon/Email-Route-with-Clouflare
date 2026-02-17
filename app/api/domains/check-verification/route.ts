@@ -209,6 +209,8 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
+    // console.log("🔍 RAW Resend response:", JSON.stringify(resendData, null, 2));
+
 
     console.log("📦 Resend API response:", {
       status: resendData.status,
