@@ -168,11 +168,6 @@ export async function POST(request: Request) {
 
     console.log("📊 Calling Resend API for domain:", domain.resendDomainId);
 
-    // const { data: resendData, error: resendError } = await resend.domains.get(
-    //   domain.resendDomainId
-    // );
-
-
     // First, trigger verification check
     console.log("🔍 Triggering Resend to verify DNS...");
     const { error: verifyError } = await resend.domains.verify(
@@ -209,11 +204,10 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
-    // console.log("🔍 RAW Resend response:", JSON.stringify(resendData, null, 2));
-
 
     console.log("📦 Resend API response:", {
       status: resendData.status,
+      capabilities: (resendData as any).capabilities,
       recordCount: resendData.records?.length,
       records: resendData.records?.map((r: any) => ({
         record: r.record,
@@ -236,10 +230,101 @@ export async function POST(request: Request) {
       })
     );
 
-    console.log("🔄 Mapped records for DB:", records.map(r => ({ 
-      record: r.record, 
-      status: r.status 
+    console.log("🔄 Mapped records for DB:", records.map((r: any) => ({
+      record: r.record,
+      status: r.status
     })));
+
+    // ─── AUTO-ENABLE RECEIVING ───────────────────────────────────────────
+    // If the domain is verified AND receiving is not yet enabled,
+    // automatically enable it via the Resend API — no admin needed!
+    let receivingEnabled = domain.receivingEnabled || false;
+    let receivingMxRecords = domain.receivingMxRecords || [];
+    let receivingAutoEnabled = false;
+
+    if (isVerified && !domain.receivingEnabled) {
+      console.log("📬 Domain verified! Auto-enabling receiving via Resend API...");
+
+      try {
+        // Step 1: Enable receiving capability on Resend
+        const { data: updateData, error: updateError } = await resend.domains.update({
+          id: domain.resendDomainId,
+          capabilities: { receiving: "enabled" },
+        });
+
+        if (updateError) {
+          console.log("⚠️ Failed to enable receiving:", updateError);
+          // Don't fail the whole request — verification still succeeded
+        } else {
+          console.log("✅ Receiving enabled on Resend:", updateData);
+
+          // Step 2: Wait a moment for Resend to generate the receiving MX records
+          await new Promise(resolve => setTimeout(resolve, 2000));
+
+          // Step 3: Re-fetch domain to get the receiving MX records
+          const { data: refreshedData, error: refreshError } = await resend.domains.get(
+            domain.resendDomainId
+          );
+
+          if (refreshError) {
+            console.log("⚠️ Failed to refetch domain after enabling receiving:", refreshError);
+          } else if (refreshedData) {
+            console.log("📦 Refreshed Resend data after enabling receiving:", {
+              capabilities: (refreshedData as any).capabilities,
+              recordCount: refreshedData.records?.length,
+              records: refreshedData.records?.map((r: any) => ({
+                record: r.record,
+                name: r.name,
+                type: r.type,
+                priority: r.priority,
+              }))
+            });
+
+            // Extract receiving MX records (record type = "Receiving")
+            const receivingRecords = (refreshedData.records || [])
+              .filter((r: any) => r.record === "Receiving")
+              .map((r: any) => ({
+                type: r.type || "MX",
+                name: r.name || "",
+                value: r.value || "",
+                priority: r.priority || 10,
+                ttl: r.ttl || "Auto",
+              }));
+
+            if (receivingRecords.length > 0) {
+              receivingEnabled = true;
+              receivingMxRecords = receivingRecords;
+              receivingAutoEnabled = true;
+              console.log("✅ Receiving MX records captured:", receivingRecords);
+            } else {
+              console.log("⚠️ No receiving records found after enabling. Capabilities may need time.");
+              // Still mark as enabled since the API call succeeded
+              receivingEnabled = true;
+              receivingAutoEnabled = true;
+            }
+
+            // Also update the main DNS records with the refreshed data
+            const refreshedRecords = (refreshedData.records || []).map(
+              (r: any) => ({
+                record: r.record || "",
+                name: r.name || "",
+                type: r.type || "",
+                value: r.value ?? "",
+                status: r.status || "not_started",
+                ttl: r.ttl,
+                priority: r.priority,
+              })
+            );
+            // Use refreshed records (which now include receiving records)
+            records.length = 0;
+            records.push(...refreshedRecords);
+          }
+        }
+      } catch (receivingError) {
+        console.error("⚠️ Error auto-enabling receiving:", receivingError);
+        // Don't fail the overall verification check
+      }
+    }
 
     console.log("💾 Updating database...");
 
@@ -249,6 +334,12 @@ export async function POST(request: Request) {
       dnsRecords: records,
       lastCheckedAt: new Date(),
       ...(isVerified ? { verifiedForReceiving: true } : {}),
+      // Auto-receiving fields
+      ...(receivingAutoEnabled ? {
+        receivingEnabled: true,
+        receivingEnabledAt: new Date(),
+        receivingMxRecords: receivingMxRecords,
+      } : {}),
     });
 
     console.log("✅ Database updated successfully");
@@ -256,8 +347,10 @@ export async function POST(request: Request) {
       id: domainId,
       status: isVerified ? "verified" : domain.status,
       verifiedForSending: isVerified,
+      receivingEnabled: receivingEnabled,
+      receivingMxRecords: receivingMxRecords.length,
       recordCount: records.length,
-      recordStatuses: records.map(r => ({ record: r.record, status: r.status }))
+      recordStatuses: records.map((r: any) => ({ record: r.record, status: r.status }))
     });
 
     const updated = await Domain.findById(domainId).lean();
@@ -265,15 +358,18 @@ export async function POST(request: Request) {
       success: true,
       verified: isVerified,
       status: resendData.status,
+      receivingAutoEnabled: receivingAutoEnabled,
       domain: updated
         ? {
-            id: updated._id.toString(),
-            domain: updated.domain,
-            status: updated.status,
-            verifiedForSending: updated.verifiedForSending,
-            dnsRecords: updated.dnsRecords,
-            lastCheckedAt: updated.lastCheckedAt,
-          }
+          id: updated._id.toString(),
+          domain: updated.domain,
+          status: updated.status,
+          verifiedForSending: updated.verifiedForSending,
+          receivingEnabled: updated.receivingEnabled,
+          receivingMxRecords: updated.receivingMxRecords,
+          dnsRecords: updated.dnsRecords,
+          lastCheckedAt: updated.lastCheckedAt,
+        }
         : null,
     });
   } catch (err) {

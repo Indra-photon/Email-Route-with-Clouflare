@@ -6,7 +6,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DomainVerificationInstructions } from "@/components/DomainVerificationInstructions";
 import { VerificationStatusBadge } from "@/components/VerificationStatusBadge";
-import ReceivingRequestButton from "@/components/ReceivingRequestButton";
 
 type DomainDetail = {
   id: string;
@@ -17,17 +16,8 @@ type DomainDetail = {
   dnsRecords?: { record: string; name: string; type: string; value?: string; status: string; priority?: number }[];
   receivingEnabled?: boolean;
   receivingEnabledAt?: string | null;
-  receivingRequestId?: string | null;
   receivingMxRecords?: { type: string; name: string; value: string; priority: number; ttl: string }[];
   lastCheckedAt?: string | null;
-};
-
-type ReceivingRequestStatus = {
-  status: "not_requested" | "pending" | "approved" | "rejected";
-  requestedAt?: string;
-  reviewedAt?: string;
-  mxRecords?: { type: string; name: string; value: string; priority: number; ttl: string }[];
-  rejectionReason?: string;
 };
 
 export default function DomainVerifyPage() {
@@ -39,8 +29,7 @@ export default function DomainVerifyPage() {
   const [checking, setChecking] = useState(false);
   const [addingToResend, setAddingToResend] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [receivingRequest, setReceivingRequest] = useState<ReceivingRequestStatus | null>(null);
-  const [loadingRequest, setLoadingRequest] = useState(false);
+  const [receivingJustEnabled, setReceivingJustEnabled] = useState(false);
 
   const fetchDomain = useCallback(async () => {
     if (!id) return;
@@ -62,26 +51,9 @@ export default function DomainVerifyPage() {
     }
   }, [id]);
 
-  const fetchReceivingRequestStatus = useCallback(async () => {
-    if (!id) return;
-    try {
-      setLoadingRequest(true);
-      const res = await fetch(`/api/receiving-requests/${id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setReceivingRequest(data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch receiving request status:", err);
-    } finally {
-      setLoadingRequest(false);
-    }
-  }, [id]);
-
   useEffect(() => {
     fetchDomain();
-    fetchReceivingRequestStatus();
-  }, [fetchDomain, fetchReceivingRequestStatus]);
+  }, [fetchDomain]);
 
   // Poll every 30s when not verified
   useEffect(() => {
@@ -115,6 +87,7 @@ export default function DomainVerifyPage() {
     try {
       setChecking(true);
       setError(null);
+      setReceivingJustEnabled(false);
       const res = await fetch("/api/domains/check-verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -124,6 +97,10 @@ export default function DomainVerifyPage() {
       if (!res.ok) {
         const msg = data.error || (res.status === 400 ? "Add domain to Resend first" : "Verification check failed");
         throw new Error(msg);
+      }
+      // Check if receiving was just auto-enabled
+      if (data.receivingAutoEnabled) {
+        setReceivingJustEnabled(true);
       }
       setDomain(data.domain ?? domain);
     } catch (err) {
@@ -196,11 +173,11 @@ export default function DomainVerifyPage() {
           </span>
           {domain.receivingEnabled ? (
             <span className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-              ✅ Enabled
+              ✅ Auto-Enabled
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300">
-              ⏳ Not Enabled
+              ⏳ Will enable on verification
             </span>
           )}
         </div>
@@ -218,6 +195,15 @@ export default function DomainVerifyPage() {
         </div>
       )}
 
+      {/* Just enabled notification */}
+      {receivingJustEnabled && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <p className="text-blue-800 dark:text-blue-200 text-sm font-medium">
+            🎉 Receiving was automatically enabled! Add the MX records below at your DNS provider to start receiving emails.
+          </p>
+        </div>
+      )}
+
       <DomainVerificationInstructions
         domainName={domain.domain}
         dnsRecords={domain.dnsRecords || []}
@@ -225,59 +211,53 @@ export default function DomainVerifyPage() {
       />
 
       {/* Receiving Email Section */}
-        <div className="mt-8 border-t pt-8">
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
-                📬 Receiving Emails (Optional)
-              </h2>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-                To receive emails at this domain, admin verification is required for security.
+      <div className="mt-8 border-t pt-8">
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+              📬 Receiving Emails
+            </h2>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+              Email receiving is automatically enabled when your domain is verified.
+            </p>
+          </div>
+
+          {/* Not yet verified */}
+          {!isVerified && (
+            <div className="bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
+              <p className="text-sm text-neutral-700 dark:text-neutral-300 mb-2">
+                <strong>Status:</strong> ⏳ Waiting for Domain Verification
+              </p>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                Once your domain is verified, email receiving will be <strong>automatically enabled</strong> — no admin approval needed!
               </p>
             </div>
+          )}
 
-            {/* Not Requested */}
-            {(!receivingRequest || receivingRequest.status === "not_requested") && !domain.receivingEnabled && (
-              <div className="bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
-                <p className="text-sm text-neutral-700 dark:text-neutral-300 mb-3">
-                  <strong>Status:</strong> ⏳ Not Requested
-                </p>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-                  Request admin approval to enable email receiving for this domain. Typically approved within 1-2 hours.
-                </p>
-                <ReceivingRequestButton
-                  domainId={domain.id}
-                  onRequestCreated={fetchReceivingRequestStatus}
-                />
-              </div>
-            )}
+          {/* Verified but receiving not yet enabled (edge case — first check after verification) */}
+          {isVerified && !domain.receivingEnabled && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+              <p className="text-sm text-amber-800 dark:text-amber-200 mb-2">
+                <strong>Status:</strong> ⏳ Enabling Receiving...
+              </p>
+              <p className="text-sm text-amber-700 dark:text-amber-300">
+                Your domain is verified. Click <strong>Check Verification</strong> to auto-enable receiving and get MX records.
+              </p>
+            </div>
+          )}
 
-            {/* Pending Approval */}
-            {receivingRequest?.status === "pending" && (
-              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-                <p className="text-sm text-amber-800 dark:text-amber-200 mb-2">
-                  <strong>Status:</strong> ⏳ Pending Admin Approval
-                </p>
-                <p className="text-sm text-amber-700 dark:text-amber-300 mb-2">
-                  Your request has been submitted. You'll receive an email when approved (typically 1-2 hours).
-                </p>
-                <p className="text-xs text-amber-600 dark:text-amber-400">
-                  Requested: {receivingRequest.requestedAt ? new Date(receivingRequest.requestedAt).toLocaleString() : "N/A"}
-                </p>
-              </div>
-            )}
+          {/* Receiving enabled — show MX records */}
+          {domain.receivingEnabled && (
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+              <p className="text-sm text-green-800 dark:text-green-200 mb-2">
+                <strong>Status:</strong> ✅ Receiving Enabled (Auto)
+              </p>
+              <p className="text-sm text-green-700 dark:text-green-300 mb-4">
+                Add these MX records at your DNS provider to start receiving emails at this domain.
+              </p>
 
-            {/* Approved */}
-            {receivingRequest?.status === "approved" && receivingRequest.mxRecords && (
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                <p className="text-sm text-green-800 dark:text-green-200 mb-2">
-                  <strong>Status:</strong> ✅ Receiving Enabled
-                </p>
-                <p className="text-sm text-green-700 dark:text-green-300 mb-4">
-                  Add these MX records at your DNS provider to start receiving emails.
-                </p>
-
-                {/* MX Records Table */}
+              {/* MX Records Table */}
+              {domain.receivingMxRecords && domain.receivingMxRecords.length > 0 ? (
                 <div className="bg-white dark:bg-neutral-950 rounded-lg border border-green-200 dark:border-green-800 overflow-hidden">
                   <table className="w-full text-sm">
                     <thead className="bg-green-100 dark:bg-green-900/30">
@@ -290,7 +270,7 @@ export default function DomainVerifyPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {receivingRequest.mxRecords.map((record, index) => (
+                      {domain.receivingMxRecords.map((record, index) => (
                         <tr key={index} className="border-t border-green-100 dark:border-green-900">
                           <td className="p-3 font-mono text-neutral-900 dark:text-neutral-100">{record.type}</td>
                           <td className="p-3 font-mono text-neutral-900 dark:text-neutral-100">{record.name}</td>
@@ -302,40 +282,22 @@ export default function DomainVerifyPage() {
                     </tbody>
                   </table>
                 </div>
+              ) : (
+                <p className="text-sm text-green-600 dark:text-green-400">
+                  Receiving is enabled. MX records will appear in your domain's DNS records above.
+                </p>
+              )}
 
+              {domain.receivingEnabledAt && (
                 <p className="text-xs text-green-600 dark:text-green-400 mt-3">
-                  Enabled: {receivingRequest.reviewedAt ? new Date(receivingRequest.reviewedAt).toLocaleString() : "N/A"}
+                  Auto-enabled: {new Date(domain.receivingEnabledAt).toLocaleString()}
                 </p>
-              </div>
-            )}
-
-            {/* Rejected */}
-            {receivingRequest?.status === "rejected" && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                <p className="text-sm text-red-800 dark:text-red-200 mb-2">
-                  <strong>Status:</strong> ❌ Request Rejected
-                </p>
-                {receivingRequest.rejectionReason && (
-                  <p className="text-sm text-red-700 dark:text-red-300 mb-2">
-                    <strong>Reason:</strong> {receivingRequest.rejectionReason}
-                  </p>
-                )}
-                <p className="text-sm text-red-600 dark:text-red-400">
-                  Please contact support for more information.
-                </p>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
+      </div>
 
-      {/* {(!domain.dnsRecords?.length || domain.dnsRecords.length === 0) && !domain.resendDomainId && (
-        <div className="mt-4">
-          <Button onClick={handleAddToResend} disabled={addingToResend}>
-            {addingToResend ? "Adding to Resend..." : "Add to Resend"}
-          </Button>
-          <p className="text-sm text-neutral-500 mt-2">Get DNS records from Resend to add at your domain provider.</p>
-        </div>
-      )} */}
       {(!domain.dnsRecords?.length || domain.dnsRecords.length === 0) && (
         <div className="mt-4">
           <Button onClick={handleAddToResend} disabled={addingToResend}>
@@ -356,23 +318,12 @@ export default function DomainVerifyPage() {
       {!isVerified && domain.resendDomainId && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
           <p className="text-blue-800 dark:text-blue-200 text-sm">
-            <strong>Next steps:</strong> Add the DNS records below at your domain provider. 
+            <strong>Next steps:</strong> Add the DNS records below at your domain provider.
             Verification typically takes 5-30 minutes. This page auto-checks every 30 seconds.
           </p>
         </div>
       )}
 
-      {/* <div className="flex gap-3 mt-4">
-        <Button
-          onClick={handleCheckVerification}
-          disabled={checking}
-        >
-          {checking ? "Checking..." : "Check Verification"}
-        </Button>
-        <Link href="/dashboard/domains">
-          <Button variant="outline">Back to Domains</Button>
-        </Link>
-      </div> */}
       <div className="flex gap-3 mt-4">
         {domain.resendDomainId && (
           <Button
@@ -389,3 +340,4 @@ export default function DomainVerifyPage() {
     </div>
   );
 }
+
