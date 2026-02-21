@@ -35,6 +35,8 @@ export default function AdminReviewRequestPage() {
   const [request, setRequest] = useState<RequestDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [reopening, setReopening] = useState(false);
 
   // Form states for approval
   const [mxPriority1, setMxPriority1] = useState("10");
@@ -47,21 +49,32 @@ export default function AdminReviewRequestPage() {
   const [rejectionReason, setRejectionReason] = useState("");
 
   useEffect(() => {
-    if (id) {
-      fetchRequest();
-    }
+    if (id) fetchRequest();
   }, [id]);
 
   const fetchRequest = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/receiving-requests`);
-      if (res.ok) {
-        const data = await res.json();
-        const foundRequest = data.requests.find((r: any) => r.id === id);
-        if (foundRequest) {
-          setRequest(foundRequest);
-          setAdminNotes(foundRequest.notes || "");
+      // Use the dedicated single-request endpoint
+      const res = await fetch(`/api/admin/receiving-requests/${id}`);
+      if (!res.ok) {
+        if (res.status === 404) {
+          setRequest(null);
+          return;
+        }
+        throw new Error("Failed to fetch request");
+      }
+      const data = await res.json();
+      setRequest(data.request);
+      setAdminNotes(data.request.notes || "");
+
+      // Pre-fill MX records if already approved
+      if (data.request.mxRecords?.length > 0) {
+        setMxPriority1(String(data.request.mxRecords[0]?.priority ?? "10"));
+        setMxValue1(data.request.mxRecords[0]?.value ?? "");
+        if (data.request.mxRecords[1]) {
+          setMxPriority2(String(data.request.mxRecords[1]?.priority ?? "20"));
+          setMxValue2(data.request.mxRecords[1]?.value ?? "");
         }
       }
     } catch (error) {
@@ -81,45 +94,24 @@ export default function AdminReviewRequestPage() {
     setSubmitting(true);
     try {
       const mxRecords = [
-        {
-          type: "MX",
-          name: "@",
-          value: mxValue1.trim(),
-          priority: parseInt(mxPriority1),
-          ttl: "Auto",
-        },
+        { type: "MX", name: "@", value: mxValue1.trim(), priority: parseInt(mxPriority1), ttl: "Auto" },
       ];
-
-      // Add second MX record if provided
       if (mxValue2.trim()) {
-        mxRecords.push({
-          type: "MX",
-          name: "@",
-          value: mxValue2.trim(),
-          priority: parseInt(mxPriority2),
-          ttl: "Auto",
-        });
+        mxRecords.push({ type: "MX", name: "@", value: mxValue2.trim(), priority: parseInt(mxPriority2), ttl: "Auto" });
       }
 
       const res = await fetch(`/api/admin/receiving-requests/${id}/approve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mxRecords,
-          notes: adminNotes,
-        }),
+        body: JSON.stringify({ mxRecords, notes: adminNotes }),
       });
 
       const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to approve request");
-      }
+      if (!res.ok) throw new Error(data.error || "Failed to approve request");
 
       toast.success("Request approved successfully!");
       router.push("/admin/receiving-requests");
     } catch (error: any) {
-      console.error("Failed to approve request:", error);
       toast.error(error.message || "Failed to approve request");
     } finally {
       setSubmitting(false);
@@ -137,24 +129,50 @@ export default function AdminReviewRequestPage() {
       const res = await fetch(`/api/admin/receiving-requests/${id}/reject`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          reason: rejectionReason,
-        }),
+        body: JSON.stringify({ reason: rejectionReason }),
       });
 
       const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to reject request");
-      }
+      if (!res.ok) throw new Error(data.error || "Failed to reject request");
 
       toast.success("Request rejected");
       router.push("/admin/receiving-requests");
     } catch (error: any) {
-      console.error("Failed to reject request:", error);
       toast.error(error.message || "Failed to reject request");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm(`Delete this request for "${request?.domain}"? This cannot be undone.`)) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/receiving-requests/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete");
+      toast.success("Request deleted");
+      router.push("/admin/receiving-requests");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete request");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleReopen = async () => {
+    if (!confirm("Re-open this request and reset it to pending? This will also disable receiving on the domain.")) return;
+    setReopening(true);
+    try {
+      const res = await fetch(`/api/admin/receiving-requests/${id}/reopen`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to re-open");
+      toast.success("Request reset to pending");
+      await fetchRequest();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to re-open request");
+    } finally {
+      setReopening(false);
     }
   };
 
@@ -177,16 +195,43 @@ export default function AdminReviewRequestPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link
-          href="/admin/receiving-requests"
-          className="text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 mb-2 inline-block"
-        >
-          ← Back to Requests
-        </Link>
-        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-          Review Receiving Request
-        </h1>
+      {/* Header */}
+      <div className="flex items-start justify-between">
+        <div>
+          <Link
+            href="/admin/receiving-requests"
+            className="text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 mb-2 inline-block"
+          >
+            ← Back to Requests
+          </Link>
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+            Review Receiving Request
+          </h1>
+        </div>
+
+        {/* Header action buttons */}
+        <div className="flex gap-2 mt-6">
+          {!isPending && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={reopening}
+              onClick={handleReopen}
+              className="text-amber-600 border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+            >
+              {reopening ? "Re-opening..." : "🔄 Re-open"}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={deleting}
+            onClick={handleDelete}
+            className="text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
+          >
+            {deleting ? "Deleting..." : "🗑️ Delete"}
+          </Button>
+        </div>
       </div>
 
       {/* Request Details */}
@@ -202,25 +247,15 @@ export default function AdminReviewRequestPage() {
             </dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-              Requested By
-            </dt>
-            <dd className="text-base text-neutral-900 dark:text-neutral-100 mt-1">
-              {request.requestedBy}
-            </dd>
+            <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Requested By</dt>
+            <dd className="text-base text-neutral-900 dark:text-neutral-100 mt-1">{request.requestedBy}</dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-              Workspace
-            </dt>
-            <dd className="text-base text-neutral-900 dark:text-neutral-100 mt-1">
-              {request.workspace}
-            </dd>
+            <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Workspace</dt>
+            <dd className="text-base text-neutral-900 dark:text-neutral-100 mt-1">{request.workspace}</dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-              Requested Date
-            </dt>
+            <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Requested Date</dt>
             <dd className="text-base text-neutral-900 dark:text-neutral-100 mt-1">
               {new Date(request.requestedAt).toLocaleString()}
             </dd>
@@ -259,9 +294,7 @@ export default function AdminReviewRequestPage() {
               ) : (
                 <span className="text-red-600 dark:text-red-400">❌</span>
               )}
-              <span className="text-sm text-neutral-700 dark:text-neutral-300">
-                Verified for Sending
-              </span>
+              <span className="text-sm text-neutral-700 dark:text-neutral-300">Verified for Sending</span>
             </div>
             <div className="flex items-center gap-2">
               {request.domainInfo.receivingEnabled ? (
@@ -269,15 +302,13 @@ export default function AdminReviewRequestPage() {
               ) : (
                 <span className="text-neutral-400">⬜</span>
               )}
-              <span className="text-sm text-neutral-700 dark:text-neutral-300">
-                Receiving Enabled
-              </span>
+              <span className="text-sm text-neutral-700 dark:text-neutral-300">Receiving Enabled</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Approval/Rejection Forms - Only show for pending requests */}
+      {/* Approval/Rejection Forms — only for pending */}
       {isPending && (
         <>
           {/* Approve Form */}
@@ -412,26 +443,20 @@ export default function AdminReviewRequestPage() {
           </h2>
           <dl className="space-y-3">
             <div>
-              <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-                Reviewed At
-              </dt>
+              <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Reviewed At</dt>
               <dd className="text-base text-neutral-900 dark:text-neutral-100 mt-1">
                 {request.reviewedAt ? new Date(request.reviewedAt).toLocaleString() : "N/A"}
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-                Reviewed By
-              </dt>
+              <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Reviewed By</dt>
               <dd className="text-base text-neutral-900 dark:text-neutral-100 mt-1">
                 {request.reviewedBy || "N/A"}
               </dd>
             </div>
             {request.status === "rejected" && request.rejectionReason && (
               <div>
-                <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-                  Rejection Reason
-                </dt>
+                <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Rejection Reason</dt>
                 <dd className="text-base text-neutral-900 dark:text-neutral-100 mt-1">
                   {request.rejectionReason}
                 </dd>
@@ -439,9 +464,7 @@ export default function AdminReviewRequestPage() {
             )}
             {request.status === "approved" && request.mxRecords.length > 0 && (
               <div>
-                <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">
-                  MX Records
-                </dt>
+                <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">MX Records</dt>
                 <dd className="space-y-2">
                   {request.mxRecords.map((record: any, index: number) => (
                     <div
@@ -457,12 +480,8 @@ export default function AdminReviewRequestPage() {
             )}
             {request.notes && (
               <div>
-                <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-                  Admin Notes
-                </dt>
-                <dd className="text-base text-neutral-900 dark:text-neutral-100 mt-1">
-                  {request.notes}
-                </dd>
+                <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Admin Notes</dt>
+                <dd className="text-base text-neutral-900 dark:text-neutral-100 mt-1">{request.notes}</dd>
               </div>
             )}
           </dl>
