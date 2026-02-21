@@ -205,6 +205,7 @@ export async function GET() {
       email: a.email,
       status: a.status,
       domain: a.domainId?.domain ?? "",
+      integrationId: a.integrationId?._id?.toString() ?? null,
       integrationName: a.integrationId?.name ?? null,
       integrationType: a.integrationId?.type ?? null,
       createdAt: a.createdAt,
