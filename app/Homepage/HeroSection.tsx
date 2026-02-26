@@ -229,7 +229,7 @@ export function HeroSection() {
               <motion.div
                 layout
                 transition={{ duration: 0.9, type: "spring", stiffness: 100, damping: 20 }}
-                className="bg-white/75 ring-neutral-300 shadow-black/6.5 overflow-hidden rounded-t-[2.5rem] border border-transparent px-2 pt-2 shadow-md ring-1 relative"
+                className="bg-white/75 ring-neutral-300  shadow-black/6.5 overflow-hidden rounded-t-[2.5rem] border border-transparent px-2 pt-2 shadow-md ring-1 relative"
               >
                 <motion.div className="bg-white ring-neutral-200 shadow-black/6.5 overflow-hidden rounded-t-[2rem] shadow ring-1 p-8 h-[600px] w-[450px]">
                   <AnimatePresence mode="wait">
@@ -256,8 +256,6 @@ export function HeroSection() {
                     )}
                   </AnimatePresence>
                 </motion.div>
-                {/* Bottom fade mask */}
-                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white via-white/50 to-transparent pointer-events-none"></div>
               </motion.div>
             </Grid.Cell>
           </Grid>
