@@ -5,6 +5,8 @@ import { SectionSeparator } from "./Homepage/SectionSeparator";
 import { BenefitsSection } from "./Homepage/BenefitsSection";
 import { FeaturesSection } from "./Homepage/FeaturesSection";
 import { TestimonialsSection } from "./Homepage/TestimonialsSection";
+import { FAQSection } from "@/components/FAQSection";
+import { Footer } from "@/components/Footer";
 
 export default function Home() {
   return (
@@ -15,6 +17,8 @@ export default function Home() {
         <BenefitsSection />
         <FeaturesSection />
         <TestimonialsSection />
+        <FAQSection />
+        <Footer />
 
       </section>
       

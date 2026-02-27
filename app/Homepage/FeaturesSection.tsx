@@ -123,6 +123,7 @@ import { Heading } from "@/components/Heading";
 import { IntegrationsStackIllustration } from "./Integrationsstackillustration";
 import { AnalyticsKanbanIllustration } from "./AnalyticsKanbanIllustration";
 import { PricingBenefitsIllustration } from "./PricingBenefitsIllustration";
+import { motion } from "motion/react";
 
 const features = [
   {
@@ -231,7 +232,14 @@ export function FeaturesSection() {
           as="h2" 
           className="text-neutral-900 mb-4 leading-tight font-semibold"
         >
+          <motion.div
+            initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
+            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
+          >
           Turn every channel into a conversation.
+          </motion.div>
         </Heading>
         <p className="text-lg md:text-xl text-neutral-600 font-schibsted font-normal mb-12 leading-relaxed max-w-3xl">
           Route emails, capture live chat, and unify Discord & Slack—all in one place. Your team responds faster when everything flows to where they already work.
