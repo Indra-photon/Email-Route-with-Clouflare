@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { motion } from "motion/react";
+import { Heading } from "@/components/Heading";
 
 const testimonials = [
   {
@@ -65,10 +67,19 @@ export function TestimonialsSection() {
   return (
     <section className="w-full bg-white py-16 md:py-20 lg:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 xl:px-0">
-        {/* Section Heading */}
-        <h2 className="text-3xl lg:text-4xl font-schibsted font-semibold tracking-tight leading-tight mb-8 text-neutral-900">
-          Trusted by teams that value fast support.
-        </h2>
+        <Heading 
+          as="h2" 
+          className="text-neutral-900 mb-4 leading-tight font-semibold"
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
+            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
+          >
+           Trusted by teams that value <span className="">fast support</span>.
+          </motion.div>
+        </Heading>
 
         {/* Main Testimonials Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 border border-neutral-200 overflow-hidden rounded-t-lg">
