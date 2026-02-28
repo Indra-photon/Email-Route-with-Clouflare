@@ -19,7 +19,7 @@ export async function getOrCreateWorkspaceForCurrentUser() {
       },
     },
     {
-      new: true,
+      returnDocument: 'after',
       upsert: true,
     }
   );

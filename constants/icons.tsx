@@ -675,3 +675,588 @@ export const AnalyticsIcon: React.FC<{
     `}</style>
   </svg>
 );
+
+
+
+// ============================================
+// ICON: MAIL (Envelope opens on hover)
+// ============================================
+export interface IconMailProps {
+  size?: number;
+  color?: string;
+  className?: string;
+  isAnimating?: boolean;
+}
+
+export function IconMail({
+  size = 24,
+  color = 'currentColor',
+  className = '',
+  isAnimating = false
+}: IconMailProps) {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill={color}
+      className={`icon icon-tabler ${className}`}
+      style={{ perspective: '2000px' }}
+    >
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      
+      {/* Envelope body - static */}
+      <path d="M22 7.535v9.465a3 3 0 0 1 -2.824 2.995l-.176 .005h-14a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-9.465l9.445 6.297l.116 .066a1 1 0 0 0 .878 0l.116 -.066l9.445 -6.297z" />
+      
+      {/* Top flap - rotates to open on hover */}
+      <motion.path 
+        d="M19 4c1.08 0 2.027 .57 2.555 1.427l-9.555 6.37l-9.555 -6.37a2.999 2.999 0 0 1 2.354 -1.42l.201 -.007h14z"
+        style={{
+          transformBox: "fill-box",
+          transformOrigin: "50% 0%"
+        }}
+        animate={isAnimating ? "open" : "closed"}
+        variants={{
+          closed: {
+            rotateX: 0,
+            y: 0,
+            transition: {
+              type: "spring",
+              stiffness: 300,
+              damping: 20
+            }
+          },
+          open: {
+            rotateX: -180,
+            y: -4,
+            transition: {
+              type: "spring",
+              stiffness: 300,
+              damping: 20
+            }
+          }
+        }}
+      />
+    </svg>
+  );
+}
+
+// ============================================
+// ICON: DASHBOARD (Chart bars grow on hover)
+// ============================================
+export interface IconDashboardProps {
+  size?: number;
+  color?: string;
+  className?: string;
+  isAnimating?: boolean;
+}
+
+export function IconDashboard({
+  size = 24,
+  color = 'currentColor',
+  className = '',
+  isAnimating = false
+}: IconDashboardProps) {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24"
+      className={`icon ${className}`}
+    >
+      <g fill="none">
+        {/* Background container */}
+        <rect 
+          x="3" 
+          y="2" 
+          width="18" 
+          height="20" 
+          rx="4"
+          fill={color}
+        />
+
+        {/* Bar 1 - shortest */}
+        <motion.g
+          style={{
+            transformBox: "fill-box",
+            transformOrigin: "8.5px 16.5px"
+          }}
+          animate={isAnimating ? "grow" : "normal"}
+          variants={{
+            normal: {
+              scaleY: 1,
+              transition: {
+                type: "spring",
+                stiffness: 300,
+                damping: 20
+              }
+            },
+            grow: {
+              scaleY: 1.4,
+              transition: {
+                type: "spring",
+                stiffness: 300,
+                damping: 20,
+                delay: 0
+              }
+            }
+          }}
+        >
+          <rect 
+            x="7.5" 
+            y="14" 
+            width="2" 
+            height="2.5" 
+            rx="0.5"
+            fill="rgba(255,255,255,0.9)"
+          />
+        </motion.g>
+        
+        {/* Bar 2 - medium */}
+        <motion.g
+          style={{
+            transformBox: "fill-box",
+            transformOrigin: "12px 16.5px"
+          }}
+          animate={isAnimating ? "grow" : "normal"}
+          variants={{
+            normal: {
+              scaleY: 1,
+              transition: {
+                type: "spring",
+                stiffness: 300,
+                damping: 20
+              }
+            },
+            grow: {
+              scaleY: 1.3,
+              transition: {
+                type: "spring",
+                stiffness: 300,
+                damping: 20,
+                delay: 0.1
+              }
+            }
+          }}
+        >
+          <rect 
+            x="11" 
+            y="11" 
+            width="2" 
+            height="5.5" 
+            rx="0.5"
+            fill="rgba(255,255,255,0.9)"
+          />
+        </motion.g>
+        
+        {/* Bar 3 - tallest */}
+        <motion.g
+          style={{
+            transformBox: "fill-box",
+            transformOrigin: "15.5px 16.5px"
+          }}
+          animate={isAnimating ? "grow" : "normal"}
+          variants={{
+            normal: {
+              scaleY: 1,
+              transition: {
+                type: "spring",
+                stiffness: 300,
+                damping: 20
+              }
+            },
+            grow: {
+              scaleY: 1.2,
+              transition: {
+                type: "spring",
+                stiffness: 300,
+                damping: 20,
+                delay: 0.2
+              }
+            }
+          }}
+        >
+          <rect 
+            x="14.5" 
+            y="8" 
+            width="2" 
+            height="8.5" 
+            rx="0.5"
+            fill="rgba(255,255,255,0.9)"
+          />
+        </motion.g>
+
+        {/* Base line */}
+        <line 
+          x1="6.5" 
+          y1="16.5" 
+          x2="17.5" 
+          y2="16.5" 
+          stroke="rgba(255,255,255,0.3)" 
+          strokeWidth="0.5"
+        />
+      </g>
+    </svg>
+  );
+}
+
+// ============================================
+// ICON: INBOX (Envelope slides in on hover)
+// ============================================
+export interface IconInboxProps {
+  size?: number;
+  color?: string;
+  className?: string;
+  isAnimating?: boolean;
+}
+
+export function IconInbox({
+  size = 24,
+  color = 'currentColor',
+  className = '',
+  isAnimating = false
+}: IconInboxProps) {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill={color} // no color
+      className={`icon ${className}`}
+    >
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      
+      {/* Flag pole - static */}
+      <path d="M10 2a1 1 0 0 1 .993 .883l.007 .117v8h-3a1 1 0 0 1 -.993 -.883l-.007 -.117v-5a1 1 0 0 1 .883 -.993l.117 -.007h3v-2a1 1 0 0 1 1 -1z" />
+      <path d="M11 12v8h1a1 1 0 0 1 .117 1.993l-.117 .007h-4a1 1 0 0 1 -.117 -1.993l.117 -.007h1v-8h1z" />
+      
+      {/* Flag - rotates on left edge */}
+      <motion.path 
+        d="M16 5a1 1 0 0 1 .694 .28l.087 .095l2 2.5a1 1 0 0 1 .072 1.147l-.072 .103l-2 2.5a1 1 0 0 1 -.652 .367l-.129 .008h-5v-7h5z"
+        style={{
+          transformBox: "fill-box",
+          transformOrigin: "11px 8.5px"
+        }}
+        animate={isAnimating ? "wave" : "normal"}
+        variants={{
+          normal: {
+            rotateY: 0,
+            transition: {
+              type: "spring",
+              stiffness: 300,
+              damping: 20
+            }
+          },
+          wave: {
+            rotateY: -360,
+            transition: {
+              type: "spring",
+              stiffness: 300,
+              damping: 20
+            }
+          }
+        }}
+      />
+    </svg>
+  );
+}
+
+// ============================================
+// ICON: GLOBE (Rotates on hover)
+// ============================================
+export interface IconGlobeProps {
+  size?: number;
+  color?: string;
+  className?: string;
+  isAnimating?: boolean;
+}
+
+export function IconGlobe({
+  size = 24,
+  color = 'currentColor',
+  className = '',
+  isAnimating = false
+}: IconGlobeProps) {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`icon ${className}`}
+    >
+      {/* Globe circle */}
+      <motion.path 
+        d="M12 21a9 9 0 1 0 0 -18a9 9 0 0 0 0 18z"
+        animate={isAnimating ? "pulse" : "normal"}
+        variants={{
+          normal: {
+            scale: 1,
+            transition: {
+              type: "spring",
+              stiffness: 300,
+              damping: 20
+            }
+          },
+          pulse: {
+            scale: [1, 1.05, 1],
+            transition: {
+              duration: 0.6,
+              ease: "easeInOut"
+            }
+          }
+        }}
+        style={{
+          transformBox: "fill-box",
+          transformOrigin: "50% 50%"
+        }}
+      />
+      
+      {/* Top horizontal line */}
+      <motion.path 
+        d="M3.6 9h16.8"
+        animate={isAnimating ? "wave" : "normal"}
+        variants={{
+          normal: {
+            d: "M3.6 9h16.8",
+            transition: {
+              type: "spring",
+              stiffness: 300,
+              damping: 20
+            }
+          },
+          wave: {
+            d: "M3.6 9q4.2 -1.5 8.4 0t8.4 0",
+            transition: {
+              type: "spring",
+              stiffness: 300,
+              damping: 20
+            }
+          }
+        }}
+      />
+      
+      {/* Bottom horizontal line */}
+      <motion.path 
+        d="M3.6 15h16.8"
+        animate={isAnimating ? "wave" : "normal"}
+        variants={{
+          normal: {
+            d: "M3.6 15h16.8",
+            transition: {
+              type: "spring",
+              stiffness: 300,
+              damping: 20,
+              delay: 0.05
+            }
+          },
+          wave: {
+            d: "M3.6 15q4.2 1.5 8.4 0t8.4 0",
+            transition: {
+              type: "spring",
+              stiffness: 300,
+              damping: 20,
+              delay: 0.05
+            }
+          }
+        }}
+      />
+      
+      {/* Left vertical meridian */}
+      <motion.path 
+        d="M11.5 3a17 17 0 0 0 0 18"
+        animate={isAnimating ? "shift" : "normal"}
+        variants={{
+          normal: {
+            d: "M11.5 3a17 17 0 0 0 0 18",
+            transition: {
+              type: "spring",
+              stiffness: 300,
+              damping: 20
+            }
+          },
+          shift: {
+            d: "M10 3a17 17 0 0 0 1.5 18",
+            transition: {
+              type: "spring",
+              stiffness: 300,
+              damping: 20
+            }
+          }
+        }}
+      />
+      
+      {/* Right vertical meridian */}
+      <motion.path 
+        d="M12.5 3a16.94 16.94 0 0 1 2.307 12"
+        animate={isAnimating ? "shift" : "normal"}
+        variants={{
+          normal: {
+            d: "M12.5 3a16.94 16.94 0 0 1 2.307 12",
+            transition: {
+              type: "spring",
+              stiffness: 300,
+              damping: 20
+            }
+          },
+          shift: {
+            d: "M14 3a16.94 16.94 0 0 1 0.807 12",
+            transition: {
+              type: "spring",
+              stiffness: 300,
+              damping: 20
+            }
+          }
+        }}
+      />
+    </svg>
+  );
+}
+
+// ============================================
+// ICON: AT SIGN (Pulse on hover)
+// ============================================
+export interface IconAtSignProps {
+  size?: number;
+  color?: string;
+  className?: string;
+  isAnimating?: boolean;
+}
+
+export function IconAtSign({
+  size = 24,
+  color = 'currentColor',
+  className = '',
+  isAnimating = false
+}: IconAtSignProps) {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`icon ${className}`}
+    >
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      
+      {/* Inner circle @ symbol */}
+      <motion.path 
+        d="M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"
+        initial={{ pathLength: 1, opacity: 1 }}
+        animate={isAnimating ? "draw" : "normal"}
+        variants={{
+          normal: {
+            pathLength: 1,
+            opacity: 1,
+            transition: {
+              duration: 0.3,
+              ease: "easeOut"
+            }
+          },
+          draw: {
+            pathLength: [0, 1],
+            opacity: [0.3, 1],
+            transition: {
+              duration: 0.5,
+              ease: "easeOut"
+            }
+          }
+        }}
+      />
+      
+      {/* Outer arc with tail */}
+      <motion.path 
+        d="M16 12v1.5a2.5 2.5 0 0 0 5 0v-1.5a9 9 0 1 0 -5.5 8.28"
+        initial={{ pathLength: 1, opacity: 0.3 }}
+        animate={isAnimating ? "draw" : "normal"}
+        variants={{
+          normal: {
+            pathLength: 1,
+            opacity: 1,
+            transition: {
+              duration: 0.3,
+              ease: "easeOut"
+            }
+          },
+          draw: {
+            pathLength: [0, 1],
+            opacity: [0.3, 1],
+            transition: {
+              duration: 0.6,
+              ease: "easeOut",
+              delay: 0.1
+            }
+          }
+        }}
+      />
+    </svg>
+  );
+}
+
+// ============================================
+// ICON: ZAP (Lightning flash on hover)
+// ============================================
+export interface IconZapProps {
+  size?: number;
+  color?: string;
+  className?: string;
+  isAnimating?: boolean;
+}
+
+export function IconZap({
+  size = 24,
+  color = 'currentColor',
+  className = '',
+  isAnimating = false
+}: IconZapProps) {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill={color}
+      className={`icon ${className}`}
+    >
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      
+      {/* Lightning bolt */}
+      <motion.path 
+        d="M13 3l-8 9h5l-1 9l8 -9h-5l1 -9z"
+        animate={isAnimating ? "flash" : "normal"}
+        variants={{
+          normal: {
+            opacity: 1,
+            y: 0,
+            transition: {
+              type: "spring",
+              stiffness: 300,
+              damping: 20
+            }
+          },
+          flash: {
+            opacity: [1, 0.6, 1],
+            y: [0, -2, 0],
+            transition: {
+              duration: 0.5,
+              ease: "easeInOut"
+            }
+          }
+        }}
+      />
+    </svg>
+  );
+}
