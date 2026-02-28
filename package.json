@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "db:indexes": "tsx lib/db/createIndexes.ts",
     "start": "next start",
     "lint": "eslint"
   },
