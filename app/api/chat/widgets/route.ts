@@ -7,7 +7,7 @@ import { Integration } from "@/app/api/models/IntegrationModel";
 import { Domain } from "@/app/api/models/DomainModel";
 import crypto from "crypto";
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
         const { userId } = await auth();
         if (!userId) return new NextResponse("Unauthorized", { status: 401 });
@@ -20,6 +20,10 @@ export async function GET() {
             .lean()
             .exec();
 
+        const protocol = request.headers.get("x-forwarded-proto") || "http";
+        const host = request.headers.get("host") || "localhost:3000";
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
+
         return NextResponse.json(
             widgets.map((w) => ({
                 id: w._id.toString(),
@@ -30,6 +34,7 @@ export async function GET() {
                 accentColor: w.accentColor,
                 status: w.status,
                 createdAt: w.createdAt,
+                embedScript: `<script>window.CHAT_KEY = '${w.activationKey}';</script>\n<script async src="${baseUrl}/chat/widget.js"></script>`,
             }))
         );
     } catch (error) {
@@ -97,7 +102,9 @@ export async function POST(request: Request) {
             accentColor: accentColor?.trim() || "#0ea5e9",
         });
 
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://yourdomain.com";
+        const protocol = request.headers.get("x-forwarded-proto") || "http";
+        const host = request.headers.get("host") || "localhost:3000";
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
 
         return NextResponse.json(
             {

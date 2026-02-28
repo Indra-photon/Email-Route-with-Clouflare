@@ -25,7 +25,9 @@ export async function GET(
             return NextResponse.json({ error: "Widget not found" }, { status: 404 });
         }
 
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://yourdomain.com";
+        const protocol = request.headers.get("x-forwarded-proto") || "http";
+        const host = request.headers.get("host") || "localhost:3000";
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
 
         return NextResponse.json({
             id: widget._id.toString(),

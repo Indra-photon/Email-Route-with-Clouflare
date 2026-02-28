@@ -318,7 +318,7 @@ export default function ChatWidgetsDashboard() {
             ) : (
                 <div className="space-y-3">
                     {widgets.map((widget) => {
-                        const script = `<script>window.CHAT_KEY = '${widget.activationKey}';</script>\n<script async src="${process.env.NEXT_PUBLIC_BASE_URL || ''}/chat/widget.js"></script>`;
+                        const script = widget.embedScript || `<script>window.CHAT_KEY = '${widget.activationKey}';</script>\n<script async src="${process.env.NEXT_PUBLIC_BASE_URL || ''}/chat/widget.js"></script>`;
                         return (
                             <div
                                 key={widget.id}
