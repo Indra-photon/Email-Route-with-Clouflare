@@ -11,13 +11,22 @@ const isPublicRoute = createRouteMatcher([
     '/api/chat(.*)'
 ])
 
+const isEmbedRoute = createRouteMatcher([
+    '/chat/embed(.*)'
+])
+
 import { NextResponse } from 'next/server';
 
 export default clerkMiddleware(async (auth, req) => {
+    const requestHeaders = new Headers(req.headers);
+
+    if (isEmbedRoute(req)) {
+        requestHeaders.set('x-skip-clerk', 'true');
+        return NextResponse.next({ request: { headers: requestHeaders } });
+    }
+
     if (isPublicRoute(req)) {
-        const response = NextResponse.next();
-        response.headers.set('x-is-public-route', 'true');
-        return response;
+        return NextResponse.next();
     }
 
     const { isAuthenticated, redirectToSignIn } = await auth()

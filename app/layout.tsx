@@ -100,9 +100,9 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const headersList = await headers();
-  const isPublicRoute = headersList.get("x-is-public-route") === "true";
+  const skipClerk = headersList.get("x-skip-clerk") === "true";
 
-  if (isPublicRoute) {
+  if (skipClerk) {
     return (
       <html lang="en">
         <body
