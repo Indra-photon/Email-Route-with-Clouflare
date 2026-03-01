@@ -92,24 +92,42 @@ export const metadata: Metadata = {
   }
 };
 
-export default function RootLayout({
+import { headers } from "next/headers";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const isPublicRoute = headersList.get("x-is-public-route") === "true";
+
+  if (isPublicRoute) {
+    return (
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} ${schibstedGrotesk.variable} antialiased`}
+        >
+          {children}
+          <Toaster position="top-right" />
+        </body>
+      </html>
+    );
+  }
+
   return (
     <ClerkProvider>
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${schibstedGrotesk.variable} antialiased`}
-      >
-        <NavBar />
-        <UserSync />
-        {children}
-        <GoogleTagManager gtmId="Your GTM ID" />
-        <Toaster position="top-right" />
-      </body>
-    </html>
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} ${schibstedGrotesk.variable} antialiased`}
+        >
+          <NavBar />
+          <UserSync />
+          {children}
+          <GoogleTagManager gtmId="Your GTM ID" />
+          <Toaster position="top-right" />
+        </body>
+      </html>
     </ClerkProvider>
   );
 }
