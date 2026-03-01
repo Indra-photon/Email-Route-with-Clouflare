@@ -101,6 +101,7 @@ export default async function RootLayout({
 }>) {
   const headersList = await headers();
   const skipClerk = headersList.get("x-skip-clerk") === "true";
+  console.log('DEBUG: skipClerk:', skipClerk, 'x-skip-clerk header:', headersList.get("x-skip-clerk"));
 
   if (skipClerk) {
     return (
