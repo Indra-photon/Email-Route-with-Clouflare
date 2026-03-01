@@ -1,0 +1,214 @@
+# Live Chat Widget — User Guide
+### For Website Owners
+
+> This guide shows you how to add a live chat widget to your website and reply to visitors — all from your Email Router dashboard.
+
+---
+
+## What You'll Be Able to Do
+
+- Add a floating 💬 button to **any of your verified websites**
+- Visitors click it → a chat popup opens → they type a message
+- You get **notified instantly in Slack or Discord**
+- You can **reply back from your dashboard**, and the visitor sees your reply in real-time
+
+---
+
+## Prerequisites (Before You Start)
+
+Make sure you've already done these two things in your dashboard:
+
+1. ✅ **Verified your domain** — Go to `Dashboard → Domains` and confirm your domain shows as verified.
+2. ✅ **Connected Slack or Discord** — Go to `Dashboard → Integrations` and add at least one Slack or Discord webhook.
+
+If you haven't done these yet, do them first — the chat widget won't work without them.
+
+---
+
+## Step 1 — Create Your Chat Widget
+
+1. In your dashboard sidebar, click **"Chat Widgets"**
+2. Click the **"Create Widget"** button
+3. Fill out the form:
+
+| Field | What to do |
+|---|---|
+| **Domain** | Pick the verified domain you want the chat on (e.g. `mystore.com`) |
+| **Integration** | Pick your Slack or Discord connection |
+| **Welcome Message** | What visitors see when they first open the chat (e.g. "Hi! How can we help?") |
+| **Accent Color** | Pick a color for the chat bubble to match your brand |
+
+4. Click **"Create Widget"**
+
+---
+
+## Step 2 — Copy Your Embed Script
+
+After creating the widget, you'll see a **green confirmation box** with your embed script. It looks like this:
+
+```html
+<script>window.CHAT_KEY = 'cw_abc123xyz789def456ghi7';</script>
+<script async src="https://yourdomain.com/chat/widget.js"></script>
+```
+
+Click **"Copy Embed"** to copy it to your clipboard.
+
+> 💡 **You can also copy it anytime** — just go to Chat Widgets, find your widget, and click the "Copy Embed" link next to it.
+
+---
+
+## Step 3 — Paste It on Your Website
+
+Open your website's HTML (or your website builder) and paste the two lines **just before the `</body>` tag** at the bottom of every page where you want the chat.
+
+### If you use a website builder:
+
+| Platform | Where to add it |
+|---|---|
+| **WordPress** | Appearance → Theme File Editor → footer.php (before `</body>`) |
+| **Shopify** | Online Store → Themes → Edit Code → `theme.liquid` (before `</body>`) |
+| **Webflow** | Project Settings → Custom Code → Footer Code |
+| **Squarespace** | Settings → Advanced → Code Injection → Footer |
+| **Wix** | Settings → Custom Code → Add to `</body>` |
+| **Plain HTML** | Open your `.html` file, paste before `</body>` |
+
+### Example (plain HTML):
+```html
+<!DOCTYPE html>
+<html>
+  <body>
+    <!-- Your website content here -->
+
+    <!-- Chat Widget — paste these two lines -->
+    <script>window.CHAT_KEY = 'cw_abc123xyz789def456ghi7';</script>
+    <script async src="https://yourdomain.com/chat/widget.js"></script>
+  </body>
+</html>
+```
+
+Save and publish your website. The 💬 button will appear on the bottom-right corner of your site.
+
+---
+
+## What Your Visitors See
+
+1. They visit your website and see a **floating 💬 button** in the bottom-right corner
+2. They click it — a **clean chat popup** opens showing your welcome message
+3. They type their message and hit **Send**
+4. The chat stays open if they navigate between pages (their conversation is saved)
+
+---
+
+## Step 4 — Receive Notifications
+
+Every time a visitor sends a message, you'll get a notification instantly:
+
+**In Slack**, it looks like this:
+```
+💬 New chat message from mystore.com
+
+> Hi, I have a question about my order
+
+Visitor ID: v_abc123
+Page: https://mystore.com/products
+
+[View Conversation →]
+```
+
+**In Discord**, it looks like this:
+```
+💬 New chat from mystore.com
+> Hi, I have a question about my order
+
+[View Conversation](link)
+```
+
+Click the link to go directly to the conversation in your dashboard.
+
+---
+
+## Step 5 — Reply to Visitors
+
+1. Go to **Dashboard → Live Chats**
+2. You'll see all your active conversations listed, newest first
+3. Click any conversation to open it
+4. Type your reply at the bottom and press **Enter** (or click Send)
+5. Your reply is delivered **instantly** to the visitor's chat popup — they see it in real-time
+
+---
+
+## Managing Your Widgets
+
+### View all your widgets
+Go to **Dashboard → Chat Widgets** — you'll see each widget with its domain, activation key, and status.
+
+### Copy the embed script again
+On the Chat Widgets page, each widget has a **"Copy Embed"** link — click it anytime.
+
+### Delete a widget
+Click the trash 🗑️ icon next to a widget. The key will stop working immediately. Any old conversations are still visible in Live Chats.
+
+### Multiple websites
+You can create **one widget per verified domain**. If you have 3 domains, you can create 3 separate widgets, each with its own key and integration.
+
+## Advanced: Custom Launcher & Style
+
+If you want to use your own icon/button or change the position/color on a specific site, you can use the optional `window.CHAT_CONFIG` object in your embed code.
+
+### Option 1: Custom Color & Position
+Keep the default floating bubble but change its look:
+```html
+<script>
+  window.CHAT_KEY = 'cw_xxx';
+  window.CHAT_CONFIG = {
+    color: '#8b5cf6',          // Purple bubble
+    position: 'bottom-left'    // Move to left side
+  };
+</script>
+<script async src="https://yourdomain.com/chat/widget.js"></script>
+```
+
+### Option 2: Custom Launcher (Your own button/image)
+If you define a `launcher`, the default floating bubble is **hidden**. The widget will instead attach itself to any element on your page that matches your CSS selector.
+
+```html
+<!-- Any element you want to trigger the chat -->
+<img id="my-chat-btn" src="/my-icon.png" style="position:fixed;bottom:20px;right:20px;cursor:pointer;" />
+
+<script>
+  window.CHAT_KEY = 'cw_xxx';
+  window.CHAT_CONFIG = {
+    launcher: '#my-chat-btn' // Match the ID above
+  };
+</script>
+<script async src="https://yourdomain.com/chat/widget.js"></script>
+```
+
+---
+
+## Tips & Best Practices
+
+- **Set a personal welcome message** — "Hi there! I'm Jane from Acme Support 👋" works much better than the generic default.
+- **Match your brand color** — Use your website's primary color for the chat bubble so it looks native.
+- **Respond fast** — The chat is designed for real-time. Visitors expect a reply within a few minutes.
+- **Check Live Chats daily** — Even if Slack/Discord notifies you, keeping the dashboard open means you can respond instantly.
+- **Don't delete widgets without updating your site** — If you delete a widget, remove the script from your website too, otherwise the button just won't load.
+
+---
+
+## Frequently Asked Questions
+
+**Q: Will the chat widget slow down my website?**  
+A: No. The script loads with `async` so it never blocks your page from loading.
+
+**Q: Can a visitor re-open a conversation they had before?**  
+A: Yes — their conversation is automatically saved in their browser. If they come back and open the chat, they'll see their previous messages.
+
+**Q: What if I'm offline? Do I miss messages?**  
+A: No. Every message is saved in your dashboard. Check **Live Chats** anytime to catch up. You'll also have the Slack/Discord notification.
+
+**Q: Can I use the same widget on multiple pages?**  
+A: Yes — paste the same 2-line script on as many pages of your website as you want. It's one widget per domain, not per page.
+
+**Q: Do I need to do anything with the Render server?**  
+A: As a user, no — that's handled by your platform administrator. You just create widgets and reply to visitors.
