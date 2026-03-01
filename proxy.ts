@@ -18,9 +18,11 @@ const isEmbedRoute = createRouteMatcher([
 import { NextResponse } from 'next/server';
 
 export default clerkMiddleware(async (auth, req) => {
+    console.log('>> PROXY PATH:', req.nextUrl.pathname);
     const requestHeaders = new Headers(req.headers);
 
     if (isEmbedRoute(req)) {
+        console.log('>> MATCHED EMBED - SETTING SKIP HEADER');
         requestHeaders.set('x-skip-clerk', 'true');
         return NextResponse.next({ request: { headers: requestHeaders } });
     }
