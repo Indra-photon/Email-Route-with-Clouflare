@@ -12,9 +12,13 @@ const isPublicRoute = createRouteMatcher([
   '/api/chat(.*)'
 ])
 
+import { NextResponse } from 'next/server';
+
 export default clerkMiddleware(async (auth, req) => {
   if (isPublicRoute(req)) {
-    return;
+    const response = NextResponse.next();
+    response.headers.set('x-is-public-route', 'true');
+    return response;
   }
 
   const { isAuthenticated, redirectToSignIn } = await auth()
