@@ -4,6 +4,10 @@ import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import AdminNav from "@/components/admin/AdminNav";
 
+// Force all admin pages to be server-rendered on demand (never statically generated)
+// This prevents Next.js from probing these routes at build time and logging false errors
+export const dynamic = "force-dynamic";
+
 export default async function AdminLayout({
   children,
 }: {

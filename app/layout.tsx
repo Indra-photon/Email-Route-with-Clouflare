@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Schibsted_Grotesk } from "next/font/google";
+
+// Force dynamic rendering — this layout reads request headers (for skipClerk)
+export const dynamic = "force-dynamic";
 import "./globals.css";
 import { GoogleTagManager } from '@next/third-parties/google'
 import { Toaster } from "@/components/ui/sonner"
@@ -18,17 +21,20 @@ import { UserSync } from "@/components/UserSync";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  preload: false, // Prevents hard network fetch at build time; still loads at runtime
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  preload: false,
 });
 
 const schibstedGrotesk = Schibsted_Grotesk({
   variable: "--font-schibsted-grotesk",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"], // Include the weights you need
+  weight: ["400", "500", "600", "700", "800", "900"],
+  preload: false,
 });
 
 export const metadata: Metadata = {
