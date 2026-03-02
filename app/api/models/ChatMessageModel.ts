@@ -5,6 +5,8 @@ export interface IChatMessage extends Document {
     widgetId: Types.ObjectId;
     sender: "visitor" | "agent";
     body: string;
+    type: "text" | "image" | "pdf";
+    mediaUrl: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -29,7 +31,16 @@ const ChatMessageSchema = new Schema<IChatMessage>(
         },
         body: {
             type: String,
-            required: true,
+            default: '',
+        },
+        type: {
+            type: String,
+            enum: ["text", "image", "pdf"],
+            default: "text",
+        },
+        mediaUrl: {
+            type: String,
+            default: '',
         },
     },
     {

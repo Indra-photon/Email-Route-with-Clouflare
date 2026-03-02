@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { io, Socket } from "socket.io-client";
 
 interface ChatMessage {
     id: string;
     sender: "visitor" | "agent";
     body: string;
+    type: "text" | "image" | "pdf";
+    mediaUrl: string;
     createdAt: string;
 }
 
@@ -27,129 +30,172 @@ export default function ChatEmbedPage() {
     const [visitorId, setVisitorId] = useState<string>("");
     const [visitorPage, setVisitorPage] = useState<string>("");
     const [isConnected, setIsConnected] = useState(false);
+    const [agentOnline, setAgentOnline] = useState(false);
+    const [agentCount, setAgentCount] = useState(0);
+    const [agentTyping, setAgentTyping] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [uploadProgress, setUploadProgress] = useState(false);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
-    const lastFetchRef = useRef<string | null>(null);
-    const renderServerUrl = process.env.NEXT_PUBLIC_RENDER_CHAT_SERVER_URL || "";
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const socketRef = useRef<Socket | null>(null);
+    const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const agentTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const conversationIdRef = useRef<string | null>(null);
 
-    // Parse URL params
+    const renderServerUrl = process.env.NEXT_PUBLIC_RENDER_CHAT_SERVER_URL || "";
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "";
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "";
+
+    // Keep ref in sync with state
+    useEffect(() => { conversationIdRef.current = conversationId; }, [conversationId]);
+
+    // ── Parse URL params ────────────────────────────────────────────
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const key = params.get("key") || "";
         const vid = params.get("vid") || "";
         const cid = params.get("cid") || "";
         const page = params.get("page") || "";
-
         setChatKey(key);
         setVisitorId(vid);
         setVisitorPage(page);
         if (cid) setConversationId(cid);
     }, []);
 
-    // Fetch/poll for messages from Vercel (fallback) + SSE from Render (real-time)
-    const fetchMessages = useCallback(async () => {
-        if (!chatKey || !visitorId || !conversationId) return;
+    // ── Load existing messages from DB ──────────────────────────────
+    const fetchInitialMessages = useCallback(async (key: string, vid: string, cid: string) => {
+        if (!key || !vid || !cid) return;
         try {
-            const url = `/api/chat/messages?key=${encodeURIComponent(chatKey)}&cid=${encodeURIComponent(conversationId)}&vid=${encodeURIComponent(visitorId)}${lastFetchRef.current ? `&after=${encodeURIComponent(lastFetchRef.current)}` : ""}`;
-            const res = await fetch(url);
+            const res = await fetch(
+                `/api/chat/messages?key=${encodeURIComponent(key)}&cid=${encodeURIComponent(cid)}&vid=${encodeURIComponent(vid)}`
+            );
             if (!res.ok) return;
             const data = await res.json();
             if (data.messages?.length > 0) {
-                setMessages((prev) => {
-                    const existingIds = new Set(prev.map((m) => m.id));
-                    const newMsgs = data.messages.filter((m: ChatMessage) => !existingIds.has(m.id));
-                    if (newMsgs.length === 0) return prev;
-                    lastFetchRef.current = newMsgs[newMsgs.length - 1].createdAt;
-                    return [...prev, ...newMsgs];
-                });
+                setMessages(data.messages as ChatMessage[]);
             }
-            if (data.widgetConfig) {
-                setWidgetConfig(data.widgetConfig);
-            }
-        } catch {
-            // silent
-        }
-    }, [chatKey, visitorId, conversationId]);
+            if (data.widgetConfig) setWidgetConfig(data.widgetConfig);
+        } catch { /* silent */ }
+    }, []);
 
-    // SSE from Render server for real-time agent replies
+    // ── Socket.io connection ────────────────────────────────────────
     useEffect(() => {
-        if (!conversationId || !chatKey || !renderServerUrl) return;
-        let es: EventSource | null = null;
-        let retryTimeout: ReturnType<typeof setTimeout>;
+        if (!chatKey || !visitorId || !renderServerUrl) return;
 
-        function connect() {
-            const url = `${renderServerUrl}/live?key=${encodeURIComponent(chatKey)}&cid=${encodeURIComponent(conversationId!)}`;
-            es = new EventSource(url);
+        const socket = io(renderServerUrl, {
+            transports: ["websocket"],
+            reconnectionAttempts: Infinity,
+            reconnectionDelay: 3000,
+        });
+        socketRef.current = socket;
 
-            es.onopen = () => setIsConnected(true);
+        socket.on("connect", () => {
+            setIsConnected(true);
+            const cid = conversationIdRef.current;
+            if (cid) {
+                socket.emit("join", { key: chatKey, cid, visitorId, role: "visitor" });
+                fetchInitialMessages(chatKey, visitorId, cid);
+            }
+        });
 
-            es.onmessage = (e) => {
-                try {
-                    const msg = JSON.parse(e.data) as ChatMessage;
-                    if (msg.sender === "agent") {
-                        setMessages((prev) => {
-                            if (prev.some((m) => m.id === msg.id)) return prev;
-                            return [...prev, msg];
-                        });
-                    }
-                } catch {
-                    // ignore heartbeats
+        socket.on("disconnect", () => {
+            setIsConnected(false);
+            setAgentOnline(false);
+        });
+
+        socket.on("new_message", (msg: ChatMessage) => {
+            setMessages((prev) => {
+                if (prev.some((m) => m.id === msg.id)) return prev;
+                return [...prev, msg];
+            });
+        });
+
+        socket.on("typing", ({ role, isTyping }: { role: string; isTyping: boolean }) => {
+            if (role === "agent") {
+                setAgentTyping(isTyping);
+                if (isTyping) {
+                    if (agentTypingTimeoutRef.current) clearTimeout(agentTypingTimeoutRef.current);
+                    agentTypingTimeoutRef.current = setTimeout(() => setAgentTyping(false), 5000);
                 }
-            };
+            }
+        });
 
-            es.onerror = () => {
-                setIsConnected(false);
-                es?.close();
-                retryTimeout = setTimeout(connect, 5000);
-            };
-        }
-
-        connect();
+        socket.on("agent_status", ({ online, count }: { online: boolean; count: number }) => {
+            setAgentOnline(online);
+            setAgentCount(count);
+        });
 
         return () => {
-            es?.close();
-            clearTimeout(retryTimeout);
+            socket.disconnect();
+            socketRef.current = null;
         };
-    }, [conversationId, chatKey, renderServerUrl]);
+    }, [chatKey, visitorId, renderServerUrl, fetchInitialMessages]);
 
-    // Polling fallback every 5s (catches up if SSE missed anything)
+    // ── Join room when conversationId becomes available ─────────────
     useEffect(() => {
-        if (!conversationId) return;
-        const interval = setInterval(fetchMessages, 5000);
-        return () => clearInterval(interval);
-    }, [fetchMessages, conversationId]);
+        if (!conversationId || !socketRef.current?.connected || !chatKey || !visitorId) return;
+        socketRef.current.emit("join", { key: chatKey, cid: conversationId, visitorId, role: "visitor" });
+        fetchInitialMessages(chatKey, visitorId, conversationId);
+    }, [conversationId, chatKey, visitorId, fetchInitialMessages]);
 
-    // Scroll to bottom on new messages
+    // ── Scroll to bottom ────────────────────────────────────────────
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
+    }, [messages, agentTyping]);
 
-    // Tell parent widget.js the conversationId (so it can persist in localStorage)
+    // ── Tell parent widget.js the conversationId ────────────────────
     useEffect(() => {
         if (conversationId) {
-            window.parent?.postMessage(
-                { type: "CW_CONVERSATION_ID", conversationId },
-                "*"
-            );
+            window.parent?.postMessage({ type: "CW_CONVERSATION_ID", conversationId }, "*");
         }
     }, [conversationId]);
 
-    const sendMessage = async () => {
-        const text = input.trim();
-        if (!text || isSending || !chatKey || !visitorId) return;
+    // ── Typing indicator emit ───────────────────────────────────────
+    const emitTypingStart = useCallback(() => {
+        const cid = conversationIdRef.current;
+        if (!cid || !socketRef.current?.connected) return;
+        socketRef.current.emit("typing_start", { cid, role: "visitor" });
+    }, []);
 
+    const emitTypingStop = useCallback(() => {
+        const cid = conversationIdRef.current;
+        if (!cid || !socketRef.current?.connected) return;
+        socketRef.current.emit("typing_stop", { cid, role: "visitor" });
+    }, []);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setInput(e.target.value);
+        emitTypingStart();
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(emitTypingStop, 2000);
+    };
+
+    // ── Send text message ───────────────────────────────────────────
+    const sendMessage = useCallback(async (
+        text: string,
+        type: "text" | "image" | "pdf" = "text",
+        mediaUrl: string = ""
+    ) => {
+        if ((!text && !mediaUrl) || isSending || !chatKey || !visitorId) return;
         setIsSending(true);
+
         const optimisticId = "temp_" + Date.now();
         const optimistic: ChatMessage = {
             id: optimisticId,
             sender: "visitor",
             body: text,
+            type,
+            mediaUrl,
             createdAt: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, optimistic]);
-        setInput("");
+        if (type === "text") setInput("");
+
+        // Stop typing indicator
+        emitTypingStop();
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
         try {
             const res = await fetch("/api/chat/messages", {
@@ -161,43 +207,85 @@ export default function ChatEmbedPage() {
                     visitorId,
                     message: text,
                     visitorPage,
+                    type,
+                    mediaUrl,
                 }),
             });
 
-            if (!res.ok) {
-                setError("Failed to send. Please try again.");
-                setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
-                setInput(text);
-            } else {
-                const data = await res.json();
-                if (!conversationId && data.conversationId) {
-                    setConversationId(data.conversationId);
-                }
-                // Replace optimistic with real ID
-                setMessages((prev) =>
-                    prev.map((m) =>
-                        m.id === optimisticId
-                            ? { ...m, id: data.messageId || m.id }
-                            : m
-                    )
-                );
-                lastFetchRef.current = new Date().toISOString();
-                setError(null);
-            }
+            if (!res.ok) throw new Error("Failed");
+
+            const data = await res.json();
+            const cid = data.conversationId;
+            if (!conversationId && cid) setConversationId(cid);
+
+            // Replace optimistic message
+            setMessages((prev) =>
+                prev.map((m) =>
+                    m.id === optimisticId
+                        ? { ...m, id: data.message?.id || data.messageId || m.id }
+                        : m
+                )
+            );
+            setError(null);
         } catch {
-            setError("Network error. Please try again.");
+            setError("Failed to send. Please try again.");
             setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
-            setInput(text);
+            if (type === "text") setInput(text);
         } finally {
             setIsSending(false);
-            inputRef.current?.focus();
+            if (type === "text") inputRef.current?.focus();
         }
-    };
+    }, [isSending, chatKey, visitorId, conversationId, visitorPage, emitTypingStop]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
-            sendMessage();
+            sendMessage(input.trim());
+        }
+    };
+
+    // ── File upload to Cloudinary (unsigned, client-side) ───────────
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const isPdf = file.type === "application/pdf";
+        const isImage = file.type.startsWith("image/");
+        if (!isPdf && !isImage) {
+            setError("Only images and PDFs are supported.");
+            return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+            setError("File too large (max 10MB).");
+            return;
+        }
+
+        setUploadProgress(true);
+        setError(null);
+
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("upload_preset", uploadPreset);
+            formData.append("folder", "chat_uploads");
+
+            const resourceType = isPdf ? "raw" : "image";
+            const uploadRes = await fetch(
+                `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
+                { method: "POST", body: formData }
+            );
+
+            if (!uploadRes.ok) throw new Error("Cloudinary upload failed");
+            const uploadData = await uploadRes.json();
+
+            const type: "image" | "pdf" = isPdf ? "pdf" : "image";
+            await sendMessage(file.name, type, uploadData.secure_url);
+        } catch {
+            setError("File upload failed. Please try again.");
+        } finally {
+            setUploadProgress(false);
+            // Reset file input
+            if (fileInputRef.current) fileInputRef.current.value = "";
         }
     };
 
@@ -211,20 +299,26 @@ export default function ChatEmbedPage() {
             {/* Header */}
             <div
                 style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }}
-                className="flex items-center gap-3 px-4 py-3 shadow-sm"
+                className="flex items-center gap-3 px-4 py-3 shadow-sm flex-shrink-0"
             >
                 <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-lg">
                     💬
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                     <p className="text-white font-semibold text-sm leading-tight">Live Support</p>
                     <div className="flex items-center gap-1.5 mt-0.5">
                         <span
-                            className="w-2 h-2 rounded-full"
-                            style={{ background: isConnected ? "#4ade80" : "#fbbf24" }}
+                            className="w-2 h-2 rounded-full flex-shrink-0"
+                            style={{
+                                background: !isConnected ? "#fbbf24" : agentOnline ? "#4ade80" : "#f87171",
+                            }}
                         />
-                        <span className="text-white/80 text-xs">
-                            {isConnected ? "Connected" : "Connecting…"}
+                        <span className="text-white/80 text-xs truncate">
+                            {!isConnected
+                                ? "Connecting…"
+                                : agentOnline
+                                    ? `Agent Online${agentCount > 1 ? ` (${agentCount})` : ""}`
+                                    : "No agents online"}
                         </span>
                     </div>
                 </div>
@@ -246,20 +340,60 @@ export default function ChatEmbedPage() {
                         key={msg.id}
                         className={`flex ${msg.sender === "visitor" ? "justify-end" : "justify-start"}`}
                     >
-                        <div
-                            className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${msg.sender === "visitor"
-                                    ? "rounded-tr-sm text-white"
-                                    : "rounded-tl-sm bg-gray-100 text-gray-800"
-                                }`}
-                            style={
-                                msg.sender === "visitor"
-                                    ? { background: accent }
-                                    : undefined
-                            }
-                        >
-                            <p className="text-sm leading-relaxed">{msg.body}</p>
+                        <div className="max-w-[80%]">
+                            <div
+                                className={`rounded-2xl overflow-hidden ${msg.sender === "visitor"
+                                        ? "rounded-tr-sm text-white"
+                                        : "rounded-tl-sm bg-gray-100 text-gray-800"
+                                    }`}
+                                style={msg.sender === "visitor" ? { background: accent } : undefined}
+                            >
+                                {msg.type === "image" && msg.mediaUrl ? (
+                                    <div className="p-1">
+                                        <img
+                                            src={msg.mediaUrl}
+                                            alt={msg.body || "image"}
+                                            className="rounded-xl max-w-full max-h-48 object-cover block"
+                                        />
+                                        <div className="flex items-center justify-between px-2 py-1 gap-2">
+                                            <span className="text-xs opacity-70 truncate">{msg.body}</span>
+                                            <a
+                                                href={msg.mediaUrl}
+                                                download={msg.body || "image"}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-xs underline opacity-70 hover:opacity-100 flex-shrink-0"
+                                            >
+                                                ↓
+                                            </a>
+                                        </div>
+                                    </div>
+                                ) : msg.type === "pdf" && msg.mediaUrl ? (
+                                    <div className="flex items-center gap-2 px-4 py-3">
+                                        <span className="text-2xl">📄</span>
+                                        <div className="min-w-0">
+                                            <p className="text-xs font-medium truncate max-w-[140px]">{msg.body}</p>
+                                            <a
+                                                href={msg.mediaUrl}
+                                                download={msg.body || "file.pdf"}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-xs underline opacity-70 hover:opacity-100"
+                                            >
+                                                Download PDF
+                                            </a>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="px-4 py-2.5">
+                                        <p className="text-sm leading-relaxed">{msg.body}</p>
+                                    </div>
+                                )}
+                            </div>
                             <p
-                                className={`text-[10px] mt-1 ${msg.sender === "visitor" ? "text-white/60 text-right" : "text-gray-400"
+                                className={`text-[10px] mt-1 ${msg.sender === "visitor"
+                                        ? "text-gray-400 text-right"
+                                        : "text-gray-400"
                                     }`}
                             >
                                 {new Date(msg.createdAt).toLocaleTimeString([], {
@@ -270,6 +404,17 @@ export default function ChatEmbedPage() {
                         </div>
                     </div>
                 ))}
+
+                {/* Agent typing indicator */}
+                {agentTyping && (
+                    <div className="flex justify-start">
+                        <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:0ms]" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:150ms]" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:300ms]" />
+                        </div>
+                    </div>
+                )}
 
                 {error && (
                     <div className="flex justify-center">
@@ -283,24 +428,55 @@ export default function ChatEmbedPage() {
             </div>
 
             {/* Input Area */}
-            <div className="px-4 py-3 border-t border-gray-100 bg-white">
-                <div className="flex items-end gap-2 bg-gray-50 rounded-2xl border border-gray-200 px-3 py-2 focus-within:border-gray-300 focus-within:ring-2 transition-all"
+            <div className="px-4 py-3 border-t border-gray-100 bg-white flex-shrink-0">
+                <div
+                    className="flex items-end gap-2 bg-gray-50 rounded-2xl border border-gray-200 px-3 py-2 focus-within:border-gray-300 focus-within:ring-2 transition-all"
                     style={{ "--tw-ring-color": `${accent}33` } as React.CSSProperties}
                 >
+                    {/* File upload button */}
+                    <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadProgress || isSending}
+                        className="flex-shrink-0 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-40"
+                        aria-label="Attach file"
+                        title="Send image or PDF"
+                    >
+                        {uploadProgress ? (
+                            <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                <circle cx="12" cy="12" r="10" strokeOpacity={0.25} />
+                                <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+                            </svg>
+                        ) : (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                            </svg>
+                        )}
+                    </button>
+
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+                        className="hidden"
+                        onChange={handleFileSelect}
+                    />
+
                     <textarea
                         ref={inputRef}
                         value={input}
-                        onChange={(e) => setInput(e.target.value)}
+                        onChange={handleInputChange}
                         onKeyDown={handleKeyDown}
                         placeholder="Type a message…"
                         rows={1}
                         className="flex-1 bg-transparent text-sm text-gray-800 placeholder-gray-400 resize-none outline-none py-0.5 max-h-28 overflow-auto"
                         style={{ lineHeight: "1.5" }}
-                        disabled={isSending}
+                        disabled={isSending || uploadProgress}
                     />
+
                     <button
-                        onClick={sendMessage}
-                        disabled={!input.trim() || isSending}
+                        onClick={() => sendMessage(input.trim())}
+                        disabled={!input.trim() || isSending || uploadProgress}
                         className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                         style={{ background: accent }}
                         aria-label="Send"

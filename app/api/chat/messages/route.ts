@@ -9,15 +9,17 @@ import { Integration } from "@/app/api/models/IntegrationModel";
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { key, conversationId, visitorId, message, visitorPage } = body as {
+        const { key, conversationId, visitorId, message, visitorPage, type, mediaUrl } = body as {
             key?: string;
             conversationId?: string;
             visitorId?: string;
             message?: string;
             visitorPage?: string;
+            type?: 'text' | 'image' | 'pdf';
+            mediaUrl?: string;
         };
 
-        if (!key || !visitorId || !message?.trim()) {
+        if (!key || !visitorId || (!message?.trim() && !mediaUrl)) {
             return NextResponse.json(
                 { error: "key, visitorId, and message are required" },
                 { status: 400 }
@@ -72,8 +74,38 @@ export async function POST(request: Request) {
             conversationId: conversation._id,
             widgetId: widget._id,
             sender: "visitor",
-            body: message.trim(),
+            body: message?.trim() || '',
+            type: type || 'text',
+            mediaUrl: mediaUrl || '',
         });
+
+        // 4. Push via WebSocket to room (render-chat-server)
+        try {
+            const renderUrl = process.env.RENDER_CHAT_SERVER_URL;
+            const pushSecret = process.env.RENDER_PUSH_SECRET;
+            if (renderUrl && pushSecret) {
+                await fetch(`${renderUrl}/push`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-push-secret': pushSecret,
+                    },
+                    body: JSON.stringify({
+                        conversationId: conversation._id.toString(),
+                        message: {
+                            id: chatMessage._id.toString(),
+                            sender: 'visitor',
+                            body: chatMessage.body,
+                            type: chatMessage.type,
+                            mediaUrl: chatMessage.mediaUrl,
+                            createdAt: chatMessage.createdAt,
+                        },
+                    }),
+                });
+            }
+        } catch (pushErr) {
+            console.error('WS push error:', pushErr);
+        }
 
         // 4. Forward to Slack/Discord
         try {
@@ -91,7 +123,7 @@ export async function POST(request: Request) {
                             type: "section",
                             text: {
                                 type: "mrkdwn",
-                                text: `💬 *New chat message from \`${domain}\`*\n\n> ${message.trim()}`,
+                                text: `💬 *New chat message from \`${domain}\`*\n\n> ${(message || '').trim() || '[file attachment]'}`,
                             },
                         },
                         {
@@ -117,7 +149,7 @@ export async function POST(request: Request) {
 
                 // Discord uses a different format
                 const discordPayload = {
-                    content: `💬 **New chat from \`${domain}\`**\n> ${message.trim()}\n\n[View Conversation](${dashboardUrl})`,
+                    content: `💬 **New chat from \`${domain}\`**\n> ${(message || '').trim() || '[file attachment]'}\n\n[View Conversation](${dashboardUrl})`,
                 };
 
                 const webhookPayload =
@@ -138,6 +170,14 @@ export async function POST(request: Request) {
             success: true,
             conversationId: conversation._id.toString(),
             messageId: chatMessage._id.toString(),
+            message: {
+                id: chatMessage._id.toString(),
+                sender: chatMessage.sender,
+                body: chatMessage.body,
+                type: chatMessage.type,
+                mediaUrl: chatMessage.mediaUrl,
+                createdAt: chatMessage.createdAt,
+            },
         });
     } catch (error) {
         console.error("POST /api/chat/messages error:", error);
@@ -200,6 +240,8 @@ export async function GET(request: Request) {
                 id: m._id.toString(),
                 sender: m.sender,
                 body: m.body,
+                type: m.type || 'text',
+                mediaUrl: m.mediaUrl || '',
                 createdAt: m.createdAt,
             })),
             widgetConfig: {
