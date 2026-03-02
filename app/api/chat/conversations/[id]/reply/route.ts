@@ -15,9 +15,9 @@ export async function POST(
 
         const { id } = await params;
         const body = await request.json();
-        const { message } = body as { message?: string };
+        const { message, type, mediaUrl } = body as { message?: string; type?: 'text' | 'image' | 'pdf'; mediaUrl?: string };
 
-        if (!message?.trim()) {
+        if (!message?.trim() && !mediaUrl) {
             return NextResponse.json({ error: "Message is required" }, { status: 400 });
         }
 
@@ -39,7 +39,9 @@ export async function POST(
             conversationId: conversation._id,
             widgetId: conversation.widgetId,
             sender: "agent",
-            body: message.trim(),
+            body: message?.trim() || '',
+            type: type || 'text',
+            mediaUrl: mediaUrl || '',
         });
 
         conversation.lastMessageAt = new Date();
@@ -63,6 +65,8 @@ export async function POST(
                             id: chatMessage._id.toString(),
                             sender: "agent",
                             body: chatMessage.body,
+                            type: chatMessage.type || 'text',
+                            mediaUrl: chatMessage.mediaUrl || '',
                             createdAt: chatMessage.createdAt,
                         },
                     }),
@@ -79,6 +83,8 @@ export async function POST(
                 id: chatMessage._id.toString(),
                 sender: chatMessage.sender,
                 body: chatMessage.body,
+                type: chatMessage.type || 'text',
+                mediaUrl: chatMessage.mediaUrl || '',
                 createdAt: chatMessage.createdAt,
             },
         });
