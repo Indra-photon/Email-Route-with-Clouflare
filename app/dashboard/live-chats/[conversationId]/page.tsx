@@ -45,9 +45,9 @@ export default function ConversationDetailPage() {
     const [visitorTyping, setVisitorTyping] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(false);
     const [wsConnected, setWsConnected] = useState(false);
-    const [widgetKey, setWidgetKey] = useState<string>("");
-
     const [wsSecret, setWsSecret] = useState<string>("");
+    const widgetKeyRef = useRef<string>(""); // ref so socket effect doesn't reconnect when key loads
+    const wsSecretRef = useRef<string>("");  // ref mirror of wsSecret for use in callbacks
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -61,7 +61,7 @@ export default function ConversationDetailPage() {
     useEffect(() => {
         fetch("/api/chat/ws-token")
             .then((r) => r.json())
-            .then((d) => { if (d.secret) setWsSecret(d.secret); })
+            .then((d) => { if (d.secret) { setWsSecret(d.secret); wsSecretRef.current = d.secret; } })
             .catch(() => { });
     }, []);
 
@@ -72,8 +72,20 @@ export default function ConversationDetailPage() {
             if (res.ok) {
                 const d = await res.json();
                 setData(d);
-                // Extract the widget activation key so agent can join presence room
-                if (d.widgetKey) setWidgetKey(d.widgetKey);
+                // Store widget key in ref \u2014 NOT state \u2014 so socket doesn't reconnect
+                if (d.widgetKey) {
+                    widgetKeyRef.current = d.widgetKey;
+                    // If socket is already connected, upgrade the join with the key
+                    // (no reconnect needed — server handles duplicate joins idempotently)
+                    if (socketRef.current?.connected) {
+                        socketRef.current.emit("join", {
+                            key: d.widgetKey,
+                            cid: conversationId,
+                            role: "agent",
+                            secret: wsSecretRef.current,
+                        });
+                    }
+                }
             }
         } catch { /* silent */ } finally {
             setLoading(false);
@@ -85,6 +97,10 @@ export default function ConversationDetailPage() {
     }, [fetchConversation]);
 
     // ── Socket.io — Agent joins the room ─────────────────────────────
+    // IMPORTANT: widgetKey is intentionally NOT in the dep array.
+    // Adding it caused the socket to disconnect/reconnect when fetchConversation
+    // returned, creating a window where incoming messages were permanently lost.
+    // widgetKeyRef is used instead so the latest value is always available.
     useEffect(() => {
         if (!conversationId || !renderServerUrl || !wsSecret) return;
 
@@ -98,7 +114,7 @@ export default function ConversationDetailPage() {
         socket.on("connect", () => {
             setWsConnected(true);
             socket.emit("join", {
-                key: widgetKey || undefined, // widget key for presence tracking
+                key: widgetKeyRef.current || undefined,
                 cid: conversationId,
                 role: "agent",
                 secret: wsSecret,
@@ -129,7 +145,7 @@ export default function ConversationDetailPage() {
             socket.disconnect();
             socketRef.current = null;
         };
-    }, [conversationId, renderServerUrl, wsSecret, widgetKey]);
+    }, [conversationId, renderServerUrl, wsSecret]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Scroll to bottom ────────────────────────────────────────────
     useEffect(() => {
