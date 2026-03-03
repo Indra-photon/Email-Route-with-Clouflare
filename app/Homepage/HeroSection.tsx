@@ -139,6 +139,10 @@ import { EmailSlackIllustration } from "./EmailSlackIllustration";
 import { AnimatePresence, motion } from "motion/react";
 import { WebsiteChatIllustration } from "./WebsiteChatIllustration";
 import { Container } from "@/components/Container";
+import { Paragraph } from "@/components/Paragraph";
+import { LiveTeamJoin } from "./LiveTeamJoin";
+import { PerfectForSection } from "./PerfectForSection";
+import { UserTypeCards } from "./UserTypeCards";
 
 export function HeroSection() {
   const [activeView, setActiveView] = useState<'email' | 'chat'>('email');
@@ -166,10 +170,10 @@ export function HeroSection() {
                 </Heading>
                 
                 {/* Subheading */}
-                <p className="text-xl md:text-2xl text-neutral-900 font-schibsted font-regular mb-8 leading-relaxed">
+                <Paragraph variant="home-par">
                   Streamline your customer support with our Slack integration. Manage tickets, respond to inquiries, and collaborate with your team without leaving your workspace.
-                </p>
-                
+                </Paragraph>
+
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 mb-10">
                   <button className="px-6 py-4 bg-neutral-900 text-white font-schibsted font-semibold text-lg rounded-xl transition-all duration-200 hover:bg-neutral-800">
@@ -192,7 +196,13 @@ export function HeroSection() {
                     <span className="text-sky-800 font-semibold">500+</span> teams already using
                   </span>
                 </div>
+
+                {/* <UserTypeCards /> */}
               </div>
+
+
+
+          
             </Grid.Cell>
 
             {/* Right side - Illustration */}

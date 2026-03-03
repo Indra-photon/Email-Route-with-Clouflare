@@ -1260,3 +1260,160 @@ export function IconZap({
     </svg>
   );
 }
+
+
+export interface BulbIconProps {
+  size?: number;
+  color?: string;
+  className?: string;
+  isActive?: boolean;
+}
+
+export function IconBulb({
+  size = 24,
+  color = 'currentColor',
+  className = '',
+  isActive = false
+}: BulbIconProps) {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`icon icon-tabler ${className}`}
+    >
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      
+      {/* Left ray */}
+      <motion.path 
+        d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"
+        fill={color}
+        stroke="none"
+        animate={isActive ? "active" : "idle"}
+        variants={{
+          idle: { opacity: 0, scale: 0.5 },
+          active: { opacity: 1, scale: 1 }
+        }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        style={{ transformOrigin: "center", transformBox: "fill-box" }}
+      />
+      
+      {/* Top ray */}
+      <motion.path 
+        d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"
+        fill={color}
+        stroke="none"
+        animate={isActive ? "active" : "idle"}
+        variants={{
+          idle: { opacity: 0, scale: 0.5 },
+          active: { opacity: 1, scale: 1 }
+        }}
+        transition={{ duration: 0.3, delay: 0.05, ease: "easeOut" }}
+        style={{ transformOrigin: "center", transformBox: "fill-box" }}
+      />
+      
+      {/* Right ray */}
+      <motion.path 
+        d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"
+        fill={color}
+        stroke="none"
+        animate={isActive ? "active" : "idle"}
+        variants={{
+          idle: { opacity: 0, scale: 0.5 },
+          active: { opacity: 1, scale: 1 }
+        }}
+        transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+        style={{ transformOrigin: "center", transformBox: "fill-box" }}
+      />
+      
+      {/* Top-left diagonal ray */}
+      <motion.path 
+        d="M4.893 4.893a1 1 0 0 1 1.32 -.083l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 0 -1.414z"
+        fill={color}
+        stroke="none"
+        animate={isActive ? "active" : "idle"}
+        variants={{
+          idle: { opacity: 0, scale: 0.5 },
+          active: { opacity: 1, scale: 1 }
+        }}
+        transition={{ duration: 0.3, delay: 0.15, ease: "easeOut" }}
+        style={{ transformOrigin: "center", transformBox: "fill-box" }}
+      />
+      
+      {/* Top-right diagonal ray */}
+      <motion.path 
+        d="M17.693 4.893a1 1 0 0 1 1.497 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7z"
+        fill={color}
+        stroke="none"
+        animate={isActive ? "active" : "idle"}
+        variants={{
+          idle: { opacity: 0, scale: 0.5 },
+          active: { opacity: 1, scale: 1 }
+        }}
+        transition={{ duration: 0.3, delay: 0.2, ease: "easeOut" }}
+        style={{ transformOrigin: "center", transformBox: "fill-box" }}
+      />
+      
+      {/* Bulb body - fills on hover */}
+      <motion.path 
+        d="M12 6a6 6 0 0 1 3.6 10.8a1 1 0 0 1 -.471 .192l-.129 .008h-6a1 1 0 0 1 -.6 -.2a6 6 0 0 1 3.6 -10.8z"
+        animate={isActive ? "active" : "idle"}
+        variants={{
+          idle: { fill: "none" },
+          active: { fill: color }
+        }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+      />
+      
+      {/* Base/socket - always filled */}
+      <path 
+        d="M14 18a1 1 0 0 1 1 1a3 3 0 0 1 -6 0a1 1 0 0 1 .883 -.993l.117 -.007h4z"
+        fill={color}
+        stroke="none"
+      />
+    </svg>
+  );
+}
+
+export interface IconSlackProps {
+  size?: number;
+  color?: string;
+  className?: string;
+}
+
+export function IconSlack ({
+  size = 24,
+  color = 'currentColor',
+  className = '',
+}: IconSlackProps) {
+  return (
+    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+    </svg>
+  );
+}
+
+export interface IconDiscordProps {
+  size?: number;
+  color?: string;
+  className?: string;
+}
+
+export function IconDiscord ({
+  size = 24,
+  color = 'currentColor',
+  className = '',
+}: IconDiscordProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="icon icon-tabler icons-tabler-filled icon-tabler-brand-discord"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14.983 3l.123 .006c2.014 .214 3.527 .672 4.966 1.673a1 1 0 0 1 .371 .488c1.876 5.315 2.373 9.987 1.451 12.28c-1.003 2.005 -2.606 3.553 -4.394 3.553c-.732 0 -1.693 -.968 -2.328 -2.045a21.512 21.512 0 0 0 2.103 -.493a1 1 0 1 0 -.55 -1.924c-3.32 .95 -6.13 .95 -9.45 0a1 1 0 0 0 -.55 1.924c.717 .204 1.416 .37 2.103 .494c-.635 1.075 -1.596 2.044 -2.328 2.044c-1.788 0 -3.391 -1.548 -4.428 -3.629c-.888 -2.217 -.39 -6.89 1.485 -12.204a1 1 0 0 1 .371 -.488c1.439 -1.001 2.952 -1.459 4.966 -1.673a1 1 0 0 1 .935 .435l.063 .107l.651 1.285l.137 -.016a12.97 12.97 0 0 1 2.643 0l.134 .016l.65 -1.284a1 1 0 0 1 .754 -.54l.122 -.009zm-5.983 7a2 2 0 0 0 -1.977 1.697l-.018 .154l-.005 .149l.005 .15a2 2 0 1 0 1.995 -2.15zm6 0a2 2 0 0 0 -1.977 1.697l-.018 .154l-.005 .149l.005 .15a2 2 0 1 0 1.995 -2.15z" /></svg>
+  );
+}
+
+
+

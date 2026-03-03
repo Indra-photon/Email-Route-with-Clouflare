@@ -124,6 +124,7 @@ import { IntegrationsStackIllustration } from "./Integrationsstackillustration";
 import { AnalyticsKanbanIllustration } from "./AnalyticsKanbanIllustration";
 import { PricingBenefitsIllustration } from "./PricingBenefitsIllustration";
 import { motion } from "motion/react";
+import { Paragraph } from "@/components/Paragraph";
 
 const features = [
   {
@@ -241,9 +242,9 @@ export function FeaturesSection() {
           Turn every channel into a conversation.
           </motion.div>
         </Heading>
-        <p className="text-lg md:text-xl text-neutral-600 font-schibsted font-normal mb-12 leading-relaxed max-w-3xl">
+        <Paragraph variant="home-par">
           Route emails, capture live chat, and unify Discord & Slack—all in one place. Your team responds faster when everything flows to where they already work.
-        </p>
+        </Paragraph>
 
         {/* Bento Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
