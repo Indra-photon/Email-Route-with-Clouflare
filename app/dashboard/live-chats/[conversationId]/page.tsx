@@ -45,6 +45,7 @@ export default function ConversationDetailPage() {
     const [visitorTyping, setVisitorTyping] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(false);
     const [wsConnected, setWsConnected] = useState(false);
+    const [widgetKey, setWidgetKey] = useState<string>("");
 
     const [wsSecret, setWsSecret] = useState<string>("");
 
@@ -71,6 +72,8 @@ export default function ConversationDetailPage() {
             if (res.ok) {
                 const d = await res.json();
                 setData(d);
+                // Extract the widget activation key so agent can join presence room
+                if (d.widgetKey) setWidgetKey(d.widgetKey);
             }
         } catch { /* silent */ } finally {
             setLoading(false);
@@ -95,6 +98,7 @@ export default function ConversationDetailPage() {
         socket.on("connect", () => {
             setWsConnected(true);
             socket.emit("join", {
+                key: widgetKey || undefined, // widget key for presence tracking
                 cid: conversationId,
                 role: "agent",
                 secret: wsSecret,
@@ -125,7 +129,7 @@ export default function ConversationDetailPage() {
             socket.disconnect();
             socketRef.current = null;
         };
-    }, [conversationId, renderServerUrl, wsSecret]);
+    }, [conversationId, renderServerUrl, wsSecret, widgetKey]);
 
     // ── Scroll to bottom ────────────────────────────────────────────
     useEffect(() => {

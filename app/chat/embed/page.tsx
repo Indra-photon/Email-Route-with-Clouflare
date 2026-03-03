@@ -94,8 +94,15 @@ export default function ChatEmbedPage() {
         socket.on("connect", () => {
             setIsConnected(true);
             const cid = conversationIdRef.current;
+            // Always join with key so visitor enters the presence room and
+            // gets agent_status immediately, even before starting a conversation.
+            socket.emit("join", {
+                key: chatKey,
+                cid: cid || undefined,
+                visitorId,
+                role: "visitor",
+            });
             if (cid) {
-                socket.emit("join", { key: chatKey, cid, visitorId, role: "visitor" });
                 fetchInitialMessages(chatKey, visitorId, cid);
             }
         });
@@ -133,7 +140,8 @@ export default function ChatEmbedPage() {
         };
     }, [chatKey, visitorId, renderServerUrl, fetchInitialMessages]);
 
-    // ── Join room when conversationId becomes available ─────────────
+    // ── Upgrade to conversation room once we have a cid ──────────────
+    // Fires when the visitor sends their first message and gets a conversationId back.
     useEffect(() => {
         if (!conversationId || !socketRef.current?.connected || !chatKey || !visitorId) return;
         socketRef.current.emit("join", { key: chatKey, cid: conversationId, visitorId, role: "visitor" });
@@ -215,17 +223,40 @@ export default function ChatEmbedPage() {
             if (!res.ok) throw new Error("Failed");
 
             const data = await res.json();
-            const cid = data.conversationId;
-            if (!conversationId && cid) setConversationId(cid);
+            const savedCid = data.conversationId;
+            const savedMsgId = data.message?.id || data.messageId || optimisticId;
 
-            // Replace optimistic message
+            // If this was the first message, we now have a cid — set it.
+            // The useEffect above will fire and emit 'join' to the conversation room.
+            if (!conversationId && savedCid) setConversationId(savedCid);
+
+            // Replace optimistic message with real ID
             setMessages((prev) =>
                 prev.map((m) =>
                     m.id === optimisticId
-                        ? { ...m, id: data.message?.id || data.messageId || m.id }
+                        ? { ...m, id: savedMsgId }
                         : m
                 )
             );
+
+            // Also emit the message via WebSocket so it arrives live on the agent's screen.
+            // The HTTP POST already called /push on the render server, but socket emit
+            // is a faster / more reliable path when the socket is already connected.
+            const activeCid = savedCid || conversationId;
+            if (activeCid && socketRef.current?.connected) {
+                socketRef.current.emit("visitor_message", {
+                    cid: activeCid,
+                    message: {
+                        id: savedMsgId,
+                        sender: "visitor",
+                        body: text,
+                        type,
+                        mediaUrl,
+                        createdAt: new Date().toISOString(),
+                    },
+                });
+            }
+
             setError(null);
         } catch {
             setError("Failed to send. Please try again.");
@@ -343,8 +374,8 @@ export default function ChatEmbedPage() {
                         <div className="max-w-[80%]">
                             <div
                                 className={`rounded-2xl overflow-hidden ${msg.sender === "visitor"
-                                        ? "rounded-tr-sm text-white"
-                                        : "rounded-tl-sm bg-gray-100 text-gray-800"
+                                    ? "rounded-tr-sm text-white"
+                                    : "rounded-tl-sm bg-gray-100 text-gray-800"
                                     }`}
                                 style={msg.sender === "visitor" ? { background: accent } : undefined}
                             >
@@ -392,8 +423,8 @@ export default function ChatEmbedPage() {
                             </div>
                             <p
                                 className={`text-[10px] mt-1 ${msg.sender === "visitor"
-                                        ? "text-gray-400 text-right"
-                                        : "text-gray-400"
+                                    ? "text-gray-400 text-right"
+                                    : "text-gray-400"
                                     }`}
                             >
                                 {new Date(msg.createdAt).toLocaleTimeString([], {

@@ -50,10 +50,13 @@ export async function GET(
                     welcomeMessage: widget.welcomeMessage,
                 }
                 : null,
+            widgetKey: widget?.activationKey || null,
             messages: messages.map((m) => ({
                 id: m._id.toString(),
                 sender: m.sender,
                 body: m.body,
+                type: m.type || "text",
+                mediaUrl: m.mediaUrl || "",
                 createdAt: m.createdAt,
             })),
         });
