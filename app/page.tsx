@@ -4,9 +4,12 @@ import { HeroSection } from "./Homepage/HeroSection";
 import { SectionSeparator } from "./Homepage/SectionSeparator";
 import { BenefitsSection } from "./Homepage/BenefitsSection";
 import { FeaturesSection } from "./Homepage/FeaturesSection";
+import { PerfectForSection } from "./Homepage/PerfectForSection";
 import { TestimonialsSection } from "./Homepage/TestimonialsSection";
 import { FAQSection } from "@/components/FAQSection";
 import { Footer } from "@/components/Footer";
+import { HowItWorksSection } from "./Homepage/HowItWorksSection";
+import { WhySlackDeskSection } from "./Homepage/WhySlackDeskSection";
 
 export default function Home() {
   return (
@@ -16,6 +19,7 @@ export default function Home() {
         {/* <SectionSeparator /> */}
         <BenefitsSection />
         <FeaturesSection />
+        <WhySlackDeskSection />
         <TestimonialsSection />
         <FAQSection />
         <Footer />

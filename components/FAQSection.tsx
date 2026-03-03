@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { Container } from "@/components/Container";
+import { Heading } from "@/components/Heading";
+import { Paragraph } from "@/components/Paragraph";
 
 interface FAQItem {
   id: string;
@@ -64,67 +67,114 @@ export function FAQSection() {
   };
 
   return (
-    <section className="py-16 md:py-24">
-      <div className="max-w-4xl mx-auto px-6">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-schibsted font-bold tracking-tight text-neutral-900 mb-3">
-            Frequently Asked Questions
-          </h2>
-          <p className="text-base font-schibsted font-normal text-neutral-600 max-w-2xl mx-auto">
-            Everything you need to know about routing your support emails to Slack. 
-            Can't find what you're looking for? Reach out to our team.
-          </p>
-        </div>
+    <section className="w-full py-20 md:py-32 bg-white">
+      <Container>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+          {/* Left Side - Heading and Description */}
+          <div className="lg:col-span-5">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="lg:sticky lg:top-24"
+            >
+              <Heading as="h2" className="text-neutral-900 mb-4">
+                Questions? <span className="text-sky-800">We've got answers.</span>
+              </Heading>
+              
+              <Paragraph variant="home-par" className="mb-8">
+                Everything you need to know about routing your support emails to Slack. Can't find what you're looking for? Reach out to our team.
+              </Paragraph>
 
-        {/* FAQ Items */}
-        <div className="border border-neutral-200 rounded-lg divide-y divide-neutral-200">
-          {faqs.map((faq) => {
-            const isOpen = openItems.includes(faq.id);
-            
-            return (
-              <div key={faq.id} className="group">
-                <button
-                  onClick={() => toggleItem(faq.id)}
-                  className="w-full text-left px-6 py-5 flex items-start justify-between gap-4 hover:bg-neutral-50 transition-colors"
-                  aria-expanded={isOpen}
+              {/* CTA */}
+              <div className="space-y-4">
+                <p className="text-sm font-schibsted font-medium text-neutral-600">
+                  Still have questions?
+                </p>
+                <a
+                  href="mailto:support@galearen.resend.app"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-neutral-900 text-white font-schibsted font-semibold text-base rounded-xl transition-all duration-200 hover:bg-neutral-800 hover:shadow-lg"
                 >
-                  <span className="text-base font-schibsted font-semibold text-neutral-900 flex-1">
-                    {faq.question}
-                  </span>
-                  <ChevronDown 
-                    className={`w-5 h-5 text-neutral-500 flex-shrink-0 transition-transform duration-200 ${
-                      isOpen ? 'rotate-180' : ''
-                    }`}
-                  />
-                </button>
-                
-                {isOpen && (
-                  <div className="px-6 pb-5 pt-0">
-                    <p className="text-sm font-schibsted font-normal text-neutral-600 leading-relaxed">
-                      {faq.answer}
-                    </p>
-                  </div>
-                )}
+                  Contact Support
+                  <svg 
+                    className="w-4 h-4" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </a>
               </div>
-            );
-          })}
-        </div>
+            </motion.div>
+          </div>
 
-        {/* Still have questions CTA */}
-        <div className="mt-8 text-center">
-          <p className="text-sm font-schibsted font-normal text-neutral-600 mb-3">
-            Still have questions?
-          </p>
-          <a
-            href="mailto:support@galearen.resend.app"
-            className="inline-flex items-center gap-2 text-sm font-schibsted font-semibold text-sky-700 hover:text-sky-800 transition-colors"
-          >
-            Contact our support team
-            <span aria-hidden="true">→</span>
-          </a>
+          {/* Right Side - FAQ Accordion */}
+          <div className="lg:col-span-7">
+            <div className="space-y-4">
+              {faqs.map((faq, index) => {
+                const isOpen = openItems.includes(faq.id);
+                
+                return (
+                  <motion.div
+                    key={faq.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: index * 0.05 }}
+                    className="group"
+                  >
+                    <button
+                      onClick={() => toggleItem(faq.id)}
+                      className="w-full text-left py-6 flex items-start justify-between gap-4 transition-colors"
+                      aria-expanded={isOpen}
+                    >
+                      <span className="text-lg font-schibsted font-semibold text-neutral-900 flex-1 pr-4">
+                        {faq.question}
+                      </span>
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <motion.div
+                          animate={{ rotate: isOpen ? 180 : 0 }}
+                          transition={{ duration: 0.3, ease: [.25, .46, .45, .94] }}
+                        >
+                          <svg 
+                            className="w-6 h-6 text-sky-700" 
+                            fill="none" 
+                            viewBox="0 0 24 24" 
+                            stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </motion.div>
+                      </div>
+                    </button>
+                    
+                    {isOpen && (
+                      <motion.div
+                        key={faq.id + "-answer"}
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1, transition: { duration: 0.2, ease: [.25, .46, .45, .94] } }}
+                        exit={{ height: 0, opacity: 0, transition: { duration: 0.1, ease: [.6, .04, .98, .335] } }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pb-6 pr-10">
+                          <p className="text-base font-schibsted text-neutral-600 leading-relaxed">
+                            {faq.answer}
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Subtle divider */}
+                    <div className="h-px bg-neutral-200" />
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      </div>
+      </Container>
     </section>
   );
 }

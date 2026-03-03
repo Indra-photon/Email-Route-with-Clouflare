@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion } from "motion/react";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { Heading } from "@/components/Heading";
+import { Paragraph } from "@/components/Paragraph";
 
 const testimonials = [
   {
@@ -38,6 +39,39 @@ const testimonials = [
       avatar: null,
     },
   },
+  {
+    id: 4,
+    company: "CloudSync",
+    logo: null,
+    quote: "We went from using <strong>5 different tools</strong> to just Slack. Our team collaboration improved overnight.",
+    author: {
+      name: "David Park",
+      role: "CTO",
+      avatar: null,
+    },
+  },
+  {
+    id: 5,
+    company: "DevTools",
+    logo: null,
+    quote: "The live chat widget increased our <strong>demo conversions by 40%</strong>. It's like having a sales rep on every page.",
+    author: {
+      name: "Lisa Nguyen",
+      role: "Head of Growth",
+      avatar: null,
+    },
+  },
+  {
+    id: 6,
+    company: "SupportPro",
+    logo: null,
+    quote: "We capture every inquiry from our website instantly in Slack. <strong>Zero missed leads</strong> since we switched.",
+    author: {
+      name: "James Mitchell",
+      role: "Sales Director",
+      avatar: null,
+    },
+  },
 ];
 
 const additionalCompanies = [
@@ -63,6 +97,24 @@ const featuredTestimonial = {
 
 export function TestimonialsSection() {
   const [activeCompany, setActiveCompany] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
+  const testimonialsPerPage = 3;
+  const totalPages = Math.ceil(testimonials.length / testimonialsPerPage);
+
+  // Auto-rotate testimonials every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentPage((prev) => (prev + 1) % totalPages);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [totalPages]);
+
+  // Get current testimonials to display
+  const currentTestimonials = testimonials.slice(
+    currentPage * testimonialsPerPage,
+    (currentPage + 1) * testimonialsPerPage
+  );
 
   return (
     <section className="w-full bg-white py-16 md:py-20 lg:py-24">
@@ -81,15 +133,24 @@ export function TestimonialsSection() {
           </motion.div>
         </Heading>
 
-        {/* Main Testimonials Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 border border-neutral-200 overflow-hidden rounded-t-lg">
-          {testimonials.map((testimonial, index) => (
-            <div
-              key={testimonial.id}
-              className={`flex flex-col p-6 gap-4 ${
-                index < testimonials.length - 1 ? 'border-b md:border-b-0 md:border-r' : ''
-              } border-neutral-200`}
-            >
+        <Paragraph variant="home-par">
+          From startups to scale-ups, teams using our platform see dramatic improvements in response times, ticket handling, and customer satisfaction—without adding headcount.
+        </Paragraph>
+
+        {/* Main Testimonials Grid with Auto-Rotation */}
+        <div className="grid grid-cols-1 md:grid-cols-3 border border-neutral-200 overflow-hidden rounded-t-lg min-h-[320px]">
+          <AnimatePresence mode="wait">
+            {currentTestimonials.map((testimonial, index) => (
+              <motion.div
+                key={`${testimonial.id}-${currentPage}`}
+                initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
+                transition={{ duration: 0.3, delay: index * 0.05, ease: [.25, .46, .45, .94] }}
+                className={`flex flex-col p-6 gap-4 ${
+                  index < currentTestimonials.length - 1 ? 'border-b md:border-b-0 md:border-r' : ''
+                } border-neutral-200`}
+              >
               {/* Company Logo */}
               <div className="flex items-center gap-2 h-10">
                 {testimonial.logo ? (
@@ -133,8 +194,9 @@ export function TestimonialsSection() {
                   </p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
+          </AnimatePresence>
         </div>
 
         {/* Additional Companies + Featured */}

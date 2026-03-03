@@ -196,6 +196,7 @@ import React from "react";
 import { Grid } from "@/components/VercelGrid";
 import { Heading } from "@/components/Heading";
 import { motion } from "framer-motion";
+import { Paragraph } from "@/components/Paragraph";
 
 const benefits = [
   {
@@ -280,6 +281,63 @@ const WavesDecoration = ({ isHovered }: { isHovered: boolean }) => (
     />
   </svg>
 );
+
+// const WavesDecoration = ({ isHovered }: { isHovered: boolean }) => (
+//   <svg width="120" height="120" viewBox="0 0 24 24" fill="none" className="absolute top-0 right-0" style={{ padding: "16px" }}>
+//     {/* Main circle */}
+//     <motion.path
+//       d="M5 13a7 7 0 1 0 14 0a7 7 0 0 0 -14 0"
+//       stroke="#0EA5E9"
+//       strokeWidth="2"
+//       strokeLinecap="round"
+//       strokeLinejoin="round"
+//       fill="none"
+//       // initial={{ opacity: 0.5 }}
+//       // animate={isHovered ? { opacity: [0.5, 0.9, 0.5] } : { opacity: 0.5 }}
+//       // transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+//     />
+
+//     {/* Hand */}
+//     <motion.path
+//       d="M14.5 10.5l-2.5 2.5"
+//       stroke="#38BDF8"
+//       strokeWidth="2"
+//       strokeLinecap="round"
+//       strokeLinejoin="round"
+//       style={{ 
+//         transformBox: "fill-box",
+//         transformOrigin: "bottom" }}
+//       initial={{ rotate: 0 }}
+//       animate={{ rotate: 360}}
+//       transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+//     />
+
+//     {/* Side button */}
+//     {/* <motion.path
+//       d="M17 8l1 -1"
+//       stroke="#0EA5E9"
+//       strokeWidth="2"
+//       strokeLinecap="round"
+//       strokeLinejoin="round"
+//       initial={{ opacity: 0.5 }}
+//       animate={isHovered ? { opacity: [0.5, 1, 0.5] } : { opacity: 0.5 }}
+//       transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
+//     /> */}
+
+//     {/* Top button */}
+//     <motion.path
+//       d="M14 3h-4"
+//       stroke="#0EA5E9"
+//       strokeWidth="2"
+//       strokeLinecap="round"
+//       strokeLinejoin="round"
+//       // initial={{ opacity: 0.5 }}
+//       // animate={isHovered ? { opacity: [0.5, 1, 0.5] } : { opacity: 0.5 }}
+//       // transition={{ duration: 1, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+//     />
+//   </svg>
+// );
+
 
 const BubblesDecoration = ({ isHovered }: { isHovered: boolean }) => (
   <svg width="120" height="120" viewBox="0 0 120 120" className="absolute top-0 right-0">
@@ -481,10 +539,10 @@ export function BenefitsSection() {
                 Real results. Real teams. Real fast.
                 </motion.div>
               </Heading>
-              <p className="text-lg md:text-xl text-neutral-600 font-schibsted font-normal mb-12 leading-relaxed max-w-3xl">
+              <Paragraph variant="home-par">
                 From startups to scale-ups, teams using our platform see dramatic improvements in response times, ticket handling, and customer satisfaction—without adding headcount.
-              </p>
-              
+              </Paragraph>
+
               <div className="border-y border-neutral-200 relative overflow-hidden ">
                 <div className="grid grid-cols-3 border-x border-neutral-200 overflow-hidden">
                   {benefits.map((benefit, index) => (

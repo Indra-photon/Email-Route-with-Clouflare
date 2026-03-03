@@ -362,3 +362,21 @@
     stroke-dashoffset: 0;
   }
 }
+
+@keyframes text-exit {
+  to {
+    transform: rotateX(-90deg);
+    opacity: 0;
+  }
+}
+
+@keyframes text-entry {
+  from {
+    transform: rotateX(90deg);
+    opacity: 0;
+  }
+  to {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+}
