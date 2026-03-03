@@ -196,16 +196,39 @@ export default function ConversationDetailPage() {
             });
             if (!res.ok) throw new Error("Failed");
             const result = await res.json();
+            const savedMessage = { ...result.message, type, mediaUrl };
+
+            // Replace optimistic message with the real saved one
             setData((prev) =>
                 prev
                     ? {
                         ...prev,
                         messages: prev.messages.map((m) =>
-                            m.id === optimisticId ? { ...result.message, type, mediaUrl } : m
+                            m.id === optimisticId ? savedMessage : m
                         ),
                     }
                     : prev
             );
+
+            // ── Direct socket emit (fastest real-time path to visitor) ──
+            // The reply API also calls /push on the render server, but that is
+            // a Vercel→Render HTTP round-trip that can be slow or fail silently.
+            // Emitting agent_message directly from the agent socket is instant.
+            if (socketRef.current?.connected && wsSecret) {
+                socketRef.current.emit("agent_message", {
+                    cid: conversationId,
+                    secret: wsSecret,
+                    message: {
+                        id: savedMessage.id,
+                        sender: "agent",
+                        body: savedMessage.body,
+                        type: savedMessage.type || "text",
+                        mediaUrl: savedMessage.mediaUrl || "",
+                        createdAt: savedMessage.createdAt,
+                    },
+                });
+            }
+
             toast.success("Reply sent");
         } catch {
             toast.error("Failed to send reply");
@@ -218,7 +241,7 @@ export default function ConversationDetailPage() {
         } finally {
             setSending(false);
         }
-    }, [conversationId, sending, emitTypingStop]);
+    }, [conversationId, sending, emitTypingStop, wsSecret]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === "Enter" && !e.shiftKey) {
