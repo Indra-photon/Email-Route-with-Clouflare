@@ -227,7 +227,17 @@ export default function ChatEmbedPage() {
             const savedMsgId = data.message?.id || data.messageId || optimisticId;
 
             // If this was the first message, we now have a cid — set it.
-            if (!conversationId && savedCid) setConversationId(savedCid);
+            if (!conversationId && savedCid) {
+                setConversationId(savedCid);
+                // Notify the parent widget.js to persist the cid in localStorage.
+                // Without this, every page reload starts a fresh conversation.
+                try {
+                    window.parent.postMessage(
+                        { type: "CW_CONVERSATION_ID", conversationId: savedCid },
+                        "*"
+                    );
+                } catch { /* cross-origin safeguard */ }
+            }
 
             // Replace optimistic message with real ID
             setMessages((prev) =>
