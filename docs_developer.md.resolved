@@ -1,0 +1,283 @@
+# Live Chat Widget — Developer Guide
+
+> Internal documentation for the Email Router engineering team.  
+> Covers every file, env var, deploy step, and architecture decision.
+
+---
+
+## Architecture Overview
+
+```
+Visitor Browser
+   │
+   ├── GET /chat/widget.js         (Vercel — serves embed JS)
+   │       └── injects floating 💬 button + iframe
+   │
+   ├── iframe: /chat/embed?key=&vid=&cid=   (Vercel — React page)
+   │       ├── POST /api/chat/messages      (send message)
+   │       └── GET  [Render]/live?key=&cid= (SSE, real-time replies)
+   │
+   └── GET /api/chat/messages?key=&cid=&vid= (polling fallback)
+
+Agent Dashboard (Vercel)
+   │
+   └── POST /api/chat/conversations/[id]/reply
+           ├── saves ChatMessage to MongoDB
+           └── POST [Render]/push  → SSE push to visitor
+
+Render Server (always-on, Express)
+   ├── GET  /health   → 200 OK (UptimeRobot pings this)
+   ├── GET  /live     → SSE stream (55s max, heartbeat every 20s)
+   └── POST /push     → x-push-secret auth → forwards to SSE clients
+```
+
+---
+
+## Middleware & Authentication
+
+### `middleware.ts`
+This file is critical for handling Clerk authentication. It distinguishes between protected and public routes.
+
+**Key Feature: Request Header Forwarding**
+To allow `layout.tsx` (a Server Component) to know if a route is public without reaching for Clerk's auth state (which can cause loops in iframes), the middleware forwards a header:
+
+```ts
+const requestHeaders = new Headers(req.headers);
+requestHeaders.set('x-is-public-route', 'true');
+return NextResponse.next({ request: { headers: requestHeaders } });
+```
+
+The `layout.tsx` then reads this via `headers().get('x-is-public-route')` to decide whether to wrap the app in `<ClerkProvider>`.
+
+---
+
+## Files Created
+
+### Mongoose Models (`app/api/models/`)
+
+#### `ChatWidgetModel.ts`
+| Field | Type | Notes |
+|---|---|---|
+| `workspaceId` | ObjectId | ref → Workspace |
+| `activationKey` | String | Unique, `cw_` + 24 hex chars, auto-generated |
+| `domain` | String | Must match a verified Domain in workspace |
+| `integrationId` | ObjectId | ref → Integration (Slack or Discord) |
+| `welcomeMessage` | String | Default: "Hi! How can we help you today?" |
+| `accentColor` | String | Hex, default `#0ea5e9` |
+| `status` | `active` \| `inactive` | |
+
+Indexes: `activationKey` (unique), `workspaceId + domain`
+
+#### `ChatConversationModel.ts`
+| Field | Type | Notes |
+|---|---|---|
+| `widgetId` | ObjectId | ref → ChatWidget |
+| `workspaceId` | ObjectId | ref → Workspace |
+| `visitorId` | String | Fingerprint stored in visitor localStorage |
+| `visitorPage` | String | URL of the page where chat was opened |
+| `status` | `open` \| `closed` | |
+| `lastMessageAt` | Date | Used for sorting in dashboard |
+
+Indexes: `widgetId + visitorId`, `workspaceId + lastMessageAt`
+
+#### `ChatMessageModel.ts`
+| Field | Type | Notes |
+|---|---|---|
+| `conversationId` | ObjectId | ref → ChatConversation |
+| `widgetId` | ObjectId | ref → ChatWidget |
+| `sender` | `visitor` \| `agent` | |
+| `body` | String | |
+
+Index: `conversationId + createdAt`
+
+---
+
+### Vercel API Routes (`app/api/chat/`)
+
+#### `widgets/route.ts`
+- **GET** — auth → workspace → list ChatWidgets
+- **POST** — auth → validate domain belongs to workspace → validate integration belongs to workspace → generate `cw_` key via `crypto.randomBytes(12)` → create widget → return widget + `embedScript` string
+
+#### `widgets/[id]/route.ts`
+- **GET** — auth → workspace → find widget
+- **DELETE** — auth → workspace → delete widget
+
+#### `messages/route.ts` ← **PUBLIC (no Clerk auth)**
+- **POST** body: `{ key, conversationId?, visitorId, message, visitorPage }`
+  1. Find ChatWidget by `activationKey`
+  2. Upsert ChatConversation by `(widgetId, visitorId)`
+  3. Save ChatMessage (sender = visitor)
+  4. Fetch Integration → POST to Slack/Discord webhook (rich block format for Slack, markdown for Discord)
+  5. Return `{ conversationId, messageId }`
+- **GET** params: `?key=&cid=&vid=&after=`
+  - Validates key + ownership, returns messages after optional timestamp
+  - Also returns `widgetConfig` (welcomeMessage, accentColor)
+
+#### `conversations/route.ts`
+- **GET** — auth → workspace → list conversations sorted by `lastMessageAt desc`, enriched with last message preview and widget domain
+
+#### `conversations/[id]/route.ts`
+- **GET** — auth → workspace → full conversation + all messages
+
+#### `conversations/[id]/reply/route.ts`
+- **POST** — auth → workspace → save ChatMessage (sender = agent) → update `lastMessageAt` → call `RENDER_CHAT_SERVER_URL/push` with `x-push-secret` header
+
+---
+
+### Public Widget Routes (`app/chat/`)
+
+#### `widget.js/route.ts`
+- Returns raw JavaScript with `Content-Type: application/javascript`
+- **Dynamic Configuration**: Supports `window.CHAT_CONFIG` for user-level overrides.
+  - `launcher`: CSS selector. If present, default bubble is hidden and click handler is attached to the selected element.
+  - `color`: Hex code for bubble background.
+  - `position`: Corner placement (`bottom-right`, `bottom-left`, etc.)
+- Script does:
+  1. Reads `window.CHAT_KEY` and optional `window.CHAT_CONFIG`
+  2. Generates/retrieves `visitorId` (localStorage)
+  3. Injects `<style>` block
+  4. **Mode A (Default)**: Renders bubble with dynamic color/position.
+  5. **Mode B (Custom Launcher)**: Binds click events to user's element and auto-positions the iframe nearby.
+  6. Listen for `postMessage` to sync `conversationId`.
+
+> **Cache-Control**: `public, max-age=60` — safe to CDN-cache for 1 min
+
+#### `embed/page.tsx` (Client Component)
+- Parses `?key`, `?vid`, `?cid`, `?page` from URL
+- Shows welcome message + message list
+- **Sending**: POST to `/api/chat/messages` with optimistic UI
+- **Receiving (real-time)**: `EventSource` to `NEXT_PUBLIC_RENDER_CHAT_SERVER_URL/live?key=&cid=` — auto-reconnects
+- **Receiving (fallback)**: polls `/api/chat/messages?...` every 5s
+- Posts `postMessage` to parent window with `conversationId` for localStorage persistence
+
+---
+
+### Dashboard Pages
+
+#### `app/dashboard/chat-widgets/page.tsx`
+- Client component, fetches `/api/chat/widgets`, `/api/integrations`, `/api/domains`
+- Only shows domains where `verifiedForSending=true` or `status=verified/active`
+- Color picker: 6 preset hex colors + `<input type="color">` for custom
+- On create success: shows green banner with activation key + embed script + copy buttons
+
+#### `app/dashboard/live-chats/page.tsx`
+- Client component, polls `/api/chat/conversations` every 10s
+- Shows last message preview, visitor page, time-ago, status badge
+
+#### `app/dashboard/live-chats/[conversationId]/page.tsx`
+- Polls `/api/chat/conversations/[id]` every 5s
+- Optimistic reply with temp ID replaced on success
+- Calls `/api/chat/conversations/[id]/reply` → server pushes via Render
+
+### Updated: `components/dashboard/DashboardNav.tsx`
+Added two entries using `@tabler/icons-react` (already in package.json):
+```ts
+{ href: "/dashboard/chat-widgets", label: "Chat Widgets", tablerIcon: IconMessageCircle }
+{ href: "/dashboard/live-chats",   label: "Live Chats",   tablerIcon: IconMessages }
+```
+The `NavLinks` renderer now checks `item.tablerIcon` first (renders with `size` prop), then `item.icon` (custom animated icons with `isAnimating` prop).
+
+---
+
+### Render Chat Server (`render-chat-server/`)
+
+Pure Node.js/Express — **no TypeScript**, no build step, deploy as-is.
+
+```
+render-chat-server/
+├── server.js       ← main server
+├── package.json    ← { express, cors } only
+├── .env.example    ← PORT, PUSH_SECRET
+└── README.md       ← deploy guide
+```
+
+**`server.js` key logic:**
+- In-memory `Map<conversationId, Set<{key, res}>>` to track SSE clients
+- `/live` — sends SSE headers, heartbeat comment `: heartbeat` every 20s, self-closes after 55s, cleans up on `req.close`
+- `/push` — validates `x-push-secret` header, finds Set for conversationId, writes `data: JSON\n\n` to each client
+
+> **Scaling note:** In-memory store means one instance only. If you upgrade to paid Render, switch to Redis pub/sub.
+
+---
+
+## Environment Variables
+
+### Next.js (`Vercel` / `.env.local`)
+```env
+MONGODB_URI=...                           # existing
+RENDER_CHAT_SERVER_URL=https://your.onrender.com
+RENDER_PUSH_SECRET=a_long_random_string
+NEXT_PUBLIC_RENDER_CHAT_SERVER_URL=https://your.onrender.com
+NEXT_PUBLIC_BASE_URL=https://your-app.vercel.app
+```
+
+### Render
+```env
+PUSH_SECRET=a_long_random_string          # must match RENDER_PUSH_SECRET above
+```
+
+---
+
+## Local Development
+
+### Run Next.js
+```bash
+# Add env vars to .env.local, then:
+npm run dev
+```
+
+### Run Render Server locally
+```bash
+cd render-chat-server
+npm install
+cp .env.example .env
+# Edit PUSH_SECRET in .env
+node server.js
+# → [chat-server] Listening on port 3001
+```
+
+Update `.env.local`:
+```env
+RENDER_CHAT_SERVER_URL=http://localhost:3001
+NEXT_PUBLIC_RENDER_CHAT_SERVER_URL=http://localhost:3001
+```
+
+### Test widget locally
+Create `test.html` anywhere:
+```html
+<!DOCTYPE html>
+<html>
+<body>
+  <h1>Test Page</h1>
+  <script>window.CHAT_KEY = 'cw_your_key_here';</script>
+  <script async src="http://localhost:3000/chat/widget.js"></script>
+</body>
+</html>
+```
+Open with a simple HTTP server (not `file://` — CORS):
+```bash
+npx serve .
+# Open http://localhost:3000/test.html  (or whatever port)
+```
+
+---
+
+## Deploy Checklist
+
+- [ ] Push code to GitHub
+- [ ] Set all 4 env vars in Vercel
+- [ ] Deploy `render-chat-server/` to Render (Root Dir: `render-chat-server`, Start: `npm start`)
+- [ ] Set `PUSH_SECRET` in Render env
+- [ ] Copy Render URL → update `RENDER_CHAT_SERVER_URL` and `NEXT_PUBLIC_RENDER_CHAT_SERVER_URL` in Vercel
+- [ ] Add UptimeRobot monitor on `https://your.onrender.com/health` every 10 min
+- [ ] Redeploy Vercel with new env vars
+- [ ] Test widget creation end-to-end
+
+---
+
+## Security Notes
+
+- `/api/chat/messages` POST is **intentionally public** (visitors aren't authenticated). Rate-limit at the CDN/Cloudflare level if abuse is a concern.
+- The `activationKey` (`cw_...`) is the only auth for the public endpoints — treat it like an API key.
+- `/push` on Render is protected by `x-push-secret` — keep this secret long (32+ chars).
+- CORS on Render's `/live` is set to `origin: '*'` so any visitor browser can connect.

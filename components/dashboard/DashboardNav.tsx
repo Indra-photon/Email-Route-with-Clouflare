@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { IconMail, IconDashboard, IconInbox, IconGlobe, IconAtSign, IconZap } from "@/constants/icons";
+import { IconMessageCircle, IconMessages } from "@tabler/icons-react";
 
 const navItems = [
   {
@@ -51,6 +52,18 @@ const navItems = [
     label: "Integrations",
     icon: IconZap,
   },
+  {
+    href: "/dashboard/chat-widgets",
+    label: "Chat Widgets",
+    icon: null,
+    tablerIcon: IconMessageCircle,
+  },
+  {
+    href: "/dashboard/live-chats",
+    label: "Live Chats",
+    icon: null,
+    tablerIcon: IconMessages,
+  },
 ];
 
 export default function DashboardNav({ children }: { children: ReactNode }) {
@@ -66,36 +79,41 @@ export default function DashboardNav({ children }: { children: ReactNode }) {
     return pathname.startsWith(href);
   };
 
-const NavLinks = () => (
-  <ul className="space-y-1">
-    {navItems.map((item) => {
-      const active = isActive(item.href, item.exact);
-      const [isHovered, setIsHovered] = useState(false);
-      const Icon = item.icon;
-      
-      return (
-        <li key={item.href}>
-          <Link
-            href={item.href}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 font-schibsted font-regular transition-all duration-150 ${
-              active
+  const NavLinks = () => (
+    <ul className="space-y-1">
+      {navItems.map((item) => {
+        const active = isActive(item.href, item.exact);
+        const [isHovered, setIsHovered] = useState(false);
+
+        return (
+          <li key={item.href}>
+            <Link
+              href={item.href}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 font-schibsted font-regular transition-all duration-150 ${active
                 ? "bg-sky-100 text-sky-800 font-semibold"
                 : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
-            }`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-          >
-            <Icon 
-              className={`size-5 ${active ? "text-sky-800" : "text-neutral-600"}`}
-              isAnimating={isHovered}
-            />
-            <span className="text-sm">{item.label}</span>
-          </Link>
-        </li>
-      );
-    })}
-  </ul>
-);
+                }`}
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+            >
+              {item.tablerIcon ? (
+                <item.tablerIcon
+                  size={20}
+                  className={`shrink-0 ${active ? "text-sky-800" : "text-neutral-600"}`}
+                />
+              ) : item.icon ? (
+                <item.icon
+                  className={`size-5 ${active ? "text-sky-800" : "text-neutral-600"}`}
+                  isAnimating={isHovered}
+                />
+              ) : null}
+              <span className="text-sm">{item.label}</span>
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+  );
 
   return (
     <div className="min-h-dvh flex">
@@ -122,9 +140,8 @@ const NavLinks = () => (
 
       {/* Sidebar — desktop always visible, mobile slide-in */}
       <aside
-        className={`fixed md:static top-0 left-0 h-full md:h-auto z-40 w-64 border-r border-neutral-200 bg-white px-4 py-6 transition-transform duration-200 md:translate-x-0 ${
-          mobileOpen ? "translate-x-0 shadow-xl" : "-translate-x-full"
-        }`}
+        className={`fixed md:static top-0 left-0 h-full md:h-auto z-40 w-64 border-r border-neutral-200 bg-white px-4 py-6 transition-transform duration-200 md:translate-x-0 ${mobileOpen ? "translate-x-0 shadow-xl" : "-translate-x-full"
+          }`}
       >
         {/* Logo/Brand */}
         <div className="mb-8 flex items-center gap-2 px-3">

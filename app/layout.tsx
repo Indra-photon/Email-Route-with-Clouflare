@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Schibsted_Grotesk } from "next/font/google";
+
+// Force dynamic rendering — this layout reads request headers (for skipClerk)
+export const dynamic = "force-dynamic";
 import "./globals.css";
 import { GoogleTagManager } from '@next/third-parties/google'
 import { Toaster } from "@/components/ui/sonner"
@@ -18,17 +21,20 @@ import { UserSync } from "@/components/UserSync";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  preload: false, // Prevents hard network fetch at build time; still loads at runtime
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  preload: false,
 });
 
 const schibstedGrotesk = Schibsted_Grotesk({
   variable: "--font-schibsted-grotesk",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"], // Include the weights you need
+  weight: ["400", "500", "600", "700", "800", "900"],
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -92,24 +98,43 @@ export const metadata: Metadata = {
   }
 };
 
-export default function RootLayout({
+import { headers } from "next/headers";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const skipClerk = headersList.get("x-skip-clerk") === "true";
+  console.log('>> LAYOUT HEADERS - skipClerk:', skipClerk, 'raw:', headersList.get("x-skip-clerk"));
+
+  if (skipClerk) {
+    return (
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} ${schibstedGrotesk.variable} antialiased`}
+        >
+          {children}
+          <Toaster position="top-right" />
+        </body>
+      </html>
+    );
+  }
+
   return (
     <ClerkProvider>
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${schibstedGrotesk.variable} antialiased`}
-      >
-        <NavBar />
-        <UserSync />
-        {children}
-        <GoogleTagManager gtmId="Your GTM ID" />
-        <Toaster position="top-right" />
-      </body>
-    </html>
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} ${schibstedGrotesk.variable} antialiased`}
+        >
+          <NavBar />
+          <UserSync />
+          {children}
+          <GoogleTagManager gtmId="Your GTM ID" />
+          <Toaster position="top-right" />
+        </body>
+      </html>
     </ClerkProvider>
   );
 }
