@@ -227,7 +227,6 @@ export default function ChatEmbedPage() {
             const savedMsgId = data.message?.id || data.messageId || optimisticId;
 
             // If this was the first message, we now have a cid — set it.
-            // The useEffect above will fire and emit 'join' to the conversation room.
             if (!conversationId && savedCid) setConversationId(savedCid);
 
             // Replace optimistic message with real ID
@@ -239,11 +238,20 @@ export default function ChatEmbedPage() {
                 )
             );
 
-            // Also emit the message via WebSocket so it arrives live on the agent's screen.
-            // The HTTP POST already called /push on the render server, but socket emit
-            // is a faster / more reliable path when the socket is already connected.
+            // Immediately join the conversation room (synchronous, no React state delay).
+            // Critical for first message: the visitor MUST be in the room before the agent
+            // can reply and have that reply delivered in real-time.
             const activeCid = savedCid || conversationId;
             if (activeCid && socketRef.current?.connected) {
+                // Join the conversation room (safe to call even if already joined)
+                socketRef.current.emit("join", {
+                    key: chatKey,
+                    cid: activeCid,
+                    visitorId,
+                    role: "visitor",
+                });
+
+                // Also emit visitor_message so the agent sees the message live
                 socketRef.current.emit("visitor_message", {
                     cid: activeCid,
                     message: {
