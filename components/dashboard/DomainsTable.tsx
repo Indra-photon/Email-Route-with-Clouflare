@@ -21,6 +21,25 @@ import DomainAddForm from "./DomainAddForm";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+// ─── Shared inline sub-types ────────────────────────────────────────────────
+
+type DnsRecord = {
+  record: string;
+  name: string;
+  type: string;
+  value?: string;
+  status: string;
+  priority?: number;
+};
+
+type MxRecord = {
+  type: string;
+  name: string;
+  value: string;
+  priority: number;
+  ttl: string;
+};
+
 interface DomainRow {
   id: string;
   domain: string;
@@ -28,25 +47,19 @@ interface DomainRow {
   verifiedForSending?: boolean;
   receivingEnabled?: boolean;
   createdAt: string;
+  prefetchedDetail?: {
+    resendDomainId?: string | null;
+    dnsRecords?: DnsRecord[];
+    receivingEnabled?: boolean;
+    receivingMxRecords?: MxRecord[];
+    lastCheckedAt?: string | null;
+  };
 }
 
 interface DomainDetail extends DomainRow {
   resendDomainId?: string | null;
-  dnsRecords?: {
-    record: string;
-    name: string;
-    type: string;
-    value?: string;
-    status: string;
-    priority?: number;
-  }[];
-  receivingMxRecords?: {
-    type: string;
-    name: string;
-    value: string;
-    priority: number;
-    ttl: string;
-  }[];
+  dnsRecords?: DnsRecord[];
+  receivingMxRecords?: MxRecord[];
   lastCheckedAt?: string | null;
 }
 
@@ -112,9 +125,9 @@ function AnimatedButton({
 }) {
   const width =
     state === "loading" ? loadingWidth
-    : state === "success" ? successWidth
-    : state === "error" ? (errorWidth ?? idleWidth)
-    : idleWidth;
+      : state === "success" ? successWidth
+        : state === "error" ? (errorWidth ?? idleWidth)
+          : idleWidth;
 
   return (
     <motion.button
@@ -331,11 +344,10 @@ function DNSTable({ records, domainName }: { records: DomainDetail["dnsRecords"]
                     </div>
                   </td>
                   <td className="px-3 py-2">
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-schibsted font-semibold ${
-                      isVerified
-                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                        : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
-                    }`}>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-schibsted font-semibold ${isVerified
+                      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                      : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+                      }`}>
                       {isVerified ? "✓ Verified" : "Pending"}
                     </span>
                   </td>
@@ -600,11 +612,37 @@ function MXTable({ records }: { records: DomainDetail["receivingMxRecords"] }) {
 // };
 
 
-function ExpandedPanel({ domainId, domainName }: { domainId: string; domainName: string }) {
-  const [detail, setDetail] = useState<DomainDetail | null>(null);
-  const [loadingDetail, setLoadingDetail] = useState(true);
+function ExpandedPanel({
+  domainId,
+  domainName,
+  isOpen,
+  initialDetail,
+}: {
+  domainId: string;
+  domainName: string;
+  isOpen: boolean;
+  initialDetail?: DomainRow["prefetchedDetail"];
+}) {
+  // Seed state with prefetched data if available — skips loading entirely on first open
+  const [detail, setDetail] = useState<DomainDetail | null>(
+    initialDetail
+      ? {
+        id: domainId,
+        domain: domainName,
+        status: "pending_verification",
+        createdAt: new Date().toISOString(),
+        resendDomainId: initialDetail.resendDomainId,
+        dnsRecords: initialDetail.dnsRecords || [],
+        receivingEnabled: initialDetail.receivingEnabled || false,
+        receivingMxRecords: initialDetail.receivingMxRecords || [],
+        lastCheckedAt: initialDetail.lastCheckedAt,
+      }
+      : null
+  );
+  const [loadingDetail, setLoadingDetail] = useState(!initialDetail);
   const [addToResendState, setAddToResendState] = useState<BtnState>("idle");
   const [checkState, setCheckState] = useState<BtnState>("idle");
+  const [hasFetched, setHasFetched] = useState(!!initialDetail);
 
   const fetchDetail = useCallback(async () => {
     try {
@@ -616,12 +654,16 @@ function ExpandedPanel({ domainId, domainName }: { domainId: string; domainName:
       toast.error("Failed to load domain details");
     } finally {
       setLoadingDetail(false);
+      setHasFetched(true);
     }
   }, [domainId]);
 
+  // Only fetch once — on the first time the panel is opened
   useEffect(() => {
-    fetchDetail();
-  }, [fetchDetail]);
+    if (isOpen && !hasFetched) {
+      fetchDetail();
+    }
+  }, [isOpen, hasFetched, fetchDetail]);
 
   const handleAddToResend = async () => {
     setAddToResendState("loading");
@@ -651,7 +693,12 @@ function ExpandedPanel({ domainId, domainName }: { domainId: string; domainName:
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setDetail(data.domain ?? detail);
+
+      // Merge with existing detail so no fields (like resendDomainId) get wiped
+      if (data.domain) {
+        setDetail((prev) => prev ? { ...prev, ...data.domain } : data.domain);
+      }
+
       setCheckState("success");
       setTimeout(() => setCheckState("idle"), 2000);
     } catch {
@@ -664,8 +711,8 @@ function ExpandedPanel({ domainId, domainName }: { domainId: string; domainName:
 
   return (
     <motion.div layout
-    transition={{ duration: 0.3, type: "spring", stiffness: 300, damping: 25 }}
-    className="px-4 pb-4 pt-1 border-t border-neutral-100 dark:border-neutral-800 mt-1">
+      transition={{ duration: 0.3, type: "spring", stiffness: 300, damping: 25 }}
+      className="px-4 pb-4 pt-1 border-t border-neutral-100 dark:border-neutral-800 mt-1">
       <AnimatePresence mode="wait" initial={false}>
         {loadingDetail ? (
           <motion.div
@@ -688,33 +735,31 @@ function ExpandedPanel({ domainId, domainName }: { domainId: string; domainName:
             transition={{ duration: 0.15, ease: [.785, .135, .15, .86] }}
             className="space-y-4"
           >
-           
-            <div className={`rounded-lg px-3 py-2 border flex items-center gap-2 ${
-              isVerified
-                ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
-                : detail?.resendDomainId
+
+            <div className={`rounded-lg px-3 py-2 border flex items-center gap-2 ${isVerified
+              ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+              : detail?.resendDomainId
                 ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
                 : "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
-            }`}>
+              }`}>
               {isVerified && (
                 <IconCheck size={14} className="text-green-700 dark:text-green-400 shrink-0" />
               )}
-              <Paragraph variant="muted" className={`text-xs ${
-                isVerified
-                  ? "text-green-800 dark:text-green-300"
-                  : detail?.resendDomainId
+              <Paragraph variant="muted" className={`text-xs ${isVerified
+                ? "text-green-800 dark:text-green-300"
+                : detail?.resendDomainId
                   ? "text-blue-800 dark:text-blue-200"
                   : "text-amber-800 dark:text-amber-200"
-              }`}>
+                }`}>
                 {isVerified
                   ? "Domain verified — you can send emails from this domain."
                   : detail?.resendDomainId
-                  ? "Add the DNS records below at your domain provider. Verification usually takes 5–30 minutes."
-                  : "Click \"Add to Resend\" to get your DNS records."}
+                    ? "Add the DNS records below at your domain provider. Verification usually takes 5–30 minutes."
+                    : "Click \"Add to Resend\" to get your DNS records."}
               </Paragraph>
             </div>
 
-       
+
             {/* <DNSTable records={detail?.dnsRecords} domainName={domainName} />
 
       
@@ -754,11 +799,11 @@ function ExpandedPanel({ domainId, domainName }: { domainId: string; domainName:
             <DNSTable records={detail?.dnsRecords} domainName={domainName} />
 
             {/* MX Records — Receiving */}
-            {detail?.receivingEnabled && (
-            <MXTable records={detail?.receivingMxRecords} />
+            {detail?.receivingMxRecords && detail.receivingMxRecords.length > 0 && (
+              <MXTable records={detail.receivingMxRecords} />
             )}
 
-           
+
             <div className="flex items-center gap-2 flex-wrap">
               {!detail?.resendDomainId && (
                 <AnimatedButton
@@ -862,11 +907,10 @@ function DomainCard({
       exit={{ opacity: 0, scale: 0.97, y: -8 }}
       transition={{ duration: 0.25, ease: [.215, .61, .355, 1] }}
     >
-      <Card className={`border shadow-none transition-colors duration-150 rounded-md overflow-hidden ${
-        isOpen
-          ? "border-sky-600 dark:border-sky-800"
-          : "border-sky-600 dark:border-neutral-700 hover:border-sky-800 dark:hover:border-neutral-600"
-      }`}>
+      <Card className={`border shadow-none transition-colors duration-150 rounded-md overflow-hidden ${isOpen
+        ? "border-sky-600 dark:border-sky-800"
+        : "border-sky-600 dark:border-neutral-700 hover:border-sky-800 dark:hover:border-neutral-600"
+        }`}>
         {/* Card header row */}
         <CardContent className="p-4 flex items-center gap-4">
           {/* Icon */}
@@ -943,21 +987,20 @@ function DomainCard({
           </motion.button>
         </CardContent>
 
-        {/* Expanded panel */}
-        <AnimatePresence initial={false}>
-          {isOpen && (
-            <motion.div
-              key="panel"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: outQuint }}
-              style={{ overflow: "hidden" }}
-            >
-              <ExpandedPanel domainId={domain.id} domainName={domain.domain} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Expanded panel — always mounted so state (fetched data) is preserved across open/close */}
+        <motion.div
+          initial={false}
+          animate={{ height: isOpen ? "auto" : 0, opacity: isOpen ? 1 : 0 }}
+          transition={{ duration: 0.3, ease: outQuint }}
+          style={{ overflow: "hidden" }}
+        >
+          <ExpandedPanel
+            domainId={domain.id}
+            domainName={domain.domain}
+            isOpen={isOpen}
+            initialDetail={domain.prefetchedDetail}
+          />
+        </motion.div>
       </Card>
     </motion.div>
   );
