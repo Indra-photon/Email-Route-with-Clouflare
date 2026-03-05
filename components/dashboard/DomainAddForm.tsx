@@ -204,6 +204,14 @@ interface DomainRow {
   verifiedForSending?: boolean;
   receivingEnabled?: boolean;
   createdAt: string;
+  // Pre-loaded detail so ExpandedPanel shows instantly with no extra fetch
+  prefetchedDetail?: {
+    resendDomainId?: string | null;
+    dnsRecords?: any[];
+    receivingEnabled?: boolean;
+    receivingMxRecords?: any[];
+    lastCheckedAt?: string | null;
+  };
 }
 
 const outCubic = [0.215, 0.61, 0.355, 1] as const;
@@ -261,23 +269,36 @@ export default function DomainAddForm({
 
       const newDomain: DomainRow = body;
 
-      // Fire-and-forget: add to Resend
-      fetch("/api/domains/add-to-resend", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domainId: newDomain.id }),
-      }).catch(() => {});
+      // ── Await add-to-resend so records are ready before card appears ──
+      setStatus("loading"); // keep loading state during Resend setup (~5-6s)
+      let prefetchedDetail: DomainRow["prefetchedDetail"] = undefined;
+      try {
+        const resendRes = await fetch("/api/domains/add-to-resend", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ domainId: newDomain.id }),
+        });
+        if (resendRes.ok) {
+          const resendBody = await resendRes.json();
+          // Use the domain data returned by add-to-resend as prefetched detail
+          if (resendBody.domain) {
+            prefetchedDetail = {
+              resendDomainId: resendBody.domain.resendDomainId,
+              dnsRecords: resendBody.domain.dnsRecords || [],
+              receivingEnabled: resendBody.domain.receivingEnabled || false,
+              receivingMxRecords: resendBody.domain.receivingMxRecords || [],
+              lastCheckedAt: null,
+            };
+          }
+        }
+      } catch {
+        // Non-fatal — card still shows, just without prefetched data
+      }
 
-      // Brief loading hold, then success
-      setTimeout(() => {
-        // setStatus("success");
-        toast.success("Domain added — expand the card below to verify.");
-        setValue("");
-
-        // Push the new card into the table
-        onDomainAdded(newDomain);
-        setStatus("idle")
-      }, 1200);
+      toast.success("Domain added — expand the card below to see your DNS records.");
+      setValue("");
+      onDomainAdded({ ...newDomain, prefetchedDetail });
+      setStatus("idle");
     } catch (err) {
       setStatus("idle");
       toast.error(err instanceof Error ? err.message : "Failed to add domain");
@@ -314,7 +335,7 @@ export default function DomainAddForm({
             {isLoading && (
               <motion.span
                 key="loader"
-                initial={{ y: 6, filter: "blur(4px)"}}
+                initial={{ y: 6, filter: "blur(4px)" }}
                 animate={{ y: 0, filter: "blur(0)" }}
                 exit={{ y: -6, filter: "blur(4px)" }}
                 transition={{ ease: easeOut, duration: 0.1 }}
