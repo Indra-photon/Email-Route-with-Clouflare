@@ -693,7 +693,12 @@ function ExpandedPanel({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setDetail(data.domain ?? detail);
+
+      // Merge with existing detail so no fields (like resendDomainId) get wiped
+      if (data.domain) {
+        setDetail((prev) => prev ? { ...prev, ...data.domain } : data.domain);
+      }
+
       setCheckState("success");
       setTimeout(() => setCheckState("idle"), 2000);
     } catch {

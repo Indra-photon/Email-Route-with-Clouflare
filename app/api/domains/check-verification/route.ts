@@ -365,6 +365,7 @@ export async function POST(request: Request) {
           domain: updated.domain,
           status: updated.status,
           verifiedForSending: updated.verifiedForSending,
+          resendDomainId: updated.resendDomainId,       // ← Added this!
           receivingEnabled: updated.receivingEnabled,
           receivingMxRecords: updated.receivingMxRecords,
           dnsRecords: updated.dnsRecords,
