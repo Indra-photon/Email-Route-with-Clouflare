@@ -16,6 +16,7 @@ export async function GET() {
     const workspace = await getOrCreateWorkspaceForCurrentUser();
 
     const domains = await Domain.find({ workspaceId: workspace._id })
+      .select("domain status verifiedForSending receivingEnabled createdAt")
       .sort({ createdAt: -1 })
       .lean()
       .exec();
@@ -25,6 +26,8 @@ export async function GET() {
         id: d._id.toString(),
         domain: d.domain,
         status: d.status,
+        verifiedForSending: d.verifiedForSending ?? false,
+        receivingEnabled: d.receivingEnabled ?? false,
         createdAt: d.createdAt,
       }))
     );

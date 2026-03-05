@@ -211,7 +211,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { CustomLink } from "@/components/CustomLink";
 import { ChevronDown, Menu, X } from "lucide-react";
-import { motion, AnimatePresence, useReducedMotion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -269,12 +269,10 @@ function SectionItems({
   items,
   isExpanded,
   pathname,
-  prefersReducedMotion,
 }: {
   items: DocSection["items"];
   isExpanded: boolean;
   pathname: string;
-  prefersReducedMotion: boolean | null;
 }) {
   const contentRef = useRef<HTMLUListElement>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number>(0);
@@ -295,7 +293,7 @@ function SectionItems({
     return () => observer.disconnect();
   }, []);
 
-  const duration = prefersReducedMotion ? 0 : 0.18;
+  const duration = 0.18;
 
   return (
     <motion.div
@@ -330,7 +328,7 @@ function SectionItems({
               <CustomLink
                 href={item.href}
                 className={cn(
-                  "relative z-10 block rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150",
+                  "relative z-10 block rounded-lg py-2 text-sm font-medium transition-colors duration-150",
                   isActive
                     ? "text-sky-700 font-semibold"
                     : "text-neutral-800 hover:text-neutral-900 hover:bg-neutral-50"
@@ -352,19 +350,17 @@ function SidebarSection({
   isExpanded,
   onToggle,
   pathname,
-  prefersReducedMotion,
 }: {
   section: DocSection;
   isExpanded: boolean;
   onToggle: () => void;
   pathname: string;
-  prefersReducedMotion: boolean | null;
 }) {
   return (
     <div>
       <button
         onClick={onToggle}
-        className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wider text-neutral-400 hover:text-neutral-600 transition-colors duration-150 mb-1.5 px-3 py-1"
+        className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wider text-neutral-400 hover:text-neutral-600 transition-colors duration-150 mb-1.5 py-1"
         aria-expanded={isExpanded}
       >
         {section.title}
@@ -372,7 +368,7 @@ function SidebarSection({
           initial={false}
           animate={{ rotate: isExpanded ? 180 : 0 }}
           transition={{
-            duration: prefersReducedMotion ? 0 : 0.18,
+            duration: 0.18,
             ease: easeOutCubic,
           }}
         >
@@ -384,7 +380,6 @@ function SidebarSection({
         items={section.items}
         isExpanded={isExpanded}
         pathname={pathname}
-        prefersReducedMotion={prefersReducedMotion}
       />
     </div>
   );
@@ -395,13 +390,11 @@ function SidebarNav({
   expandedSections,
   toggleSection,
   pathname,
-  prefersReducedMotion,
   onLinkClick,
 }: {
   expandedSections: Set<string>;
   toggleSection: (title: string) => void;
   pathname: string;
-  prefersReducedMotion: boolean | null;
   onLinkClick?: () => void;
 }) {
   return (
@@ -413,7 +406,6 @@ function SidebarNav({
           isExpanded={expandedSections.has(section.title)}
           onToggle={() => toggleSection(section.title)}
           pathname={pathname}
-          prefersReducedMotion={prefersReducedMotion}
         />
       ))}
     </nav>
@@ -427,7 +419,6 @@ export function DocsSidebar() {
     () => new Set(docSections.map((s) => s.title))
   );
   const pathname = usePathname();
-  const prefersReducedMotion = useReducedMotion();
 
   const toggleSection = useCallback((title: string) => {
     setExpandedSections((prev) => {
@@ -478,7 +469,7 @@ export function DocsSidebar() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{
-                duration: prefersReducedMotion ? 0 : 0.2,
+                duration: 0.2,
                 ease: easeOutCubic,
               }}
               onClick={closeMobile}
@@ -490,7 +481,7 @@ export function DocsSidebar() {
               animate={{ x: "0%", opacity: 1 }}
               exit={{ x: "-100%", opacity: 0.8 }}
               transition={{
-                duration: prefersReducedMotion ? 0 : 0.3,
+                duration: 0.3,
                 ease: easeOutQuint,
               }}
               className="lg:hidden fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-white z-40 overflow-y-auto overscroll-contain"
@@ -508,7 +499,6 @@ export function DocsSidebar() {
                   expandedSections={expandedSections}
                   toggleSection={toggleSection}
                   pathname={pathname}
-                  prefersReducedMotion={prefersReducedMotion}
                   onLinkClick={closeMobile}
                 />
               </div>
@@ -531,7 +521,6 @@ export function DocsSidebar() {
           expandedSections={expandedSections}
           toggleSection={toggleSection}
           pathname={pathname}
-          prefersReducedMotion={prefersReducedMotion}
         />
       </aside>
     </>

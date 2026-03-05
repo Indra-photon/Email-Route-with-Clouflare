@@ -175,7 +175,7 @@ export default function DashboardNav({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Page content */}
-      <main className="flex-1 min-w-0 px-4 md:px-6 lg:px-8 py-6 bg-neutral-50">
+      <main className="flex-1 min-w-0 px-4 md:px-6 lg:px-8 py-6 bg-white">
         {children}
       </main>
     </div>
