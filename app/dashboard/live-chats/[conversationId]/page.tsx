@@ -180,6 +180,7 @@ export default function ConversationDetailPage() {
         setSending(true);
 
         const optimisticId = "temp_" + Date.now();
+        const now = new Date().toISOString();
         setData((prev) =>
             prev
                 ? {
@@ -192,7 +193,7 @@ export default function ConversationDetailPage() {
                             body: text,
                             type,
                             mediaUrl,
-                            createdAt: new Date().toISOString(),
+                            createdAt: now,
                         },
                     ],
                 }
@@ -203,6 +204,24 @@ export default function ConversationDetailPage() {
         // Stop typing
         emitTypingStop();
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+        // ── Emit agent_message via socket IMMEDIATELY for instant delivery ──
+        // This ensures the visitor sees the message in real-time without waiting
+        // for the API call + /push HTTP roundtrip to complete.
+        if (socketRef.current?.connected && wsSecretRef.current) {
+            socketRef.current.emit("agent_message", {
+                cid: conversationId,
+                secret: wsSecretRef.current,
+                message: {
+                    id: optimisticId,
+                    sender: "agent",
+                    body: text,
+                    type,
+                    mediaUrl,
+                    createdAt: now,
+                },
+            });
+        }
 
         try {
             const res = await fetch(`/api/chat/conversations/${conversationId}/reply`, {
@@ -226,25 +245,6 @@ export default function ConversationDetailPage() {
                     : prev
             );
 
-            // ── Direct socket emit (fastest real-time path to visitor) ──
-            // The reply API also calls /push on the render server, but that is
-            // a Vercel→Render HTTP round-trip that can be slow or fail silently.
-            // Emitting agent_message directly from the agent socket is instant.
-            if (socketRef.current?.connected && wsSecret) {
-                socketRef.current.emit("agent_message", {
-                    cid: conversationId,
-                    secret: wsSecret,
-                    message: {
-                        id: savedMessage.id,
-                        sender: "agent",
-                        body: savedMessage.body,
-                        type: savedMessage.type || "text",
-                        mediaUrl: savedMessage.mediaUrl || "",
-                        createdAt: savedMessage.createdAt,
-                    },
-                });
-            }
-
             toast.success("Reply sent");
         } catch {
             toast.error("Failed to send reply");
@@ -257,7 +257,7 @@ export default function ConversationDetailPage() {
         } finally {
             setSending(false);
         }
-    }, [conversationId, sending, emitTypingStop, wsSecret]);
+    }, [conversationId, sending, emitTypingStop]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === "Enter" && !e.shiftKey) {
