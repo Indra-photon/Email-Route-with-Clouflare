@@ -146,44 +146,8 @@ export default function ChatEmbedPage() {
         fetchInitialMessages(chatKey, visitorId, conversationId);
     }, [conversationId, chatKey, visitorId, fetchInitialMessages]);
 
-    // ── BULLETPROOF: Poll for new messages every 3 seconds ──────────
-    // This guarantees messages appear even if socket events are lost.
-    // It only fetches messages newer than the last known message.
-    useEffect(() => {
-        if (!chatKey || !visitorId || !conversationId) return;
 
-        const poll = async () => {
-            try {
-                const res = await fetch(
-                    `/api/chat/messages?key=${encodeURIComponent(chatKey)}&cid=${encodeURIComponent(conversationId)}&vid=${encodeURIComponent(visitorId)}`
-                );
-                if (!res.ok) return;
-                const data = await res.json();
-                if (data.messages?.length > 0) {
-                    setMessages((prev) => {
-                        const existingIds = new Set(prev.map((m) => m.id));
-                        const newMsgs = (data.messages as ChatMessage[]).filter(
-                            (m) => !existingIds.has(m.id)
-                        );
-                        if (newMsgs.length === 0) return prev;
-                        // Replace any temp_ messages with real ones and add truly new messages
-                        const withoutTemps = prev.filter(
-                            (m) => !m.id.startsWith("temp_") || existingIds.has(m.id)
-                        );
-                        // Merge: keep existing real messages, add any new from server
-                        const serverIds = new Set((data.messages as ChatMessage[]).map((m) => m.id));
-                        const kept = withoutTemps.filter(
-                            (m) => m.id.startsWith("temp_") || serverIds.has(m.id)
-                        );
-                        return data.messages as ChatMessage[];
-                    });
-                }
-            } catch { /* silent */ }
-        };
 
-        const interval = setInterval(poll, 3000);
-        return () => clearInterval(interval);
-    }, [chatKey, visitorId, conversationId]);
 
     // ── BULLETPROOF: Poll agent presence every 8 seconds via REST ────
     // Works independently of socket — guaranteed accurate status.
@@ -510,21 +474,14 @@ export default function ChatEmbedPage() {
                                         <div className="min-w-0">
                                             <p className="text-xs font-medium truncate max-w-[140px]">{msg.body}</p>
                                             <button
-                                                onClick={async () => {
-                                                    try {
-                                                        const response = await fetch(msg.mediaUrl);
-                                                        const blob = await response.blob();
-                                                        const url = URL.createObjectURL(blob);
-                                                        const a = document.createElement("a");
-                                                        a.href = url;
-                                                        a.download = msg.body || "file.pdf";
-                                                        document.body.appendChild(a);
-                                                        a.click();
-                                                        document.body.removeChild(a);
-                                                        URL.revokeObjectURL(url);
-                                                    } catch {
-                                                        window.open(msg.mediaUrl, "_blank");
-                                                    }
+                                                onClick={() => {
+                                                    const proxyUrl = `/api/chat/download-proxy?url=${encodeURIComponent(msg.mediaUrl)}&filename=${encodeURIComponent(msg.body || "file.pdf")}`;
+                                                    const a = document.createElement("a");
+                                                    a.href = proxyUrl;
+                                                    a.download = msg.body || "file.pdf";
+                                                    document.body.appendChild(a);
+                                                    a.click();
+                                                    document.body.removeChild(a);
                                                 }}
                                                 className="text-xs underline opacity-70 hover:opacity-100 cursor-pointer bg-transparent border-none p-0"
                                             >
