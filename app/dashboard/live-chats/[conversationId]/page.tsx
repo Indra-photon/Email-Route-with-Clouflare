@@ -152,6 +152,39 @@ export default function ConversationDetailPage() {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [data?.messages, visitorTyping]);
 
+    // ── BULLETPROOF: Poll for new messages every 3 seconds ──────────
+    // Guarantees messages appear even if socket new_message events are lost.
+    useEffect(() => {
+        if (!conversationId) return;
+
+        const poll = async () => {
+            try {
+                const res = await fetch(`/api/chat/conversations/${conversationId}`);
+                if (!res.ok) return;
+                const freshData = await res.json();
+                if (freshData.messages?.length > 0) {
+                    setData((prev) => {
+                        if (!prev) return prev;
+                        const existingIds = new Set(prev.messages.map((m) => m.id));
+                        const newMsgs = (freshData.messages as ChatMessage[]).filter(
+                            (m: ChatMessage) => !existingIds.has(m.id)
+                        );
+                        if (newMsgs.length === 0) return prev;
+                        // Use server data as source of truth, keeping any temp_ optimistic messages
+                        const tempMsgs = prev.messages.filter((m) => m.id.startsWith("temp_"));
+                        return {
+                            ...prev,
+                            messages: [...(freshData.messages as ChatMessage[]), ...tempMsgs],
+                        };
+                    });
+                }
+            } catch { /* silent */ }
+        };
+
+        const interval = setInterval(poll, 3000);
+        return () => clearInterval(interval);
+    }, [conversationId]);
+
     // ── Typing indicator emit ───────────────────────────────────────
     const emitTypingStart = useCallback(() => {
         if (!socketRef.current?.connected) return;
@@ -390,15 +423,27 @@ export default function ConversationDetailPage() {
                                         />
                                         <div className="flex items-center justify-between px-2 py-1 gap-2">
                                             <span className="text-xs opacity-70 truncate">{msg.body}</span>
-                                            <a
-                                                href={msg.mediaUrl}
-                                                download={msg.body || "image"}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-xs underline opacity-70 hover:opacity-100 flex-shrink-0"
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        const response = await fetch(msg.mediaUrl);
+                                                        const blob = await response.blob();
+                                                        const url = URL.createObjectURL(blob);
+                                                        const a = document.createElement("a");
+                                                        a.href = url;
+                                                        a.download = msg.body || "image";
+                                                        document.body.appendChild(a);
+                                                        a.click();
+                                                        document.body.removeChild(a);
+                                                        URL.revokeObjectURL(url);
+                                                    } catch {
+                                                        window.open(msg.mediaUrl, "_blank");
+                                                    }
+                                                }}
+                                                className="text-xs underline opacity-70 hover:opacity-100 shrink-0 cursor-pointer bg-transparent border-none"
                                             >
                                                 ↓ Download
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                 ) : msg.type === "pdf" && msg.mediaUrl ? (
@@ -406,15 +451,27 @@ export default function ConversationDetailPage() {
                                         <span className="text-2xl">📄</span>
                                         <div className="min-w-0">
                                             <p className="text-xs font-medium truncate max-w-[160px]">{msg.body}</p>
-                                            <a
-                                                href={msg.mediaUrl}
-                                                download={msg.body || "file.pdf"}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-xs underline opacity-70 hover:opacity-100"
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        const response = await fetch(msg.mediaUrl);
+                                                        const blob = await response.blob();
+                                                        const url = URL.createObjectURL(blob);
+                                                        const a = document.createElement("a");
+                                                        a.href = url;
+                                                        a.download = msg.body || "file.pdf";
+                                                        document.body.appendChild(a);
+                                                        a.click();
+                                                        document.body.removeChild(a);
+                                                        URL.revokeObjectURL(url);
+                                                    } catch {
+                                                        window.open(msg.mediaUrl, "_blank");
+                                                    }
+                                                }}
+                                                className="text-xs underline opacity-70 hover:opacity-100 cursor-pointer bg-transparent border-none p-0"
                                             >
                                                 Download PDF
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                 ) : (

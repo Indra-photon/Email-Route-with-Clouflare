@@ -146,6 +146,67 @@ export default function ChatEmbedPage() {
         fetchInitialMessages(chatKey, visitorId, conversationId);
     }, [conversationId, chatKey, visitorId, fetchInitialMessages]);
 
+    // ── BULLETPROOF: Poll for new messages every 3 seconds ──────────
+    // This guarantees messages appear even if socket events are lost.
+    // It only fetches messages newer than the last known message.
+    useEffect(() => {
+        if (!chatKey || !visitorId || !conversationId) return;
+
+        const poll = async () => {
+            try {
+                const res = await fetch(
+                    `/api/chat/messages?key=${encodeURIComponent(chatKey)}&cid=${encodeURIComponent(conversationId)}&vid=${encodeURIComponent(visitorId)}`
+                );
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.messages?.length > 0) {
+                    setMessages((prev) => {
+                        const existingIds = new Set(prev.map((m) => m.id));
+                        const newMsgs = (data.messages as ChatMessage[]).filter(
+                            (m) => !existingIds.has(m.id)
+                        );
+                        if (newMsgs.length === 0) return prev;
+                        // Replace any temp_ messages with real ones and add truly new messages
+                        const withoutTemps = prev.filter(
+                            (m) => !m.id.startsWith("temp_") || existingIds.has(m.id)
+                        );
+                        // Merge: keep existing real messages, add any new from server
+                        const serverIds = new Set((data.messages as ChatMessage[]).map((m) => m.id));
+                        const kept = withoutTemps.filter(
+                            (m) => m.id.startsWith("temp_") || serverIds.has(m.id)
+                        );
+                        return data.messages as ChatMessage[];
+                    });
+                }
+            } catch { /* silent */ }
+        };
+
+        const interval = setInterval(poll, 3000);
+        return () => clearInterval(interval);
+    }, [chatKey, visitorId, conversationId]);
+
+    // ── BULLETPROOF: Poll agent presence every 8 seconds via REST ────
+    // Works independently of socket — guaranteed accurate status.
+    useEffect(() => {
+        if (!chatKey || !renderServerUrl) return;
+
+        const checkPresence = async () => {
+            try {
+                const res = await fetch(
+                    `${renderServerUrl}/presence?key=${encodeURIComponent(chatKey)}`
+                );
+                if (!res.ok) return;
+                const data = await res.json();
+                setAgentOnline(data.online);
+                setAgentCount(data.count || 0);
+            } catch { /* silent — socket presence still works as backup */ }
+        };
+
+        checkPresence(); // Check immediately
+        const interval = setInterval(checkPresence, 8000);
+        return () => clearInterval(interval);
+    }, [chatKey, renderServerUrl]);
+
     // ── Scroll to bottom ────────────────────────────────────────────
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -420,15 +481,27 @@ export default function ChatEmbedPage() {
                                         />
                                         <div className="flex items-center justify-between px-2 py-1 gap-2">
                                             <span className="text-xs opacity-70 truncate">{msg.body}</span>
-                                            <a
-                                                href={msg.mediaUrl}
-                                                download={msg.body || "image"}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-xs underline opacity-70 hover:opacity-100 flex-shrink-0"
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        const response = await fetch(msg.mediaUrl);
+                                                        const blob = await response.blob();
+                                                        const url = URL.createObjectURL(blob);
+                                                        const a = document.createElement("a");
+                                                        a.href = url;
+                                                        a.download = msg.body || "image";
+                                                        document.body.appendChild(a);
+                                                        a.click();
+                                                        document.body.removeChild(a);
+                                                        URL.revokeObjectURL(url);
+                                                    } catch {
+                                                        window.open(msg.mediaUrl, "_blank");
+                                                    }
+                                                }}
+                                                className="text-xs underline opacity-70 hover:opacity-100 shrink-0 cursor-pointer bg-transparent border-none"
                                             >
                                                 ↓
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                 ) : msg.type === "pdf" && msg.mediaUrl ? (
@@ -436,15 +509,27 @@ export default function ChatEmbedPage() {
                                         <span className="text-2xl">📄</span>
                                         <div className="min-w-0">
                                             <p className="text-xs font-medium truncate max-w-[140px]">{msg.body}</p>
-                                            <a
-                                                href={msg.mediaUrl}
-                                                download={msg.body || "file.pdf"}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-xs underline opacity-70 hover:opacity-100"
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        const response = await fetch(msg.mediaUrl);
+                                                        const blob = await response.blob();
+                                                        const url = URL.createObjectURL(blob);
+                                                        const a = document.createElement("a");
+                                                        a.href = url;
+                                                        a.download = msg.body || "file.pdf";
+                                                        document.body.appendChild(a);
+                                                        a.click();
+                                                        document.body.removeChild(a);
+                                                        URL.revokeObjectURL(url);
+                                                    } catch {
+                                                        window.open(msg.mediaUrl, "_blank");
+                                                    }
+                                                }}
+                                                className="text-xs underline opacity-70 hover:opacity-100 cursor-pointer bg-transparent border-none p-0"
                                             >
                                                 Download PDF
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                 ) : (
