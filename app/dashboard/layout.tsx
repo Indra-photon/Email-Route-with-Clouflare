@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { HelpSlideOver } from "@/components/HelpSlideOver";
 import DashboardNav from "@/components/dashboard/DashboardNav";
+import AgentPresenceProvider from "@/components/dashboard/AgentPresenceProvider";
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const { userId } = await auth();
@@ -10,6 +11,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   return (
     <>
+      <AgentPresenceProvider />
       <DashboardNav>{children}</DashboardNav>
       <HelpSlideOver />
     </>

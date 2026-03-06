@@ -45,8 +45,6 @@ export default function ChatEmbedPage() {
     const conversationIdRef = useRef<string | null>(null);
 
     const renderServerUrl = process.env.NEXT_PUBLIC_RENDER_CHAT_SERVER_URL || "";
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "";
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "";
 
     // Keep ref in sync with state
     useEffect(() => { conversationIdRef.current = conversationId; }, [conversationId]);
@@ -190,13 +188,14 @@ export default function ChatEmbedPage() {
         setIsSending(true);
 
         const optimisticId = "temp_" + Date.now();
+        const now = new Date().toISOString();
         const optimistic: ChatMessage = {
             id: optimisticId,
             sender: "visitor",
             body: text,
             type,
             mediaUrl,
-            createdAt: new Date().toISOString(),
+            createdAt: now,
         };
         setMessages((prev) => [...prev, optimistic]);
         if (type === "text") setInput("");
@@ -204,6 +203,24 @@ export default function ChatEmbedPage() {
         // Stop typing indicator
         emitTypingStop();
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+        // ── Emit visitor_message via socket IMMEDIATELY for instant delivery ──
+        // This ensures the agent sees the message in real-time without waiting
+        // for the API call + /push HTTP roundtrip to complete.
+        const currentCid = conversationIdRef.current;
+        if (currentCid && socketRef.current?.connected) {
+            socketRef.current.emit("visitor_message", {
+                cid: currentCid,
+                message: {
+                    id: optimisticId,
+                    sender: "visitor",
+                    body: text,
+                    type,
+                    mediaUrl,
+                    createdAt: now,
+                },
+            });
+        }
 
         try {
             const res = await fetch("/api/chat/messages", {
@@ -229,8 +246,6 @@ export default function ChatEmbedPage() {
             // If this was the first message, we now have a cid — set it.
             if (!conversationId && savedCid) {
                 setConversationId(savedCid);
-                // Notify the parent widget.js to persist the cid in localStorage.
-                // Without this, every page reload starts a fresh conversation.
                 try {
                     window.parent.postMessage(
                         { type: "CW_CONVERSATION_ID", conversationId: savedCid },
@@ -248,12 +263,9 @@ export default function ChatEmbedPage() {
                 )
             );
 
-            // Immediately join the conversation room (synchronous, no React state delay).
-            // Critical for first message: the visitor MUST be in the room before the agent
-            // can reply and have that reply delivered in real-time.
+            // Join the conversation room if this was the first message.
             const activeCid = savedCid || conversationId;
             if (activeCid && socketRef.current?.connected) {
-                // Join the conversation room (safe to call even if already joined)
                 socketRef.current.emit("join", {
                     key: chatKey,
                     cid: activeCid,
@@ -261,18 +273,22 @@ export default function ChatEmbedPage() {
                     role: "visitor",
                 });
 
-                // Also emit visitor_message so the agent sees the message live
-                socketRef.current.emit("visitor_message", {
-                    cid: activeCid,
-                    message: {
-                        id: savedMsgId,
-                        sender: "visitor",
-                        body: text,
-                        type,
-                        mediaUrl,
-                        createdAt: new Date().toISOString(),
-                    },
-                });
+                // If we didn't have a cid before (first message), the socket
+                // emit above was skipped. Now emit visitor_message with the real cid
+                // so the agent sees it (even if slightly delayed for first message only).
+                if (!currentCid) {
+                    socketRef.current.emit("visitor_message", {
+                        cid: activeCid,
+                        message: {
+                            id: savedMsgId,
+                            sender: "visitor",
+                            body: text,
+                            type,
+                            mediaUrl,
+                            createdAt: now,
+                        },
+                    });
+                }
             }
 
             setError(null);
@@ -293,7 +309,7 @@ export default function ChatEmbedPage() {
         }
     };
 
-    // ── File upload to Cloudinary (unsigned, client-side) ───────────
+    // ── File upload via server-side API ────────────────────────────────
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -315,20 +331,18 @@ export default function ChatEmbedPage() {
         try {
             const formData = new FormData();
             formData.append("file", file);
-            formData.append("upload_preset", uploadPreset);
-            formData.append("folder", "chat_uploads");
+            formData.append("key", chatKey);
 
-            const resourceType = isPdf ? "raw" : "image";
-            const uploadRes = await fetch(
-                `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
-                { method: "POST", body: formData }
-            );
+            const uploadRes = await fetch("/api/chat/visitor-upload", {
+                method: "POST",
+                body: formData,
+            });
 
-            if (!uploadRes.ok) throw new Error("Cloudinary upload failed");
+            if (!uploadRes.ok) throw new Error("Upload failed");
             const uploadData = await uploadRes.json();
 
-            const type: "image" | "pdf" = isPdf ? "pdf" : "image";
-            await sendMessage(file.name, type, uploadData.secure_url);
+            const type: "image" | "pdf" = uploadData.type === "pdf" ? "pdf" : "image";
+            await sendMessage(uploadData.filename || file.name, type, uploadData.url);
         } catch {
             setError("File upload failed. Please try again.");
         } finally {
