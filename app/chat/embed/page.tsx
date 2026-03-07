@@ -141,10 +141,10 @@ export default function ChatEmbedPage() {
     // ── Upgrade to conversation room once we have a cid ──────────────
     // Fires when the visitor sends their first message and gets a conversationId back.
     useEffect(() => {
-        if (!conversationId || !socketRef.current?.connected || !chatKey || !visitorId) return;
-        socketRef.current.emit("join", { key: chatKey, cid: conversationId, visitorId, role: "visitor" });
+        if (!conversationId || !isConnected || !chatKey || !visitorId) return;
+        socketRef.current?.emit("join", { key: chatKey, cid: conversationId, visitorId, role: "visitor" });
         fetchInitialMessages(chatKey, visitorId, conversationId);
-    }, [conversationId, chatKey, visitorId, fetchInitialMessages]);
+    }, [conversationId, chatKey, visitorId, isConnected, fetchInitialMessages]);
 
 
 
@@ -405,7 +405,7 @@ export default function ChatEmbedPage() {
                             {!isConnected
                                 ? "Connecting…"
                                 : agentOnline
-                                    ? `Agent Online${agentCount > 1 ? ` (${agentCount})` : ""}`
+                                    ? "Agent Online"
                                     : "No agents online"}
                         </span>
                     </div>

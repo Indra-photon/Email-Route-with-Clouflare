@@ -47,35 +47,7 @@ export async function POST(
         conversation.lastMessageAt = new Date();
         await conversation.save();
 
-        // Push to Render server for real-time delivery to the visitor
-        try {
-            const renderUrl = process.env.RENDER_CHAT_SERVER_URL;
-            const pushSecret = process.env.RENDER_PUSH_SECRET;
 
-            if (renderUrl && pushSecret) {
-                await fetch(`${renderUrl}/push`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "x-push-secret": pushSecret,
-                    },
-                    body: JSON.stringify({
-                        conversationId: conversation._id.toString(),
-                        message: {
-                            id: chatMessage._id.toString(),
-                            sender: "agent",
-                            body: chatMessage.body,
-                            type: chatMessage.type || 'text',
-                            mediaUrl: chatMessage.mediaUrl || '',
-                            createdAt: chatMessage.createdAt,
-                        },
-                    }),
-                });
-            }
-        } catch (pushErr) {
-            // Don't fail the reply if Render push fails
-            console.error("Render push error:", pushErr);
-        }
 
         return NextResponse.json({
             success: true,
