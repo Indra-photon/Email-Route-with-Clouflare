@@ -144,7 +144,7 @@ export async function POST(request: Request) {
         // We include excludeSocketId (if provided) so the render server doesn't broadcast back to the sender
         const { socketId } = body;
         try {
-            const pushSecret = process.env.PUSH_SECRET;
+            const pushSecret = process.env.RENDER_PUSH_SECRET;
             const renderUrl = process.env.NEXT_PUBLIC_RENDER_CHAT_SERVER_URL;
             if (renderUrl && pushSecret) {
                 await fetch(`${renderUrl}/push`, {
@@ -199,9 +199,9 @@ export async function GET(request: Request) {
         const visitorId = searchParams.get("vid");
         const after = searchParams.get("after"); // ISO timestamp for incremental fetch
 
-        if (!key || !conversationId || !visitorId) {
+        if (!key || !visitorId) {
             return NextResponse.json(
-                { error: "key, cid, and vid are required" },
+                { error: "key and vid are required" },
                 { status: 400 }
             );
         }
@@ -218,6 +218,30 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: "Invalid key" }, { status: 401 });
         }
 
+        const widgetConfig = {
+            welcomeMessage: widget.welcomeMessage,
+            accentColor: widget.accentColor,
+        };
+
+        // ── vid-only mode: discover active conversation ─────────────────────
+        // Called by the embed page on mount to check if this visitor has
+        // an existing open conversation (without needing a cid from localStorage).
+        if (!conversationId) {
+            const activeConv = await ChatConversation.findOne({
+                widgetId: widget._id,
+                visitorId,
+                status: "open",
+            })
+                .sort({ lastMessageAt: -1 })
+                .lean();
+
+            return NextResponse.json({
+                conversationId: activeConv ? activeConv._id.toString() : null,
+                widgetConfig,
+            });
+        }
+
+        // ── cid + vid mode: return messages for the conversation ──────────
         // Verify conversation belongs to this visitor & widget
         const conversation = await ChatConversation.findOne({
             _id: conversationId,
@@ -249,10 +273,7 @@ export async function GET(request: Request) {
                 mediaUrl: m.mediaUrl || '',
                 createdAt: m.createdAt,
             })),
-            widgetConfig: {
-                welcomeMessage: widget.welcomeMessage,
-                accentColor: widget.accentColor,
-            },
+            widgetConfig,
         });
     } catch (error) {
         console.error("GET /api/chat/messages error:", error);

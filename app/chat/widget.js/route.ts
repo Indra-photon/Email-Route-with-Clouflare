@@ -72,7 +72,6 @@ export async function GET(request: Request) {
   iframe.src = BASE_URL + '/chat/embed'
     + '?key='  + encodeURIComponent(CHAT_KEY)
     + '&vid='  + encodeURIComponent(visitorId)
-    + (conversationId ? '&cid=' + encodeURIComponent(conversationId) : '')
     + '&page=' + encodeURIComponent(window.location.href);
   iframe.setAttribute('allow', 'clipboard-write');
   wrap.appendChild(iframe);
