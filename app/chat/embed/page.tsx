@@ -488,14 +488,31 @@ export default function ChatEmbedPage() {
                                         <div className="min-w-0">
                                             <p className="text-xs font-medium truncate max-w-[140px]">{msg.body}</p>
                                             <button
-                                                onClick={() => {
-                                                    const proxyUrl = `/api/chat/download-proxy?url=${encodeURIComponent(msg.mediaUrl)}&filename=${encodeURIComponent(msg.body || "file.pdf")}`;
-                                                    const a = document.createElement("a");
-                                                    a.href = proxyUrl;
-                                                    a.download = msg.body || "file.pdf";
-                                                    document.body.appendChild(a);
-                                                    a.click();
-                                                    document.body.removeChild(a);
+                                                onClick={async () => {
+                                                    try {
+                                                        const proxyUrl = `/api/chat/download-proxy?url=${encodeURIComponent(msg.mediaUrl)}&filename=${encodeURIComponent(msg.body || "file.pdf")}`;
+                                                        // Fetch the file as a blob in the background
+                                                        const response = await fetch(proxyUrl);
+                                                        const blob = await response.blob();
+                                                        // Create a local memory URL for the blob
+                                                        const blobUrl = window.URL.createObjectURL(blob);
+
+                                                        // Trigger a direct, silent download (no new tab opens)
+                                                        const a = document.createElement("a");
+                                                        a.style.display = "none";
+                                                        a.href = blobUrl;
+                                                        a.download = msg.body || "file.pdf";
+                                                        document.body.appendChild(a);
+                                                        a.click();
+
+                                                        // Cleanup
+                                                        setTimeout(() => {
+                                                            document.body.removeChild(a);
+                                                            window.URL.revokeObjectURL(blobUrl);
+                                                        }, 100);
+                                                    } catch (err) {
+                                                        console.error("Failed to download PDF", err);
+                                                    }
                                                 }}
                                                 className="text-xs underline opacity-70 hover:opacity-100 cursor-pointer bg-transparent border-none p-0"
                                             >
