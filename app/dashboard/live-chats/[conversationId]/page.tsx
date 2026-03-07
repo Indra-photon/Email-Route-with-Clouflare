@@ -124,6 +124,10 @@ export default function ConversationDetailPage() {
         socket.on("disconnect", () => setWsConnected(false));
 
         socket.on("new_message", (msg: ChatMessage) => {
+            // Only add visitor messages via socket.
+            // Agent's own replies are already shown via optimistic UI —
+            // receiving them back from the socket only causes a flash/duplicate.
+            if (msg.sender === "agent") return;
             setData((prev) => {
                 if (!prev) return prev;
                 if (prev.messages.some((m) => m.id === msg.id)) return prev;
