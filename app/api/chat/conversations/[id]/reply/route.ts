@@ -15,7 +15,7 @@ export async function POST(
 
         const { id } = await params;
         const body = await request.json();
-        const { message, type, mediaUrl } = body as { message?: string; type?: 'text' | 'image' | 'pdf'; mediaUrl?: string };
+        const { message, type, mediaUrl, socketId } = body;
 
         if (!message?.trim() && !mediaUrl) {
             return NextResponse.json({ error: "Message is required" }, { status: 400 });
@@ -47,7 +47,34 @@ export async function POST(
         conversation.lastMessageAt = new Date();
         await conversation.save();
 
-
+        // Push to Render Chat Server
+        try {
+            const pushSecret = process.env.PUSH_SECRET;
+            const renderUrl = process.env.NEXT_PUBLIC_RENDER_CHAT_SERVER_URL;
+            if (renderUrl && pushSecret) {
+                await fetch(`${renderUrl}/push`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-push-secret": pushSecret,
+                    },
+                    body: JSON.stringify({
+                        conversationId: conversation._id.toString(),
+                        message: {
+                            id: chatMessage._id.toString(),
+                            sender: chatMessage.sender,
+                            body: chatMessage.body,
+                            type: chatMessage.type,
+                            mediaUrl: chatMessage.mediaUrl,
+                            createdAt: chatMessage.createdAt,
+                        },
+                        excludeSocketId: socketId,
+                    }),
+                });
+            }
+        } catch (pushErr) {
+            console.error("Failed to push agent reply to chat server:", pushErr);
+        }
 
         return NextResponse.json({
             success: true,
