@@ -208,24 +208,6 @@ export default function ConversationDetailPage() {
         emitTypingStop();
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
-        // ── Emit agent_message via socket IMMEDIATELY for instant delivery ──
-        // This ensures the visitor sees the message in real-time without waiting
-        // for the API call + /push HTTP roundtrip to complete.
-        if (socketRef.current?.connected && wsSecretRef.current) {
-            socketRef.current.emit("agent_message", {
-                cid: conversationId,
-                secret: wsSecretRef.current,
-                message: {
-                    id: optimisticId,
-                    sender: "agent",
-                    body: text,
-                    type,
-                    mediaUrl,
-                    createdAt: now,
-                },
-            });
-        }
-
         try {
             const res = await fetch(`/api/chat/conversations/${conversationId}/reply`, {
                 method: "POST",
