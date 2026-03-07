@@ -264,24 +264,6 @@ export default function ChatEmbedPage() {
         emitTypingStop();
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
-        // ── Emit visitor_message via socket IMMEDIATELY for instant delivery ──
-        // This ensures the agent sees the message in real-time without waiting
-        // for the API call + /push HTTP roundtrip to complete.
-        const currentCid = conversationIdRef.current;
-        if (currentCid && socketRef.current?.connected) {
-            socketRef.current.emit("visitor_message", {
-                cid: currentCid,
-                message: {
-                    id: optimisticId,
-                    sender: "visitor",
-                    body: text,
-                    type,
-                    mediaUrl,
-                    createdAt: now,
-                },
-            });
-        }
-
         try {
             const res = await fetch("/api/chat/messages", {
                 method: "POST",
@@ -325,6 +307,7 @@ export default function ChatEmbedPage() {
             );
 
             // Join the conversation room if this was the first message.
+            // (delivery to agent is handled by /push in the API — no socket emit here)
             const activeCid = savedCid || conversationId;
             if (activeCid && socketRef.current?.connected) {
                 socketRef.current.emit("join", {
@@ -333,23 +316,6 @@ export default function ChatEmbedPage() {
                     visitorId,
                     role: "visitor",
                 });
-
-                // If we didn't have a cid before (first message), the socket
-                // emit above was skipped. Now emit visitor_message with the real cid
-                // so the agent sees it (even if slightly delayed for first message only).
-                if (!currentCid) {
-                    socketRef.current.emit("visitor_message", {
-                        cid: activeCid,
-                        message: {
-                            id: savedMsgId,
-                            sender: "visitor",
-                            body: text,
-                            type,
-                            mediaUrl,
-                            createdAt: now,
-                        },
-                    });
-                }
             }
 
             setError(null);
