@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { MessageSquare, ChevronRight, Clock } from "lucide-react";
+import { MessageSquare, ChevronRight, Clock, Trash2 } from "lucide-react";
 
 interface ConversationPreview {
     id: string;
@@ -46,6 +46,30 @@ export default function LiveChatsPage() {
         const interval = setInterval(fetchConversations, 10000);
         return () => clearInterval(interval);
     }, [fetchConversations]);
+
+    const handleDelete = async (e: React.MouseEvent, id: string) => {
+        e.preventDefault(); // Prevent navigating to the chat
+
+        if (!window.confirm("Are you sure you want to permanently delete this conversation and all its files? This action cannot be undone.")) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/chat/conversations/${id}`, {
+                method: "DELETE",
+            });
+
+            if (res.ok) {
+                // Remove from local state immediately
+                setConversations((prev) => prev.filter((c) => c.id !== id));
+            } else {
+                alert("Failed to delete conversation.");
+            }
+        } catch (error) {
+            console.error("Error deleting conversation:", error);
+            alert("An error occurred while deleting.");
+        }
+    };
 
     if (loading) {
         return (
@@ -104,8 +128,8 @@ export default function LiveChatsPage() {
                                             </span>
                                             <span
                                                 className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${conv.status === "open"
-                                                        ? "bg-green-100 text-green-700"
-                                                        : "bg-neutral-100 text-neutral-500"
+                                                    ? "bg-green-100 text-green-700"
+                                                    : "bg-neutral-100 text-neutral-500"
                                                     }`}
                                             >
                                                 {conv.status}
@@ -135,10 +159,19 @@ export default function LiveChatsPage() {
                                             <Clock size={11} />
                                             {timeAgo(conv.lastMessageAt)}
                                         </div>
-                                        <ChevronRight
-                                            size={16}
-                                            className="text-neutral-300 group-hover:text-neutral-500 transition-colors"
-                                        />
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <button
+                                                onClick={(e) => handleDelete(e, conv.id)}
+                                                className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                                                title="Delete conversation"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                            <ChevronRight
+                                                size={16}
+                                                className="text-neutral-300 group-hover:text-neutral-500 transition-colors hidden sm:block"
+                                            />
+                                        </div>
                                     </div>
                                 </Link>
                             </li>
