@@ -131,6 +131,10 @@ export default function ChatEmbedPage() {
         });
 
         socket.on("new_message", (msg: ChatMessage) => {
+            // Only add agent messages via socket.
+            // Visitor's own messages are already shown via optimistic UI —
+            // receiving them back from the socket only causes a flash/duplicate.
+            if (msg.sender === "visitor") return;
             setMessages((prev) => {
                 if (prev.some((m) => m.id === msg.id)) return prev;
                 return [...prev, msg];
