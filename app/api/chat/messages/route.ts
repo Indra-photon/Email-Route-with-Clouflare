@@ -79,33 +79,7 @@ export async function POST(request: Request) {
             mediaUrl: mediaUrl || '',
         });
 
-        // 4. Push via WebSocket to room (render-chat-server)
-        try {
-            const renderUrl = process.env.RENDER_CHAT_SERVER_URL;
-            const pushSecret = process.env.RENDER_PUSH_SECRET;
-            if (renderUrl && pushSecret) {
-                await fetch(`${renderUrl}/push`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-push-secret': pushSecret,
-                    },
-                    body: JSON.stringify({
-                        conversationId: conversation._id.toString(),
-                        message: {
-                            id: chatMessage._id.toString(),
-                            sender: 'visitor',
-                            body: chatMessage.body,
-                            type: chatMessage.type,
-                            mediaUrl: chatMessage.mediaUrl,
-                            createdAt: chatMessage.createdAt,
-                        },
-                    }),
-                });
-            }
-        } catch (pushErr) {
-            console.error('WS push error:', pushErr);
-        }
+
 
         // 4. Forward to Slack/Discord
         try {
