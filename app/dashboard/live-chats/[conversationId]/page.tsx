@@ -216,16 +216,25 @@ export default function ConversationDetailPage() {
             });
             if (!res.ok) throw new Error("Failed");
             const result = await res.json();
-            const savedMessage = { ...result.message, type, mediaUrl };
 
-            // Replace optimistic message with the real saved one
+            // Replace optimistic with the real saved message, and deduplicate
+            // in the same atomic update to prevent race-condition duplicates.
+            const savedMessage = { ...result.message, type, mediaUrl };
             setData((prev) =>
                 prev
                     ? {
                         ...prev,
-                        messages: prev.messages.map((m) =>
-                            m.id === optimisticId ? savedMessage : m
-                        ),
+                        messages: (() => {
+                            const mapped = prev.messages.map((m) =>
+                                m.id === optimisticId ? savedMessage : m
+                            );
+                            const seen = new Set<string>();
+                            return mapped.filter((m) => {
+                                if (seen.has(m.id)) return false;
+                                seen.add(m.id);
+                                return true;
+                            });
+                        })(),
                     }
                     : prev
             );

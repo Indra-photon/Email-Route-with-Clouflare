@@ -297,14 +297,22 @@ export default function ChatEmbedPage() {
                 } catch { /* cross-origin safeguard */ }
             }
 
-            // Replace optimistic message with real ID
-            setMessages((prev) =>
-                prev.map((m) =>
-                    m.id === optimisticId
-                        ? { ...m, id: savedMsgId }
-                        : m
-                )
-            );
+            // Replace optimistic message with real ID, and deduplicate in the same
+            // atomic update. This prevents the race where /push delivers the real
+            // message via socket BEFORE this setState runs (which would cause
+            // [temp_xxx, real_id] → after replace → [real_id, real_id]).
+            setMessages((prev) => {
+                const mapped = prev.map((m) =>
+                    m.id === optimisticId ? { ...m, id: savedMsgId } : m
+                );
+                // Remove duplicate IDs, keeping the first occurrence
+                const seen = new Set<string>();
+                return mapped.filter((m) => {
+                    if (seen.has(m.id)) return false;
+                    seen.add(m.id);
+                    return true;
+                });
+            });
 
             // Join the conversation room if this was the first message.
             // (delivery to agent is handled by /push in the API — no socket emit here)
