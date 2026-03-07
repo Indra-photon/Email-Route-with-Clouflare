@@ -49,20 +49,21 @@ export default function ChatEmbedPage() {
     // Keep ref in sync with state
     useEffect(() => { conversationIdRef.current = conversationId; }, [conversationId]);
 
-    // ── Parse URL params ────────────────────────────────────────────
+    // ── Parse URL params ─────────────────────────────────────────────
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const key = params.get("key") || "";
         const vid = params.get("vid") || "";
-        const cid = params.get("cid") || "";
         const page = params.get("page") || "";
         setChatKey(key);
         setVisitorId(vid);
         setVisitorPage(page);
-        if (cid) setConversationId(cid);
+        // Note: we intentionally do NOT read ?cid= from the URL.
+        // The conversation is discovered from the API via lookupActiveConversation.
     }, []);
 
     // ── Load existing messages from DB ──────────────────────────────
+    // Called once we know the conversationId (either from API lookup or after first message).
     const fetchInitialMessages = useCallback(async (key: string, vid: string, cid: string) => {
         if (!key || !vid || !cid) return;
         try {
@@ -75,6 +76,28 @@ export default function ChatEmbedPage() {
                 setMessages(data.messages as ChatMessage[]);
             }
             if (data.widgetConfig) setWidgetConfig(data.widgetConfig);
+        } catch { /* silent */ }
+    }, []);
+
+    // ── Look up active conversation for this visitor ─────────────────
+    // Called on mount. If this visitor has chatted before (same visitorId),
+    // the API returns their conversationId and existing messages.
+    // This replaces the old approach of reading ?cid= from the URL (which
+    // could be stale from localStorage and show a previous session's history).
+    const lookupActiveConversation = useCallback(async (key: string, vid: string) => {
+        if (!key || !vid) return;
+        try {
+            const res = await fetch(
+                `/api/chat/messages?key=${encodeURIComponent(key)}&vid=${encodeURIComponent(vid)}`
+            );
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data.widgetConfig) setWidgetConfig(data.widgetConfig);
+            if (data.conversationId) {
+                setConversationId(data.conversationId);
+                // conversationId state update triggers the cid useEffect below
+                // which calls fetchInitialMessages — no need to duplicate here.
+            }
         } catch { /* silent */ }
     }, []);
 
@@ -134,6 +157,15 @@ export default function ChatEmbedPage() {
             socketRef.current = null;
         };
     }, [chatKey, visitorId, renderServerUrl, fetchInitialMessages]);
+
+    // ── On mount: look up active conversation by visitorId ───────────
+    // Runs once chatKey + visitorId are parsed from the URL.
+    // This discovers if the visitor has an existing open conversation
+    // without relying on a potentially-stale ?cid= URL param.
+    useEffect(() => {
+        if (!chatKey || !visitorId) return;
+        lookupActiveConversation(chatKey, visitorId);
+    }, [chatKey, visitorId, lookupActiveConversation]);
 
     // ── Upgrade to conversation room once we have a cid ──────────────
     // Fires when the visitor sends their first message and gets a conversationId back.

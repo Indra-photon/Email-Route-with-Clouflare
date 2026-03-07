@@ -49,7 +49,7 @@ export async function POST(
 
         // Push to Render Chat Server
         try {
-            const pushSecret = process.env.PUSH_SECRET;
+            const pushSecret = process.env.RENDER_PUSH_SECRET;
             const renderUrl = process.env.NEXT_PUBLIC_RENDER_CHAT_SERVER_URL;
             if (renderUrl && pushSecret) {
                 await fetch(`${renderUrl}/push`, {
