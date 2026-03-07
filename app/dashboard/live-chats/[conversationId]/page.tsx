@@ -230,7 +230,7 @@ export default function ConversationDetailPage() {
             const res = await fetch(`/api/chat/conversations/${conversationId}/reply`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: text, type, mediaUrl }),
+                body: JSON.stringify({ message: text, type, mediaUrl, socketId: socketRef.current?.id }),
             });
             if (!res.ok) throw new Error("Failed");
             const result = await res.json();

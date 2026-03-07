@@ -9,7 +9,7 @@ import { Integration } from "@/app/api/models/IntegrationModel";
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { key, conversationId, visitorId, message, visitorPage, type, mediaUrl } = body as {
+        const { key, conversationId: reqConvId, visitorId, message, visitorPage, type, mediaUrl } = body as {
             key?: string;
             conversationId?: string;
             visitorId?: string;
@@ -43,9 +43,9 @@ export async function POST(request: Request) {
 
         // 2. Upsert conversation
         let conversation;
-        if (conversationId) {
+        if (reqConvId) {
             conversation = await ChatConversation.findOne({
-                _id: conversationId,
+                _id: reqConvId,
                 widgetId: widget._id,
                 visitorId,
             });
@@ -138,6 +138,37 @@ export async function POST(request: Request) {
         } catch (webhookErr) {
             // Don't fail the request if webhook fails
             console.error("Webhook forward error:", webhookErr);
+        }
+
+        // 5. Push to Render Chat Server to ensure agent dashboard receives it 
+        // We include excludeSocketId (if provided) so the render server doesn't broadcast back to the sender
+        const { socketId } = body;
+        try {
+            const pushSecret = process.env.PUSH_SECRET;
+            const renderUrl = process.env.NEXT_PUBLIC_RENDER_CHAT_SERVER_URL;
+            if (renderUrl && pushSecret) {
+                await fetch(`${renderUrl}/push`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-push-secret": pushSecret,
+                    },
+                    body: JSON.stringify({
+                        conversationId: conversation._id.toString(),
+                        message: {
+                            id: chatMessage._id.toString(),
+                            sender: chatMessage.sender,
+                            body: chatMessage.body,
+                            type: chatMessage.type,
+                            mediaUrl: chatMessage.mediaUrl,
+                            createdAt: chatMessage.createdAt,
+                        },
+                        excludeSocketId: socketId, // Exclude the sender's socket from receiving the broadcast loop
+                    }),
+                });
+            }
+        } catch (pushErr) {
+            console.error("Failed to push message to chat server:", pushErr);
         }
 
         return NextResponse.json({

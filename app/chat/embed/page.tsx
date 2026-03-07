@@ -100,9 +100,6 @@ export default function ChatEmbedPage() {
                 visitorId,
                 role: "visitor",
             });
-            if (cid) {
-                fetchInitialMessages(chatKey, visitorId, cid);
-            }
         });
 
         socket.on("disconnect", () => {
@@ -141,9 +138,15 @@ export default function ChatEmbedPage() {
     // ── Upgrade to conversation room once we have a cid ──────────────
     // Fires when the visitor sends their first message and gets a conversationId back.
     useEffect(() => {
-        if (!conversationId || !isConnected || !chatKey || !visitorId) return;
-        socketRef.current?.emit("join", { key: chatKey, cid: conversationId, visitorId, role: "visitor" });
+        if (!conversationId || !chatKey || !visitorId) return;
+
+        // Fetch history immediately, independently of socket connection
         fetchInitialMessages(chatKey, visitorId, conversationId);
+
+        // Join socket room if socket is connected
+        if (isConnected) {
+            socketRef.current?.emit("join", { key: chatKey, cid: conversationId, visitorId, role: "visitor" });
+        }
     }, [conversationId, chatKey, visitorId, isConnected, fetchInitialMessages]);
 
 
@@ -259,6 +262,7 @@ export default function ChatEmbedPage() {
                     visitorPage,
                     type,
                     mediaUrl,
+                    socketId: socketRef.current?.id,
                 }),
             });
 
