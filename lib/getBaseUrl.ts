@@ -5,7 +5,7 @@
  */
 export function getBaseUrl(): string {
   // Always use the environment variable for consistency
-  return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  return process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 }
 
 /**

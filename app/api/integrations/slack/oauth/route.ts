@@ -11,11 +11,11 @@ export async function GET() {
 
   const clientId = process.env.SLACK_CLIENT_ID;
   const clientSecret = process.env.SLACK_CLIENT_SECRET;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const siteUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
   if (!clientId || !clientSecret || !siteUrl) {
     return NextResponse.json(
-      { error: "Slack OAuth is not configured. Add SLACK_CLIENT_ID, SLACK_CLIENT_SECRET, and NEXT_PUBLIC_SITE_URL to your environment." },
+      { error: "Slack OAuth is not configured. Add SLACK_CLIENT_ID, SLACK_CLIENT_SECRET, and NEXT_PUBLIC_BASE_URL to your environment." },
       { status: 500 }
     );
   }

@@ -17,7 +17,7 @@ export default async function AdminSettingsPage() {
     ]);
 
     // Env config (read-only display)
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "Not set";
+    const siteUrl = process.env.NEXT_PUBLIC_BASE_URL || "Not set";
     const notificationEmail = process.env.NOTIFICATION_FROM_EMAIL || "Not set";
     const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map((e) => e.trim()).filter(Boolean);
     const mongoConnected = !!process.env.MONGODB_URI;
@@ -124,7 +124,7 @@ export default async function AdminSettingsPage() {
                     <div className="flex items-center justify-between p-4 gap-4">
                         <div className="min-w-0">
                             <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">Site URL</p>
-                            <p className="text-xs text-neutral-500 font-mono truncate">NEXT_PUBLIC_SITE_URL</p>
+                            <p className="text-xs text-neutral-500 font-mono truncate">NEXT_PUBLIC_BASE_URL</p>
                         </div>
                         <code className="text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1 max-w-xs truncate">
                             {siteUrl}

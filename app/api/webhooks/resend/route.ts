@@ -276,7 +276,7 @@ export async function POST(request: Request) {
     console.log("💾 Email saved to database:", emailThread._id);
 
     // 10. Generate reply link
-    const replyUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/reply/${emailThread._id}`;
+    const replyUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/reply/${emailThread._id}`;
 
     // 10.5. Check if ticket is claimed (for consistency, though new emails won't be claimed)
     let claimStatus = "";
