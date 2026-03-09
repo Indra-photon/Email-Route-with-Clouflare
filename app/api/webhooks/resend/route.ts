@@ -224,8 +224,15 @@ export async function POST(request: Request) {
 
     const integration = await Integration.findById(alias.integrationId).lean().exec();
     
-    if (!integration || !integration.webhookUrl) {
-      console.warn("⚠️ Integration not found or has no webhook:", alias.email);
+    if (!integration) {
+      console.warn("⚠️ Integration not found for alias:", alias.email);
+      return NextResponse.json({ message: "No integration" }, { status: 200 });
+    }
+
+    // OAuth integrations use slackAccessToken instead of webhookUrl
+    const isOAuth = integration.authMethod === "oauth";
+    if (!isOAuth && !integration.webhookUrl) {
+      console.warn("⚠️ Integration has no webhook URL:", alias.email);
       return NextResponse.json({ message: "No integration" }, { status: 200 });
     }
 
