@@ -310,9 +310,54 @@ export async function POST(request: Request) {
       : `${statusEmoji} **Status:** ${statusLabel}\n`;
 
     // 11. Format Discord/Slack message with reply link and claim status
+    const claimField = emailThread.assignedTo && emailThread.assignedToEmail
+      ? { type: "mrkdwn", text: `*Claimed by:*\n${emailThread.assignedToEmail}` }
+      : null;
+
     const messagePayload = integration.type === "slack"
       ? {
-          text: `📧 New email to *${emailLower}*\n${claimStatus}${statusLine}*From:* ${fromEmail}\n*Subject:* ${subject}\n\n${snippet}\n\n🔗 [Click here to reply](${replyUrl})`,
+          text: `📧 New email to \`${emailLower}\` — From: ${fromEmail} | Subject: ${subject}`,
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `📧 *New email to \`${emailLower}\`*`,
+              },
+            },
+            {
+              type: "section",
+              fields: [
+                { type: "mrkdwn", text: `*From:*\n${fromEmail}` },
+                { type: "mrkdwn", text: `*Subject:*\n${subject}` },
+                { type: "mrkdwn", text: `*Status:*\n${statusEmoji} ${statusLabel}` },
+                ...(claimField ? [claimField] : []),
+              ],
+            },
+            ...(snippet
+              ? [
+                  {
+                    type: "section",
+                    text: {
+                      type: "mrkdwn",
+                      text: `>${snippet.replace(/\n/g, "\n>")}`,
+                    },
+                  },
+                ]
+              : []),
+            { type: "divider" },
+            {
+              type: "actions",
+              elements: [
+                {
+                  type: "button",
+                  text: { type: "plain_text", text: "Reply to Email →", emoji: true },
+                  url: replyUrl,
+                  style: "primary",
+                },
+              ],
+            },
+          ],
         }
       : {
           content: `📧 **New email to ${emailLower}**
@@ -326,28 +371,59 @@ ${snippet}
 
     console.log("📤 Posting to", integration.type, "webhook");
 
-    // 12. Post to Slack/Discord
-    const webhookResponse = await fetch(integration.webhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(messagePayload),
-    });
-
-    if (!webhookResponse.ok) {
-      const errorText = await webhookResponse.text();
-      console.error("❌ Webhook post failed:", {
-        status: webhookResponse.status,
-        error: errorText,
+    // 12. Post to Slack (OAuth bot token) or Discord/Slack (webhook URL)
+    if (
+      integration.type === "slack" &&
+      integration.authMethod === "oauth" &&
+      integration.slackAccessToken &&
+      integration.slackChannelId
+    ) {
+      // ── Slack App (OAuth) — use chat.postMessage ────────────────────────
+      // This returns a message `ts` that we store so thread replies are matched.
+      const slackRes = await fetch("https://slack.com/api/chat.postMessage", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${integration.slackAccessToken}`,
+        },
+        body: JSON.stringify({
+          channel: integration.slackChannelId,
+          ...messagePayload,
+        }),
       });
-      return NextResponse.json(
-        { error: "Webhook failed" }, 
-        { status: 500 }
-      );
-    }
 
-    console.log("✨ Successfully posted to", integration.type, "with reply link");
+      const slackData = await slackRes.json();
+
+      if (!slackData.ok) {
+        console.error("❌ Slack chat.postMessage failed:", slackData.error);
+        return NextResponse.json({ error: "Slack post failed" }, { status: 500 });
+      }
+
+      // Save the message ts + channel so we can match thread replies back to this email
+      emailThread.slackMessageTs = slackData.ts    as string;
+      emailThread.slackChannelId = slackData.channel as string;
+      await emailThread.save();
+
+      console.log("✨ Posted to Slack (OAuth) — ts:", slackData.ts);
+    } else {
+      // ── Discord or legacy Slack webhook ────────────────────────────────
+      const webhookResponse = await fetch(integration.webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(messagePayload),
+      });
+
+      if (!webhookResponse.ok) {
+        const errorText = await webhookResponse.text();
+        console.error("❌ Webhook post failed:", {
+          status: webhookResponse.status,
+          error: errorText,
+        });
+        return NextResponse.json({ error: "Webhook failed" }, { status: 500 });
+      }
+
+      console.log("✨ Successfully posted to", integration.type, "with reply link");
+    }
 
     return NextResponse.json({ 
       success: true,
