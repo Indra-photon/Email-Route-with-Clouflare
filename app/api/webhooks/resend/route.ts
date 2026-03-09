@@ -310,9 +310,54 @@ export async function POST(request: Request) {
       : `${statusEmoji} **Status:** ${statusLabel}\n`;
 
     // 11. Format Discord/Slack message with reply link and claim status
+    const claimField = emailThread.assignedTo && emailThread.assignedToEmail
+      ? { type: "mrkdwn", text: `*Claimed by:*\n${emailThread.assignedToEmail}` }
+      : null;
+
     const messagePayload = integration.type === "slack"
       ? {
-          text: `📧 New email to *${emailLower}*\n${claimStatus}${statusLine}*From:* ${fromEmail}\n*Subject:* ${subject}\n\n${snippet}\n\n🔗 [Click here to reply](${replyUrl})`,
+          text: `📧 New email to \`${emailLower}\` — From: ${fromEmail} | Subject: ${subject}`,
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `📧 *New email to \`${emailLower}\`*`,
+              },
+            },
+            {
+              type: "section",
+              fields: [
+                { type: "mrkdwn", text: `*From:*\n${fromEmail}` },
+                { type: "mrkdwn", text: `*Subject:*\n${subject}` },
+                { type: "mrkdwn", text: `*Status:*\n${statusEmoji} ${statusLabel}` },
+                ...(claimField ? [claimField] : []),
+              ],
+            },
+            ...(snippet
+              ? [
+                  {
+                    type: "section",
+                    text: {
+                      type: "mrkdwn",
+                      text: `>${snippet.replace(/\n/g, "\n>")}`,
+                    },
+                  },
+                ]
+              : []),
+            { type: "divider" },
+            {
+              type: "actions",
+              elements: [
+                {
+                  type: "button",
+                  text: { type: "plain_text", text: "Reply to Email →", emoji: true },
+                  url: replyUrl,
+                  style: "primary",
+                },
+              ],
+            },
+          ],
         }
       : {
           content: `📧 **New email to ${emailLower}**

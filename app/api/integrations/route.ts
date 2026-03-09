@@ -71,6 +71,20 @@ export async function POST(request: Request) {
       );
     }
 
+    const trimmedUrl = webhookUrl.trim();
+    if (type === "slack" && !trimmedUrl.startsWith("https://hooks.slack.com/")) {
+      return NextResponse.json(
+        { error: "Slack webhook URLs must start with https://hooks.slack.com/" },
+        { status: 400 }
+      );
+    }
+    if (type === "discord" && !trimmedUrl.startsWith("https://discord.com/api/webhooks/")) {
+      return NextResponse.json(
+        { error: "Discord webhook URLs must start with https://discord.com/api/webhooks/" },
+        { status: 400 }
+      );
+    }
+
     await dbConnect();
     const workspace = await getOrCreateWorkspaceForCurrentUser();
 
@@ -78,7 +92,7 @@ export async function POST(request: Request) {
       workspaceId: workspace._id,
       type,
       name: name.trim(),
-      webhookUrl: webhookUrl.trim(),
+      webhookUrl: trimmedUrl,
     });
 
     return NextResponse.json(
