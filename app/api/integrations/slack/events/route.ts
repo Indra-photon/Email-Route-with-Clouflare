@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import dbConnect from "@/lib/dbConnect";
 import { EmailThread } from "@/app/api/models/EmailThreadModel";
+import { Integration } from "@/app/api/models/IntegrationModel";
 import { Alias } from "@/app/api/models/AliasModel";
 import { Domain } from "@/app/api/models/DomainModel";
 import { Resend } from "resend";
@@ -87,8 +88,10 @@ export async function POST(request: Request) {
   const threadTs  = event.thread_ts as string;
   const channelId = event.channel   as string;
   const replyText = ((event.text as string) || "").trim();
+  const slackFiles = (event.files as Array<Record<string, unknown>> | undefined) || [];
 
-  if (!replyText) return NextResponse.json({ ok: true });
+  // Must have either text or file attachments
+  if (!replyText && slackFiles.length === 0) return NextResponse.json({ ok: true });
 
   await dbConnect();
 
@@ -131,11 +134,44 @@ export async function POST(request: Request) {
         : fallbackEmail;
     }
 
+    // ── Download any files attached in the Slack reply ─────────────────────
+    type ResendAttachment = { filename: string; content: Buffer };
+    const attachments: ResendAttachment[] = [];
+
+    if (slackFiles.length > 0) {
+      // Find the bot token for this channel's integration
+      const integration = await Integration.findOne({
+        slackChannelId: channelId,
+        authMethod: "oauth",
+      }).lean();
+      const botToken = integration?.slackAccessToken;
+
+      if (botToken) {
+        for (const file of slackFiles) {
+          const downloadUrl = (file.url_private_download || file.url_private) as string | undefined;
+          const filename = (file.name || file.title || "attachment") as string;
+          if (!downloadUrl) continue;
+          try {
+            const fileRes = await fetch(downloadUrl, {
+              headers: { Authorization: `Bearer ${botToken}` },
+            });
+            if (fileRes.ok) {
+              const buffer = Buffer.from(await fileRes.arrayBuffer());
+              attachments.push({ filename, content: buffer });
+            }
+          } catch (e) {
+            console.warn("⚠️ Could not download Slack file:", filename, e);
+          }
+        }
+      }
+    }
+
     const { error: sendError } = await resend.emails.send({
       from:    fromAddress,
       to:      emailThread.from,
       subject: replySubject,
-      text:    replyText,
+      text:    replyText || "(see attachment)",
+      ...(attachments.length > 0 ? { attachments } : {}),
       headers: {
         "In-Reply-To": emailThread.messageId,
         ...(referencesHeader ? { References: referencesHeader } : {}),
