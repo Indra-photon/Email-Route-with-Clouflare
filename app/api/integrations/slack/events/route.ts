@@ -72,10 +72,11 @@ export async function POST(request: Request) {
 
   const event = payload.event as Record<string, unknown>;
 
-  // Only process plain text thread replies, not bot messages
+  // Only process plain text thread replies, not bot messages or channel broadcasts
   if (
     event.type !== "message" ||
     event.subtype === "bot_message" ||
+    event.subtype === "thread_broadcast" || // "Also send to #channel" duplicate
     event.bot_id !== undefined ||
     !event.thread_ts ||            // must be inside a thread
     event.thread_ts === event.ts   // ignore the root message itself
