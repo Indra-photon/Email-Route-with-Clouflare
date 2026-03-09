@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   const state = searchParams.get("state");
   const error = searchParams.get("error"); // e.g. "access_denied"
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL!;
+  const siteUrl = process.env.NEXT_PUBLIC_BASE_URL!;
   const redirectBase = `${siteUrl}/dashboard/integrations`;
 
   // User denied the OAuth screen

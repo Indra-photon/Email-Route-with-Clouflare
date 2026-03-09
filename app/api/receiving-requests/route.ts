@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
 
     // Send email notification to user
     try {
-      const dashboardUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/domains/${domain._id}/verify`;
+      const dashboardUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/domains/${domain._id}/verify`;
       const userName = user.firstName || user.emailAddresses[0].emailAddress.split("@")[0];
 
       await resend.emails.send({
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
             <p><strong>Requested by:</strong> ${userEmail}</p>
             <p><strong>Workspace:</strong> ${workspace._id}</p>
             <p><strong>Requested:</strong> ${receivingRequest.requestedAt.toLocaleString()}</p>
-            <p><a href="${process.env.NEXT_PUBLIC_SITE_URL}/admin/receiving-requests">Review now</a></p>
+            <p><a href="${process.env.NEXT_PUBLIC_BASE_URL}/admin/receiving-requests">Review now</a></p>
           `,
         });
 

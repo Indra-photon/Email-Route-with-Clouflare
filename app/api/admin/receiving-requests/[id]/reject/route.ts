@@ -67,7 +67,7 @@ export async function POST(
 
     // Send email notification to user
     try {
-      const dashboardUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/domains/${domain?._id}/verify`;
+      const dashboardUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/domains/${domain?._id}/verify`;
 
       await resend.emails.send({
         from: process.env.NOTIFICATION_FROM_EMAIL || "notifications@yourdomain.com",
