@@ -371,28 +371,59 @@ ${snippet}
 
     console.log("📤 Posting to", integration.type, "webhook");
 
-    // 12. Post to Slack/Discord
-    const webhookResponse = await fetch(integration.webhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(messagePayload),
-    });
-
-    if (!webhookResponse.ok) {
-      const errorText = await webhookResponse.text();
-      console.error("❌ Webhook post failed:", {
-        status: webhookResponse.status,
-        error: errorText,
+    // 12. Post to Slack (OAuth bot token) or Discord/Slack (webhook URL)
+    if (
+      integration.type === "slack" &&
+      integration.authMethod === "oauth" &&
+      integration.slackAccessToken &&
+      integration.slackChannelId
+    ) {
+      // ── Slack App (OAuth) — use chat.postMessage ────────────────────────
+      // This returns a message `ts` that we store so thread replies are matched.
+      const slackRes = await fetch("https://slack.com/api/chat.postMessage", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${integration.slackAccessToken}`,
+        },
+        body: JSON.stringify({
+          channel: integration.slackChannelId,
+          ...messagePayload,
+        }),
       });
-      return NextResponse.json(
-        { error: "Webhook failed" }, 
-        { status: 500 }
-      );
-    }
 
-    console.log("✨ Successfully posted to", integration.type, "with reply link");
+      const slackData = await slackRes.json();
+
+      if (!slackData.ok) {
+        console.error("❌ Slack chat.postMessage failed:", slackData.error);
+        return NextResponse.json({ error: "Slack post failed" }, { status: 500 });
+      }
+
+      // Save the message ts + channel so we can match thread replies back to this email
+      emailThread.slackMessageTs = slackData.ts    as string;
+      emailThread.slackChannelId = slackData.channel as string;
+      await emailThread.save();
+
+      console.log("✨ Posted to Slack (OAuth) — ts:", slackData.ts);
+    } else {
+      // ── Discord or legacy Slack webhook ────────────────────────────────
+      const webhookResponse = await fetch(integration.webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(messagePayload),
+      });
+
+      if (!webhookResponse.ok) {
+        const errorText = await webhookResponse.text();
+        console.error("❌ Webhook post failed:", {
+          status: webhookResponse.status,
+          error: errorText,
+        });
+        return NextResponse.json({ error: "Webhook failed" }, { status: 500 });
+      }
+
+      console.log("✨ Successfully posted to", integration.type, "with reply link");
+    }
 
     return NextResponse.json({ 
       success: true,

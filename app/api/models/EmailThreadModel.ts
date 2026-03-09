@@ -22,6 +22,10 @@ export interface IEmailThread extends Document {
   discordMessageId: string | null;
   discordChannelId: string | null;
 
+  // Slack thread tracking (for bidirectional Slack reply → email flow)
+  slackMessageTs?: string | null;
+  slackChannelId?: string | null;
+
   // Ticket assignment fields
   assignedTo?: string;
   assignedToEmail?: string;
@@ -116,6 +120,10 @@ const EmailThreadSchema = new Schema<IEmailThread>(
       type: String,
       default: null,
     },
+
+    // Slack thread tracking
+    slackMessageTs: { type: String, default: null, index: true },
+    slackChannelId: { type: String, default: null },
 
     // Ticket assignment fields
     assignedTo: {

@@ -22,11 +22,14 @@ export async function GET() {
 
     return NextResponse.json(
       integrations.map((i) => ({
-        id: i._id.toString(),
-        type: i.type,
-        name: i.name,
-        webhookUrl: i.webhookUrl,
-        createdAt: i.createdAt,
+        id:               i._id.toString(),
+        type:             i.type,
+        name:             i.name,
+        webhookUrl:       i.webhookUrl,
+        authMethod:       i.authMethod ?? "webhook",
+        slackChannelName: i.slackChannelName ?? null,
+        slackTeamName:    i.slackTeamName    ?? null,
+        createdAt:        i.createdAt,
       }))
     );
   } catch (error) {
