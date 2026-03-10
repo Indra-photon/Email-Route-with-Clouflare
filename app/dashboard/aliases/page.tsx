@@ -563,6 +563,7 @@ import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
 import { AnimatedSubmitButton } from "@/components/ui/AnimatedSubmitButton";
 import { AnimatedDeleteButton } from "@/components/ui/AnimatedDeleteButton";
 import { CustomLink } from "@/components/CustomLink";
+import { RefreshCw } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -649,7 +650,7 @@ function AliasCard({
       transition={{ duration: 0.15, ease: [0.215, 0.61, 0.355, 1] }}
       style={{ transformOrigin: "top left" }}
     >
-      <Card className="bg-neutral-100 rounded-xl hover:bg-neutral-200 transition-colors duration-300 ease-out">
+      <Card className="bg-neutral-50 rounded-xl hover:bg-neutral-100 transition-colors duration-300 ease-out">
         <CardContent className="p-4 flex items-center gap-4">
           {/* Icon */}
           <div className="shrink-0 w-8 h-8 rounded-md bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center">
@@ -666,7 +667,7 @@ function AliasCard({
               {alias.email}
             </p>
             <div className="mt-0.5">
-              <Badge className={`border-0 font-schibsted tracking-tight ${
+              <Badge className={`border-0 font-schibsted tracking-tight rounded-sm ${
                 isActive
                   ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
                   : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"
@@ -929,7 +930,7 @@ function LoadingState() {
       transition={{ duration: 0.2, ease: easeOutCubic }}
       className="flex items-center justify-center py-12 gap-2"
     >
-      <span className="alias-btn-loader text-neutral-400" />
+      <RefreshCw className="size-8 text-neutral-400 animate-spin mb-4" />
       <Paragraph variant="muted" className="text-xs">Loading aliases...</Paragraph>
     </motion.div>
   );

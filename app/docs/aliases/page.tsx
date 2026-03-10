@@ -40,9 +40,10 @@ export default function AliasesPage() {
           <li>Go to <CustomLink href="/dashboard/aliases" className="text-sky-800 hover:text-sky-900 underline">Dashboard → Aliases</CustomLink></li>
           <li>Click "Add Alias"</li>
           <li>Select your domain from the dropdown</li>
-          <li>Enter the local part (e.g., <Highlight>support</Highlight>, <Highlight>sales</Highlight>, <Highlight>billing</Highlight>)</li>
+          <li>Enter the local part (e.g., <Highlight>support</Highlight>, <Highlight>sales</Highlight>, <Highlight>billing</Highlight>).
+          Your email address will be <Highlight>localpart@yourdomain.com</Highlight>. (e.g. <Highlight>support@yourdomain.com</Highlight>, <Highlight>sales@yourdomain.com</Highlight>, <Highlight>billing@yourdomain.com</Highlight>)</li>
           <li>Select the target integration (Slack or Discord channel)</li>
-          <li>Click "Create Alias"</li>
+          <li>Click the button <Highlight>Create Alias</Highlight></li>
         </ol>
         </Paragraph>
       </div>
@@ -98,7 +99,7 @@ export default function AliasesPage() {
         </div>
       </div> */}
 
-      <div className="mb-12">
+      {/* <div className="mb-12">
         <Heading as="h2" variant="muted" className="text-neutral-900 mb-4">
           How Routing Works
         </Heading>
@@ -132,7 +133,7 @@ export default function AliasesPage() {
           <li>Edit or delete aliases (coming soon)</li>
         </ul>
         </Paragraph>
-      </div>
+      </div> */}
 
       <DocsNavigation
         prev={{
