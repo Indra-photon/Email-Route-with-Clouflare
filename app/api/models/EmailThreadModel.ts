@@ -19,6 +19,13 @@ export interface IEmailThread extends Document {
   direction: "inbound" | "outbound";
   status: "open" | "in_progress" | "waiting" | "resolved";
 
+  attachments: Array<{
+    id: string;
+    filename: string;
+    content_type: string;
+    size?: number;
+  }>;
+
   discordMessageId: string | null;
   discordChannelId: string | null;
 
@@ -98,6 +105,18 @@ const EmailThreadSchema = new Schema<IEmailThread>(
     htmlBody: {
       type: String,
       default: "",
+    },
+
+    attachments: {
+      type: [
+        {
+          id: { type: String, required: true },
+          filename: { type: String, required: true },
+          content_type: { type: String, default: "application/octet-stream" },
+          size: { type: Number },
+        },
+      ],
+      default: [],
     },
 
     direction: {
