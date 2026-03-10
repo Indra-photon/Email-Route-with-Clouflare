@@ -141,9 +141,9 @@ export async function POST(request: Request) {
     }
 
     // ── Download any files attached in the Slack reply ─────────────────────
-    // Resend attachment: content must be a Buffer (most reliable across SDK versions)
-    type ResendAttachment = { filename: string; content: Buffer; content_type?: string };
-    const attachments: ResendAttachment[] = [];
+    // Use base64 string + content_type so Gmail renders images correctly.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const attachments: any[] = [];
 
     if (slackFiles.length > 0) {
       // Find the bot token for this channel's integration
@@ -157,15 +157,19 @@ export async function POST(request: Request) {
         for (const file of slackFiles) {
           const downloadUrl = (file.url_private_download || file.url_private) as string | undefined;
           const filename = (file.name || file.title || "attachment") as string;
-          const mimeType = (file.mimetype as string | undefined) || undefined;
+          const mimeType = (file.mimetype as string | undefined) || "application/octet-stream";
           if (!downloadUrl) continue;
           try {
             const fileRes = await fetch(downloadUrl, {
               headers: { Authorization: `Bearer ${botToken}` },
             });
             if (fileRes.ok) {
-              const buffer = Buffer.from(await fileRes.arrayBuffer());
-              attachments.push({ filename, content: buffer, ...(mimeType ? { content_type: mimeType } : {}) });
+              const base64Content = Buffer.from(await fileRes.arrayBuffer()).toString("base64");
+              attachments.push({
+                filename,
+                content: base64Content,
+                ...(mimeType ? { content_type: mimeType } : {}),
+              });
             } else {
               console.warn(`⚠️ Slack file download returned ${fileRes.status} for: ${filename}`);
             }
