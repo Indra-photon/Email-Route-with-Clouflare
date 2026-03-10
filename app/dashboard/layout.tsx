@@ -13,7 +13,6 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     <>
       <AgentPresenceProvider />
       <DashboardNav>{children}</DashboardNav>
-      <HelpSlideOver />
     </>
   );
 }
