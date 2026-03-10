@@ -8,7 +8,7 @@
 //   try {
 //     // 1. Parse Resend webhook payload
 //     const payload = await request.json();
-    
+
 //     console.log("📧 Received email webhook from Resend:", {
 //       type: payload.type,
 //       to: payload.data?.to,
@@ -23,7 +23,7 @@
 //     }
 
 //     const emailData = payload.data;
-    
+
 //     // 3. Extract recipient email
 //     const recipientEmail = Array.isArray(emailData.to) 
 //       ? emailData.to[0] 
@@ -37,7 +37,7 @@
 //     // 4. Parse email address (support@acme.com → support + acme.com)
 //     const emailLower = recipientEmail.toLowerCase().trim();
 //     const atIndex = emailLower.indexOf("@");
-    
+
 //     if (atIndex === -1) {
 //       console.error("❌ Invalid email format:", emailLower);
 //       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
@@ -50,7 +50,7 @@
 
 //     // 5. Look up alias in MongoDB (NO POPULATE)
 //     await dbConnect();
-    
+
 //     const alias = await Alias.findOne({ 
 //       localPart: localPart,
 //       email: emailLower 
@@ -70,7 +70,7 @@
 //     }
 
 //     const integration = await Integration.findById(alias.integrationId).lean().exec();
-    
+
 //     if (!integration || !integration.webhookUrl) {
 //       console.warn("⚠️ Integration not found or has no webhook:", alias.email);
 //       return NextResponse.json({ message: "No integration" }, { status: 200 });
@@ -79,7 +79,7 @@
 //     // 7. Format message for Slack/Discord
 //     const fromEmail = emailData.from || "Unknown";
 //     const subject = emailData.subject || "(no subject)";
-    
+
 //     // Try multiple possible body fields from Resend
 //     const textBody = 
 //       emailData.text || 
@@ -89,7 +89,7 @@
 //       emailData.body?.text ||
 //       emailData.body?.html ||
 //       "";
-      
+
 //     const snippet = textBody.slice(0, 500);
 
 //     // Debug log
@@ -161,7 +161,7 @@ export async function POST(request: Request) {
   try {
     // 1. Parse Resend webhook payload
     const payload = await request.json();
-    
+
     console.log("📧 Received email webhook from Resend:", {
       type: payload.type,
       to: payload.data?.to,
@@ -176,10 +176,10 @@ export async function POST(request: Request) {
     }
 
     const emailData = payload.data;
-    
+
     // 3. Extract recipient email
-    const recipientEmail = Array.isArray(emailData.to) 
-      ? emailData.to[0] 
+    const recipientEmail = Array.isArray(emailData.to)
+      ? emailData.to[0]
       : emailData.to;
 
     if (!recipientEmail) {
@@ -190,7 +190,7 @@ export async function POST(request: Request) {
     // 4. Parse email address (support@acme.com → support + acme.com)
     const emailLower = recipientEmail.toLowerCase().trim();
     const atIndex = emailLower.indexOf("@");
-    
+
     if (atIndex === -1) {
       console.error("❌ Invalid email format:", emailLower);
       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
@@ -203,10 +203,10 @@ export async function POST(request: Request) {
 
     // 5. Look up alias in MongoDB
     await dbConnect();
-    
-    const alias = await Alias.findOne({ 
+
+    const alias = await Alias.findOne({
       localPart: localPart,
-      email: emailLower 
+      email: emailLower
     }).lean().exec();
 
     if (!alias) {
@@ -223,7 +223,7 @@ export async function POST(request: Request) {
     }
 
     const integration = await Integration.findById(alias.integrationId).lean().exec();
-    
+
     if (!integration) {
       console.warn("⚠️ Integration not found for alias:", alias.email);
       return NextResponse.json({ message: "No integration" }, { status: 200 });
@@ -239,14 +239,16 @@ export async function POST(request: Request) {
     // 7. Fetch full email content from Resend API
     let textBody = "";
     let htmlBody = "";
-    
+    type ResendAttachmentMeta = { id: string; filename: string; content_type: string; download_url: string; size?: number };
+    let attachmentMetas: ResendAttachmentMeta[] = [];
+
     try {
       console.log("📥 Fetching email content from Resend API...");
       const { data: fullEmail } = await resend.emails.receiving.get(emailData.email_id);
-      
+
       textBody = fullEmail?.text || "";
       htmlBody = fullEmail?.html || "";
-      
+
       console.log("✅ Email content retrieved:", {
         hasText: !!textBody,
         hasHtml: !!htmlBody,
@@ -257,10 +259,28 @@ export async function POST(request: Request) {
       // Continue without body - better to send notification without body than fail
     }
 
+    // 7.5. Fetch attachment metadata from Resend receiving attachments API
+    try {
+      const attachRes = await fetch(
+        `https://api.resend.com/emails/receiving/${emailData.email_id}/attachments`,
+        { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` } }
+      );
+      if (attachRes.ok) {
+        const attachJson = await attachRes.json();
+        attachmentMetas = attachJson.data || attachJson || [];
+        console.log("📎 Found", attachmentMetas.length, "attachment(s) in email");
+      }
+    } catch (attachError) {
+      console.warn("⚠️ Could not fetch attachment metadata:", attachError);
+    }
+
     // 8. Format message data
     const fromEmail = emailData.from || "Unknown";
     const subject = emailData.subject || "(no subject)";
     const snippet = textBody.slice(0, 500) || htmlBody.slice(0, 500) || "(No body content)";
+    const attachmentNote = attachmentMetas.length > 0
+      ? `\n📎 _${attachmentMetas.length} attachment(s): ${attachmentMetas.map(a => a.filename).join(", ")}_`
+      : "";
 
     // 9. Save email to database
     const emailThread = await EmailThread.create({
@@ -323,58 +343,58 @@ export async function POST(request: Request) {
 
     const messagePayload = integration.type === "slack"
       ? {
-          text: `📧 New email to \`${emailLower}\` — From: ${fromEmail} | Subject: ${subject}`,
-          blocks: [
-            {
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                text: `📧 *New email to \`${emailLower}\`*`,
-              },
+        text: `📧 New email to \`${emailLower}\` — From: ${fromEmail} | Subject: ${subject}`,
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `📧 *New email to \`${emailLower}\`*`,
             },
-            {
-              type: "section",
-              fields: [
-                { type: "mrkdwn", text: `*From:*\n${fromEmail}` },
-                { type: "mrkdwn", text: `*Subject:*\n${subject}` },
-                { type: "mrkdwn", text: `*Status:*\n${statusEmoji} ${statusLabel}` },
-                ...(claimField ? [claimField] : []),
-              ],
-            },
-            ...(snippet
-              ? [
-                  {
-                    type: "section",
-                    text: {
-                      type: "mrkdwn",
-                      text: `>${snippet.replace(/\n/g, "\n>")}`,
-                    },
-                  },
-                ]
-              : []),
-            { type: "divider" },
-            {
-              type: "actions",
-              elements: [
-                {
-                  type: "button",
-                  text: { type: "plain_text", text: "Reply to Email →", emoji: true },
-                  url: replyUrl,
-                  style: "primary",
+          },
+          {
+            type: "section",
+            fields: [
+              { type: "mrkdwn", text: `*From:*\n${fromEmail}` },
+              { type: "mrkdwn", text: `*Subject:*\n${subject}` },
+              { type: "mrkdwn", text: `*Status:*\n${statusEmoji} ${statusLabel}` },
+              ...(claimField ? [claimField] : []),
+            ],
+          },
+          ...(snippet
+            ? [
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text: `>${snippet.replace(/\n/g, "\n>")}${attachmentNote}`,
                 },
-              ],
-            },
-          ],
-        }
+              },
+            ]
+            : attachmentNote ? [{ type: "section", text: { type: "mrkdwn", text: attachmentNote } }] : []),
+          { type: "divider" },
+          {
+            type: "actions",
+            elements: [
+              {
+                type: "button",
+                text: { type: "plain_text", text: "Reply to Email →", emoji: true },
+                url: replyUrl,
+                style: "primary",
+              },
+            ],
+          },
+        ],
+      }
       : {
-          content: `📧 **New email to ${emailLower}**
+        content: `📧 **New email to ${emailLower}**
 ${claimStatus}${statusLine}**From:** ${fromEmail}
 **Subject:** ${subject}
 
 ${snippet}
 
 🔗 [Click here to reply](${replyUrl})`,
-        };
+      };
 
     console.log("📤 Posting to", integration.type, "webhook");
 
@@ -407,11 +427,69 @@ ${snippet}
       }
 
       // Save the message ts + channel so we can match thread replies back to this email
-      emailThread.slackMessageTs = slackData.ts    as string;
+      emailThread.slackMessageTs = slackData.ts as string;
       emailThread.slackChannelId = slackData.channel as string;
       await emailThread.save();
 
       console.log("✨ Posted to Slack (OAuth) — ts:", slackData.ts);
+
+      // ── Upload email attachments to the Slack thread ──────────────────
+      if (attachmentMetas.length > 0 && integration.slackAccessToken) {
+        for (const meta of attachmentMetas) {
+          try {
+            // 1. Download the file from Resend
+            const fileRes = await fetch(meta.download_url);
+            if (!fileRes.ok) { console.warn("⚠️ Could not download attachment:", meta.filename); continue; }
+            const fileBuffer = Buffer.from(await fileRes.arrayBuffer());
+            const fileSize = fileBuffer.length;
+
+            // 2. Get an upload URL from Slack
+            const urlRes = await fetch("https://slack.com/api/files.getUploadURLExternal", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                Authorization: `Bearer ${integration.slackAccessToken}`,
+              },
+              body: new URLSearchParams({
+                filename: meta.filename,
+                length: String(fileSize),
+              }),
+            });
+            const urlData = await urlRes.json();
+            if (!urlData.ok) { console.warn("⚠️ Slack getUploadURLExternal failed:", urlData.error); continue; }
+
+            // 3. Upload the file content to the upload URL
+            const uploadRes = await fetch(urlData.upload_url, {
+              method: "POST",
+              headers: { "Content-Type": meta.content_type || "application/octet-stream" },
+              body: fileBuffer,
+            });
+            if (!uploadRes.ok) { console.warn("⚠️ Slack file upload failed:", meta.filename); continue; }
+
+            // 4. Complete the upload and share in the thread
+            const completeRes = await fetch("https://slack.com/api/files.completeUploadExternal", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${integration.slackAccessToken}`,
+              },
+              body: JSON.stringify({
+                files: [{ id: urlData.file_id }],
+                channel_id: integration.slackChannelId,
+                thread_ts: slackData.ts,
+              }),
+            });
+            const completeData = await completeRes.json();
+            if (completeData.ok) {
+              console.log("📎 Uploaded attachment to Slack thread:", meta.filename);
+            } else {
+              console.warn("⚠️ Slack completeUploadExternal failed:", completeData.error);
+            }
+          } catch (uploadErr) {
+            console.warn("⚠️ Error uploading attachment:", meta.filename, uploadErr);
+          }
+        }
+      }
     } else {
       // ── Discord or legacy Slack webhook ────────────────────────────────
       const webhookResponse = await fetch(integration.webhookUrl, {
@@ -432,7 +510,7 @@ ${snippet}
       console.log("✨ Successfully posted to", integration.type, "with reply link");
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       message: "Email routed to integration"
     });

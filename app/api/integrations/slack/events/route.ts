@@ -135,7 +135,8 @@ export async function POST(request: Request) {
     }
 
     // ── Download any files attached in the Slack reply ─────────────────────
-    type ResendAttachment = { filename: string; content: Buffer };
+    // Resend requires attachment content as base64 strings (not raw Buffers)
+    type ResendAttachment = { filename: string; content: string };
     const attachments: ResendAttachment[] = [];
 
     if (slackFiles.length > 0) {
@@ -157,7 +158,8 @@ export async function POST(request: Request) {
             });
             if (fileRes.ok) {
               const buffer = Buffer.from(await fileRes.arrayBuffer());
-              attachments.push({ filename, content: buffer });
+              // Convert to base64 string — required by Resend SDK
+              attachments.push({ filename, content: buffer.toString("base64") });
             }
           } catch (e) {
             console.warn("⚠️ Could not download Slack file:", filename, e);
