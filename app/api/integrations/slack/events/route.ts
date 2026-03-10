@@ -78,6 +78,8 @@ export async function POST(request: Request) {
     event.type !== "message" ||
     event.subtype === "bot_message" ||
     event.subtype === "thread_broadcast" || // "Also send to #channel" duplicate
+    event.subtype === "message_changed" ||  // file-processing updates — already handled on first event
+    event.subtype === "message_deleted" ||
     event.bot_id !== undefined ||
     !event.thread_ts ||            // must be inside a thread
     event.thread_ts === event.ts   // ignore the root message itself
@@ -88,7 +90,11 @@ export async function POST(request: Request) {
   const threadTs = event.thread_ts as string;
   const channelId = event.channel as string;
   const replyText = ((event.text as string) || "").trim();
-  const slackFiles = (event.files as Array<Record<string, unknown>> | undefined) || [];
+  // Support both `files` (array, modern API) and `file` (singular, older events)
+  const slackFiles: Array<Record<string, unknown>> = [
+    ...((event.files as Array<Record<string, unknown>> | undefined) || []),
+    ...(event.file ? [event.file as Record<string, unknown>] : []),
+  ];
 
   // Must have either text or file attachments
   if (!replyText && slackFiles.length === 0) return NextResponse.json({ ok: true });
@@ -135,8 +141,8 @@ export async function POST(request: Request) {
     }
 
     // ── Download any files attached in the Slack reply ─────────────────────
-    // Resend requires attachment content as base64 strings (not raw Buffers)
-    type ResendAttachment = { filename: string; content: string };
+    // Resend attachment: content must be a Buffer (most reliable across SDK versions)
+    type ResendAttachment = { filename: string; content: Buffer; content_type?: string };
     const attachments: ResendAttachment[] = [];
 
     if (slackFiles.length > 0) {
@@ -151,6 +157,7 @@ export async function POST(request: Request) {
         for (const file of slackFiles) {
           const downloadUrl = (file.url_private_download || file.url_private) as string | undefined;
           const filename = (file.name || file.title || "attachment") as string;
+          const mimeType = (file.mimetype as string | undefined) || undefined;
           if (!downloadUrl) continue;
           try {
             const fileRes = await fetch(downloadUrl, {
@@ -158,27 +165,47 @@ export async function POST(request: Request) {
             });
             if (fileRes.ok) {
               const buffer = Buffer.from(await fileRes.arrayBuffer());
-              // Convert to base64 string — required by Resend SDK
-              attachments.push({ filename, content: buffer.toString("base64") });
+              attachments.push({ filename, content: buffer, ...(mimeType ? { content_type: mimeType } : {}) });
+            } else {
+              console.warn(`⚠️ Slack file download returned ${fileRes.status} for: ${filename}`);
             }
           } catch (e) {
             console.warn("⚠️ Could not download Slack file:", filename, e);
           }
         }
+      } else {
+        console.warn("⚠️ No OAuth bot token found for channel:", channelId);
       }
     }
 
-    const { error: sendError } = await resend.emails.send({
+    // ── Send email via Resend ─────────────────────────────────────────────
+    // Try with attachments first; if Resend rejects, fall back to text-only
+    const baseEmailPayload = {
       from: fromAddress,
       to: emailThread.from,
       subject: replySubject,
       text: replyText || "(see attachment)",
-      ...(attachments.length > 0 ? { attachments } : {}),
       headers: {
         "In-Reply-To": emailThread.messageId,
         ...(referencesHeader ? { References: referencesHeader } : {}),
       },
-    });
+    };
+
+    let sendError: unknown = null;
+
+    if (attachments.length > 0) {
+      const { error } = await resend.emails.send({ ...baseEmailPayload, attachments });
+      if (error) {
+        console.warn("⚠️ Resend rejected email with attachments, retrying text-only:", error);
+        // Fallback: send text only, mention attachments couldn't be forwarded
+        const fallbackText = `${replyText}\n\n[Note: ${attachments.length} attachment(s) could not be forwarded]`;
+        const { error: fallbackError } = await resend.emails.send({ ...baseEmailPayload, text: fallbackText });
+        sendError = fallbackError;
+      }
+    } else {
+      const { error } = await resend.emails.send(baseEmailPayload);
+      sendError = error;
+    }
 
     if (sendError) {
       console.error("❌ Resend error sending Slack reply:", sendError);

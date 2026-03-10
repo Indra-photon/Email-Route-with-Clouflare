@@ -295,6 +295,12 @@ export async function POST(request: Request) {
       subject,
       textBody,
       htmlBody,
+      attachments: attachmentMetas.map((a) => ({
+        id: a.id,
+        filename: a.filename,
+        content_type: a.content_type,
+        size: a.size,
+      })),
       direction: "inbound",
       status: "open",
       statusUpdatedAt: new Date(),
