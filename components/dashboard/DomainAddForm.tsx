@@ -66,7 +66,7 @@
 //       const domainId = body.id;
 
 //       // Fire-and-forget: add to Resend
-//       fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/domains/add-to-resend`, {
+//       fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/domains/add-to-resend`, {
 //         method: "POST",
 //         headers: { "Content-Type": "application/json" },
 //         body: JSON.stringify({ domainId }),

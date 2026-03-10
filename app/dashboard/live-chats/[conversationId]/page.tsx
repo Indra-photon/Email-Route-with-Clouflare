@@ -124,6 +124,10 @@ export default function ConversationDetailPage() {
         socket.on("disconnect", () => setWsConnected(false));
 
         socket.on("new_message", (msg: ChatMessage) => {
+            // Only add visitor messages via socket.
+            // Agent's own replies are already shown via optimistic UI —
+            // receiving them back from the socket only causes a flash/duplicate.
+            if (msg.sender === "agent") return;
             setData((prev) => {
                 if (!prev) return prev;
                 if (prev.messages.some((m) => m.id === msg.id)) return prev;
@@ -151,6 +155,9 @@ export default function ConversationDetailPage() {
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [data?.messages, visitorTyping]);
+
+
+
 
     // ── Typing indicator emit ───────────────────────────────────────
     const emitTypingStart = useCallback(() => {
@@ -180,6 +187,7 @@ export default function ConversationDetailPage() {
         setSending(true);
 
         const optimisticId = "temp_" + Date.now();
+        const now = new Date().toISOString();
         setData((prev) =>
             prev
                 ? {
@@ -192,7 +200,7 @@ export default function ConversationDetailPage() {
                             body: text,
                             type,
                             mediaUrl,
-                            createdAt: new Date().toISOString(),
+                            createdAt: now,
                         },
                     ],
                 }
@@ -208,42 +216,32 @@ export default function ConversationDetailPage() {
             const res = await fetch(`/api/chat/conversations/${conversationId}/reply`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: text, type, mediaUrl }),
+                body: JSON.stringify({ message: text, type, mediaUrl, socketId: socketRef.current?.id }),
             });
             if (!res.ok) throw new Error("Failed");
             const result = await res.json();
-            const savedMessage = { ...result.message, type, mediaUrl };
 
-            // Replace optimistic message with the real saved one
+            // Replace optimistic with the real saved message, and deduplicate
+            // in the same atomic update to prevent race-condition duplicates.
+            const savedMessage = { ...result.message, type, mediaUrl };
             setData((prev) =>
                 prev
                     ? {
                         ...prev,
-                        messages: prev.messages.map((m) =>
-                            m.id === optimisticId ? savedMessage : m
-                        ),
+                        messages: (() => {
+                            const mapped = prev.messages.map((m) =>
+                                m.id === optimisticId ? savedMessage : m
+                            );
+                            const seen = new Set<string>();
+                            return mapped.filter((m) => {
+                                if (seen.has(m.id)) return false;
+                                seen.add(m.id);
+                                return true;
+                            });
+                        })(),
                     }
                     : prev
             );
-
-            // ── Direct socket emit (fastest real-time path to visitor) ──
-            // The reply API also calls /push on the render server, but that is
-            // a Vercel→Render HTTP round-trip that can be slow or fail silently.
-            // Emitting agent_message directly from the agent socket is instant.
-            if (socketRef.current?.connected && wsSecret) {
-                socketRef.current.emit("agent_message", {
-                    cid: conversationId,
-                    secret: wsSecret,
-                    message: {
-                        id: savedMessage.id,
-                        sender: "agent",
-                        body: savedMessage.body,
-                        type: savedMessage.type || "text",
-                        mediaUrl: savedMessage.mediaUrl || "",
-                        createdAt: savedMessage.createdAt,
-                    },
-                });
-            }
 
             toast.success("Reply sent");
         } catch {
@@ -257,7 +255,7 @@ export default function ConversationDetailPage() {
         } finally {
             setSending(false);
         }
-    }, [conversationId, sending, emitTypingStop, wsSecret]);
+    }, [conversationId, sending, emitTypingStop]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === "Enter" && !e.shiftKey) {
@@ -390,15 +388,27 @@ export default function ConversationDetailPage() {
                                         />
                                         <div className="flex items-center justify-between px-2 py-1 gap-2">
                                             <span className="text-xs opacity-70 truncate">{msg.body}</span>
-                                            <a
-                                                href={msg.mediaUrl}
-                                                download={msg.body || "image"}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-xs underline opacity-70 hover:opacity-100 flex-shrink-0"
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        const response = await fetch(msg.mediaUrl);
+                                                        const blob = await response.blob();
+                                                        const url = URL.createObjectURL(blob);
+                                                        const a = document.createElement("a");
+                                                        a.href = url;
+                                                        a.download = msg.body || "image";
+                                                        document.body.appendChild(a);
+                                                        a.click();
+                                                        document.body.removeChild(a);
+                                                        URL.revokeObjectURL(url);
+                                                    } catch {
+                                                        window.open(msg.mediaUrl, "_blank");
+                                                    }
+                                                }}
+                                                className="text-xs underline opacity-70 hover:opacity-100 shrink-0 cursor-pointer bg-transparent border-none"
                                             >
                                                 ↓ Download
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                 ) : msg.type === "pdf" && msg.mediaUrl ? (
@@ -406,15 +416,20 @@ export default function ConversationDetailPage() {
                                         <span className="text-2xl">📄</span>
                                         <div className="min-w-0">
                                             <p className="text-xs font-medium truncate max-w-[160px]">{msg.body}</p>
-                                            <a
-                                                href={msg.mediaUrl}
-                                                download={msg.body || "file.pdf"}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-xs underline opacity-70 hover:opacity-100"
+                                            <button
+                                                onClick={() => {
+                                                    const proxyUrl = `/api/chat/download-proxy?url=${encodeURIComponent(msg.mediaUrl)}&filename=${encodeURIComponent(msg.body || "file.pdf")}`;
+                                                    const a = document.createElement("a");
+                                                    a.href = proxyUrl;
+                                                    a.download = msg.body || "file.pdf";
+                                                    document.body.appendChild(a);
+                                                    a.click();
+                                                    document.body.removeChild(a);
+                                                }}
+                                                className="text-xs underline opacity-70 hover:opacity-100 cursor-pointer bg-transparent border-none p-0"
                                             >
                                                 Download PDF
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                 ) : (

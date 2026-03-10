@@ -146,6 +146,32 @@ export default async function ReplyPage({ params }: PageProps) {
               </pre>
             </div>
           </div>
+
+          {thread.attachments && thread.attachments.length > 0 && (
+            <div className="mt-4">
+              <h3 className="font-medium text-neutral-700 mb-2">
+                Attachments ({thread.attachments.length})
+              </h3>
+              <ul className="space-y-2">
+                {thread.attachments.map((att) => (
+                  <li key={att.id}>
+                    <a
+                      href={`/api/emails/attachments/${threadId}/${att.id}`}
+                      download={att.filename}
+                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 underline"
+                    >
+                      📎 {att.filename}
+                      {att.size ? (
+                        <span className="text-neutral-400 no-underline">
+                          ({Math.round(att.size / 1024)} KB)
+                        </span>
+                      ) : null}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div className="bg-white rounded-lg shadow-lg p-6">

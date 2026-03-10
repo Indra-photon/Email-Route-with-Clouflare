@@ -19,8 +19,19 @@ export interface IEmailThread extends Document {
   direction: "inbound" | "outbound";
   status: "open" | "in_progress" | "waiting" | "resolved";
 
+  attachments: Array<{
+    id: string;
+    filename: string;
+    content_type: string;
+    size?: number;
+  }>;
+
   discordMessageId: string | null;
   discordChannelId: string | null;
+
+  // Slack thread tracking (for bidirectional Slack reply → email flow)
+  slackMessageTs?: string | null;
+  slackChannelId?: string | null;
 
   // Ticket assignment fields
   assignedTo?: string;
@@ -96,6 +107,18 @@ const EmailThreadSchema = new Schema<IEmailThread>(
       default: "",
     },
 
+    attachments: {
+      type: [
+        {
+          id: { type: String, required: true },
+          filename: { type: String, required: true },
+          content_type: { type: String, default: "application/octet-stream" },
+          size: { type: Number },
+        },
+      ],
+      default: [],
+    },
+
     direction: {
       type: String,
       enum: ["inbound", "outbound"],
@@ -116,6 +139,10 @@ const EmailThreadSchema = new Schema<IEmailThread>(
       type: String,
       default: null,
     },
+
+    // Slack thread tracking
+    slackMessageTs: { type: String, default: null, index: true },
+    slackChannelId: { type: String, default: null },
 
     // Ticket assignment fields
     assignedTo: {

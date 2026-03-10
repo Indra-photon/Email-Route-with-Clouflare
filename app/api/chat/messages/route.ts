@@ -9,7 +9,7 @@ import { Integration } from "@/app/api/models/IntegrationModel";
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { key, conversationId, visitorId, message, visitorPage, type, mediaUrl } = body as {
+        const { key, conversationId: reqConvId, visitorId, message, visitorPage, type, mediaUrl } = body as {
             key?: string;
             conversationId?: string;
             visitorId?: string;
@@ -43,9 +43,9 @@ export async function POST(request: Request) {
 
         // 2. Upsert conversation
         let conversation;
-        if (conversationId) {
+        if (reqConvId) {
             conversation = await ChatConversation.findOne({
-                _id: conversationId,
+                _id: reqConvId,
                 widgetId: widget._id,
                 visitorId,
             });
@@ -79,33 +79,7 @@ export async function POST(request: Request) {
             mediaUrl: mediaUrl || '',
         });
 
-        // 4. Push via WebSocket to room (render-chat-server)
-        try {
-            const renderUrl = process.env.RENDER_CHAT_SERVER_URL;
-            const pushSecret = process.env.RENDER_PUSH_SECRET;
-            if (renderUrl && pushSecret) {
-                await fetch(`${renderUrl}/push`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-push-secret': pushSecret,
-                    },
-                    body: JSON.stringify({
-                        conversationId: conversation._id.toString(),
-                        message: {
-                            id: chatMessage._id.toString(),
-                            sender: 'visitor',
-                            body: chatMessage.body,
-                            type: chatMessage.type,
-                            mediaUrl: chatMessage.mediaUrl,
-                            createdAt: chatMessage.createdAt,
-                        },
-                    }),
-                });
-            }
-        } catch (pushErr) {
-            console.error('WS push error:', pushErr);
-        }
+
 
         // 4. Forward to Slack/Discord
         try {
@@ -166,6 +140,37 @@ export async function POST(request: Request) {
             console.error("Webhook forward error:", webhookErr);
         }
 
+        // 5. Push to Render Chat Server to ensure agent dashboard receives it 
+        // We include excludeSocketId (if provided) so the render server doesn't broadcast back to the sender
+        const { socketId } = body;
+        try {
+            const pushSecret = process.env.RENDER_PUSH_SECRET;
+            const renderUrl = process.env.NEXT_PUBLIC_RENDER_CHAT_SERVER_URL;
+            if (renderUrl && pushSecret) {
+                await fetch(`${renderUrl}/push`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-push-secret": pushSecret,
+                    },
+                    body: JSON.stringify({
+                        conversationId: conversation._id.toString(),
+                        message: {
+                            id: chatMessage._id.toString(),
+                            sender: chatMessage.sender,
+                            body: chatMessage.body,
+                            type: chatMessage.type,
+                            mediaUrl: chatMessage.mediaUrl,
+                            createdAt: chatMessage.createdAt,
+                        },
+                        excludeSocketId: socketId, // Exclude the sender's socket from receiving the broadcast loop
+                    }),
+                });
+            }
+        } catch (pushErr) {
+            console.error("Failed to push message to chat server:", pushErr);
+        }
+
         return NextResponse.json({
             success: true,
             conversationId: conversation._id.toString(),
@@ -194,9 +199,9 @@ export async function GET(request: Request) {
         const visitorId = searchParams.get("vid");
         const after = searchParams.get("after"); // ISO timestamp for incremental fetch
 
-        if (!key || !conversationId || !visitorId) {
+        if (!key || !visitorId) {
             return NextResponse.json(
-                { error: "key, cid, and vid are required" },
+                { error: "key and vid are required" },
                 { status: 400 }
             );
         }
@@ -213,6 +218,30 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: "Invalid key" }, { status: 401 });
         }
 
+        const widgetConfig = {
+            welcomeMessage: widget.welcomeMessage,
+            accentColor: widget.accentColor,
+        };
+
+        // ── vid-only mode: discover active conversation ─────────────────────
+        // Called by the embed page on mount to check if this visitor has
+        // an existing open conversation (without needing a cid from localStorage).
+        if (!conversationId) {
+            const activeConv = await ChatConversation.findOne({
+                widgetId: widget._id,
+                visitorId,
+                status: "open",
+            })
+                .sort({ lastMessageAt: -1 })
+                .lean();
+
+            return NextResponse.json({
+                conversationId: activeConv ? activeConv._id.toString() : null,
+                widgetConfig,
+            });
+        }
+
+        // ── cid + vid mode: return messages for the conversation ──────────
         // Verify conversation belongs to this visitor & widget
         const conversation = await ChatConversation.findOne({
             _id: conversationId,
@@ -244,10 +273,7 @@ export async function GET(request: Request) {
                 mediaUrl: m.mediaUrl || '',
                 createdAt: m.createdAt,
             })),
-            widgetConfig: {
-                welcomeMessage: widget.welcomeMessage,
-                accentColor: widget.accentColor,
-            },
+            widgetConfig,
         });
     } catch (error) {
         console.error("GET /api/chat/messages error:", error);

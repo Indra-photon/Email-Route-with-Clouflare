@@ -85,7 +85,7 @@ export async function POST(
 
     // Send email notification to user
     try {
-      const dashboardUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/domains/${domain?._id}/verify`;
+      const dashboardUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/domains/${domain?._id}/verify`;
 
       // Build MX records table HTML
       const mxRecordsHtml = mxRecords

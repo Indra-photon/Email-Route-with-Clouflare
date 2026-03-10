@@ -15,7 +15,7 @@ export async function POST(
 
         const { id } = await params;
         const body = await request.json();
-        const { message, type, mediaUrl } = body as { message?: string; type?: 'text' | 'image' | 'pdf'; mediaUrl?: string };
+        const { message, type, mediaUrl, socketId } = body;
 
         if (!message?.trim() && !mediaUrl) {
             return NextResponse.json({ error: "Message is required" }, { status: 400 });
@@ -47,11 +47,10 @@ export async function POST(
         conversation.lastMessageAt = new Date();
         await conversation.save();
 
-        // Push to Render server for real-time delivery to the visitor
+        // Push to Render Chat Server
         try {
-            const renderUrl = process.env.RENDER_CHAT_SERVER_URL;
             const pushSecret = process.env.RENDER_PUSH_SECRET;
-
+            const renderUrl = process.env.NEXT_PUBLIC_RENDER_CHAT_SERVER_URL;
             if (renderUrl && pushSecret) {
                 await fetch(`${renderUrl}/push`, {
                     method: "POST",
@@ -63,18 +62,18 @@ export async function POST(
                         conversationId: conversation._id.toString(),
                         message: {
                             id: chatMessage._id.toString(),
-                            sender: "agent",
+                            sender: chatMessage.sender,
                             body: chatMessage.body,
-                            type: chatMessage.type || 'text',
-                            mediaUrl: chatMessage.mediaUrl || '',
+                            type: chatMessage.type,
+                            mediaUrl: chatMessage.mediaUrl,
                             createdAt: chatMessage.createdAt,
                         },
+                        excludeSocketId: socketId,
                     }),
                 });
             }
         } catch (pushErr) {
-            // Don't fail the reply if Render push fails
-            console.error("Render push error:", pushErr);
+            console.error("Failed to push agent reply to chat server:", pushErr);
         }
 
         return NextResponse.json({

@@ -45,26 +45,25 @@ export default function ChatEmbedPage() {
     const conversationIdRef = useRef<string | null>(null);
 
     const renderServerUrl = process.env.NEXT_PUBLIC_RENDER_CHAT_SERVER_URL || "";
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "";
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "";
 
     // Keep ref in sync with state
     useEffect(() => { conversationIdRef.current = conversationId; }, [conversationId]);
 
-    // ── Parse URL params ────────────────────────────────────────────
+    // ── Parse URL params ─────────────────────────────────────────────
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const key = params.get("key") || "";
         const vid = params.get("vid") || "";
-        const cid = params.get("cid") || "";
         const page = params.get("page") || "";
         setChatKey(key);
         setVisitorId(vid);
         setVisitorPage(page);
-        if (cid) setConversationId(cid);
+        // Note: we intentionally do NOT read ?cid= from the URL.
+        // The conversation is discovered from the API via lookupActiveConversation.
     }, []);
 
     // ── Load existing messages from DB ──────────────────────────────
+    // Called once we know the conversationId (either from API lookup or after first message).
     const fetchInitialMessages = useCallback(async (key: string, vid: string, cid: string) => {
         if (!key || !vid || !cid) return;
         try {
@@ -77,6 +76,28 @@ export default function ChatEmbedPage() {
                 setMessages(data.messages as ChatMessage[]);
             }
             if (data.widgetConfig) setWidgetConfig(data.widgetConfig);
+        } catch { /* silent */ }
+    }, []);
+
+    // ── Look up active conversation for this visitor ─────────────────
+    // Called on mount. If this visitor has chatted before (same visitorId),
+    // the API returns their conversationId and existing messages.
+    // This replaces the old approach of reading ?cid= from the URL (which
+    // could be stale from localStorage and show a previous session's history).
+    const lookupActiveConversation = useCallback(async (key: string, vid: string) => {
+        if (!key || !vid) return;
+        try {
+            const res = await fetch(
+                `/api/chat/messages?key=${encodeURIComponent(key)}&vid=${encodeURIComponent(vid)}`
+            );
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data.widgetConfig) setWidgetConfig(data.widgetConfig);
+            if (data.conversationId) {
+                setConversationId(data.conversationId);
+                // conversationId state update triggers the cid useEffect below
+                // which calls fetchInitialMessages — no need to duplicate here.
+            }
         } catch { /* silent */ }
     }, []);
 
@@ -102,9 +123,6 @@ export default function ChatEmbedPage() {
                 visitorId,
                 role: "visitor",
             });
-            if (cid) {
-                fetchInitialMessages(chatKey, visitorId, cid);
-            }
         });
 
         socket.on("disconnect", () => {
@@ -113,6 +131,10 @@ export default function ChatEmbedPage() {
         });
 
         socket.on("new_message", (msg: ChatMessage) => {
+            // Only add agent messages via socket.
+            // Visitor's own messages are already shown via optimistic UI —
+            // receiving them back from the socket only causes a flash/duplicate.
+            if (msg.sender === "visitor") return;
             setMessages((prev) => {
                 if (prev.some((m) => m.id === msg.id)) return prev;
                 return [...prev, msg];
@@ -140,13 +162,53 @@ export default function ChatEmbedPage() {
         };
     }, [chatKey, visitorId, renderServerUrl, fetchInitialMessages]);
 
+    // ── On mount: look up active conversation by visitorId ───────────
+    // Runs once chatKey + visitorId are parsed from the URL.
+    // This discovers if the visitor has an existing open conversation
+    // without relying on a potentially-stale ?cid= URL param.
+    useEffect(() => {
+        if (!chatKey || !visitorId) return;
+        lookupActiveConversation(chatKey, visitorId);
+    }, [chatKey, visitorId, lookupActiveConversation]);
+
     // ── Upgrade to conversation room once we have a cid ──────────────
     // Fires when the visitor sends their first message and gets a conversationId back.
     useEffect(() => {
-        if (!conversationId || !socketRef.current?.connected || !chatKey || !visitorId) return;
-        socketRef.current.emit("join", { key: chatKey, cid: conversationId, visitorId, role: "visitor" });
+        if (!conversationId || !chatKey || !visitorId) return;
+
+        // Fetch history immediately, independently of socket connection
         fetchInitialMessages(chatKey, visitorId, conversationId);
-    }, [conversationId, chatKey, visitorId, fetchInitialMessages]);
+
+        // Join socket room if socket is connected
+        if (isConnected) {
+            socketRef.current?.emit("join", { key: chatKey, cid: conversationId, visitorId, role: "visitor" });
+        }
+    }, [conversationId, chatKey, visitorId, isConnected, fetchInitialMessages]);
+
+
+
+
+    // ── BULLETPROOF: Poll agent presence every 8 seconds via REST ────
+    // Works independently of socket — guaranteed accurate status.
+    useEffect(() => {
+        if (!chatKey || !renderServerUrl) return;
+
+        const checkPresence = async () => {
+            try {
+                const res = await fetch(
+                    `${renderServerUrl}/presence?key=${encodeURIComponent(chatKey)}`
+                );
+                if (!res.ok) return;
+                const data = await res.json();
+                setAgentOnline(data.online);
+                setAgentCount(data.count || 0);
+            } catch { /* silent — socket presence still works as backup */ }
+        };
+
+        checkPresence(); // Check immediately
+        const interval = setInterval(checkPresence, 8000);
+        return () => clearInterval(interval);
+    }, [chatKey, renderServerUrl]);
 
     // ── Scroll to bottom ────────────────────────────────────────────
     useEffect(() => {
@@ -190,13 +252,14 @@ export default function ChatEmbedPage() {
         setIsSending(true);
 
         const optimisticId = "temp_" + Date.now();
+        const now = new Date().toISOString();
         const optimistic: ChatMessage = {
             id: optimisticId,
             sender: "visitor",
             body: text,
             type,
             mediaUrl,
-            createdAt: new Date().toISOString(),
+            createdAt: now,
         };
         setMessages((prev) => [...prev, optimistic]);
         if (type === "text") setInput("");
@@ -217,6 +280,7 @@ export default function ChatEmbedPage() {
                     visitorPage,
                     type,
                     mediaUrl,
+                    socketId: socketRef.current?.id,
                 }),
             });
 
@@ -229,8 +293,6 @@ export default function ChatEmbedPage() {
             // If this was the first message, we now have a cid — set it.
             if (!conversationId && savedCid) {
                 setConversationId(savedCid);
-                // Notify the parent widget.js to persist the cid in localStorage.
-                // Without this, every page reload starts a fresh conversation.
                 try {
                     window.parent.postMessage(
                         { type: "CW_CONVERSATION_ID", conversationId: savedCid },
@@ -239,39 +301,32 @@ export default function ChatEmbedPage() {
                 } catch { /* cross-origin safeguard */ }
             }
 
-            // Replace optimistic message with real ID
-            setMessages((prev) =>
-                prev.map((m) =>
-                    m.id === optimisticId
-                        ? { ...m, id: savedMsgId }
-                        : m
-                )
-            );
+            // Replace optimistic message with real ID, and deduplicate in the same
+            // atomic update. This prevents the race where /push delivers the real
+            // message via socket BEFORE this setState runs (which would cause
+            // [temp_xxx, real_id] → after replace → [real_id, real_id]).
+            setMessages((prev) => {
+                const mapped = prev.map((m) =>
+                    m.id === optimisticId ? { ...m, id: savedMsgId } : m
+                );
+                // Remove duplicate IDs, keeping the first occurrence
+                const seen = new Set<string>();
+                return mapped.filter((m) => {
+                    if (seen.has(m.id)) return false;
+                    seen.add(m.id);
+                    return true;
+                });
+            });
 
-            // Immediately join the conversation room (synchronous, no React state delay).
-            // Critical for first message: the visitor MUST be in the room before the agent
-            // can reply and have that reply delivered in real-time.
+            // Join the conversation room if this was the first message.
+            // (delivery to agent is handled by /push in the API — no socket emit here)
             const activeCid = savedCid || conversationId;
             if (activeCid && socketRef.current?.connected) {
-                // Join the conversation room (safe to call even if already joined)
                 socketRef.current.emit("join", {
                     key: chatKey,
                     cid: activeCid,
                     visitorId,
                     role: "visitor",
-                });
-
-                // Also emit visitor_message so the agent sees the message live
-                socketRef.current.emit("visitor_message", {
-                    cid: activeCid,
-                    message: {
-                        id: savedMsgId,
-                        sender: "visitor",
-                        body: text,
-                        type,
-                        mediaUrl,
-                        createdAt: new Date().toISOString(),
-                    },
                 });
             }
 
@@ -293,7 +348,7 @@ export default function ChatEmbedPage() {
         }
     };
 
-    // ── File upload to Cloudinary (unsigned, client-side) ───────────
+    // ── File upload via server-side API ────────────────────────────────
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -315,20 +370,18 @@ export default function ChatEmbedPage() {
         try {
             const formData = new FormData();
             formData.append("file", file);
-            formData.append("upload_preset", uploadPreset);
-            formData.append("folder", "chat_uploads");
+            formData.append("key", chatKey);
 
-            const resourceType = isPdf ? "raw" : "image";
-            const uploadRes = await fetch(
-                `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
-                { method: "POST", body: formData }
-            );
+            const uploadRes = await fetch("/api/chat/visitor-upload", {
+                method: "POST",
+                body: formData,
+            });
 
-            if (!uploadRes.ok) throw new Error("Cloudinary upload failed");
+            if (!uploadRes.ok) throw new Error("Upload failed");
             const uploadData = await uploadRes.json();
 
-            const type: "image" | "pdf" = isPdf ? "pdf" : "image";
-            await sendMessage(file.name, type, uploadData.secure_url);
+            const type: "image" | "pdf" = uploadData.type === "pdf" ? "pdf" : "image";
+            await sendMessage(uploadData.filename || file.name, type, uploadData.url);
         } catch {
             setError("File upload failed. Please try again.");
         } finally {
@@ -366,7 +419,7 @@ export default function ChatEmbedPage() {
                             {!isConnected
                                 ? "Connecting…"
                                 : agentOnline
-                                    ? `Agent Online${agentCount > 1 ? ` (${agentCount})` : ""}`
+                                    ? "Agent Online"
                                     : "No agents online"}
                         </span>
                     </div>
@@ -406,15 +459,27 @@ export default function ChatEmbedPage() {
                                         />
                                         <div className="flex items-center justify-between px-2 py-1 gap-2">
                                             <span className="text-xs opacity-70 truncate">{msg.body}</span>
-                                            <a
-                                                href={msg.mediaUrl}
-                                                download={msg.body || "image"}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-xs underline opacity-70 hover:opacity-100 flex-shrink-0"
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        const response = await fetch(msg.mediaUrl);
+                                                        const blob = await response.blob();
+                                                        const url = URL.createObjectURL(blob);
+                                                        const a = document.createElement("a");
+                                                        a.href = url;
+                                                        a.download = msg.body || "image";
+                                                        document.body.appendChild(a);
+                                                        a.click();
+                                                        document.body.removeChild(a);
+                                                        URL.revokeObjectURL(url);
+                                                    } catch {
+                                                        window.open(msg.mediaUrl, "_blank");
+                                                    }
+                                                }}
+                                                className="text-xs underline opacity-70 hover:opacity-100 shrink-0 cursor-pointer bg-transparent border-none"
                                             >
                                                 ↓
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                 ) : msg.type === "pdf" && msg.mediaUrl ? (
@@ -422,15 +487,37 @@ export default function ChatEmbedPage() {
                                         <span className="text-2xl">📄</span>
                                         <div className="min-w-0">
                                             <p className="text-xs font-medium truncate max-w-[140px]">{msg.body}</p>
-                                            <a
-                                                href={msg.mediaUrl}
-                                                download={msg.body || "file.pdf"}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-xs underline opacity-70 hover:opacity-100"
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        const proxyUrl = `/api/chat/download-proxy?url=${encodeURIComponent(msg.mediaUrl)}&filename=${encodeURIComponent(msg.body || "file.pdf")}`;
+                                                        // Fetch the file as a blob in the background
+                                                        const response = await fetch(proxyUrl);
+                                                        const blob = await response.blob();
+                                                        // Create a local memory URL for the blob
+                                                        const blobUrl = window.URL.createObjectURL(blob);
+
+                                                        // Trigger a direct, silent download (no new tab opens)
+                                                        const a = document.createElement("a");
+                                                        a.style.display = "none";
+                                                        a.href = blobUrl;
+                                                        a.download = msg.body || "file.pdf";
+                                                        document.body.appendChild(a);
+                                                        a.click();
+
+                                                        // Cleanup
+                                                        setTimeout(() => {
+                                                            document.body.removeChild(a);
+                                                            window.URL.revokeObjectURL(blobUrl);
+                                                        }, 100);
+                                                    } catch (err) {
+                                                        console.error("Failed to download PDF", err);
+                                                    }
+                                                }}
+                                                className="text-xs underline opacity-70 hover:opacity-100 cursor-pointer bg-transparent border-none p-0"
                                             >
                                                 Download PDF
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                 ) : (
