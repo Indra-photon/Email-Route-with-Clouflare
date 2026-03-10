@@ -85,8 +85,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  const threadTs  = event.thread_ts as string;
-  const channelId = event.channel   as string;
+  const threadTs = event.thread_ts as string;
+  const channelId = event.channel as string;
   const replyText = ((event.text as string) || "").trim();
   const slackFiles = (event.files as Array<Record<string, unknown>> | undefined) || [];
 
@@ -97,9 +97,9 @@ export async function POST(request: Request) {
 
   // Find the email thread that this Slack thread belongs to
   const emailThread = await EmailThread.findOne({
-    slackMessageTs:  threadTs,
-    slackChannelId:  channelId,
-    direction:       "inbound",
+    slackMessageTs: threadTs,
+    slackChannelId: channelId,
+    direction: "inbound",
   });
 
   if (!emailThread) {
@@ -123,7 +123,7 @@ export async function POST(request: Request) {
       : null;
 
     const fallbackEmail = process.env.REPLY_FROM_EMAIL || "onboarding@resend.dev";
-    const fallbackName  = process.env.REPLY_FROM_NAME  || "Email Router";
+    const fallbackName = process.env.REPLY_FROM_NAME || "Email Router";
 
     let fromAddress: string;
     if (domain?.verifiedForSending) {
@@ -167,10 +167,10 @@ export async function POST(request: Request) {
     }
 
     const { error: sendError } = await resend.emails.send({
-      from:    fromAddress,
-      to:      emailThread.from,
+      from: fromAddress,
+      to: emailThread.from,
       subject: replySubject,
-      text:    replyText || "(see attachment)",
+      text: replyText || "(see attachment)",
       ...(attachments.length > 0 ? { attachments } : {}),
       headers: {
         "In-Reply-To": emailThread.messageId,
@@ -183,10 +183,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false }, { status: 500 });
     }
 
-    // Mark the thread as waiting (reply sent, awaiting customer response)
-    emailThread.status          = "waiting";
+    // Mark the thread as open (reply sent, awaiting customer's next message)
+    emailThread.status = "open";
     emailThread.statusUpdatedAt = new Date();
-    emailThread.repliedAt       = new Date();
+    emailThread.repliedAt = new Date();
     await emailThread.save();
 
     console.log(`✅ Slack→Email reply sent for thread ${emailThread._id}`);

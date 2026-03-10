@@ -165,7 +165,8 @@ export async function POST(request: Request) {
     });
 
     // Save thread updates (including auto-claim)
-    thread.status = "waiting";
+    // Status becomes "open" after a reply — waiting for customer's next message
+    thread.status = "open";
     thread.statusUpdatedAt = new Date();
     thread.repliedAt = new Date();
     await thread.save();
