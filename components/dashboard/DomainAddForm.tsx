@@ -194,6 +194,7 @@ import { motion, AnimatePresence, easeOut } from "motion/react";
 import { IconCheck, IconPlus } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { CustomLink } from "../CustomLink";
+import { AnimatedSubmitButton } from "@/components/ui/AnimatedSubmitButton";
 
 type Status = "idle" | "loading" | "success";
 
@@ -217,27 +218,6 @@ interface DomainRow {
 const outCubic = [0.215, 0.61, 0.355, 1] as const;
 const outQuint = [0.23, 1, 0.32, 1] as const;
 
-const loaderStyle = `
-  .domain-loader {
-    width: 18px;
-    height: 18px;
-    --b: 3px;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    padding: 1px;
-    background: conic-gradient(#0000 10%, #ffffff) content-box;
-    -webkit-mask:
-      repeating-conic-gradient(#0000 0deg, #000 1deg 20deg, #0000 21deg 36deg),
-      radial-gradient(farthest-side, #0000 calc(100% - var(--b) - 1px), #000 calc(100% - var(--b)));
-    -webkit-mask-composite: destination-in;
-    mask-composite: intersect;
-    animation: domain-spin 1s infinite steps(10);
-    flex-shrink: 0;
-  }
-  @keyframes domain-spin {
-    to { transform: rotate(1turn); }
-  }
-`;
 
 export default function DomainAddForm({
   onDomainAdded,
@@ -311,7 +291,6 @@ export default function DomainAddForm({
 
   return (
     <>
-      <style>{loaderStyle}</style>
       <form onSubmit={handleSubmit} className="flex gap-2">
         <input
           type="text"
@@ -323,58 +302,19 @@ export default function DomainAddForm({
           onChange={(e) => setValue(e.target.value)}
           className="w-64 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 transition-colors duration-100 focus:border-sky-800 dark:focus:border-neutral-400 outline-none focus:outline-none [box-shadow:none] focus:[box-shadow:none] disabled:opacity-50 disabled:cursor-not-allowed"
         />
-        <motion.button
-          layout
-          type="submit"
-          whileTap={{ scale: 0.90 }}
-          className="font-schibsted w-48 px-4 py-2 rounded-md bg-gradient-to-t from-sky-900 to-cyan-600 text-white border-0 shadow-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 cursor-pointer flex items-center justify-center gap-2 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
-        //   animate={{ width: isLoading ? 140 : 180 }}
-        //   transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        >
-          <AnimatePresence mode="wait">
-            {isLoading && (
-              <motion.span
-                key="loader"
-                initial={{ y: 6, filter: "blur(4px)" }}
-                animate={{ y: 0, filter: "blur(0)" }}
-                exit={{ y: -6, filter: "blur(4px)" }}
-                transition={{ ease: easeOut, duration: 0.1 }}
-                className="flex items-center justify-center gap-2"
-              >
-                <span className="domain-loader" />
-                <span>Adding...</span>
-              </motion.span>
-            )}
 
-            {/* {isSuccess && (
-              <motion.span
-                key="check"
-                initial={{ opacity: 0.5, y: 6, scale: 0.97 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0.4, y: -4, scale: 0.98 }}
-                transition={{ duration: 0.2, ease: outQuint }}
-                className="flex items-center justify-center gap-1.5"
-              >
-                <IconCheck size={16} strokeWidth={2.5} />
-                <span>Added Successfully</span>
-              </motion.span>
-            )} */}
-
-            {!isBusy && (
-              <motion.span
-                key="label"
-                initial={{ y: -6, filter: "blur(4px)" }}
-                animate={{ y: 0, filter: "blur(0)" }}
-                exit={{ y: 6, filter: "blur(4px)" }}
-                transition={{ ease: easeOut, duration: 0.1 }}
-                className="flex items-center justify-center gap-2"
-              >
-                <IconPlus size={16} strokeWidth={2.5} />
-                Add Domain
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </motion.button>
+        <AnimatedSubmitButton
+            idleLabel="Add"
+            loadingLabel="Adding..."
+            successLabel="Added"
+            idleIcon={<IconPlus size={16} strokeWidth={2.5} />}
+            state={status}
+            idleWidth={180}
+            loadingWidth={140}
+            successWidth={210}
+            disabled={isBusy}
+            className="font-schibsted w-32 px-4 py-2 rounded-md bg-gradient-to-t from-sky-900 to-cyan-600 text-white border-0 shadow-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 cursor-pointer flex items-center justify-center gap-2 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
+        />
 
         <div className="flex items-center">
           <CustomLink

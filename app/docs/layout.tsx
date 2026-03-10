@@ -13,13 +13,13 @@ export default function DocsLayout({
   return (
     <div className="min-h-screen bg-neutral-50">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white">
+      {/* <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white">
         <Container className="py-4">
           <div className="flex items-center justify-between">
             <DocSearch />
           </div>
         </Container>
-      </header>
+      </header> */}
 
       {/* Main Content */}
       <Container className="py-8">

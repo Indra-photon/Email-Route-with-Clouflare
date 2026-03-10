@@ -107,7 +107,9 @@ export default function AnimatedDropdown({
             exit={{ opacity: 0, y: -4, scaleY: 0.95, scaleX: 0.98 }}
             transition={{ duration: 0.2, ease: easeOutQuint }}
             style={{ transformOrigin: "top" }}
-            className={`absolute z-50 ${width} mt-0 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg shadow-neutral-200/50 dark:shadow-neutral-900/50 overflow-hidden`}
+            className={`absolute z-50 ${width} mt-0 rounded-lg 
+            border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg 
+            shadow-neutral-200/50 dark:shadow-neutral-900/50 overflow-hidden`}
           >
             <div className="max-h-48 overflow-y-auto py-1">
               {options.length === 0 ? (
@@ -127,13 +129,14 @@ export default function AnimatedDropdown({
                         delay: i * 0.02,
                         ease: easeOutCubic,
                       }}
+                      className=""
                     >
                       <button
                         type="button"
                         onClick={() => handleSelect(option.value)}
-                        className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-schibsted text-left transition-colors duration-75 cursor-pointer ${
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-schibsted font-semibold text-left transition-colors duration-75 cursor-pointer ${
                           isSelected
-                            ? "bg-sky-50 dark:bg-sky-900/20 text-sky-800 dark:text-sky-300 font-medium"
+                            ? " dark:bg-sky-900/20 text-sky-800 dark:text-sky-300 font-medium"
                             : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800"
                         }`}
                       >
