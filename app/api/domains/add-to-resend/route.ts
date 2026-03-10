@@ -52,6 +52,8 @@ export async function POST(request: Request) {
 
     if (resendError) {
       const message = resendError.message || "Resend API error";
+      console.log("❌ Resend API error:", message, resendError);
+      
       const status =
         message.toLowerCase().includes("already exists") ? 409 :
           message.toLowerCase().includes("invalid") ? 400 : 500;

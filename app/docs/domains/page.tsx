@@ -65,7 +65,7 @@ export default function DomainsPage() {
     <article className="prose prose-neutral max-w-none">
       {/* Header */}
       <div className="mb-8">
-        <Badge className="mb-4 bg-sky-100 text-sky-800 font-schibsted font-medium">
+        <Badge className="mb-4 bg-sky-100 text-sky-800 font-schibsted font-bold uppercase tracking-wide">
           Domain Setup
         </Badge>
         <Heading as="h1" className="text-neutral-900 mb-4">
@@ -89,11 +89,13 @@ export default function DomainsPage() {
 
         <ol className="">
           <Paragraph variant="docs-par" className="list-decimal list-inside space-y-2">
-            <li>Go to <CustomLink href="/dashboard/domains" className="text-sky-800 hover:text-sky-900 underline">Dashboard → Domains</CustomLink></li>
+            <li>Go to <CustomLink href="/dashboard/domains" className="text-sky-800 hover:text-sky-900 font-semibold underline">Dashboard → Domains</CustomLink></li>
             <li>Click "Add Domain"</li>
             <li>Enter your domain name (e.g., <Highlight>acme.com</Highlight>)</li>
-            <li>Click "Add Domain"</li>
-            <li>Note the MX records displayed</li>
+            <li>Click "Add Domain". You can see the domain added to your list with status as <Highlight>"Pending Verification"</Highlight></li>
+            <li>Tap the domain card and modal opens with the button <Highlight>Add to Resend</Highlight>. Click the 
+            button to add your domain to our database to get the MX records.</li>
+            <li>Once added, you will see the MX records displayed in the modal.</li>
           </Paragraph>
         </ol>
       </div>
@@ -112,7 +114,7 @@ export default function DomainsPage() {
           Copy the records provided in the dashboard and add them to your DNS provider.
         </Paragraph>
 
-        <div className="overflow-x-auto mb-6">
+        {/* <div className="overflow-x-auto mb-6">
           {loading ? (
             <div className="text-center py-8">
               <p className="text-sm text-neutral-600 font-schibsted">Loading...</p>
@@ -146,7 +148,7 @@ export default function DomainsPage() {
               </table>
             </>
           )}
-        </div>
+        </div> */}
 
         {/* <Callout type="warning" title="Important">
           Adding MX records will route ALL email for your domain through Email Router. 
@@ -193,8 +195,8 @@ export default function DomainsPage() {
           </div>
 
           {/* Provider Content with Animation */}
-          <Card className="border border-neutral-200">
-            <CardContent className="px-6">
+          <Card className="border border-neutral-400 border-dashed rounded-lg shadow-none bg-neutral-100">
+            <CardContent className="px-6 py-3 min-h-[380px]">
               <AnimatePresence mode="wait">
                 {selectedProvider === 'cloudflare' && (
                   <motion.div
@@ -210,10 +212,7 @@ export default function DomainsPage() {
                         <li>Select your domain</li>
                         <li>Go to DNS → Records</li>
                         <li>Click "Add record"</li>
-                        <li>Select Type: MX</li>
-                        <li>Name: @ (or your domain)</li>
-                        <li>Mail server: mx1.resend.dev</li>
-                        <li>Repeat for mx2.resend.dev with priority 20</li>
+                        <li>Copy the records from your dashboard and paste them into the appropriate fields.</li>
                       </Paragraph>
                     </ol>
                   </motion.div>
@@ -234,8 +233,7 @@ export default function DomainsPage() {
                         <li>Click DNS next to your domain</li>
                         <li>Scroll to MX Records section</li>
                         <li>Click "Add"</li>
-                        <li>Enter mx1.resend.dev with priority 10</li>
-                        <li>Add another: mx2.resend.dev with priority 20</li>
+                        <li>Copy the records from your dashboard and paste them into the appropriate fields.</li>
                         <li>Save changes</li>
                       </Paragraph>
                     </ol>
@@ -256,9 +254,7 @@ export default function DomainsPage() {
                         <li>Go to Domain List → Manage</li>
                         <li>Select "Advanced DNS"</li>
                         <li>Find "Mail Settings"</li>
-                        <li>Select "Custom MX"</li>
-                        <li>Add mx1.resend.dev (Priority 10)</li>
-                        <li>Add mx2.resend.dev (Priority 20)</li>
+                        <li>Copy the records from your dashboard and paste them into the appropriate fields.</li>
                         <li>Save changes</li>
                       </Paragraph>
                     </ol>
@@ -278,10 +274,13 @@ export default function DomainsPage() {
         </Heading>
 
         <Paragraph variant="docs-par" className="mb-4">
-          After adding MX records, verify your domain in the Email Router dashboard. Once verified, you can start creating email aliases and routing emails to Slack or Discord.
+          After adding MX records, verify your domain in the Email Router dashboard by clicking 
+          <Highlight>{" "}Check Verification</Highlight> button. 
+          Make sure the status of every record changes to <Highlight>Verified</Highlight>.
+          Once all the records are verified, you can start creating email aliases and routing emails to Slack or Discord.
         </Paragraph>
 
-        <Paragraph variant="docs-par" className="mb-4">
+        <Paragraph variant="docs-par" className="mb-4 font-bold">
           DNS changes can take 10-30 minutes to propagate. Use <CustomLink href="https://mxtoolbox.com" className="text-sky-800 hover:text-sky-900 underline">MXToolbox.com</CustomLink> to check your records.
         </Paragraph>
 
