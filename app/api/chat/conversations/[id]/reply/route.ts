@@ -4,6 +4,9 @@ import dbConnect from "@/lib/dbConnect";
 import { getOrCreateWorkspaceForCurrentUser } from "@/app/api/workspace/helpers";
 import { ChatConversation } from "@/app/api/models/ChatConversationModel";
 import { ChatMessage } from "@/app/api/models/ChatMessageModel";
+import { ChatWidget } from "@/app/api/models/ChatWidgetModel";
+import { Integration } from "@/app/api/models/IntegrationModel";
+import { postAgentReplyToSlack } from "@/lib/slackLiveChat";
 
 export async function POST(
     request: Request,
@@ -46,6 +49,30 @@ export async function POST(
 
         conversation.lastMessageAt = new Date();
         await conversation.save();
+
+        // Post to Slack thread if this conversation has Slack integration
+        try {
+            if (conversation.slackThreadTs && conversation.slackChannelId) {
+                const widget = await ChatWidget.findById(conversation.widgetId).lean();
+                if (widget) {
+                    const integration = await Integration.findById(widget.integrationId).lean();
+                    if (
+                        integration?.type === "slack" &&
+                        integration.authMethod === "oauth" &&
+                        integration.slackAccessToken
+                    ) {
+                        await postAgentReplyToSlack({
+                            channelId: conversation.slackChannelId,
+                            botToken: integration.slackAccessToken,
+                            threadTs: conversation.slackThreadTs,
+                            message: message?.trim() || "[file attachment]",
+                        });
+                    }
+                }
+            }
+        } catch (slackErr) {
+            console.error("⚠️ Failed to post agent reply to Slack:", slackErr);
+        }
 
         // Push to Render Chat Server
         try {
