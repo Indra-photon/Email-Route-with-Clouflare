@@ -4,6 +4,7 @@ import { ChatWidget } from "@/app/api/models/ChatWidgetModel";
 import { ChatConversation } from "@/app/api/models/ChatConversationModel";
 import { ChatMessage } from "@/app/api/models/ChatMessageModel";
 import { Integration } from "@/app/api/models/IntegrationModel";
+import { postToSlackLiveChat } from "@/lib/slackLiveChat";
 
 // PUBLIC endpoint — no Clerk auth (visitor's browser calls this)
 export async function POST(request: Request) {
@@ -84,7 +85,32 @@ export async function POST(request: Request) {
         // 4. Forward to Slack/Discord
         try {
             const integration = await Integration.findById(widget.integrationId).lean();
-            if (integration?.webhookUrl) {
+            
+            // 4a. Slack OAuth Live Chat (bidirectional threads)
+            if (integration?.type === "slack" && integration.authMethod === "oauth" && integration.slackAccessToken) {
+                const slackResult = await postToSlackLiveChat({
+                    channelId: integration.slackChannelId || "",
+                    botToken: integration.slackAccessToken,
+                    message: message?.trim() || "[file attachment]",
+                    threadTs: conversation.slackThreadTs || undefined,
+                    visitorId,
+                    domain: widget.domain,
+                });
+
+                if (slackResult.ok && slackResult.threadTs) {
+                    // Save thread_ts for first message, or keep existing
+                    if (!conversation.slackThreadTs) {
+                        conversation.slackThreadTs = slackResult.threadTs;
+                        conversation.slackChannelId = integration.slackChannelId || null;
+                        await conversation.save();
+                        console.log(`✅ Slack live chat thread created: ${slackResult.threadTs}`);
+                    }
+                } else {
+                    console.error("⚠️ Failed to post to Slack live chat:", slackResult.error);
+                }
+            }
+            // 4b. Webhook-based integration (legacy notification-only)
+            else if (integration?.webhookUrl) {
                 const domain = widget.domain;
                 const convId = conversation._id.toString();
                 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";

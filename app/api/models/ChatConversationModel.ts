@@ -7,6 +7,8 @@ export interface IChatConversation extends Document {
     visitorPage: string;
     status: "open" | "closed";
     lastMessageAt: Date;
+    slackThreadTs?: string | null;      // Slack thread timestamp for live chat integration
+    slackChannelId?: string | null;     // Slack channel ID where this conversation is posted
     createdAt: Date;
     updatedAt: Date;
 }
@@ -42,6 +44,15 @@ const ChatConversationSchema = new Schema<IChatConversation>(
         lastMessageAt: {
             type: Date,
             default: Date.now,
+        },
+        slackThreadTs: {
+            type: String,
+            default: null,
+            index: true,
+        },
+        slackChannelId: {
+            type: String,
+            default: null,
         },
     },
     {
