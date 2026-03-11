@@ -23,6 +23,7 @@ export interface IEmailThread extends Document {
     id: string;
     filename: string;
     content_type: string;
+    download_url?: string;
     size?: number;
   }>;
 
@@ -32,6 +33,7 @@ export interface IEmailThread extends Document {
   // Slack thread tracking (for bidirectional Slack reply → email flow)
   slackMessageTs?: string | null;
   slackChannelId?: string | null;
+  slackEventId?: string | null;  // for deduplication — Slack retries if no 3s response
 
   // Ticket assignment fields
   assignedTo?: string;
@@ -113,6 +115,7 @@ const EmailThreadSchema = new Schema<IEmailThread>(
           id: { type: String, required: true },
           filename: { type: String, required: true },
           content_type: { type: String, default: "application/octet-stream" },
+          download_url: { type: String },
           size: { type: Number },
         },
       ],
@@ -143,6 +146,7 @@ const EmailThreadSchema = new Schema<IEmailThread>(
     // Slack thread tracking
     slackMessageTs: { type: String, default: null, index: true },
     slackChannelId: { type: String, default: null },
+    slackEventId:   { type: String, default: null, index: true, sparse: true },
 
     // Ticket assignment fields
     assignedTo: {

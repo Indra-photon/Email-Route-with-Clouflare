@@ -5,115 +5,20 @@ import { EmailThread } from "@/app/api/models/EmailThreadModel";
 import { Integration } from "@/app/api/models/IntegrationModel";
 import { Alias } from "@/app/api/models/AliasModel";
 import { Domain } from "@/app/api/models/DomainModel";
+import { ChatConversation } from "@/app/api/models/ChatConversationModel";
+import { ChatMessage } from "@/app/api/models/ChatMessageModel";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// ── Slack signature verification ────────────────────────────────────────────
-// https://api.slack.com/authentication/verifying-requests-from-slack
-async function verifySlackSignature(request: Request, rawBody: string): Promise<boolean> {
-  const signingSecret = process.env.SLACK_SIGNING_SECRET;
-  if (!signingSecret) {
-    console.error("SLACK_SIGNING_SECRET not configured");
-    return false;
-  }
-
-  const timestamp = request.headers.get("x-slack-request-timestamp");
-  const signature = request.headers.get("x-slack-signature");
-
-  if (!timestamp || !signature) return false;
-
-  // Reject requests older than 5 minutes to prevent replay attacks
-  const now = Math.floor(Date.now() / 1000);
-  if (Math.abs(now - parseInt(timestamp, 10)) > 300) return false;
-
-  const baseString = `v0:${timestamp}:${rawBody}`;
-  const computed = "v0=" + crypto
-    .createHmac("sha256", signingSecret)
-    .update(baseString)
-    .digest("hex");
-
-  try {
-    return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(signature));
-  } catch {
-    return false;
-  }
-}
-
-// POST /api/integrations/slack/events
-// Receives all Slack events (message.channels) for every workspace that has
-// installed the app. When a team member replies to an email-notification thread,
-// we find the original EmailThread and send the reply back via Resend.
-export async function POST(request: Request) {
-  // Read raw body BEFORE any parsing — needed for signature verification
-  const rawBody = await request.text();
-
-  // Verify the request really came from Slack
-  const valid = await verifySlackSignature(request, rawBody);
-  if (!valid) {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-  }
-
-  let payload: Record<string, unknown>;
-  try {
-    payload = JSON.parse(rawBody);
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-
-  // ── URL verification challenge (one-time, when you first set the Events URL) ─
-  if (payload.type === "url_verification") {
-    return NextResponse.json({ challenge: payload.challenge });
-  }
-
-  // ── Only handle message events ─────────────────────────────────────────────
-  if (payload.type !== "event_callback") {
-    return NextResponse.json({ ok: true });
-  }
-
-  const event = payload.event as Record<string, unknown>;
-
-  // Only process plain text thread replies, not bot messages or channel broadcasts
-  if (
-    event.type !== "message" ||
-    event.subtype === "bot_message" ||
-    event.subtype === "thread_broadcast" || // "Also send to #channel" duplicate
-    event.subtype === "message_changed" ||  // file-processing updates — already handled on first event
-    event.subtype === "message_deleted" ||
-    event.bot_id !== undefined ||
-    !event.thread_ts ||            // must be inside a thread
-    event.thread_ts === event.ts   // ignore the root message itself
-  ) {
-    return NextResponse.json({ ok: true });
-  }
-
-  const threadTs = event.thread_ts as string;
-  const channelId = event.channel as string;
-  const replyText = ((event.text as string) || "").trim();
-  // Support both `files` (array, modern API) and `file` (singular, older events)
-  const slackFiles: Array<Record<string, unknown>> = [
-    ...((event.files as Array<Record<string, unknown>> | undefined) || []),
-    ...(event.file ? [event.file as Record<string, unknown>] : []),
-  ];
-
-  // Must have either text or file attachments
-  if (!replyText && slackFiles.length === 0) return NextResponse.json({ ok: true });
-
-  await dbConnect();
-
-  // Find the email thread that this Slack thread belongs to
-  const emailThread = await EmailThread.findOne({
-    slackMessageTs: threadTs,
-    slackChannelId: channelId,
-    direction: "inbound",
-  });
-
-  if (!emailThread) {
-    // Not one of our email notifications — ignore
-    return NextResponse.json({ ok: true });
-  }
-
-  // ── Build the reply email ──────────────────────────────────────────────────
+// ── Handle Email Thread Reply ────────────────────────────────────────────────
+async function handleEmailThreadReply(
+  emailThread: any,
+  replyText: string,
+  slackFiles: Array<Record<string, unknown>>,
+  channelId: string,
+  eventId?: string
+) {
   try {
     const replySubject = emailThread.subject.startsWith("Re:")
       ? emailThread.subject
@@ -122,31 +27,24 @@ export async function POST(request: Request) {
     const references = [emailThread.messageId, ...(emailThread.references || [])].filter(Boolean);
     const referencesHeader = references.join(" ");
 
-    // Determine the "from" address (same logic as /api/emails/reply)
     const alias = await Alias.findById(emailThread.aliasId).lean();
-    const domain = alias
-      ? await Domain.findOne({ _id: alias.domainId }).lean()
-      : null;
+    const domain = alias ? await Domain.findOne({ _id: alias.domainId }).lean() : null;
 
     const fallbackEmail = process.env.REPLY_FROM_EMAIL || "onboarding@resend.dev";
     const fallbackName = process.env.REPLY_FROM_NAME || "Email Router";
 
     let fromAddress: string;
     if (domain?.verifiedForSending) {
-      fromAddress = emailThread.to; // e.g. support@git-cv.com
+      fromAddress = emailThread.to;
     } else {
-      fromAddress = fallbackName
-        ? `${fallbackName} <${fallbackEmail}>`
-        : fallbackEmail;
+      fromAddress = fallbackName ? `${fallbackName} <${fallbackEmail}>` : fallbackEmail;
     }
 
-    // ── Download any files attached in the Slack reply ─────────────────────
-    // Resend attachment: content must be a Buffer (most reliable across SDK versions)
-    type ResendAttachment = { filename: string; content: Buffer; content_type?: string };
-    const attachments: ResendAttachment[] = [];
+    // ── Download Slack files ───────────────────────────────────────────────
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const attachments: any[] = [];
 
     if (slackFiles.length > 0) {
-      // Find the bot token for this channel's integration
       const integration = await Integration.findOne({
         slackChannelId: channelId,
         authMethod: "oauth",
@@ -155,22 +53,46 @@ export async function POST(request: Request) {
 
       if (botToken) {
         for (const file of slackFiles) {
-          const downloadUrl = (file.url_private_download || file.url_private) as string | undefined;
+          const fileId = file.id as string | undefined;
           const filename = (file.name || file.title || "attachment") as string;
-          const mimeType = (file.mimetype as string | undefined) || undefined;
-          if (!downloadUrl) continue;
+
           try {
+            let downloadUrl = (file.url_private_download || file.url_private) as string | undefined;
+
+            if (fileId) {
+              const infoRes = await fetch(`https://slack.com/api/files.info?file=${fileId}`, {
+                headers: { Authorization: `Bearer ${botToken}` },
+              });
+              const infoData = await infoRes.json();
+              if (infoData.ok && infoData.file?.url_private) {
+                downloadUrl = infoData.file.url_private;
+              }
+            }
+
+            if (!downloadUrl) {
+              console.warn("⚠️ No download URL for file:", filename);
+              continue;
+            }
+
             const fileRes = await fetch(downloadUrl, {
               headers: { Authorization: `Bearer ${botToken}` },
             });
-            if (fileRes.ok) {
-              const buffer = Buffer.from(await fileRes.arrayBuffer());
-              attachments.push({ filename, content: buffer, ...(mimeType ? { content_type: mimeType } : {}) });
-            } else {
-              console.warn(`⚠️ Slack file download returned ${fileRes.status} for: ${filename}`);
+
+            if (!fileRes.ok) {
+              console.warn(`⚠️ Slack file download failed (${fileRes.status}): ${filename}`);
+              continue;
             }
+
+            const arrayBuf = await fileRes.arrayBuffer();
+            if (arrayBuf.byteLength === 0) {
+              console.warn(`⚠️ Empty file skipped: ${filename}`);
+              continue;
+            }
+
+            attachments.push({ filename, content: Buffer.from(arrayBuf).toString("base64") });
+            console.log(`📎 Attachment ready: ${filename} (${arrayBuf.byteLength} bytes)`);
           } catch (e) {
-            console.warn("⚠️ Could not download Slack file:", filename, e);
+            console.warn("⚠️ Could not process Slack file:", filename, e);
           }
         }
       } else {
@@ -178,9 +100,8 @@ export async function POST(request: Request) {
       }
     }
 
-    // ── Send email via Resend ─────────────────────────────────────────────
-    // Try with attachments first; if Resend rejects, fall back to text-only
-    const baseEmailPayload = {
+    // ── Send via Resend ────────────────────────────────────────────────────
+    const emailPayload = {
       from: fromAddress,
       to: emailThread.from,
       subject: replySubject,
@@ -189,30 +110,26 @@ export async function POST(request: Request) {
         "In-Reply-To": emailThread.messageId,
         ...(referencesHeader ? { References: referencesHeader } : {}),
       },
+      ...(attachments.length > 0 ? { attachments } : {}),
     };
 
-    let sendError: unknown = null;
+    const { error } = await resend.emails.send(emailPayload);
 
-    if (attachments.length > 0) {
-      const { error } = await resend.emails.send({ ...baseEmailPayload, attachments });
-      if (error) {
-        console.warn("⚠️ Resend rejected email with attachments, retrying text-only:", error);
-        // Fallback: send text only, mention attachments couldn't be forwarded
-        const fallbackText = `${replyText}\n\n[Note: ${attachments.length} attachment(s) could not be forwarded]`;
-        const { error: fallbackError } = await resend.emails.send({ ...baseEmailPayload, text: fallbackText });
-        sendError = fallbackError;
+    if (error) {
+      console.warn("⚠️ Resend rejected with attachments, retrying text-only:", error);
+      const fallbackText = `${replyText}\n\n[Note: ${attachments.length} attachment(s) could not be forwarded]`;
+      const { error: fallbackError } = await resend.emails.send({
+        ...emailPayload,
+        text: fallbackText,
+        attachments: [],
+      });
+      if (fallbackError) {
+        console.error("❌ Resend fallback also failed:", fallbackError);
+        return NextResponse.json({ ok: false }, { status: 500 });
       }
-    } else {
-      const { error } = await resend.emails.send(baseEmailPayload);
-      sendError = error;
     }
 
-    if (sendError) {
-      console.error("❌ Resend error sending Slack reply:", sendError);
-      return NextResponse.json({ ok: false }, { status: 500 });
-    }
-
-    // Mark the thread as open (reply sent, awaiting customer's next message)
+    emailThread.slackEventId = eventId ?? null;
     emailThread.status = "open";
     emailThread.statusUpdatedAt = new Date();
     emailThread.repliedAt = new Date();
@@ -224,5 +141,169 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 
+  return NextResponse.json({ ok: true });
+}
+
+// ── Handle Live Chat Reply ───────────────────────────────────────────────────
+async function handleLiveChatReply(
+  conversation: any,
+  replyText: string,
+  eventId?: string
+) {
+  try {
+    // Save agent message to DB
+    const chatMessage = await ChatMessage.create({
+      conversationId: conversation._id,
+      widgetId: conversation.widgetId,
+      sender: "agent",
+      body: replyText.trim(),
+      type: "text",
+      mediaUrl: "",
+    });
+
+    conversation.lastMessageAt = new Date();
+    await conversation.save();
+
+    // Push to Socket.IO server so visitor receives it in real-time
+    try {
+      const pushSecret = process.env.RENDER_PUSH_SECRET;
+      const renderUrl = process.env.NEXT_PUBLIC_RENDER_CHAT_SERVER_URL;
+      
+      if (renderUrl && pushSecret) {
+        await fetch(`${renderUrl}/push`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-push-secret": pushSecret,
+          },
+          body: JSON.stringify({
+            conversationId: conversation._id.toString(),
+            message: {
+              id: chatMessage._id.toString(),
+              sender: "agent",
+              body: chatMessage.body,
+              type: chatMessage.type,
+              mediaUrl: chatMessage.mediaUrl,
+              createdAt: chatMessage.createdAt,
+            },
+          }),
+        });
+      }
+    } catch (pushErr) {
+      console.error("❌ Failed to push Slack reply to chat server:", pushErr);
+    }
+
+    console.log(`✅ Slack→LiveChat reply sent for conversation ${conversation._id}`);
+  } catch (err) {
+    console.error("❌ Error processing Slack live chat reply:", err);
+    return NextResponse.json({ ok: false }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true });
+}
+
+async function verifySlackSignature(request: Request, rawBody: string): Promise<boolean> {
+  const signingSecret = process.env.SLACK_SIGNING_SECRET;
+  if (!signingSecret) return false;
+
+  const timestamp = request.headers.get("x-slack-request-timestamp");
+  const signature = request.headers.get("x-slack-signature");
+  if (!timestamp || !signature) return false;
+
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - parseInt(timestamp, 10)) > 300) return false;
+
+  const baseString = `v0:${timestamp}:${rawBody}`;
+  const computed = "v0=" + crypto.createHmac("sha256", signingSecret).update(baseString).digest("hex");
+
+  try {
+    return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(signature));
+  } catch {
+    return false;
+  }
+}
+
+export async function POST(request: Request) {
+  const rawBody = await request.text();
+
+  const valid = await verifySlackSignature(request, rawBody);
+  if (!valid) return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+
+  let payload: Record<string, unknown>;
+  try {
+    payload = JSON.parse(rawBody);
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  if (payload.type === "url_verification") {
+    return NextResponse.json({ challenge: payload.challenge });
+  }
+
+  if (payload.type !== "event_callback") return NextResponse.json({ ok: true });
+
+  const event = payload.event as Record<string, unknown>;
+
+  if (
+    event.type !== "message" ||
+    event.subtype === "bot_message" ||
+    event.subtype === "thread_broadcast" ||
+    event.subtype === "message_changed" ||
+    event.subtype === "message_deleted" ||
+    event.bot_id !== undefined ||
+    !event.thread_ts ||
+    event.thread_ts === event.ts
+  ) {
+    return NextResponse.json({ ok: true });
+  }
+
+  const threadTs = event.thread_ts as string;
+  const channelId = event.channel as string;
+  const replyText = ((event.text as string) || "").trim();
+
+  const slackFiles: Array<Record<string, unknown>> = [
+    ...((event.files as Array<Record<string, unknown>> | undefined) || []),
+    ...(event.file ? [event.file as Record<string, unknown>] : []),
+  ];
+
+  if (!replyText && slackFiles.length === 0) return NextResponse.json({ ok: true });
+
+  await dbConnect();
+
+  // ── Deduplication ─────────────────────────────────────────────────────────
+  // Slack retries the event if we don't respond within 3 seconds, which causes
+  // duplicate emails. We store the event_id and skip if already processed.
+  const eventId = payload.event_id as string | undefined;
+  if (eventId) {
+    const alreadyProcessed = await EmailThread.exists({ slackEventId: eventId });
+    if (alreadyProcessed) {
+      console.log("⚡ Duplicate Slack event — skipping:", eventId);
+      return NextResponse.json({ ok: true });
+    }
+  }
+
+  // Try to match an email thread first
+  const emailThread = await EmailThread.findOne({
+    slackMessageTs: threadTs,
+    slackChannelId: channelId,
+    direction: "inbound",
+  });
+
+  // If email thread found, handle email reply (existing logic)
+  if (emailThread) {
+    return await handleEmailThreadReply(emailThread, replyText, slackFiles, channelId, eventId);
+  }
+
+  // Try to match a live chat conversation
+  const chatConversation = await ChatConversation.findOne({
+    slackThreadTs: threadTs,
+    slackChannelId: channelId,
+  });
+
+  if (chatConversation) {
+    return await handleLiveChatReply(chatConversation, replyText, eventId);
+  }
+
+  // No match found - ignore
   return NextResponse.json({ ok: true });
 }

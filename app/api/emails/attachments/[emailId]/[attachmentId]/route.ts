@@ -38,15 +38,17 @@ export async function GET(
     return NextResponse.json({ error: "Attachment not found" }, { status: 404 });
   }
 
-  // Fetch the attachment content from Resend's API
-  const resendRes = await fetch(
-    `https://api.resend.com/emails/receiving/${thread.originalEmailId}/attachments/${attachmentId}`,
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      },
-    }
-  );
+  // Fetch the attachment content from Resend using the stored download_url
+  // (NOT /attachments/{id} which returns JSON metadata — use the download_url directly)
+  if (!attachmentMeta.download_url) {
+    return NextResponse.json({ error: "No download URL stored for this attachment" }, { status: 404 });
+  }
+
+  const resendRes = await fetch(attachmentMeta.download_url, {
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+    },
+  });
 
   if (!resendRes.ok) {
     console.error("❌ Resend attachment fetch failed:", resendRes.status, resendRes.statusText);
