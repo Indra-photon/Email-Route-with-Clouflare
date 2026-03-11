@@ -408,21 +408,6 @@ export default function ChatEmbedPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                     <p className="text-white font-semibold text-sm leading-tight">Live Support</p>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                        <span
-                            className="w-2 h-2 rounded-full flex-shrink-0"
-                            style={{
-                                background: !isConnected ? "#fbbf24" : agentOnline ? "#4ade80" : "#f87171",
-                            }}
-                        />
-                        <span className="text-white/80 text-xs truncate">
-                            {!isConnected
-                                ? "Connecting…"
-                                : agentOnline
-                                    ? "Agent Online"
-                                    : "No agents online"}
-                        </span>
-                    </div>
                 </div>
             </div>
 
