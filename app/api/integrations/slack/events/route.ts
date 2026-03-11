@@ -9,13 +9,9 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// ── Slack signature verification ────────────────────────────────────────────
 async function verifySlackSignature(request: Request, rawBody: string): Promise<boolean> {
   const signingSecret = process.env.SLACK_SIGNING_SECRET;
-  if (!signingSecret) {
-    console.error("SLACK_SIGNING_SECRET not configured");
-    return false;
-  }
+  if (!signingSecret) return false;
 
   const timestamp = request.headers.get("x-slack-request-timestamp");
   const signature = request.headers.get("x-slack-signature");
@@ -25,10 +21,7 @@ async function verifySlackSignature(request: Request, rawBody: string): Promise<
   if (Math.abs(now - parseInt(timestamp, 10)) > 300) return false;
 
   const baseString = `v0:${timestamp}:${rawBody}`;
-  const computed = "v0=" + crypto
-    .createHmac("sha256", signingSecret)
-    .update(baseString)
-    .digest("hex");
+  const computed = "v0=" + crypto.createHmac("sha256", signingSecret).update(baseString).digest("hex");
 
   try {
     return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(signature));
@@ -41,9 +34,7 @@ export async function POST(request: Request) {
   const rawBody = await request.text();
 
   const valid = await verifySlackSignature(request, rawBody);
-  if (!valid) {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-  }
+  if (!valid) return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
 
   let payload: Record<string, unknown>;
   try {
@@ -56,9 +47,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ challenge: payload.challenge });
   }
 
-  if (payload.type !== "event_callback") {
-    return NextResponse.json({ ok: true });
-  }
+  if (payload.type !== "event_callback") return NextResponse.json({ ok: true });
 
   const event = payload.event as Record<string, unknown>;
 
@@ -88,6 +77,18 @@ export async function POST(request: Request) {
 
   await dbConnect();
 
+  // ── Deduplication ─────────────────────────────────────────────────────────
+  // Slack retries the event if we don't respond within 3 seconds, which causes
+  // duplicate emails. We store the event_id and skip if already processed.
+  const eventId = payload.event_id as string | undefined;
+  if (eventId) {
+    const alreadyProcessed = await EmailThread.exists({ slackEventId: eventId });
+    if (alreadyProcessed) {
+      console.log("⚡ Duplicate Slack event — skipping:", eventId);
+      return NextResponse.json({ ok: true });
+    }
+  }
+
   const emailThread = await EmailThread.findOne({
     slackMessageTs: threadTs,
     slackChannelId: channelId,
@@ -105,9 +106,7 @@ export async function POST(request: Request) {
     const referencesHeader = references.join(" ");
 
     const alias = await Alias.findById(emailThread.aliasId).lean();
-    const domain = alias
-      ? await Domain.findOne({ _id: alias.domainId }).lean()
-      : null;
+    const domain = alias ? await Domain.findOne({ _id: alias.domainId }).lean() : null;
 
     const fallbackEmail = process.env.REPLY_FROM_EMAIL || "onboarding@resend.dev";
     const fallbackName = process.env.REPLY_FROM_NAME || "Email Router";
@@ -119,11 +118,7 @@ export async function POST(request: Request) {
       fromAddress = fallbackName ? `${fallbackName} <${fallbackEmail}>` : fallbackEmail;
     }
 
-    // ── Download Slack files and build attachments ─────────────────────────
-    // Uses the exact pattern from Resend's official docs:
-    // { filename: string, content: base64string }
-    // Sends as a regular downloadable attachment — reliable in all email clients.
-    // No CID/inline tricks — those get blocked by Gmail for external senders.
+    // ── Download Slack files ───────────────────────────────────────────────
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const attachments: any[] = [];
 
@@ -136,51 +131,51 @@ export async function POST(request: Request) {
 
       if (botToken) {
         for (const file of slackFiles) {
-          const downloadUrl = (file.url_private_download || file.url_private) as string | undefined;
+          const fileId = file.id as string | undefined;
           const filename = (file.name || file.title || "attachment") as string;
-          if (!downloadUrl) continue;
 
           try {
-            // Slack's url_private_download redirects to a CDN URL.
-            // fetch() follows redirects automatically but drops the Authorization
-            // header on redirect — the CDN returns an XML AccessDenied error,
-            // which gets base64-encoded and sent as the "image" (corrupt file).
-            // Fix: manually follow the redirect, only sending auth on the first request.
-            const firstRes = await fetch(downloadUrl, {
-              headers: { Authorization: `Bearer ${botToken}` },
-              redirect: "manual", // don't auto-follow — we'll handle it
-            });
+            // Use files.info to get a fresh, stable download URL.
+            // url_private_download can redirect to a CDN that drops the
+            // Authorization header, returning an XML error page instead of
+            // the actual file bytes. files.info → url_private is served
+            // directly by Slack with a valid bot token — no CDN redirect.
+            let downloadUrl = (file.url_private_download || file.url_private) as string | undefined;
 
-            let fileRes: Response;
-            if (firstRes.status === 301 || firstRes.status === 302 || firstRes.status === 307 || firstRes.status === 308) {
-              const redirectUrl = firstRes.headers.get("location");
-              if (!redirectUrl) {
-                console.warn(`⚠️ Slack redirect had no location header: ${filename}`);
-                continue;
+            if (fileId) {
+              const infoRes = await fetch(`https://slack.com/api/files.info?file=${fileId}`, {
+                headers: { Authorization: `Bearer ${botToken}` },
+              });
+              const infoData = await infoRes.json();
+              if (infoData.ok && infoData.file?.url_private) {
+                downloadUrl = infoData.file.url_private;
               }
-              // Follow redirect WITHOUT Authorization header (CDN doesn't need it)
-              fileRes = await fetch(redirectUrl);
-            } else {
-              fileRes = firstRes;
             }
+
+            if (!downloadUrl) {
+              console.warn("⚠️ No download URL for file:", filename);
+              continue;
+            }
+
+            const fileRes = await fetch(downloadUrl, {
+              headers: { Authorization: `Bearer ${botToken}` },
+            });
 
             if (!fileRes.ok) {
               console.warn(`⚠️ Slack file download failed (${fileRes.status}): ${filename}`);
               continue;
             }
 
-            // Verify we got actual file bytes, not an error page
-            const contentType = fileRes.headers.get("content-type") || "";
-            if (contentType.includes("text/html") || contentType.includes("application/xml") || contentType.includes("text/xml")) {
-              console.warn(`⚠️ Slack returned ${contentType} instead of file — skipping: ${filename}`);
+            const arrayBuf = await fileRes.arrayBuffer();
+            if (arrayBuf.byteLength === 0) {
+              console.warn(`⚠️ Empty file skipped: ${filename}`);
               continue;
             }
 
-            const content = Buffer.from(await fileRes.arrayBuffer()).toString("base64");
-            attachments.push({ filename, content });
-            console.log(`📎 Attachment ready: ${filename} (${contentType})`);
+            attachments.push({ filename, content: Buffer.from(arrayBuf).toString("base64") });
+            console.log(`📎 Attachment ready: ${filename} (${arrayBuf.byteLength} bytes)`);
           } catch (e) {
-            console.warn("⚠️ Could not download Slack file:", filename, e);
+            console.warn("⚠️ Could not process Slack file:", filename, e);
           }
         }
       } else {
@@ -204,7 +199,6 @@ export async function POST(request: Request) {
     const { error } = await resend.emails.send(emailPayload);
 
     if (error) {
-      // Fallback: retry text-only so the reply still gets through
       console.warn("⚠️ Resend rejected with attachments, retrying text-only:", error);
       const fallbackText = `${replyText}\n\n[Note: ${attachments.length} attachment(s) could not be forwarded]`;
       const { error: fallbackError } = await resend.emails.send({
@@ -218,6 +212,9 @@ export async function POST(request: Request) {
       }
     }
 
+    // Save event ID first to claim this event — prevents duplicates if save
+    // takes long enough for Slack to fire a second retry
+    emailThread.slackEventId = eventId ?? null;
     emailThread.status = "open";
     emailThread.statusUpdatedAt = new Date();
     emailThread.repliedAt = new Date();
