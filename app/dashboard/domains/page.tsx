@@ -6,7 +6,6 @@ import { getOrCreateWorkspaceForCurrentUser } from "@/app/api/workspace/helpers"
 import { Domain } from "@/app/api/models/DomainModel";
 import DomainAddForm from "@/components/dashboard/DomainAddForm";
 import DomainsTable from "@/components/dashboard/DomainsTable";
-import DomainsLoading from "./loading";
 import { Heading } from "@/components/Heading";
 import { Paragraph } from "@/components/Paragraph";
 
@@ -49,10 +48,12 @@ export default async function DomainsPage() {
         </Paragraph>
       </div>
 
+      <DomainsTable initialDomains={domains} />
+
       {/* Table is the only Client Component — handles optimistic updates */}
-      <Suspense fallback={<DomainsLoading />}>
+      {/* <Suspense fallback={<DomainsLoading />}>
         <DomainsTable initialDomains={domains} />
-      </Suspense>
+      </Suspense> */}
     </div>
   );
 }
