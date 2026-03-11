@@ -141,9 +141,11 @@ export async function POST(request: Request) {
     }
 
     // ── Download any files attached in the Slack reply ─────────────────────
-    // Use base64 string + content_type so Gmail renders images correctly.
+    // Images use CID inline embedding (contentId) so Gmail renders them in the
+    // email body. Non-image files are sent as regular attachments.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const attachments: any[] = [];
+    let inlineImagesHtml = ""; // accumulated <img> tags for inline images
 
     if (slackFiles.length > 0) {
       // Find the bot token for this channel's integration
@@ -165,11 +167,27 @@ export async function POST(request: Request) {
             });
             if (fileRes.ok) {
               const base64Content = Buffer.from(await fileRes.arrayBuffer()).toString("base64");
-              attachments.push({
-                filename,
-                content: base64Content,
-                ...(mimeType ? { content_type: mimeType } : {}),
-              });
+              const isImage = mimeType.startsWith("image/");
+
+              if (isImage) {
+                // Inline embed via CID — Gmail renders this as an inline image
+                const contentId = `slack-file-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+                attachments.push({
+                  filename,
+                  content: base64Content,
+                  contentId,          // Resend's CID field
+                });
+                inlineImagesHtml += `<br/><img src="cid:${contentId}" alt="${filename}" style="max-width:100%;"/>`;
+                console.log(`📎 Inline CID image: ${filename} → cid:${contentId}`);
+              } else {
+                // Regular attachment for non-images (PDFs, docs, etc.)
+                attachments.push({
+                  filename,
+                  content: base64Content,
+                  content_type: mimeType,
+                });
+                console.log(`📎 Regular attachment: ${filename}`);
+              }
             } else {
               console.warn(`⚠️ Slack file download returned ${fileRes.status} for: ${filename}`);
             }
@@ -183,12 +201,18 @@ export async function POST(request: Request) {
     }
 
     // ── Send email via Resend ─────────────────────────────────────────────
-    // Try with attachments first; if Resend rejects, fall back to text-only
+    // If there are inline images, send as HTML so the <img cid:> tags resolve.
+    const hasInlineImages = inlineImagesHtml.length > 0;
+    const htmlBody = hasInlineImages
+      ? `<p>${replyText.replace(/\n/g, "<br/>")}</p>${inlineImagesHtml}`
+      : undefined;
+
     const baseEmailPayload = {
       from: fromAddress,
       to: emailThread.from,
       subject: replySubject,
       text: replyText || "(see attachment)",
+      ...(htmlBody ? { html: htmlBody } : {}),
       headers: {
         "In-Reply-To": emailThread.messageId,
         ...(referencesHeader ? { References: referencesHeader } : {}),
@@ -203,7 +227,7 @@ export async function POST(request: Request) {
         console.warn("⚠️ Resend rejected email with attachments, retrying text-only:", error);
         // Fallback: send text only, mention attachments couldn't be forwarded
         const fallbackText = `${replyText}\n\n[Note: ${attachments.length} attachment(s) could not be forwarded]`;
-        const { error: fallbackError } = await resend.emails.send({ ...baseEmailPayload, text: fallbackText });
+        const { error: fallbackError } = await resend.emails.send({ ...baseEmailPayload, text: fallbackText, html: undefined });
         sendError = fallbackError;
       }
     } else {
