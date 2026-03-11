@@ -141,18 +141,44 @@ export async function POST(request: Request) {
           if (!downloadUrl) continue;
 
           try {
-            const fileRes = await fetch(downloadUrl, {
+            // Slack's url_private_download redirects to a CDN URL.
+            // fetch() follows redirects automatically but drops the Authorization
+            // header on redirect — the CDN returns an XML AccessDenied error,
+            // which gets base64-encoded and sent as the "image" (corrupt file).
+            // Fix: manually follow the redirect, only sending auth on the first request.
+            const firstRes = await fetch(downloadUrl, {
               headers: { Authorization: `Bearer ${botToken}` },
+              redirect: "manual", // don't auto-follow — we'll handle it
             });
+
+            let fileRes: Response;
+            if (firstRes.status === 301 || firstRes.status === 302 || firstRes.status === 307 || firstRes.status === 308) {
+              const redirectUrl = firstRes.headers.get("location");
+              if (!redirectUrl) {
+                console.warn(`⚠️ Slack redirect had no location header: ${filename}`);
+                continue;
+              }
+              // Follow redirect WITHOUT Authorization header (CDN doesn't need it)
+              fileRes = await fetch(redirectUrl);
+            } else {
+              fileRes = firstRes;
+            }
 
             if (!fileRes.ok) {
               console.warn(`⚠️ Slack file download failed (${fileRes.status}): ${filename}`);
               continue;
             }
 
+            // Verify we got actual file bytes, not an error page
+            const contentType = fileRes.headers.get("content-type") || "";
+            if (contentType.includes("text/html") || contentType.includes("application/xml") || contentType.includes("text/xml")) {
+              console.warn(`⚠️ Slack returned ${contentType} instead of file — skipping: ${filename}`);
+              continue;
+            }
+
             const content = Buffer.from(await fileRes.arrayBuffer()).toString("base64");
             attachments.push({ filename, content });
-            console.log(`📎 Attachment ready: ${filename}`);
+            console.log(`📎 Attachment ready: ${filename} (${contentType})`);
           } catch (e) {
             console.warn("⚠️ Could not download Slack file:", filename, e);
           }
