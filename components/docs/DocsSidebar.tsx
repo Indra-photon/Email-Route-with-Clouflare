@@ -1,210 +1,3 @@
-// "use client";
-
-// import { useState } from "react";
-// import { CustomLink } from "@/components/CustomLink";
-// import { ChevronDown, Menu, X } from "lucide-react";
-// import { motion, AnimatePresence } from "motion/react";
-// import { usePathname } from "next/navigation";
-
-// interface DocSection {
-//   title: string;
-//   items: {
-//     title: string;
-//     href: string;
-//   }[];
-// }
-
-// const docSections: DocSection[] = [
-//   {
-//     title: "Getting Started",
-//     items: [
-//       { title: "Introduction", href: "/docs" },
-//       // { title: "Quick Start", href: "/docs/getting-started" },
-//     ],
-//   },
-//   {
-//     title: "Domain Setup",
-//     items: [
-//       { title: "Add Your Domain", href: "/docs/domains" },
-//     ],
-//   },
-//   {
-//     title: "Integrations",
-//     items: [
-//       { title: "Slack Integration", href: "/docs/integrations/slack" },
-//       { title: "Discord Integration", href: "/docs/integrations/discord" },
-//     ],
-//   },
-//   {
-//     title: "Email Aliases",
-//     items: [
-//       { title: "Create an Alias", href: "/docs/aliases" },
-//     ],
-//   },
-//   {
-//     title: "Ticket Management",
-//     items: [
-//       { title: "View Tickets", href: "/docs/tickets" },
-//     ],
-//   },
-//   {
-//     title: "Chatbot",
-//     items: [
-//       { title: "Install Widget", href: "/docs/chatbot" },
-//     ],
-//   },
-//   // {
-//   //   title: "API Reference",
-//   //   items: [
-//   //     { title: "Authentication", href: "/docs/api" },
-//   //   ],
-//   // },
-//   // {
-//   //   title: "Advanced",
-//   //   items: [
-//   //     { title: "Email Forwarding", href: "/docs/advanced" },
-//   //   ],
-//   // },
-//   // {
-//   //   title: "Troubleshooting",
-//   //   items: [
-//   //     { title: "Common Issues", href: "/docs/troubleshooting" },
-//   //   ],
-//   // },
-//   // {
-//   //   title: "Resources",
-//   //   items: [
-//   //     { title: "Changelog", href: "/docs/resources" },
-//   //   ],
-//   // },
-// ];
-
-// export function DocsSidebar() {
-//   const [mobileOpen, setMobileOpen] = useState(false);
-//   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-//     new Set(docSections.map((s) => s.title))
-//   );
-//   const pathname = usePathname();
-
-//   const toggleSection = (title: string) => {
-//     setExpandedSections((prev) => {
-//       const next = new Set(prev);
-//       if (next.has(title)) {
-//         next.delete(title);
-//       } else {
-//         next.add(title);
-//       }
-//       return next;
-//     });
-//   };
-
-//   const isActive = (href: string) => pathname === href;
-
-//   const SidebarContent = () => (
-//     <nav className="space-y-6">
-//       {docSections.map((section) => {
-//         const isExpanded = expandedSections.has(section.title);
-//         return (
-//           <div key={section.title}>
-//             <button
-//               onClick={() => toggleSection(section.title)}
-//               className="flex w-full items-center justify-between text-sm font-schibsted font-semibold text-neutral-900 mb-2"
-//             >
-//               {section.title}
-//               <ChevronDown
-//                 className={`size-4 transition-transform ${
-//                   isExpanded ? "rotate-180" : ""
-//                 }`}
-//               />
-//             </button>
-//             <AnimatePresence>
-//               {isExpanded && (
-//                 <motion.ul
-//                   initial={{ height: 0, opacity: 0 }}
-//                   animate={{ height: "auto", opacity: 1 }}
-//                   exit={{ height: 0, opacity: 0 }}
-//                   transition={{ duration: 0.2 }}
-//                   className="space-y-1 overflow-hidden"
-//                 >
-//                   {section.items.map((item) => (
-//                     <li key={item.href}>
-//                       <CustomLink
-//                         href={item.href}
-//                         className={`block rounded-lg px-3 py-2 text-sm font-schibsted font-medium transition-colors ${
-//                           isActive(item.href)
-//                             ? "bg-sky-100 text-sky-800 font-semibold"
-//                             : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
-//                         }`}
-//                       >
-//                         {item.title}
-//                       </CustomLink>
-//                     </li>
-//                   ))}
-//                 </motion.ul>
-//               )}
-//             </AnimatePresence>
-//           </div>
-//         );
-//       })}
-//     </nav>
-//   );
-
-//   return (
-//     <>
-//       {/* Mobile Toggle Button */}
-//       <button
-//         onClick={() => setMobileOpen(!mobileOpen)}
-//         className="lg:hidden fixed top-4 left-4 z-50 rounded-lg bg-white p-2 shadow-lg border border-neutral-200"
-//       >
-//         {mobileOpen ? (
-//           <X className="size-5 text-neutral-900" />
-//         ) : (
-//           <Menu className="size-5 text-neutral-900" />
-//         )}
-//       </button>
-
-//       {/* Mobile Sidebar */}
-//       <AnimatePresence>
-//         {mobileOpen && (
-//           <>
-//             <motion.div
-//               initial={{ opacity: 0 }}
-//               animate={{ opacity: 1 }}
-//               exit={{ opacity: 0 }}
-//               onClick={() => setMobileOpen(false)}
-//               className="lg:hidden fixed inset-0 bg-neutral-900/50 z-40"
-//             />
-//             <motion.aside
-//               initial={{ x: -320 }}
-//               animate={{ x: 0 }}
-//               exit={{ x: -320 }}
-//               transition={{ type: "spring", damping: 20 }}
-//               className="lg:hidden fixed top-0 left-0 bottom-0 w-80 bg-white border-r border-neutral-200 z-40 overflow-y-auto p-6"
-//             >
-//               <div className="mb-8">
-//                 <h2 className="text-lg font-schibsted font-semibold text-neutral-900">
-//                   Documentation
-//                 </h2>
-//               </div>
-//               <SidebarContent />
-//             </motion.aside>
-//           </>
-//         )}
-//       </AnimatePresence>
-
-//       {/* Desktop Sidebar */}
-//       <aside className="hidden lg:block sticky top-6 w-64 h-[calc(100vh-3rem)] overflow-y-auto pr-4">
-//         <div className="mb-8">
-//           <h2 className="text-lg font-schibsted font-semibold text-neutral-900">
-//             Documentation
-//           </h2>
-//         </div>
-//         <SidebarContent />
-//       </aside>
-//     </>
-//   );
-// }
-
 
 "use client";
 
@@ -215,7 +8,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-// ─── Easing curves (user-provided) ─────────────────────────────────
+// ─── Easing curves ──────────────────────────────────────────────────
 const easeOutCubic: [number, number, number, number] = [0.215, 0.61, 0.355, 1];
 const easeOutQuint: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
@@ -260,19 +53,17 @@ const docSections: DocSection[] = [
 ];
 
 // ─── Collapsible section items ──────────────────────────────────────
-// Uses measured height with overflow hidden. The height animation is
-// kept to a fast 200ms with easeOutCubic so it feels snappy.
-// Crucially: this ONLY animates when the user explicitly toggles a
-// section — not on route changes.
 
 function SectionItems({
   items,
   isExpanded,
   pathname,
+  itemRefs,
 }: {
   items: DocSection["items"];
   isExpanded: boolean;
   pathname: string;
+  itemRefs: React.MutableRefObject<Record<string, HTMLLIElement | null>>;
 }) {
   const contentRef = useRef<HTMLUListElement>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number>(0);
@@ -293,8 +84,6 @@ function SectionItems({
     return () => observer.disconnect();
   }, []);
 
-  const duration = 0.18;
-
   return (
     <motion.div
       initial={false}
@@ -303,35 +92,26 @@ function SectionItems({
         opacity: isExpanded ? 1 : 0,
       }}
       transition={{
-        height: { duration, ease: easeOutCubic },
-        opacity: { duration: duration * 0.7, ease: "easeOut" },
+        height: { duration: 0.18, ease: easeOutCubic },
+        opacity: { duration: 0.13, ease: "easeOut" },
       }}
       style={{ overflow: "hidden" }}
-      aria-hidden={!isExpanded}
     >
       <ul ref={contentRef} className="space-y-0.5 pb-1">
         {items.map((item) => {
           const isActive = pathname === item.href;
           return (
-            <li key={item.href} className="relative">
-              {isActive && (
-                <motion.div
-                  layoutId="docs-sidebar-active"
-                  className="absolute inset-0 rounded-lg bg-sky-50 border border-sky-100"
-                  transition={{
-                    type: "spring",
-                    stiffness: 380,
-                    damping: 28,
-                  }}
-                />
-              )}
+            <li
+              key={item.href}
+              ref={(el) => { itemRefs.current[item.href] = el; }}
+            >
               <CustomLink
                 href={item.href}
                 className={cn(
-                  "relative z-10 block rounded-lg py-2 text-sm font-medium transition-colors duration-150",
+                  "relative z-10 block rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-300 ease-out",
                   isActive
                     ? "text-sky-700 font-semibold"
-                    : "text-neutral-800 hover:text-neutral-900 hover:bg-neutral-50"
+                    : "text-neutral-800"
                 )}
               >
                 {item.title}
@@ -345,32 +125,32 @@ function SectionItems({
 }
 
 // ─── Single sidebar section ─────────────────────────────────────────
+
 function SidebarSection({
   section,
   isExpanded,
   onToggle,
   pathname,
+  itemRefs,
 }: {
   section: DocSection;
   isExpanded: boolean;
   onToggle: () => void;
   pathname: string;
+  itemRefs: React.MutableRefObject<Record<string, HTMLLIElement | null>>;
 }) {
   return (
     <div>
       <button
         onClick={onToggle}
-        className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wider text-neutral-400 hover:text-neutral-600 transition-colors duration-150 mb-1.5 py-1"
+        className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wider text-neutral-400 mb-1.5 py-1"
         aria-expanded={isExpanded}
       >
         {section.title}
         <motion.span
           initial={false}
           animate={{ rotate: isExpanded ? 180 : 0 }}
-          transition={{
-            duration: 0.18,
-            ease: easeOutCubic,
-          }}
+          transition={{ duration: 0.18, ease: easeOutCubic }}
         >
           <ChevronDown className="size-3.5" />
         </motion.span>
@@ -380,12 +160,14 @@ function SidebarSection({
         items={section.items}
         isExpanded={isExpanded}
         pathname={pathname}
+        itemRefs={itemRefs}
       />
     </div>
   );
 }
 
 // ─── Shared nav content ─────────────────────────────────────────────
+
 function SidebarNav({
   expandedSections,
   toggleSection,
@@ -397,22 +179,85 @@ function SidebarNav({
   pathname: string;
   onLinkClick?: () => void;
 }) {
+  const navRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<Record<string, HTMLLIElement | null>>({});
+
+  // Indicator position state
+  const [indicatorStyle, setIndicatorStyle] = useState<{
+    top: number;
+    height: number;
+    opacity: number;
+  }>({ top: 0, height: 0, opacity: 0 });
+
+  useEffect(() => {
+    const activeEl = itemRefs.current[pathname];
+    const navEl = navRef.current;
+
+    if (!activeEl || !navEl) {
+      setIndicatorStyle((prev) => ({ ...prev, opacity: 0 }));
+      return;
+    }
+
+    const navRect = navEl.getBoundingClientRect();
+    const itemRect = activeEl.getBoundingClientRect();
+
+    setIndicatorStyle({
+      top: itemRect.top - navRect.top + navEl.scrollTop,
+      height: itemRect.height,
+      opacity: 1,
+    });
+  }, [pathname, expandedSections]);
+
   return (
-    <nav className="space-y-4" onClick={onLinkClick}>
-      {docSections.map((section) => (
-        <SidebarSection
-          key={section.title}
-          section={section}
-          isExpanded={expandedSections.has(section.title)}
-          onToggle={() => toggleSection(section.title)}
-          pathname={pathname}
-        />
-      ))}
-    </nav>
+    <div ref={navRef} className="relative" onClick={onLinkClick}>
+      {/* ── Shared persistent background indicator ── */}
+      <motion.div
+        className="absolute left-0 right-0 rounded-lg pointer-events-none z-0"
+        animate={{
+          top: indicatorStyle.top,
+          height: indicatorStyle.height,
+          opacity: indicatorStyle.opacity,
+        }}
+        transition={{
+          top: { duration: 0.35, ease: easeOutQuint },
+          height: { duration: 0.25, ease: easeOutCubic },
+          opacity: { duration: 0.15, ease: "easeOut" },
+        }}
+      />
+
+      {/* ── Shared persistent left border indicator ── */}
+      <motion.div
+        className="absolute left-0 w-[3px] rounded-full bg-sky-600 pointer-events-none z-0"
+        animate={{
+          top: indicatorStyle.top + 4,
+          height: indicatorStyle.height - 8,
+          opacity: indicatorStyle.opacity,
+        }}
+        transition={{
+          top: { duration: 0.35, ease: easeOutQuint },
+          height: { duration: 0.25, ease: easeOutCubic },
+          opacity: { duration: 0.15, ease: "easeOut" },
+        }}
+      />
+
+      <nav className="space-y-4">
+        {docSections.map((section) => (
+          <SidebarSection
+            key={section.title}
+            section={section}
+            isExpanded={expandedSections.has(section.title)}
+            onToggle={() => toggleSection(section.title)}
+            pathname={pathname}
+            itemRefs={itemRefs}
+          />
+        ))}
+      </nav>
+    </div>
   );
 }
 
 // ─── Main export ────────────────────────────────────────────────────
+
 export function DocsSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
@@ -432,7 +277,7 @@ export function DocsSidebar() {
     });
   }, []);
 
-  // Auto-expand section containing the active route (without collapsing others)
+  // Auto-expand section containing the active route
   useEffect(() => {
     const activeSection = docSections.find((section) =>
       section.items.some((item) => item.href === pathname)
@@ -468,10 +313,7 @@ export function DocsSidebar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{
-                duration: 0.2,
-                ease: easeOutCubic,
-              }}
+              transition={{ duration: 0.2, ease: easeOutCubic }}
               onClick={closeMobile}
               className="lg:hidden fixed inset-0 bg-neutral-900/40 backdrop-blur-[2px] z-40"
             />
@@ -480,10 +322,7 @@ export function DocsSidebar() {
               initial={{ x: "-100%", opacity: 0.8 }}
               animate={{ x: "0%", opacity: 1 }}
               exit={{ x: "-100%", opacity: 0.8 }}
-              transition={{
-                duration: 0.3,
-                ease: easeOutQuint,
-              }}
+              transition={{ duration: 0.3, ease: easeOutQuint }}
               className="lg:hidden fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-white z-40 overflow-y-auto overscroll-contain"
             >
               <div className="p-6">

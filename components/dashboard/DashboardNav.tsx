@@ -18,7 +18,8 @@ import {
 } from "lucide-react";
 
 import { IconMail, IconDashboard, IconInbox, IconGlobe, IconAtSign, IconZap } from "@/constants/icons";
-import { IconMessageCircle, IconMessages } from "@tabler/icons-react";
+import { IconExternalLink, IconMessageCircle, IconMessages } from "@tabler/icons-react";
+import { CustomLink } from "../CustomLink";
 
 const navItems = [
   {
@@ -43,14 +44,14 @@ const navItems = [
     icon: IconGlobe,
   },
   {
-    href: "/dashboard/aliases",
-    label: "Aliases",
-    icon: IconAtSign,
-  },
-  {
     href: "/dashboard/integrations",
     label: "Integrations",
     icon: IconZap,
+  },
+  {
+    href: "/dashboard/aliases",
+    label: "Aliases",
+    icon: IconAtSign,
   },
   {
     href: "/dashboard/chat-widgets",
@@ -160,16 +161,19 @@ export default function DashboardNav({ children }: { children: ReactNode }) {
 
         {/* Bottom section - User info or help link (optional) */}
         <div className="mt-8 px-3">
-          <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-            <p className="text-xs font-schibsted font-medium text-neutral-900 mb-1">
+          <div className="rounded-lg bg-gradient-to-t from-sky-900 to-cyan-700 border border-neutral-50 p-3">
+            <p className="text-xs font-schibsted font-medium text-neutral-50 pb-2">
               Need Help?
             </p>
-            <Link
+            <CustomLink
               href="/docs"
-              className="text-xs font-schibsted font-normal text-sky-800 hover:text-sky-900 transition-colors"
+              className="flex text-sm font-schibsted font-normal text-white hover:text-neutral-100 transition-colors"
             >
-              View Documentation →
-            </Link>
+              <span className="size-4 mr-1">
+                <IconExternalLink size={16} className="text-neutral-50" />
+              </span>
+              View Documentation
+            </CustomLink>
           </div>
         </div>
       </aside>

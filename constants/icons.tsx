@@ -1,6 +1,6 @@
 'use client';
 import React from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 export const TrashIcon: React.FC<{ rotation: number }> = ({ rotation }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-2 -6 28 32" fill="none" 
@@ -24,6 +24,57 @@ export const TrashIcon: React.FC<{ rotation: number }> = ({ rotation }) => (
         <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
     </svg>
 )
+
+
+export interface TrashIconShakeProps {
+  size?: number;
+  color?: string;
+  className?: string;
+  isAnimating?: boolean;
+}
+
+export function TrashIconShake({
+  size = 24,
+  color = 'currentColor',
+  className = '',
+  isAnimating = false
+}: TrashIconShakeProps) {
+  return (
+    <motion.svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      animate={isAnimating ? "shake" : "idle"}
+      variants={{
+        idle: {
+          x: 0,
+          transition: { duration: 0 }
+        },
+        shake: {
+          x: [0, -2, 2, -2, 2, -1, 1, 0],
+          transition: {
+            duration: 0.5,
+            repeat: Infinity,
+            repeatDelay: 0.1,
+            ease: "easeInOut"
+          }
+        }
+      }}
+    >
+      <path d="M4 7h16" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+      <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+      <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+    </motion.svg>
+  );
+}
 
 // Sitemap Icon for "Smart email routing to Slack channels"
 export const SitemapIcon: React.FC<{ 
@@ -1416,4 +1467,66 @@ export function IconDiscord ({
 }
 
 
+  
 
+interface CopyIconProps {
+  copied: boolean;
+  size?: number;
+}
+
+const expoOut = [.075, .82, .165, 1] as const;
+
+export function CopyIcon({ copied, size = 18 }: CopyIconProps) {
+  return (
+    <span style={{ width: size, height: size, position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <AnimatePresence mode="wait" initial={false}>
+        {!copied ? (
+          <motion.svg
+            key="copy"
+            xmlns="http://www.w3.org/2000/svg"
+            width={size}
+            height={size}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ position: "absolute" }}
+            initial={{ opacity: 0.9, scale: 0.95, filter: "blur(1px)" }}
+            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0.9, scale: 0.95, filter: "blur(1px)" }}
+            transition={
+              copied
+                ? { duration: 0, }
+                : { duration: 0.05, ease: expoOut }
+            }
+            aria-hidden="true"
+          >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666" />
+            <path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" />
+          </motion.svg>
+        ) : (
+          <motion.svg
+            key="check"
+            xmlns="http://www.w3.org/2000/svg"
+            width={size}
+            height={size}
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            style={{ position: "absolute" }}
+            initial={{ opacity: 0, scale: 0.7, filter: "blur(1px)" }}
+            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, scale: 0.7, filter: "blur(1px)" }}
+            transition={{ duration: 0, }}
+            aria-hidden="true"
+          >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.293 5.953a1 1 0 0 0 -1.32 -.083l-.094 .083l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.403 1.403l.083 .094l2 2l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" />
+          </motion.svg>
+        )}
+      </AnimatePresence>
+    </span>
+  );
+}
