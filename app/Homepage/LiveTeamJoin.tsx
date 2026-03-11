@@ -1,41 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence, useSpring, useTransform } from "motion/react";
+import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "motion/react";
 
-// Random avatar faces from UI Faces / DiceBear style
-const AVATAR_POOL = [
-  "https://i.pravatar.cc/150?img=1",
-  "https://i.pravatar.cc/150?img=2",
-  "https://i.pravatar.cc/150?img=3",
-  "https://i.pravatar.cc/150?img=4",
-  "https://i.pravatar.cc/150?img=5",
-  "https://i.pravatar.cc/150?img=6",
-  "https://i.pravatar.cc/150?img=7",
-  "https://i.pravatar.cc/150?img=8",
-  "https://i.pravatar.cc/150?img=9",
-  "https://i.pravatar.cc/150?img=10",
-  "https://i.pravatar.cc/150?img=11",
-  "https://i.pravatar.cc/150?img=12",
-  "https://i.pravatar.cc/150?img=13",
-  "https://i.pravatar.cc/150?img=14",
-  "https://i.pravatar.cc/150?img=15",
-  "https://i.pravatar.cc/150?img=16",
-  "https://i.pravatar.cc/150?img=17",
-  "https://i.pravatar.cc/150?img=18",
-  "https://i.pravatar.cc/150?img=19",
-  "https://i.pravatar.cc/150?img=20",
-  "https://i.pravatar.cc/150?img=21",
-  "https://i.pravatar.cc/150?img=22",
-  "https://i.pravatar.cc/150?img=23",
-  "https://i.pravatar.cc/150?img=24",
-  "https://i.pravatar.cc/150?img=25",
-  "https://i.pravatar.cc/150?img=26",
-  "https://i.pravatar.cc/150?img=27",
-  "https://i.pravatar.cc/150?img=28",
-  "https://i.pravatar.cc/150?img=29",
-  "https://i.pravatar.cc/150?img=30",
-];
+const AVATAR_POOL = Array.from({ length: 30 }, (_, i) => `https://i.pravatar.cc/150?img=${i + 1}`);
 
 const GRADIENTS = [
   "from-cyan-400 to-cyan-500",
@@ -44,8 +12,6 @@ const GRADIENTS = [
   "from-sky-300 to-sky-400",
   "from-sky-500 to-cyan-400",
   "from-cyan-500 to-sky-300",
-  "from-sky-200 to-cyan-400",
-  "from-cyan-400 to-sky-600",
 ];
 
 interface AvatarData {
@@ -59,11 +25,7 @@ function getRandomAvatar(usedImages: string[]): AvatarData {
   const pool = available.length > 0 ? available : AVATAR_POOL;
   const image = pool[Math.floor(Math.random() * pool.length)];
   const gradient = GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)];
-  return {
-    id: Date.now() + Math.random(),
-    image,
-    gradient,
-  };
+  return { id: Date.now() + Math.random(), image, gradient };
 }
 
 function createInitialAvatars(): AvatarData[] {
@@ -77,23 +39,50 @@ function createInitialAvatars(): AvatarData[] {
   return avatars;
 }
 
-// Animated number counter with slot-machine roll
-function AnimatedCount({ value }: { value: number }) {
+function Avatar({ avatar, isNew }: { avatar: AvatarData; isNew: boolean }) {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+
   return (
-    <span className="inline-flex overflow-hidden relative" style={{ height: "1.2em" }}>
+    <motion.div
+      layout
+      className="relative w-11 h-11 rounded-full border-[3px] border-white shadow-md flex-shrink-0 overflow-hidden"
+      initial={isNew ? { opacity: 0, scale: 0.5 } : false}
+      animate={{ opacity: 1, scale: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20, scale: 0.8 }}
+      transition={
+        isNew
+          ? { duration: 0.5, ease: [0.34, 1.56, 0.64, 1] } // slow spring entrance
+          : { duration: 0.25, ease: [0.4, 0, 0.2, 1] }
+      }
+    >
+      <div className={`absolute inset-0 bg-gradient-to-br ${avatar.gradient}`} />
+      {!error && (
+        <img
+          src={avatar.image}
+          alt=""
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
+          onLoad={() => setLoaded(true)}
+          onError={() => setError(true)}
+        />
+      )}
+    </motion.div>
+  );
+}
+
+
+
+function CountUp({ value }: { value: number }) {
+  return (
+    <span className="overflow-hidden">
       <AnimatePresence mode="popLayout">
         <motion.span
           key={value}
-          initial={{ y: 14, opacity: 0, filter: "blur(2px)" }}
-          animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-          exit={{ y: -14, opacity: 0, filter: "blur(2px)" }}
-          transition={{
-            type: "spring",
-            stiffness: 350,
-            damping: 25,
-            mass: 0.8,
-          }}
-          className="text-sky-800 font-semibold"
+          className="text-sky-800 font-semibold inline-block"
+          initial={{ y: 12, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -12, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 28 }}
         >
           {value}+
         </motion.span>
@@ -102,139 +91,55 @@ function AnimatedCount({ value }: { value: number }) {
   );
 }
 
-// Single avatar orb
-function AvatarOrb({
-  avatar,
-  isEntering,
-  isExiting,
-}: {
-  avatar: AvatarData;
-  isEntering?: boolean;
-  isExiting?: boolean;
-}) {
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const [imgError, setImgError] = useState(false);
-
-  return (
-    <motion.div
-      layout
-      layoutId={`avatar-${avatar.id}`}
-      className="relative w-11 h-11 rounded-full border-[3px] border-white shadow-md flex-shrink-0 overflow-hidden"
-      initial={
-        isEntering
-          ? { x: -36, opacity: 0, scale: 0.7 }
-          : { x: 0, opacity: 1, scale: 1 }
-      }
-      animate={{ x: 0, opacity: 1, scale: 1 }}
-      exit={
-        isExiting
-          ? { x: 24, opacity: 0, scale: 0.75 }
-          : { opacity: 0, scale: 0.8 }
-      }
-      transition={
-        isEntering
-          ? {
-              type: "spring",
-              stiffness: 300,
-              damping: 18,
-              mass: 0.9,
-            }
-          : isExiting
-          ? {
-              duration: 0.35,
-              ease: [0.4, 0, 0.2, 1],
-            }
-          : {
-              type: "spring",
-              stiffness: 250,
-              damping: 22,
-            }
-      }
-    >
-      {/* Gradient fallback */}
-      <div
-        className={`absolute inset-0 rounded-full bg-gradient-to-br ${avatar.gradient}`}
-      />
-
-      {/* Face image */}
-      {!imgError && (
-        <img
-          src={avatar.image}
-          alt=""
-          className={`absolute inset-0 w-full h-full rounded-full object-cover transition-opacity duration-300 ${
-            imgLoaded ? "opacity-100" : "opacity-0"
-          }`}
-          onLoad={() => setImgLoaded(true)}
-          onError={() => setImgError(true)}
-        />
-      )}
-    </motion.div>
-  );
-}
-
 export function LiveTeamJoin({
   initialCount = 500,
-  intervalMs = 6000,
+  intervalMs = 3000,
 }: {
   initialCount?: number;
   intervalMs?: number;
 }) {
   const [avatars, setAvatars] = useState<AvatarData[]>(createInitialAvatars);
   const [count, setCount] = useState(initialCount);
-  const [enteringId, setEnteringId] = useState<number | null>(null);
-  const [exitingId, setExitingId] = useState<number | null>(null);
+  const [newId, setNewId] = useState<number | null>(null);
 
-  const cycleTeam = useCallback(() => {
+  const cycle = useCallback(() => {
     setAvatars((prev) => {
       const usedImages = prev.map((a) => a.image);
-      const newAvatar = getRandomAvatar(usedImages);
-
-      // Mark the last one as exiting, prepend the new one
-      setExitingId(prev[prev.length - 1].id);
-      setEnteringId(newAvatar.id);
-
-      // Remove last, add new at front
-      const next = [newAvatar, ...prev.slice(0, 3)];
-
-      // Clear entering/exiting flags after animation
-      setTimeout(() => {
-        setEnteringId(null);
-        setExitingId(null);
-      }, 900);
-
-      return next;
+      const next = getRandomAvatar(usedImages);
+      setNewId(next.id);
+      setTimeout(() => setNewId(null), 800);
+      return [next, ...prev.slice(0, 3)];
     });
-
-    // Counter updates slightly after the merge impact
-    setTimeout(() => {
-      setCount((c) => c + 1);
-    }, 400);
+    setTimeout(() => setCount((c) => c + 1), 350);
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(cycleTeam, intervalMs);
-    return () => clearInterval(timer);
-  }, [cycleTeam, intervalMs]);
+    const t = setInterval(cycle, intervalMs);
+    return () => clearInterval(t);
+  }, [cycle, intervalMs]);
 
   return (
-    <div className="flex items-center gap-4">
-      {/* Avatar stack with overflow clip */}
-      <div className="flex -space-x-3 overflow-hidden pl-1" style={{ clipPath: "inset(-4px -4px -4px 0px)" }}>
+    <div className="flex flex items-center gap-4">
+      <div
+        className="flex -space-x-3 w-40"
+        style={{ clipPath: "inset(-6px -6px -6px 0px)" }}
+      >
+        
         <AnimatePresence mode="popLayout" initial={false}>
-          {avatars.map((avatar) => (
-            <AvatarOrb
-              key={avatar.id}
-              avatar={avatar}
-              isEntering={avatar.id === enteringId}
-              isExiting={avatar.id === exitingId}
-            />
-          ))}
-        </AnimatePresence>
-      </div>
+          {avatars.map((avatar, index) => (
+            <motion.div
+                key={avatar.id}
+                animate={{ x: [0, -3, 1, 0] }}         // nudge left then settle
+                transition={{ duration: 0.4, delay: index * 0.04, ease: "easeOut" }}
+              >
+            <Avatar key={avatar.id} avatar={avatar} isNew={avatar.id === newId} />
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
 
-      {/* Counter text */}
-      <span className="text-base font-schibsted font-medium text-neutral-900">
-        <AnimatedCount value={count} /> teams already using
+      <span className="text-lg font-schibsted font-medium text-neutral-900 flex items-center justify-center gap-1">
+         <CountUp value={count} /> teams already using...
       </span>
     </div>
   );

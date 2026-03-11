@@ -143,6 +143,7 @@ import { Paragraph } from "@/components/Paragraph";
 import { LiveTeamJoin } from "./LiveTeamJoin";
 import { PerfectForSection } from "./PerfectForSection";
 import { UserTypeCards } from "./UserTypeCards";
+import HeroCTAPrimary, { HeroCTASecondary } from "@/components/HeroCTAPrimary";
 
 export function HeroSection() {
   const [activeView, setActiveView] = useState<'email' | 'chat'>('email');
@@ -166,7 +167,7 @@ export function HeroSection() {
                   as="h1" 
                   className="text-neutral-900 mb-6 leading-tight"
                 >
-                  Solve your customer tickets from <span className="text-sky-800">Slack.</span> Instant Support with <span className="text-sky-800">small team.</span>
+                  Solve your customer tickets from <span className="text-sky-800">One Workspace.</span> 
                 </Heading>
                 
                 {/* Subheading */}
@@ -175,26 +176,15 @@ export function HeroSection() {
                 </Paragraph>
 
                 {/* CTA Buttons */}
-                <div className="flex flex-col sm:flex-row gap-4 mb-10">
-                  <button className="px-6 py-4 bg-neutral-900 text-white font-schibsted font-semibold text-lg rounded-xl transition-all duration-200 hover:bg-neutral-800">
-                    Get Started Free
-                  </button>
-                  <button className="px-8 py-4 bg-white hover:bg-neutral-50 text-neutral-900 font-schibsted font-semibold text-lg rounded-xl border-2 border-neutral-300 transition-all duration-200 hover:border-neutral-400">
-                    See How It Works
-                  </button>
+                <div className="flex flex-col sm:flex-row gap-10 mb-10">
+                  <HeroCTAPrimary />
+                  <HeroCTASecondary />
                 </div>
+
                 
                 {/* Social Proof */}
                 <div className="flex items-center gap-4">
-                  <div className="flex -space-x-3">
-                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-500 border-3 border-white shadow-md"></div>
-                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-sky-400 to-sky-500 border-3 border-white shadow-md"></div>
-                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-cyan-300 to-cyan-400 border-3 border-white shadow-md"></div>
-                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-sky-300 to-sky-400 border-3 border-white shadow-md"></div>
-                  </div>
-                  <span className="text-base font-schibsted font-medium text-neutral-900">
-                    <span className="text-sky-800 font-semibold">500+</span> teams already using
-                  </span>
+                  <LiveTeamJoin initialCount={500} intervalMs={5000} />
                 </div>
 
                 {/* <UserTypeCards /> */}

@@ -146,11 +146,8 @@ export default function DashboardNav({ children }: { children: ReactNode }) {
       >
         {/* Logo/Brand */}
         <div className="mb-8 flex items-center gap-2 px-3">
-          <div className="rounded-lg bg-sky-100 p-2">
-            <Mail className="size-5 text-sky-800" />
-          </div>
           <h2 className="text-lg font-schibsted font-semibold text-neutral-900">
-            Email Router
+            Manage your tickets with ease
           </h2>
         </div>
 
