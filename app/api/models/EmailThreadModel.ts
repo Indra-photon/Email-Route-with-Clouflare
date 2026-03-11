@@ -33,6 +33,7 @@ export interface IEmailThread extends Document {
   // Slack thread tracking (for bidirectional Slack reply → email flow)
   slackMessageTs?: string | null;
   slackChannelId?: string | null;
+  slackEventId?: string | null;  // for deduplication — Slack retries if no 3s response
 
   // Ticket assignment fields
   assignedTo?: string;
@@ -145,6 +146,7 @@ const EmailThreadSchema = new Schema<IEmailThread>(
     // Slack thread tracking
     slackMessageTs: { type: String, default: null, index: true },
     slackChannelId: { type: String, default: null },
+    slackEventId:   { type: String, default: null, index: true, sparse: true },
 
     // Ticket assignment fields
     assignedTo: {
