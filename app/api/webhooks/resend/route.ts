@@ -299,6 +299,7 @@ export async function POST(request: Request) {
         id: a.id,
         filename: a.filename,
         content_type: a.content_type,
+        download_url: a.download_url,
         size: a.size,
       })),
       direction: "inbound",
@@ -443,9 +444,13 @@ ${snippet}
       if (attachmentMetas.length > 0 && integration.slackAccessToken) {
         for (const meta of attachmentMetas) {
           try {
-            // 1. Download the file from Resend
-            const fileRes = await fetch(meta.download_url);
-            if (!fileRes.ok) { console.warn("⚠️ Could not download attachment:", meta.filename); continue; }
+            // 1. Download the file content via the download_url Resend provides.
+            // NOTE: Do NOT construct /attachments/{id} — that returns JSON metadata,
+            // not binary content. meta.download_url is the actual file download URL.
+            const fileRes = await fetch(meta.download_url, {
+              headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+            });
+            if (!fileRes.ok) { console.warn("⚠️ Could not download attachment:", meta.filename, fileRes.status); continue; }
             const fileBuffer = Buffer.from(await fileRes.arrayBuffer());
             const fileSize = fileBuffer.length;
 

@@ -23,6 +23,7 @@ export interface IEmailThread extends Document {
     id: string;
     filename: string;
     content_type: string;
+    download_url?: string;
     size?: number;
   }>;
 
@@ -113,6 +114,7 @@ const EmailThreadSchema = new Schema<IEmailThread>(
           id: { type: String, required: true },
           filename: { type: String, required: true },
           content_type: { type: String, default: "application/octet-stream" },
+          download_url: { type: String },
           size: { type: Number },
         },
       ],
