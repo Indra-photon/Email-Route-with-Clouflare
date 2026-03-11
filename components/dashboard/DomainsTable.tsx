@@ -405,11 +405,13 @@ function ExpandedPanel({
   domainName,
   isOpen,
   initialDetail,
+  onStatusChange,
 }: {
   domainId: string;
   domainName: string;
   isOpen: boolean;
   initialDetail?: DomainRow["prefetchedDetail"];
+  onStatusChange?: (patch: Partial<DomainRow>) => void;
 }) {
   // Seed state with prefetched data if available — skips loading entirely on first open
   const [detail, setDetail] = useState<DomainDetail | null>(
@@ -485,9 +487,14 @@ function ExpandedPanel({
       // Merge with existing detail so no fields (like resendDomainId) get wiped
       if (data.domain) {
         setDetail((prev) => prev ? { ...prev, ...data.domain } : data.domain);
+        // Bubble status + verifiedForSending up so the card badge refreshes
+        onStatusChange?.({
+          status: data.domain.status,
+          verifiedForSending: data.domain.verifiedForSending,
+        });
       }
 
-      setCheckState("success");
+      setCheckState(data.verified ? "success" : "error");
       setTimeout(() => setCheckState("idle"), 2000);
     } catch {
       setCheckState("error");
@@ -638,10 +645,12 @@ type DeleteStatus = "idle" | "deleting" | "deleted";
 function DomainCard({ 
   domain,
   onDelete,
+  onStatusChange,
   index,
 }: {
   domain: DomainRow;
   onDelete: (id: string) => void;
+  onStatusChange?: (id: string, patch: Partial<DomainRow>) => void;
   index: number;
 }) {
   const [deleteStatus, setDeleteStatus] = useState<DeleteStatus>("idle");
@@ -649,11 +658,16 @@ function DomainCard({
   const isDeleted = deleteStatus === "deleted";
 
 
+  const [localStatus, setLocalStatus] = useState<Pick<DomainRow, "status" | "verifiedForSending">>({
+    status: domain.status,
+    verifiedForSending: domain.verifiedForSending,
+  });
+
   const getStatusBadge = () => {
-    if (domain.verifiedForSending || domain.status === "verified") {
+    if (localStatus.verifiedForSending || localStatus.status === "verified") {
       return <Badge className="bg-green-50 border border-green-900 text-green-800 dark:bg-green-900/30 dark:text-green-400 rounded-sm font-schibsted font-semibold">Verified</Badge>;
     }
-    if (domain.status === "active") {
+    if (localStatus.status === "active") {
       return <Badge className="bg-blue-100 border border-blue-900 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-sm font-schibsted font-semibold">Active</Badge>;
     }
     return <Badge className="bg-amber-100 border border-amber-900 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 rounded-sm font-schibsted font-semibold">Pending Verification</Badge>;
@@ -736,6 +750,10 @@ function DomainCard({
             domainName={domain.domain}
             isOpen={isOpen}
             initialDetail={domain.prefetchedDetail}
+            onStatusChange={(patch) => {
+              setLocalStatus((prev) => ({ ...prev, ...patch }));
+              onStatusChange?.(domain.id, patch);
+            }}
           />
         </motion.div>
       </Card>
@@ -779,6 +797,12 @@ export default function DomainsTable({ initialDomains }: { initialDomains: Domai
     setDomains((prev) => [domain, ...prev]);
   };
 
+  const handleStatusChange = (id: string, patch: Partial<DomainRow>) => {
+    setDomains((prev) =>
+      prev.map((d) => (d.id === id ? { ...d, ...patch } : d))
+    );
+  };
+
   return (
     <> 
 
@@ -805,7 +829,7 @@ export default function DomainsTable({ initialDomains }: { initialDomains: Domai
                 className="space-y-2"
                 >
                 {domains.map((d, index) => (
-                    <DomainCard key={d.id} domain={d} onDelete={handleDelete} index={index} />
+                    <DomainCard key={d.id} domain={d} onDelete={handleDelete} onStatusChange={handleStatusChange} index={index} />
                 ))}
                 </motion.div>
             )}
