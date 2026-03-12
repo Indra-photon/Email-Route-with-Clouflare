@@ -5,6 +5,8 @@ import { motion } from "motion/react";
 import { Heading } from "@/components/Heading";
 import { Paragraph } from "@/components/Paragraph";
 import { LaptopNotificationVisual } from "./LaptopNotificationVisual";
+import HeroCTAPrimary, { HeroCTASecondary } from "@/components/HeroCTAPrimary";
+import Link from "next/link";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -736,20 +738,40 @@ export function WhySlackDeskSection() {
     <section className="w-full bg-white py-16 md:py-20 lg:py-24">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 xl:px-0">
 
-        <Heading 
-        as="h2" 
-        className="text-neutral-900 mb-4 leading-tight font-semibold"
-        >
-        <motion.div
-            initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
-            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
-        >
-        Why teams switch to SlackDesk.
-        </motion.div>
-        </Heading>
-        <Paragraph variant="home-par">
+        <div className="flex items-center justify-between">
+          <Heading 
+          as="h2" 
+          className="text-neutral-900 mb-4 leading-tight font-semibold"
+          >
+            <motion.div
+                initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
+                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
+            >
+            Why teams switch to SlackDesk.
+            </motion.div>
+          </Heading>
+
+          <div>
+            <Link
+              href="/dashboard">
+                <motion.button
+              whileTap={{ scale: 0.97 }}
+              className="relative w-64 flex items-center justify-center gap-0 overflow-hidden rounded-2xl bg-gradient-to-b from-sky-900 to-cyan-700 shadow-lg cursor-pointer"
+            >
+      
+              {/* Text */}
+              <span
+                className="relative z-10 font-schibsted font-semibold text-white text-xl uppercase tracking-wide select-none px-8 py-4"
+              >
+                Get Started
+              </span>
+            </motion.button>
+              </Link>
+          </div>
+        </div>
+        <Paragraph variant="home-par" className="max-w-3xl">
         We stripped away the bloat and complexity. What's left is pure simplicity — a tool that works the way your team actually works.
         </Paragraph>
 

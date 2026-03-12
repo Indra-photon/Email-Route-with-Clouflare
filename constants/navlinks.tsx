@@ -23,6 +23,11 @@ export const navlinks = [
     icon: IconBriefcase2,
   },
   {
+    url: "/pricing",
+    label: "Pricing",
+    icon: IconMail,
+  },
+  {
     url: "/docs",
     label: "Docs",
     icon: IconArticle,

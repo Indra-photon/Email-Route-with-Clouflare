@@ -24,6 +24,8 @@ import { CopyIconButton } from "@/components/ui/CopyIconButton";
 import { Heading } from "../Heading";
 
 
+const easeOutCubic = [0.215, 0.61, 0.355, 1] as const;
+
 type DnsRecord = {
   record: string;
   name: string;
@@ -505,60 +507,17 @@ function ExpandedPanel({
   const isVerified = detail?.status === "verified" || detail?.verifiedForSending;
 
   return (
-    <motion.div layout
+    <motion.div 
+      layout
       transition={{ duration: 0.3, type: "spring", stiffness: 300, damping: 25 }}
       className="px-4 pb-4 pt-1 border-t border-neutral-100 dark:border-neutral-800 mt-1">
-      <AnimatePresence mode="wait" initial={false}>
-        {loadingDetail ? (
-            <motion.div
-                key="loading"
-                initial={{ opacity: 0.5, scale: 0.98, y: -2 }}
-                animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.2, ease: [.075, .82, .165, 1] } }}
-                exit={{ opacity: 0.5, scale: 0.98, y: -2, transition: { duration: 0.15, ease: [.075, .82, .165, 1] } }}
-                style={{ transformOrigin: "top left" }}
-                className="space-y-2"
-            >
-                {/* Label */}
-                <div className="h-3 w-48 rounded bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
-
-                {/* Table */}
-                <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
-                <table className="min-w-full text-xs">
-                    <thead>
-                    <tr className="bg-neutral-100 dark:bg-neutral-800">
-                        {[40, 48, 52, 80, 44].map((w, i) => (
-                        <th key={i} className="px-3 py-2 text-left">
-                            <div className={`h-2.5 rounded bg-neutral-300 dark:bg-neutral-600 animate-pulse`} style={{ width: w }} />
-                        </th>
-                        ))}
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {Array.from({ length: initialDetail?.dnsRecords?.length ?? 3 }).map((_, i) => (
-                        <tr key={i} className="border-t border-neutral-200 dark:border-neutral-700">
-                        <td className="px-3 py-2"><div className="h-2.5 w-8 rounded bg-neutral-200 dark:bg-neutral-700 animate-pulse" /></td>
-                        <td className="px-3 py-2"><div className="h-2.5 w-20 rounded bg-neutral-200 dark:bg-neutral-700 animate-pulse" /></td>
-                        <td className="px-3 py-2"><div className="h-2.5 w-24 rounded bg-neutral-200 dark:bg-neutral-700 animate-pulse" /></td>
-                        <td className="px-3 py-2"><div className="h-2.5 w-32 rounded bg-neutral-200 dark:bg-neutral-700 animate-pulse" /></td>
-                        <td className="px-3 py-2"><div className="h-2.5 w-10 rounded-full bg-neutral-200 dark:bg-neutral-700 animate-pulse" /></td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
-                </div>
-
-                {/* Button row */}
-                <div className="flex items-center gap-2 pt-1">
-                <div className="h-7 w-28 rounded-md bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
-                </div>
-            </motion.div>
-        ) : (
-          <motion.div
+      <AnimatePresence mode="wait">
+        <motion.div
             key="content"
             layout
-            initial={{ opacity: 0.5, scale: 0.98, y: -2 }}
-            animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.25, ease: [.075, .82, .165, 1] } }}
-            exit={{ opacity: 0.5, scale: 0.98, y: -2, transition: { duration: 0.15, ease: [.075, .82, .165, 1] } }}
+            initial={{ opacity: 0.5, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1, transition: { duration: 0.10, ease: [.075, .82, .165, 1] } }}
+            exit={{ opacity: 0.5, scale: 0.98, transition: { duration: 0.10, ease: [.075, .82, .165, 1] } }}
             style={{ transformOrigin: "top left" }}
             className="space-y-4"
           >
@@ -631,7 +590,6 @@ function ExpandedPanel({
               </Paragraph>
             </div> */}
           </motion.div>
-        )}
 
       </AnimatePresence>
     </motion.div>
@@ -815,11 +773,23 @@ export default function DomainsTable({ initialDomains }: { initialDomains: Domai
   };
 
   return (
-    <> 
+    <motion.div
+      initial={{ opacity: 0.90, scale: 0.95, y: 2 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.03, ease: easeOutCubic }}
+      className="space-y-6"
+    >
+
+      <div>
+        <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">Add Your Domains</Heading>
+        <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400">
+          Add and verify your domains to use for email aliases.
+        </Paragraph>
+      </div>
 
       <DomainAddForm onDomainAdded={handleDomainAdded} />
 
-      <div className="border-2 border-dashed border-neutral-200 rounded-xl px-4 pt-3 pb-3">
+      <div className=" pt-3 pb-3">
 
         <Card className="min-h-[120px] overflow-hidden">
             <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">Your Domains</Heading>
@@ -847,6 +817,6 @@ export default function DomainsTable({ initialDomains }: { initialDomains: Domai
             </AnimatePresence>
         </Card>
         </div>
-    </>
+    </motion.div>
   );
 }

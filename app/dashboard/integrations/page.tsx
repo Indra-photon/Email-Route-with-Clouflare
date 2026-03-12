@@ -478,8 +478,10 @@ function LoadingState() {
       transition={{ duration: 0.2, ease: easeOutCubic }}
       className="flex items-center justify-center py-12 gap-2"
     >
-      <RefreshCw className="size-8 text-neutral-400 animate-spin" />
-      <Paragraph variant="muted" className="text-xs">Loading integrations...</Paragraph>
+      <div className="flex flex-col items-center gap-4">
+        <RefreshCw className="size-8 text-neutral-400 animate-spin" />
+      <Paragraph variant="muted" className="text-xs">Loading aliases...</Paragraph>
+      </div>
     </motion.div>
   );
 }
@@ -535,7 +537,12 @@ export default function IntegrationsPage() {
 
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      initial={{ opacity: 0.90, scale: 0.95, y: 2, }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.03, ease: easeOutCubic }}
+      className="space-y-6"
+    >
       <div>
         <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
           Connect Your Team Workspace
@@ -547,7 +554,11 @@ export default function IntegrationsPage() {
 
       <IntegrationAddForm onIntegrationAdded={handleIntegrationAdded} />
 
-      <div className="border-2 border-dashed border-neutral-200 rounded-xl px-4 pt-3 pb-3">
+      <motion.div
+      layout
+      transition={{ type: "spring", stiffness: 300, damping: 28 }}
+      // className="border-2 border-dashed border-neutral-200 rounded-xl px-4 pt-3 pb-3">
+      className=" pt-3 pb-3">
       <Card className="min-h-[120px] overflow-hidden">
            <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
              Your Integrations
@@ -582,7 +593,7 @@ export default function IntegrationsPage() {
           )}
         </AnimatePresence>
       </Card>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
