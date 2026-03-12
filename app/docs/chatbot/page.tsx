@@ -7,289 +7,137 @@ import { Callout } from "@/components/docs/Callout";
 import { DocsNavigation } from "@/components/docs/DocsNavigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { MessageSquare, Power, RadioTower } from "lucide-react";
 
-export default function TicketsPage() {
+export default function ChatbotPage() {
   return (
     <article className="prose prose-neutral max-w-none">
       <div className="mb-8">
         <Badge className="mb-4 bg-sky-100 text-sky-800 font-schibsted font-medium">
-          Ticket Management
+          Chat Widget
         </Badge>
         <Heading as="h1" className="text-neutral-900 mb-4">
-          Ticket Management
+          Chat Widgets & Live Chat
         </Heading>
-        <Paragraph variant="default" className="text-neutral-600">
-          View, claim, assign, and track customer support tickets. Collaborate with your team to resolve issues faster.
+        <Paragraph variant="default" className="text-neutral-900 font-schibsted font-regular mb-8 leading-relaxed">
+          Add a beautiful live chat widget to your website. Visitors can chat with your team directly, 
+          and your team can reply directly from Slack—creating a seamless customer support experience.
         </Paragraph>
       </div>
 
-      <Callout type="info" title="What Are Tickets?">
-        Every inbound email becomes a ticket that can be claimed, tracked, and managed by your team.
-      </Callout>
-
-      <div className="my-12">
+      <div className="mb-12">
         <Heading as="h2" className="text-neutral-900 mb-6 text-2xl">
-          Ticket Statuses
+          Complete Setup in 3 Steps
         </Heading>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="size-3 rounded-full bg-amber-500"></div>
-                <h3 className="text-sm font-schibsted font-semibold text-neutral-900">
-                  Open
-                </h3>
+        
+        <div className="space-y-6">
+          {/* Step 1 */}
+          <Card className="border border-neutral-200">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="rounded-lg bg-indigo-100 p-3 mt-1">
+                  <Power className="size-6 text-indigo-800" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-schibsted font-semibold text-neutral-900 mb-2">
+                    Step 1: Create a Chat Widget
+                  </h3>
+                  <Paragraph variant="docs-par" className="mb-4">
+                    Generate and customize an embeddable widget directly from your dashboard.
+                  </Paragraph>
+                  <ol className="list-decimal list-inside space-y-2 text-sm text-neutral-600 font-schibsted">
+                    <li>Go to <CustomLink href="/dashboard/chat-widgets" className="text-sky-800 hover:text-sky-900 underline font-semibold">Dashboard → Chat Widgets</CustomLink>.</li>
+                    <li>Click <strong>Create Widget</strong>.</li>
+                    <li>Select the verified domain where the widget will be hosted.</li>
+                    <li>Select the Integration (Slack or Discord) that will receive the chat messages.</li>
+                    <li>Customize the <strong>Welcome Message</strong> and <strong>Accent Color</strong> to match your brand.</li>
+                    <li>Click <strong>Create Widget</strong>.</li>
+                  </ol>
+                  <div className="mt-4">
+                    <Callout type="info" title="Prerequisites">
+                      You must have at least one verified domain and one active integration before creating a chat widget.
+                    </Callout>
+                  </div>
+                </div>
               </div>
-              <Paragraph variant="small" className="text-neutral-600">
-                New unassigned tickets waiting to be claimed
-              </Paragraph>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="size-3 rounded-full bg-sky-500"></div>
-                <h3 className="text-sm font-schibsted font-semibold text-neutral-900">
-                  In Progress
-                </h3>
+          {/* Step 2 */}
+          <Card className="border border-neutral-200">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="rounded-lg bg-sky-100 p-3 mt-1">
+                  <MessageSquare className="size-6 text-sky-800" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-schibsted font-semibold text-neutral-900 mb-2">
+                    Step 2: Embed on Your Website
+                  </h3>
+                  <Paragraph variant="docs-par" className="mb-4">
+                    Once created, you will be provided with an Activation Key and an Embed Script. Add the script to your website's HTML before the closing <Highlight>&lt;/body&gt;</Highlight> tag.
+                  </Paragraph>
+                  <CodeBlock
+                    code={`<!-- Email Router Chat Widget -->
+<script>window.CHAT_KEY = 'YOUR_ACTIVATION_KEY_HERE';</script>
+<script async src="https://your-email-router-domain.com/chat/widget.js"></script>`}
+                    language="html"
+                    filename="index.html"
+                  />
+                  <Paragraph variant="docs-par" className="mt-4 text-xs italic">
+                    Replace <Highlight>YOUR_ACTIVATION_KEY_HERE</Highlight> with the activation key provided in the dashboard. The widget will automatically load and apply your custom branding.
+                  </Paragraph>
+                </div>
               </div>
-              <Paragraph variant="small" className="text-neutral-600">
-                Tickets claimed and actively being worked on
-              </Paragraph>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="size-3 rounded-full bg-purple-500"></div>
-                <h3 className="text-sm font-schibsted font-semibold text-neutral-900">
-                  Waiting
-                </h3>
+          {/* Step 3 */}
+          <Card className="border border-neutral-200 bg-sky-50">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="rounded-lg bg-amber-100 p-3 mt-1 border border-amber-200">
+                  <RadioTower className="size-6 text-amber-800" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-schibsted font-semibold text-neutral-900 mb-2">
+                    Step 3: Reply in Real-Time
+                  </h3>
+                  <Paragraph variant="docs-par" className="mb-4">
+                    When a visitor starts a chat, you can reply to them instantly from two places: your Slack workspace or your Email Router dashboard.
+                  </Paragraph>
+                  
+                  <div className="mb-4">
+                    <h4 className="font-schibsted font-semibold text-neutral-900 text-sm mb-2">Option A: Reply from Slack</h4>
+                    <ul className="list-disc list-inside space-y-2 text-sm text-neutral-600 font-schibsted">
+                      <li>Hover over the chat notification message in Slack.</li>
+                      <li>Click <strong>Reply in thread</strong>.</li>
+                      <li>Type your message and send it.</li>
+                    </ul>
+                  </div>
+
+                  <div className="mb-4">
+                    <h4 className="font-schibsted font-semibold text-neutral-900 text-sm mb-2">Option B: Reply from Dashboard</h4>
+                    <ul className="list-disc list-inside space-y-2 text-sm text-neutral-600 font-schibsted">
+                      <li>Go to <CustomLink href="/dashboard/live-chats" className="text-sky-800 hover:text-sky-900 font-semibold underline">Dashboard → Live Chats</CustomLink>.</li>
+                      <li>Select the active conversation in the sidebar.</li>
+                      <li>Type your message in the chat window and hit send.</li>
+                    </ul>
+                  </div>
+
+                  <Callout type="tip" title="Lightning FastSync">
+                    Email Router uses persistent WebSockets under the hood to ensure that delays are minimal. Responses usually appear in less than a second!
+                  </Callout>
+                </div>
               </div>
-              <Paragraph variant="small" className="text-neutral-600">
-                Waiting for customer response or external action
-              </Paragraph>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="size-3 rounded-full bg-green-500"></div>
-                <h3 className="text-sm font-schibsted font-semibold text-neutral-900">
-                  Resolved
-                </h3>
-              </div>
-              <Paragraph variant="small" className="text-neutral-600">
-                Tickets successfully closed and resolved
-              </Paragraph>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      <div className="mb-12">
-        <Heading as="h2" className="text-neutral-900 mb-4 text-2xl">
-          View Tickets
-        </Heading>
-        <Paragraph variant="default" className="mb-4">
-          Access your tickets from the dashboard:
-        </Paragraph>
-        <ul className="list-disc list-inside space-y-2 font-schibsted font-normal text-sm text-neutral-600 mb-6">
-          <li><CustomLink href="/dashboard/tickets/mine" className="text-sky-800 hover:text-sky-900 underline">My Tickets</CustomLink> - Tickets assigned to you</li>
-          <li><CustomLink href="/dashboard/tickets/unassigned" className="text-sky-800 hover:text-sky-900 underline">Unassigned Tickets</CustomLink> - Available tickets to claim</li>
-        </ul>
-      </div>
-
-      <div className="mb-12">
-        <Heading as="h2" className="text-neutral-900 mb-4 text-2xl">
-          Claim a Ticket
-        </Heading>
-        <Paragraph variant="default" className="mb-4">
-          When you see an unassigned ticket you want to handle:
-        </Paragraph>
-        <ol className="list-decimal list-inside space-y-3 font-schibsted font-normal text-sm text-neutral-600 mb-6">
-          <li>Go to <CustomLink href="/dashboard/tickets/unassigned" className="text-sky-800 hover:text-sky-900 underline">Unassigned Tickets</CustomLink></li>
-          <li>Find the ticket you want to handle</li>
-          <li>Click "Claim" button</li>
-          <li>Ticket is now assigned to you</li>
-          <li>Status changes to "In Progress"</li>
-        </ol>
-
-        <CodeBlock
-          code={`POST /api/emails/tickets/{ticketId}/claim
-
-Response:
-{
-  "id": "ticket_123",
-  "status": "in_progress",
-  "assignedTo": "user_456",
-  "claimedAt": "2024-02-28T10:30:00Z"
-}`}
-          language="json"
-          filename="claim-ticket.json"
-        />
-      </div>
-
-      <div className="mb-12">
-        <Heading as="h2" className="text-neutral-900 mb-4 text-2xl">
-          Reply to Customers
-        </Heading>
-        <Paragraph variant="default" className="mb-4">
-          Respond to customer emails directly from the ticket view:
-        </Paragraph>
-        <ol className="list-decimal list-inside space-y-3 font-schibsted font-normal text-sm text-neutral-600 mb-6">
-          <li>Open the ticket details</li>
-          <li>Click "Reply" button</li>
-          <li>Compose your response</li>
-          <li>Click "Send"</li>
-          <li>Customer receives your email</li>
-        </ol>
-
-        <Callout type="tip" title="Email Threading">
-          Replies automatically maintain the email thread, so customers see your response in context.
-        </Callout>
-      </div>
-
-      <div className="mb-12">
-        <Heading as="h2" className="text-neutral-900 mb-4 text-2xl">
-          Update Ticket Status
-        </Heading>
-        <Paragraph variant="default" className="mb-4">
-          Change ticket status based on progress:
-        </Paragraph>
-
-        <div className="space-y-3">
-          <div className="rounded-lg border border-neutral-200 p-4">
-            <h3 className="text-sm font-schibsted font-semibold text-neutral-900 mb-1">
-              Mark as Waiting
-            </h3>
-            <Paragraph variant="small" className="text-neutral-600">
-              Use when you need customer to provide more information
-            </Paragraph>
-          </div>
-
-          <div className="rounded-lg border border-neutral-200 p-4">
-            <h3 className="text-sm font-schibsted font-semibold text-neutral-900 mb-1">
-              Mark as Resolved
-            </h3>
-            <Paragraph variant="small" className="text-neutral-600">
-              Use when the issue is completely solved
-            </Paragraph>
-          </div>
-        </div>
-
-        <CodeBlock
-          code={`POST /api/emails/tickets/{ticketId}/status
-
-{
-  "status": "resolved"
-}
-
-Response:
-{
-  "id": "ticket_123",
-  "status": "resolved",
-  "resolvedAt": "2024-02-28T11:45:00Z"
-}`}
-          language="json"
-          filename="update-status.json"
-          className="mt-6"
-        />
-      </div>
-
-      <div className="mb-12">
-        <Heading as="h2" className="text-neutral-900 mb-4 text-2xl">
-          Filter Tickets
-        </Heading>
-        <Paragraph variant="default" className="mb-4">
-          Use filters to find specific tickets:
-        </Paragraph>
-        <ul className="list-disc list-inside space-y-2 font-schibsted font-normal text-sm text-neutral-600 mb-6">
-          <li><Highlight>All</Highlight> - View all tickets</li>
-          <li><Highlight>Open</Highlight> - Only new unassigned tickets</li>
-          <li><Highlight>In Progress</Highlight> - Tickets being actively worked</li>
-          <li><Highlight>Waiting</Highlight> - Tickets awaiting customer response</li>
-          <li><Highlight>Resolved</Highlight> - Closed tickets</li>
-        </ul>
-      </div>
-
-      <div className="mb-12">
-        <Heading as="h2" className="text-neutral-900 mb-4 text-2xl">
-          Ticket Metrics
-        </Heading>
-        <Paragraph variant="default" className="mb-4">
-          Track your team's performance:
-        </Paragraph>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <h3 className="text-xs font-schibsted font-medium text-neutral-600 mb-1">
-                Response Time
-              </h3>
-              <p className="text-2xl font-schibsted font-semibold text-neutral-900">
-                12 min
-              </p>
-              <Paragraph variant="small" className="text-neutral-600">
-                Average time to first response
-              </Paragraph>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <h3 className="text-xs font-schibsted font-medium text-neutral-600 mb-1">
-                Resolution Time
-              </h3>
-              <p className="text-2xl font-schibsted font-semibold text-neutral-900">
-                2.5 hrs
-              </p>
-              <Paragraph variant="small" className="text-neutral-600">
-                Average time to resolve
-              </Paragraph>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <h3 className="text-xs font-schibsted font-medium text-neutral-600 mb-1">
-                Tickets Resolved
-              </h3>
-              <p className="text-2xl font-schibsted font-semibold text-neutral-900">
-                156
-              </p>
-              <Paragraph variant="small" className="text-neutral-600">
-                This week
-              </Paragraph>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      <div className="mb-12">
-        <Heading as="h2" className="text-neutral-900 mb-4 text-2xl">
-          Best Practices
-        </Heading>
-        <div className="space-y-4">
-          <Callout type="tip" title="Claim Quickly">
-            Claim tickets as soon as possible to show customers you're on it
-          </Callout>
-
-          <Callout type="tip" title="Update Status">
-            Keep ticket status current so teammates know what's happening
-          </Callout>
-
-          <Callout type="tip" title="Use Templates">
-            Create response templates for common issues to save time
-          </Callout>
         </div>
       </div>
 
       <DocsNavigation
-        prev={{ title: "Email Aliases", href: "/docs/aliases" }}
-        next={{ title: "Chatbot Widget", href: "/docs/chatbot" }}
+        prev={{ title: "Slack Integration", href: "/docs/integrations/slack" }}
+        next={{ title: "Troubleshooting", href: "/docs/troubleshooting" }}
       />
     </article>
   );
