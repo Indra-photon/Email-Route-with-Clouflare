@@ -407,6 +407,7 @@ import { AnimatedDeleteButton } from "@/components/ui/AnimatedDeleteButton";
 import { CopyIconButton } from "@/components/ui/CopyIconButton";
 import { CustomLink } from "@/components/CustomLink";
 import { CopyIcon } from "lucide-react";
+import AliasesPageSkeleton from "@/components/dashboard/AliasesPageSkeleton";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1009,7 +1010,7 @@ export default function ChatWidgetsDashboard() {
         )}
       </AnimatePresence> */}
 
-       <div className="border-2 border-dashed border-neutral-200 rounded-xl px-4 pt-3 pb-3">
+       <div className=" px-4 pt-3 pb-3">
 
       <Card className="min-h-[120px] overflow-hidden">
         <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
@@ -1021,7 +1022,7 @@ export default function ChatWidgetsDashboard() {
 
         <AnimatePresence mode="wait">
           {loading ? (
-            <LoadingState key="loading" />
+            <AliasesPageSkeleton />
           ) : widgets.length === 0 ? (
             <EmptyState key="empty" />
           ) : (

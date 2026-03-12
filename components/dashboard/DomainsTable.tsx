@@ -169,6 +169,9 @@ export function AnimatedButton({
 // ─── DNS Records Table (Sending) ─────────────────────────────────────────────
 
 function DNSTable({ records, domainName }: { records: DomainDetail["dnsRecords"]; domainName: string }) {
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [copiedItem, setCopiedItem] = useState<string | null>(null);
+
   if (!records?.length) return (
     <div className="space-y-2">
       <Paragraph variant="small" className="font-semibold text-neutral-700 dark:text-neutral-300">
@@ -179,9 +182,6 @@ function DNSTable({ records, domainName }: { records: DomainDetail["dnsRecords"]
       </Paragraph>
     </div>
   );
-
-    const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-    const [copiedItem, setCopiedItem] = useState<string | null>(null);
 
   return (
     <div className="space-y-2">
@@ -292,10 +292,10 @@ function DNSTable({ records, domainName }: { records: DomainDetail["dnsRecords"]
 // ─── MX Records Table (Receiving) ─────────────────────────────────────────────
 
 function MXTable({ records }: { records: DomainDetail["receivingMxRecords"] }) {
-  if (!records?.length) return null;
-
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
+
+  if (!records?.length) return null;
 
   return (
     <div className="space-y-2">
@@ -434,7 +434,15 @@ function ExpandedPanel({
   const [loadingDetail, setLoadingDetail] = useState(!initialDetail);
   const [addToResendState, setAddToResendState] = useState<BtnState>("idle");
   const [checkState, setCheckState] = useState<BtnState>("idle");
-  const [hasFetched, setHasFetched] = useState(!!initialDetail);
+  const [lastFetchedAt, setLastFetchedAt] = useState<number | null>(
+    initialDetail ? Date.now() : null
+  );
+
+  const STALE_AFTER_MS = 30_000; // 30 seconds
+
+  const isStale =
+    lastFetchedAt === null ||
+    Date.now() - lastFetchedAt > STALE_AFTER_MS;
 
   const fetchDetail = useCallback(async () => {
     try {
@@ -446,16 +454,16 @@ function ExpandedPanel({
       toast.error("Failed to load domain details");
     } finally {
       setLoadingDetail(false);
-      setHasFetched(true);
+      setLastFetchedAt(Date.now());
     }
   }, [domainId]);
 
   // Only fetch once — on the first time the panel is opened
   useEffect(() => {
-    if (isOpen && !hasFetched) {
+    if (isOpen && isStale) {
       fetchDetail();
     }
-  }, [isOpen, hasFetched, fetchDetail]);
+  }, [isOpen, isStale, fetchDetail]);
 
   const handleAddToResend = async () => {
     setAddToResendState("loading");
@@ -767,25 +775,20 @@ export default function DomainsTable({ initialDomains }: { initialDomains: Domai
     );
   };
 
-  const listVariants = {
-    hidden: {},
-    show: { transition: { staggerChildren: 0.035 } },
-  };
-
   return (
     <motion.div
-      initial={{ opacity: 0.90, scale: 0.95, y: 2 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.03, ease: easeOutCubic }}
+      // initial={{ opacity: 0.90, scale: 0.95, y: 2 }}
+      // animate={{ opacity: 1, scale: 1, y: 0 }}
+      // transition={{ duration: 0.03, ease: easeOutCubic }}
       className="space-y-6"
     >
 
-      <div>
+      {/* <div>
         <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">Add Your Domains</Heading>
         <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400">
           Add and verify your domains to use for email aliases.
         </Paragraph>
-      </div>
+      </div> */}
 
       <DomainAddForm onDomainAdded={handleDomainAdded} />
 
@@ -796,17 +799,13 @@ export default function DomainsTable({ initialDomains }: { initialDomains: Domai
             <Paragraph variant="small" className="text-neutral-600 dark:text-neutral-400 mt-1 pb-5">
             Manage the domains you use to send and receive emails. Click on a domain to view its DNS records and verification status.
             </Paragraph>
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="popLayout">
             {domains.length === 0 ? (
                 <EmptyState key="empty" />
             ) : (
                 <motion.div
                 key="list"
                 layout
-                variants={listVariants}
-                initial="hidden"
-                animate="show"
-                exit={{ opacity: 0.7 }}
                 className="space-y-2"
                 >
                 {domains.map((d, index) => (
