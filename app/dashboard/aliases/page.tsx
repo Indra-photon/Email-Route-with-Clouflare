@@ -564,6 +564,7 @@ import { AnimatedSubmitButton } from "@/components/ui/AnimatedSubmitButton";
 import { AnimatedDeleteButton } from "@/components/ui/AnimatedDeleteButton";
 import { CustomLink } from "@/components/CustomLink";
 import { RefreshCw } from "lucide-react";
+import AliasesPageSkeleton from "@/components/dashboard/AliasesPageSkeleton";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -594,11 +595,6 @@ type IntegrationOption = {
 
 const easeOutCubic = [0.215, 0.61, 0.355, 1] as const;
 const easeOutQuint = [0.23, 1, 0.32, 1] as const;
-
-const listVariants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.035 } },
-};
 
 // ─── Alias Card ───────────────────────────────────────────────────────────────
 
@@ -1009,9 +1005,9 @@ export default function AliasesPage() {
 
   return (
     <motion.div
-      initial={{ scale: 0.95, y: 2 }}
-      animate={{ scale: 1, y: 0 }}
-      transition={{ duration: 0.03, ease: easeOutCubic }}
+      // initial={{ scale: 0.95, y: 2 }}
+      // animate={{ scale: 1, y: 0 }}
+      // transition={{ duration: 0.03, ease: easeOutCubic }}
       className="space-y-6"
     >
       <div>
@@ -1032,8 +1028,7 @@ export default function AliasesPage() {
 
 
       <motion.div
-      layout
-      transition={{ type: "spring", stiffness: 300, damping: 28 }}
+      // transition={{ type: "spring", stiffness: 300, damping: 28 }}
       className="pt-3 pb-3">
         <Card className="min-h-[120px]">
           <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
@@ -1044,7 +1039,17 @@ export default function AliasesPage() {
             </Paragraph>
 
             <AnimatePresence mode="wait">
-              {loading && <LoadingState key="loading" />}
+              {loading && (
+                <motion.div
+                  key="skeleton"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15, ease: easeOutCubic }}
+                >
+                  <AliasesPageSkeleton />
+                </motion.div>
+              )}
 
               {!loading && aliases.length === 0 && <EmptyState key="empty" />}
 
@@ -1052,21 +1057,19 @@ export default function AliasesPage() {
                 <motion.div
                   key="list"
                   layout
-                  variants={listVariants}
-                  initial="hidden"
-                  animate="show"
-                  exit={{ opacity: 0 }}
                   className="space-y-2"
                 >
-                  {aliases.map((a) => (
-                    <AliasCard
-                      key={a.id}
-                      alias={a}
-                      integrations={integrations}
-                      onDelete={handleDelete}
-                      onUpdate={handleUpdate}
-                    />
-                  ))}
+                  <AnimatePresence mode="popLayout">
+                    {aliases.map((a) => (
+                      <AliasCard
+                        key={a.id}
+                        alias={a}
+                        integrations={integrations}
+                        onDelete={handleDelete}
+                        onUpdate={handleUpdate}
+                      />
+                    ))}
+                  </AnimatePresence>
                 </motion.div>
               )}
             </AnimatePresence>

@@ -25,6 +25,7 @@ import { AnimatedDeleteButton } from "@/components/ui/AnimatedDeleteButton";
 import { CopyIconButton } from "@/components/ui/CopyIconButton";
 import { CustomLink } from "@/components/CustomLink";
 import { RefreshCw } from "lucide-react";
+import AliasesPageSkeleton from "@/components/dashboard/AliasesPageSkeleton";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -44,12 +45,6 @@ type Integration = {
 const easeOutCubic = [0.215, 0.61, 0.355, 1] as const;
 const easeOutQuint = [0.23, 1, 0.32, 1] as const;
 const easeOutQuart = [0.165, 0.84, 0.44, 1] as const;
-
-
-  const listVariants = {
-    show: { transition: { staggerChildren: 0.035 } },
-    hidden: {},
-  };
 
 // ─── Type Selector ────────────────────────────────────────────────────────────
 
@@ -538,9 +533,9 @@ export default function IntegrationsPage() {
 
   return (
     <motion.div
-      initial={{ opacity: 0.90, scale: 0.95, y: 2, }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.03, ease: easeOutCubic }}
+      // initial={{ opacity: 0.90, scale: 0.95, y: 2, }}
+      // animate={{ opacity: 1, scale: 1, y: 0 }}
+      // transition={{ duration: 0.03, ease: easeOutCubic }}
       className="space-y-6"
     >
       <div>
@@ -555,8 +550,7 @@ export default function IntegrationsPage() {
       <IntegrationAddForm onIntegrationAdded={handleIntegrationAdded} />
 
       <motion.div
-      layout
-      transition={{ type: "spring", stiffness: 300, damping: 28 }}
+      // transition={{ type: "spring", stiffness: 300, damping: 28 }}
       // className="border-2 border-dashed border-neutral-200 rounded-xl px-4 pt-3 pb-3">
       className=" pt-3 pb-3">
       <Card className="min-h-[120px] overflow-hidden">
@@ -569,26 +563,24 @@ export default function IntegrationsPage() {
 
         <AnimatePresence mode="wait">
           {loading ? (
-            <LoadingState key="loading" />
+            <AliasesPageSkeleton key="loading" />
           ) : integrations.length === 0 ? (
             <EmptyState key="empty" />
           ) : (
             <motion.div
               key="list"
               layout
-              variants={listVariants}
-              initial="hidden"
-              animate="show"
-              exit={{ opacity: 0.7 }}
               className="space-y-2"
             >
-              {integrations.map((i) => (
-                <IntegrationCard
-                  key={i.id}
-                  integration={i}
-                  onDelete={handleDelete}
-                />
-              ))}
+              <AnimatePresence mode="popLayout">
+                {integrations.map((i) => (
+                  <IntegrationCard
+                    key={i.id}
+                    integration={i}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </AnimatePresence>
             </motion.div>
           )}
         </AnimatePresence>
