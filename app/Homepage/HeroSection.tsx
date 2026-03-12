@@ -167,12 +167,13 @@ export function HeroSection() {
                   as="h1" 
                   className="text-neutral-900 mb-6 leading-tight"
                 >
-                  Solve your customer tickets from <span className="text-sky-800">One Workspace.</span> 
+                  Streamline your customer tickets from <span className="text-sky-800">One Workspace.</span> 
                 </Heading>
                 
                 {/* Subheading */}
                 <Paragraph variant="home-par">
-                  Streamline your customer support with our Slack integration. Manage tickets, respond to inquiries, and collaborate with your team without leaving your workspace.
+                  Manage tickets, respond to inquiries, and collaborate with your team without leaving your workspace. No time waste, no missing emails,
+                  no cluttered inbox, small team, save cost, and provide instant support to your customers.
                 </Paragraph>
 
                 {/* CTA Buttons */}

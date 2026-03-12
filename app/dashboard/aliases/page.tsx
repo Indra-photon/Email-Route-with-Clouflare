@@ -595,6 +595,11 @@ type IntegrationOption = {
 const easeOutCubic = [0.215, 0.61, 0.355, 1] as const;
 const easeOutQuint = [0.23, 1, 0.32, 1] as const;
 
+const listVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.035 } },
+};
+
 // ─── Alias Card ───────────────────────────────────────────────────────────────
 
 type BtnState = "idle" | "loading" | "success" | "error";
@@ -640,15 +645,25 @@ function AliasCard({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, scale: 0.95, y: -2 }}
-      animate={{
-        opacity: deleteState === "success" ? 0 : 1,
-        scale: deleteState === "success" ? 0.97 : 1,
-        y: 0,
+      style={{ transformOrigin: "top center" }}
+      variants={{
+        hidden: { opacity: 0, scaleY: 0 },
+        show:   { opacity: 1, scaleY: 1 },
       }}
-      exit={{ opacity: 0, scale: 0.97, y: -2 }}
-      transition={{ duration: 0.15, ease: [0.215, 0.61, 0.355, 1] }}
-      style={{ transformOrigin: "top left" }}
+      animate="show"
+      exit={{ opacity: 0, scaleY: 0.85 }}
+      transition={{
+        layout: { type: "spring", stiffness: 400, damping: 28 },
+        opacity: {
+          duration: 0.15,
+          ease: [0.4, 0, 1, 1],  // ease-in on exit feels decisive
+        },
+        scaleY: {
+          type: "spring",
+          stiffness: 400,
+          damping: 28,
+        },
+      }}
     >
       <Card className="bg-neutral-50 rounded-xl hover:bg-neutral-100 transition-colors duration-300 ease-out">
         <CardContent className="p-4 flex items-center gap-4">
@@ -995,10 +1010,10 @@ export default function AliasesPage() {
     <div className="space-y-6">
       <div>
         <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
-          Create and Connect Email Aliases
+          Create Email Aliases for Your Domains
         </Heading>
         <Paragraph variant="default" className="text-neutral-600 dark:text-neutral-400 mt-1">
-          Create email aliases for your domains. Each alias routes to a Slack or Discord integration.
+          Set up email addresses like support@yourdomain.com and route them to your Slack or Discord channels. Each alias can be connected to any integration.
         </Paragraph>
       </div>
 
@@ -1016,7 +1031,7 @@ export default function AliasesPage() {
             Your Email Aliases
           </Heading>
           <Paragraph variant="small" className="text-neutral-600 dark:text-neutral-400 mt-1 pb-5">
-            Manage your email aliases below. Click on an alias to view details or change its integration.
+            View and manage all your email aliases. Click any alias to see details or update its integration settings.
             </Paragraph>
 
             <AnimatePresence mode="wait">
@@ -1026,27 +1041,24 @@ export default function AliasesPage() {
 
               {!loading && aliases.length > 0 && (
                 <motion.div
-                  key="list"
-                  layout
-                  initial={{ opacity: 0.7 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0.7 }}
-                  transition={{ duration: 0.15, ease: easeOutCubic }}
-                  style={{ transformOrigin: "top left" }}
-                  className="space-y-2"
-                >
-                  <LayoutGroup>
-                    {aliases.map((a) => (
-                      <AliasCard
-                        key={a.id}
-                        alias={a}
-                        integrations={integrations}
-                        onDelete={handleDelete}
-                        onUpdate={handleUpdate}
-                      />
-                    ))}
-                  </LayoutGroup>
-                </motion.div>
+  key="list"
+  layout
+  variants={listVariants}
+  initial="hidden"
+  animate="show"
+  exit={{ opacity: 0 }}
+  className="space-y-2"
+>
+  {aliases.map((a) => (
+    <AliasCard
+      key={a.id}
+      alias={a}
+      integrations={integrations}
+      onDelete={handleDelete}
+      onUpdate={handleUpdate}
+    />
+  ))}
+</motion.div>
               )}
             </AnimatePresence>
         </Card>

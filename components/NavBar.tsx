@@ -473,7 +473,7 @@ function DocsDropdown() {
               </div>
 
               {/* Right — quick links */}
-              <motion.div
+              {/* <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.25, delay: 0.1, ease: EASE_OUT_CUBIC }}
@@ -496,8 +496,6 @@ function DocsDropdown() {
                     ))}
                   </div>
                 </div>
-
-                {/* View all CTA */}
                 <Link
                   href="/docs"
                   onClick={() => setOpen(false)}
@@ -508,7 +506,7 @@ function DocsDropdown() {
                     <path d="M2 5h6M5 2l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </Link>
-              </motion.div>
+              </motion.div> */}
             </div>
           </motion.div>
         )}

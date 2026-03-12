@@ -45,6 +45,12 @@ const easeOutCubic = [0.215, 0.61, 0.355, 1] as const;
 const easeOutQuint = [0.23, 1, 0.32, 1] as const;
 const easeOutQuart = [0.165, 0.84, 0.44, 1] as const;
 
+
+  const listVariants = {
+    show: { transition: { staggerChildren: 0.035 } },
+    hidden: {},
+  };
+
 // ─── Type Selector ────────────────────────────────────────────────────────────
 
 function TypeSelector({
@@ -287,13 +293,30 @@ function IntegrationCard({
     ? integration.webhookUrl.slice(0, 50) + "…"
     : integration.webhookUrl;
 
+  
+
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, scale: 0.95, y: -2 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.97, y: -2 }}
-      transition={{ duration: 0.15, ease: easeOutCubic }}
+      style={{ transformOrigin: "top center" }}
+      variants={{
+        hidden: { opacity: 0, scaleY: 0 },
+        show:   { opacity: 1, scaleY: 1 },
+      }}
+      animate="show"
+      exit={{ opacity: 0, scaleY: 0.85 }}
+      transition={{
+        layout: { type: "spring", stiffness: 400, damping: 28 },
+        opacity: {
+          duration: 0.15,
+          ease: [0.4, 0, 1, 1],  // ease-in on exit feels decisive
+        },
+        scaleY: {
+          type: "spring",
+          stiffness: 400,
+          damping: 28,
+        },
+      }}
     >
       <Card className="bg-neutral-50 rounded-xl hover:bg-neutral-100 transition-colors duration-150">
         <CardContent className="p-4 flex items-center gap-4">
@@ -468,6 +491,8 @@ export default function IntegrationsPage() {
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(true);
 
+  
+
   // Handle Slack OAuth callback toasts
   useEffect(() => {
     const success = searchParams.get("success");
@@ -508,6 +533,7 @@ export default function IntegrationsPage() {
     setIntegrations((prev) => [integration, ...prev]);
   };
 
+
   return (
     <div className="space-y-6">
       <div>
@@ -539,10 +565,10 @@ export default function IntegrationsPage() {
             <motion.div
               key="list"
               layout
-              initial={{ opacity: 0.7 }}
-              animate={{ opacity: 1 }}
+              variants={listVariants}
+              initial="hidden"
+              animate="show"
               exit={{ opacity: 0.7 }}
-              transition={{ duration: 0.15, type: "spring", stiffness: 300, damping: 20 }}
               className="space-y-2"
             >
               {integrations.map((i) => (

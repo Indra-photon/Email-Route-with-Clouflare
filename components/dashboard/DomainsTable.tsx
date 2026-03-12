@@ -676,11 +676,17 @@ function DomainCard({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, scale: 0.95, y: -4 }}
-      animate={{ opacity: isDeleted ? 0 : 1, scale: isDeleted ? 0.97 : 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.97, y: -4 }}
-      transition={{ duration: 0.15, ease: [.215, .61, .355, 1] }}
-      style={{ transformOrigin: "top left" }}
+      style={{ transformOrigin: "top center" }}
+      variants={{
+        hidden: { opacity: 0, scaleY: 0 },
+        show:   { opacity: 1, scaleY: 1 },
+      }}
+      animate={isDeleted ? { opacity: 0, scaleY: 0.85 } : "show"}  // ← always explicit
+      exit={{ opacity: 0, scaleY: 0.85 }}
+      transition={{
+        opacity: { duration: 0.15, ease: [0.4, 0, 1, 1] },
+        scaleY:  { type: "spring", stiffness: 400, damping: 28 },
+      }}
     >
       <Card className="bg-neutral-100 rounded-xl hover:bg-neutral-200 transition-colors duration-300 ease-out">
         {/* Card header row */}
@@ -803,6 +809,11 @@ export default function DomainsTable({ initialDomains }: { initialDomains: Domai
     );
   };
 
+  const listVariants = {
+    hidden: {},
+    show: { transition: { staggerChildren: 0.035 } },
+  };
+
   return (
     <> 
 
@@ -822,10 +833,10 @@ export default function DomainsTable({ initialDomains }: { initialDomains: Domai
                 <motion.div
                 key="list"
                 layout
-                initial={{ opacity: 0.7 }}
-                animate={{ opacity: 1 }}
+                variants={listVariants}
+                initial="hidden"
+                animate="show"
                 exit={{ opacity: 0.7 }}
-                transition={{ duration: 0.15, type: "spring", stiffness: 300, damping: 20 }}
                 className="space-y-2"
                 >
                 {domains.map((d, index) => (
