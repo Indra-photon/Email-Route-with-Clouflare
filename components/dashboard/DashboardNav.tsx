@@ -33,11 +33,11 @@ const navItems = [
     label: "My Tickets",
     icon: IconMail,
   },
-  {
-    href: "/dashboard/tickets/unassigned",
-    label: "Unassigned",
-    icon: IconInbox,
-  },
+  // {
+  //   href: "/dashboard/tickets/unassigned",
+  //   label: "Unassigned",
+  //   icon: IconInbox,
+  // },
   {
     href: "/dashboard/domains",
     label: "Domains",

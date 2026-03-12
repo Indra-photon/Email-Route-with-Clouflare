@@ -40,20 +40,6 @@ export default async function DomainsPage() {
   }));
 
   return (
-    <div className="space-y-6">
-      <div>
-        <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">Add Your Domains</Heading>
-        <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400">
-          Add and verify your domains to use for email aliases.
-        </Paragraph>
-      </div>
-
-      <DomainsTable initialDomains={domains} />
-
-      {/* Table is the only Client Component — handles optimistic updates */}
-      {/* <Suspense fallback={<DomainsLoading />}>
-        <DomainsTable initialDomains={domains} />
-      </Suspense> */}
-    </div>
+    <DomainsTable initialDomains={domains} />
   );
 }

@@ -917,10 +917,9 @@ function EmptyState() {
   return (
     <motion.div
       key="empty"
-      initial={{ opacity: 0, scale: 0.95, y: 10 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95, y: 10 }}
-      transition={{ duration: 0.2, ease: easeOutCubic }}
+      initial={{ scale: 0.95, y: 10 }}
+      animate={{scale: 1, y: 0 }}
+      transition={{ duration: 0.10, ease: easeOutCubic }}
       className="flex flex-col items-center justify-center py-12 px-6 gap-3"
     >
       <div className="w-10 h-10 rounded-full bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center opacity-40">
@@ -945,8 +944,10 @@ function LoadingState() {
       transition={{ duration: 0.2, ease: easeOutCubic }}
       className="flex items-center justify-center py-12 gap-2"
     >
-      <RefreshCw className="size-8 text-neutral-400 animate-spin mb-4" />
+      <div className="flex flex-col items-center gap-4">
+        <RefreshCw className="size-8 text-neutral-400 animate-spin" />
       <Paragraph variant="muted" className="text-xs">Loading aliases...</Paragraph>
+      </div>
     </motion.div>
   );
 }
@@ -1007,7 +1008,12 @@ export default function AliasesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      initial={{ scale: 0.95, y: 2 }}
+      animate={{ scale: 1, y: 0 }}
+      transition={{ duration: 0.03, ease: easeOutCubic }}
+      className="space-y-6"
+    >
       <div>
         <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
           Create Email Aliases for Your Domains
@@ -1025,8 +1031,11 @@ export default function AliasesPage() {
 
 
 
-      <div className="border-2 border-dashed border-neutral-200 rounded-xl px-4 pt-3 pb-3">
-        <Card className="min-h-[120px] overflow-hidden">
+      <motion.div
+      layout
+      transition={{ type: "spring", stiffness: 300, damping: 28 }}
+      className="pt-3 pb-3">
+        <Card className="min-h-[120px]">
           <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
             Your Email Aliases
           </Heading>
@@ -1041,28 +1050,28 @@ export default function AliasesPage() {
 
               {!loading && aliases.length > 0 && (
                 <motion.div
-  key="list"
-  layout
-  variants={listVariants}
-  initial="hidden"
-  animate="show"
-  exit={{ opacity: 0 }}
-  className="space-y-2"
->
-  {aliases.map((a) => (
-    <AliasCard
-      key={a.id}
-      alias={a}
-      integrations={integrations}
-      onDelete={handleDelete}
-      onUpdate={handleUpdate}
-    />
-  ))}
-</motion.div>
+                  key="list"
+                  layout
+                  variants={listVariants}
+                  initial="hidden"
+                  animate="show"
+                  exit={{ opacity: 0 }}
+                  className="space-y-2"
+                >
+                  {aliases.map((a) => (
+                    <AliasCard
+                      key={a.id}
+                      alias={a}
+                      integrations={integrations}
+                      onDelete={handleDelete}
+                      onUpdate={handleUpdate}
+                    />
+                  ))}
+                </motion.div>
               )}
             </AnimatePresence>
         </Card>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
