@@ -235,7 +235,7 @@ export const PricingBenefitsIllustration: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
         >
-          <button className="bg-sky-600 hover:bg-sky-700 text-white font-schibsted font-semibold px-8 py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+          <button className="bg-gradient-to-b from-sky-900 to-cyan-700 text-white font-schibsted font-semibold px-8 py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
             Start for free
           </button>
         </motion.div>
