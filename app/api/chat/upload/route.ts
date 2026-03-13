@@ -55,6 +55,7 @@ export async function POST(request: Request) {
                         resource_type: fileType === "pdf" ? "raw" : "image",
                         public_id: `${Date.now()}_${file.name.replace(/\s+/g, "_")}`,
                         access_mode: "public",
+                        access_control: [{ access_type: "anonymous" }],
                     },
                     (err, result) => {
                         if (err || !result) return reject(err);
