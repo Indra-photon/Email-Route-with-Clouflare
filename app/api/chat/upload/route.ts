@@ -54,6 +54,7 @@ export async function POST(request: Request) {
                         folder: "chat_uploads",
                         resource_type: fileType === "pdf" ? "raw" : "image",
                         public_id: `${Date.now()}_${file.name.replace(/\s+/g, "_")}`,
+                        access_mode: "public",
                     },
                     (err, result) => {
                         if (err || !result) return reject(err);

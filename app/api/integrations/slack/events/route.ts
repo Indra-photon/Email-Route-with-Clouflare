@@ -8,6 +8,13 @@ import { Domain } from "@/app/api/models/DomainModel";
 import { ChatConversation } from "@/app/api/models/ChatConversationModel";
 import { ChatMessage } from "@/app/api/models/ChatMessageModel";
 import { Resend } from "resend";
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -148,17 +155,94 @@ async function handleEmailThreadReply(
 async function handleLiveChatReply(
   conversation: any,
   replyText: string,
+  slackFiles: Array<Record<string, unknown>>,
+  channelId: string,
   eventId?: string
 ) {
   try {
-    // Save agent message to DB
+    // ── Download Slack files and re-upload to Cloudinary ──────────────────
+    let mediaUrl = "";
+    let mediaType: "text" | "image" | "pdf" = "text";
+    let mediaFilename = "";
+
+    if (slackFiles.length > 0) {
+      const integration = await Integration.findOne({
+        slackChannelId: channelId,
+        authMethod: "oauth",
+      }).lean();
+      const botToken = integration?.slackAccessToken;
+
+      if (botToken) {
+        // Process the first file (chat messages show one attachment at a time)
+        const file = slackFiles[0];
+        const fileId = file.id as string | undefined;
+        const filename = (file.name || file.title || "attachment") as string;
+        const mimetype = (file.mimetype || "") as string;
+
+        try {
+          let downloadUrl = (file.url_private_download || file.url_private) as string | undefined;
+
+          if (fileId) {
+            const infoRes = await fetch(`https://slack.com/api/files.info?file=${fileId}`, {
+              headers: { Authorization: `Bearer ${botToken}` },
+            });
+            const infoData = await infoRes.json();
+            if (infoData.ok && infoData.file?.url_private) {
+              downloadUrl = infoData.file.url_private;
+            }
+          }
+
+          if (downloadUrl) {
+            const fileRes = await fetch(downloadUrl, {
+              headers: { Authorization: `Bearer ${botToken}` },
+            });
+
+            if (fileRes.ok) {
+              const arrayBuf = await fileRes.arrayBuffer();
+              if (arrayBuf.byteLength > 0) {
+                const buffer = Buffer.from(arrayBuf);
+                const isPdf = mimetype === "application/pdf" || filename.toLowerCase().endsWith(".pdf");
+                const isImage = mimetype.startsWith("image/") || /\.(jpe?g|png|gif|webp)$/i.test(filename);
+
+                if (isPdf || isImage) {
+                  // Upload to Cloudinary
+                  const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
+                    const uploadStream = cloudinary.uploader.upload_stream(
+                      {
+                        folder: "chat_uploads",
+                        resource_type: isPdf ? "raw" : "image",
+                        public_id: `${Date.now()}_${filename.replace(/\s+/g, "_")}`,
+                      },
+                      (err, result) => {
+                        if (err || !result) return reject(err);
+                        resolve(result as { secure_url: string });
+                      }
+                    );
+                    uploadStream.end(buffer);
+                  });
+
+                  mediaUrl = uploadResult.secure_url;
+                  mediaType = isPdf ? "pdf" : "image";
+                  mediaFilename = filename;
+                  console.log(`📎 Slack→Cloudinary upload done: ${filename} → ${mediaUrl}`);
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("⚠️ Could not process Slack file for live chat:", filename, e);
+        }
+      }
+    }
+
+    // ── Save agent message to DB ──────────────────────────────────────────
     const chatMessage = await ChatMessage.create({
       conversationId: conversation._id,
       widgetId: conversation.widgetId,
       sender: "agent",
-      body: replyText.trim(),
-      type: "text",
-      mediaUrl: "",
+      body: mediaUrl ? (replyText.trim() || mediaFilename) : replyText.trim(),
+      type: mediaType,
+      mediaUrl,
     });
 
     conversation.lastMessageAt = new Date();
@@ -301,7 +385,7 @@ export async function POST(request: Request) {
   });
 
   if (chatConversation) {
-    return await handleLiveChatReply(chatConversation, replyText, eventId);
+    return await handleLiveChatReply(chatConversation, replyText, slackFiles, channelId, eventId);
   }
 
   // No match found - ignore
