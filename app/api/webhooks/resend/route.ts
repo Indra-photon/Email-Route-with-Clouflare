@@ -1,156 +1,6 @@
-// import { NextResponse } from "next/server";
-// import dbConnect from "@/lib/dbConnect";
-// import { Alias } from "@/app/api/models/AliasModel";
-// import { Domain } from "@/app/api/models/DomainModel";
-// import { Integration } from "@/app/api/models/IntegrationModel";
-
-// export async function POST(request: Request) {
-//   try {
-//     // 1. Parse Resend webhook payload
-//     const payload = await request.json();
-
-//     console.log("📧 Received email webhook from Resend:", {
-//       type: payload.type,
-//       to: payload.data?.to,
-//       from: payload.data?.from,
-//       subject: payload.data?.subject,
-//     });
-
-//     // 2. Verify it's an email.received event
-//     if (payload.type !== "email.received") {
-//       console.log("⚠️ Ignoring non-email event:", payload.type);
-//       return NextResponse.json({ message: "Event ignored" });
-//     }
-
-//     const emailData = payload.data;
-
-//     // 3. Extract recipient email
-//     const recipientEmail = Array.isArray(emailData.to) 
-//       ? emailData.to[0] 
-//       : emailData.to;
-
-//     if (!recipientEmail) {
-//       console.error("❌ No recipient email found");
-//       return NextResponse.json({ error: "No recipient" }, { status: 400 });
-//     }
-
-//     // 4. Parse email address (support@acme.com → support + acme.com)
-//     const emailLower = recipientEmail.toLowerCase().trim();
-//     const atIndex = emailLower.indexOf("@");
-
-//     if (atIndex === -1) {
-//       console.error("❌ Invalid email format:", emailLower);
-//       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
-//     }
-
-//     const localPart = emailLower.slice(0, atIndex);
-//     const domainPart = emailLower.slice(atIndex + 1);
-
-//     console.log("🔍 Looking up alias:", { localPart, domain: domainPart, email: emailLower });
-
-//     // 5. Look up alias in MongoDB (NO POPULATE)
-//     await dbConnect();
-
-//     const alias = await Alias.findOne({ 
-//       localPart: localPart,
-//       email: emailLower 
-//     }).lean().exec();
-
-//     if (!alias) {
-//       console.warn("⚠️ No alias found for:", emailLower);
-//       return NextResponse.json({ message: "Alias not found" }, { status: 200 });
-//     }
-
-//     console.log("✅ Found alias:", alias.email);
-
-//     // 6. Manually fetch integration (instead of populate)
-//     if (!alias.integrationId) {
-//       console.warn("⚠️ No integration configured for alias:", alias.email);
-//       return NextResponse.json({ message: "No integration" }, { status: 200 });
-//     }
-
-//     const integration = await Integration.findById(alias.integrationId).lean().exec();
-
-//     if (!integration || !integration.webhookUrl) {
-//       console.warn("⚠️ Integration not found or has no webhook:", alias.email);
-//       return NextResponse.json({ message: "No integration" }, { status: 200 });
-//     }
-
-//     // 7. Format message for Slack/Discord
-//     const fromEmail = emailData.from || "Unknown";
-//     const subject = emailData.subject || "(no subject)";
-
-//     // Try multiple possible body fields from Resend
-//     const textBody = 
-//       emailData.text || 
-//       emailData.html || 
-//       emailData.parsedData?.textBody || 
-//       emailData.parsedData?.htmlBody ||
-//       emailData.body?.text ||
-//       emailData.body?.html ||
-//       "";
-
-//     const snippet = textBody.slice(0, 500);
-
-//     // Debug log
-//     console.log("📝 Email body extraction:", {
-//       hasText: !!emailData.text,
-//       hasHtml: !!emailData.html,
-//       bodyLength: snippet.length,
-//       bodyPreview: snippet.slice(0, 100),
-//     });
-
-//     const messagePayload = integration.type === "slack" 
-//       ? {
-//           text: `📧 New email to *${emailLower}*\n*From:* ${fromEmail}\n*Subject:* ${subject}\n\n${snippet}`
-//         }
-//       : {
-//           content: `📧 **New email to ${emailLower}**\n**From:** ${fromEmail}\n**Subject:** ${subject}\n\n${snippet}`
-//         };
-
-//     console.log("📤 Posting to", integration.type, "webhook");
-
-//     // 8. Post to Slack/Discord
-//     const webhookResponse = await fetch(integration.webhookUrl, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//       body: JSON.stringify(messagePayload),
-//     });
-
-//     if (!webhookResponse.ok) {
-//       const errorText = await webhookResponse.text();
-//       console.error("❌ Webhook post failed:", {
-//         status: webhookResponse.status,
-//         error: errorText,
-//       });
-//       return NextResponse.json(
-//         { error: "Webhook failed" }, 
-//         { status: 500 }
-//       );
-//     }
-
-//     console.log("✨ Successfully posted to", integration.type);
-
-//     return NextResponse.json({ 
-//       success: true,
-//       message: "Email routed to integration"
-//     });
-
-//   } catch (error) {
-//     console.error("❌ Error processing webhook:", error);
-//     return NextResponse.json(
-//       { error: "Internal error" },
-//       { status: 500 }
-//     );
-//   }
-// }
-
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import { Alias } from "@/app/api/models/AliasModel";
-import { Domain } from "@/app/api/models/DomainModel";
 import { Integration } from "@/app/api/models/IntegrationModel";
 import { EmailThread } from "@/app/api/models/EmailThreadModel";
 import { Resend } from "resend";
@@ -197,9 +47,8 @@ export async function POST(request: Request) {
     }
 
     const localPart = emailLower.slice(0, atIndex);
-    const domainPart = emailLower.slice(atIndex + 1);
 
-    console.log("🔍 Looking up alias:", { localPart, domain: domainPart, email: emailLower });
+    console.log("🔍 Looking up alias:", { localPart, email: emailLower });
 
     // 5. Look up alias in MongoDB
     await dbConnect();
@@ -239,7 +88,7 @@ export async function POST(request: Request) {
     // 7. Fetch full email content from Resend API
     let textBody = "";
     let htmlBody = "";
-    type ResendAttachmentMeta = { id: string; filename: string; content_type: string; download_url: string; size?: number };
+    type ResendAttachmentMeta = { id: string; filename: string; content_type: string; download_url: string; size?: number; content?: string };
     let attachmentMetas: ResendAttachmentMeta[] = [];
 
     try {
@@ -249,33 +98,60 @@ export async function POST(request: Request) {
       textBody = fullEmail?.text || "";
       htmlBody = fullEmail?.html || "";
 
+      // Pull attachments directly from the full email object — it contains base64 content
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rawAttachments: any[] = (fullEmail as any)?.attachments || [];
+      console.log("📎 Raw attachments from fullEmail:", JSON.stringify(rawAttachments.map((a: any) => ({
+        filename: a.filename || a.name,
+        content_type: a.content_type || a.type || a.mimeType,
+        hasContent: !!a.content,
+        hasDownloadUrl: !!a.download_url,
+        keys: Object.keys(a),
+      })), null, 2));
+
+      attachmentMetas = rawAttachments.map((a: any) => ({
+        id: a.id || `att_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+        filename: a.filename || a.name || "attachment",
+        content_type: a.content_type || a.type || a.mimeType || "application/octet-stream",
+        download_url: a.download_url || "",
+        size: a.size,
+        content: a.content, // base64 string if present
+      }));
+
       console.log("✅ Email content retrieved:", {
         hasText: !!textBody,
         hasHtml: !!htmlBody,
         textLength: textBody.length,
+        attachmentCount: attachmentMetas.length,
       });
     } catch (fetchError) {
       console.error("❌ Error fetching email content from Resend:", fetchError);
-      // Continue without body - better to send notification without body than fail
     }
 
-    // 7.5. Fetch attachment metadata from Resend receiving attachments API
-    try {
-      const attachRes = await fetch(
-        `https://api.resend.com/emails/receiving/${emailData.email_id}/attachments`,
-        { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` } }
-      );
-      if (attachRes.ok) {
-        const attachJson = await attachRes.json();
-        attachmentMetas = attachJson.data || attachJson || [];
-        console.log("📎 Found", attachmentMetas.length, "attachment(s) in email");
+    // Fallback: try the separate attachments endpoint if no attachments found above
+    if (attachmentMetas.length === 0) {
+      try {
+        const attachRes = await fetch(
+          `https://api.resend.com/emails/receiving/${emailData.email_id}/attachments`,
+          { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` } }
+        );
+        if (attachRes.ok) {
+          const attachJson = await attachRes.json();
+          const raw = attachJson.data || attachJson || [];
+          console.log("📎 Fallback attachment API response:", JSON.stringify(raw, null, 2));
+          attachmentMetas = raw;
+        }
+      } catch (attachError) {
+        console.warn("⚠️ Could not fetch attachment metadata:", attachError);
       }
-    } catch (attachError) {
-      console.warn("⚠️ Could not fetch attachment metadata:", attachError);
     }
 
     // 8. Format message data
-    const fromEmail = emailData.from || "Unknown";
+    const fromRaw = (emailData.from || "Unknown") as string;
+    // Extract display name from "John Doe <john@gmail.com>" format
+    const fromNameMatch = fromRaw.match(/^(.+?)\s*</);
+    const fromName = fromNameMatch ? fromNameMatch[1].trim() : "";
+    const fromEmail = fromRaw;
     const subject = emailData.subject || "(no subject)";
     const snippet = textBody.slice(0, 500) || htmlBody.slice(0, 500) || "(No body content)";
     const attachmentNote = attachmentMetas.length > 0
@@ -291,6 +167,7 @@ export async function POST(request: Request) {
       inReplyTo: null,
       references: [],
       from: fromEmail,
+      fromName,
       to: emailLower,
       subject,
       textBody,
@@ -348,11 +225,7 @@ export async function POST(request: Request) {
       ? { type: "mrkdwn", text: `*Claimed by:*\n${emailThread.assignedToEmail}` }
       : null;
 
-      console.log("🔍 emailThread._id:", emailThread._id, typeof emailThread._id);
-console.log("🔍 emailThread._id.toString():", emailThread._id.toString());
-console.log("🔍 replyUrl:", replyUrl);
-console.log("🔍 snippet length:", snippet?.length);
-console.log("🔍 attachmentNote:", attachmentNote);
+
 
     const messagePayload = integration.type === "slack"
       ? {
@@ -471,14 +344,34 @@ ${snippet}
       if (attachmentMetas.length > 0 && integration.slackAccessToken) {
         for (const meta of attachmentMetas) {
           try {
-            // 1. Download the file content via the download_url Resend provides.
-            // NOTE: Do NOT construct /attachments/{id} — that returns JSON metadata,
-            // not binary content. meta.download_url is the actual file download URL.
-            const fileRes = await fetch(meta.download_url, {
-              headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
-            });
-            if (!fileRes.ok) { console.warn("⚠️ Could not download attachment:", meta.filename, fileRes.status); continue; }
-            const fileBuffer = Buffer.from(await fileRes.arrayBuffer());
+            let fileBuffer: Buffer | null = null;
+
+            // Option A: use base64 content directly from fullEmail (fastest)
+            if (meta.content) {
+              fileBuffer = Buffer.from(meta.content, "base64");
+              console.log(`📎 Using base64 content for: ${meta.filename} (${fileBuffer.length} bytes)`);
+            }
+            // Option B: download via download_url
+            else if (meta.download_url) {
+              const fileRes = await fetch(meta.download_url, {
+                headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+              });
+              if (!fileRes.ok) {
+                console.warn("⚠️ Could not download attachment:", meta.filename, fileRes.status);
+                continue;
+              }
+              fileBuffer = Buffer.from(await fileRes.arrayBuffer());
+              console.log(`📎 Downloaded attachment: ${meta.filename} (${fileBuffer.length} bytes)`);
+            } else {
+              console.warn("⚠️ No content or download_url for attachment:", meta.filename);
+              continue;
+            }
+
+            if (!fileBuffer || fileBuffer.length === 0) {
+              console.warn("⚠️ Empty file buffer for:", meta.filename);
+              continue;
+            }
+
             const fileSize = fileBuffer.length;
 
             // 2. Get an upload URL from Slack
@@ -500,7 +393,7 @@ ${snippet}
             const uploadRes = await fetch(urlData.upload_url, {
               method: "POST",
               headers: { "Content-Type": meta.content_type || "application/octet-stream" },
-              body: fileBuffer,
+              body: new Uint8Array(fileBuffer),
             });
             if (!uploadRes.ok) { console.warn("⚠️ Slack file upload failed:", meta.filename); continue; }
 
@@ -519,9 +412,9 @@ ${snippet}
             });
             const completeData = await completeRes.json();
             if (completeData.ok) {
-              console.log("📎 Uploaded attachment to Slack thread:", meta.filename);
+              console.log("📎 ✅ Uploaded attachment to Slack thread:", meta.filename);
             } else {
-              console.warn("⚠️ Slack completeUploadExternal failed:", completeData.error);
+              console.warn("⚠️ Slack completeUploadExternal failed:", completeData.error, JSON.stringify(completeData));
             }
           } catch (uploadErr) {
             console.warn("⚠️ Error uploading attachment:", meta.filename, uploadErr);

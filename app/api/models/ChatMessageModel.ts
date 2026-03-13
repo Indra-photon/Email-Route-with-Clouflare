@@ -7,6 +7,7 @@ export interface IChatMessage extends Document {
     body: string;
     type: "text" | "image" | "pdf";
     mediaUrl: string;
+    slackEventId?: string | null;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -41,6 +42,12 @@ const ChatMessageSchema = new Schema<IChatMessage>(
         mediaUrl: {
             type: String,
             default: '',
+        },
+        slackEventId: {
+            type: String,
+            default: null,
+            index: true,
+            sparse: true,
         },
     },
     {
