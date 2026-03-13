@@ -95,6 +95,8 @@ export async function POST(request: Request) {
                     threadTs: conversation.slackThreadTs || undefined,
                     visitorId,
                     domain: widget.domain,
+                    mediaUrl: mediaUrl || undefined,
+                    mediaType: (type as 'text' | 'image' | 'pdf') || 'text',
                 });
 
                 if (slackResult.ok && slackResult.threadTs) {

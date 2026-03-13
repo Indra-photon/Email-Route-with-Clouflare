@@ -66,6 +66,8 @@ export async function POST(
                             botToken: integration.slackAccessToken,
                             threadTs: conversation.slackThreadTs,
                             message: message?.trim() || "[file attachment]",
+                            mediaUrl: mediaUrl || undefined,
+                            mediaType: (type as 'text' | 'image' | 'pdf') || 'text',
                         });
                     }
                 }

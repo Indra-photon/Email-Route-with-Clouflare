@@ -12,6 +12,8 @@ interface SlackPostMessageParams {
     threadTs?: string; // If provided, posts as a thread reply
     visitorId?: string;
     domain?: string;
+    mediaUrl?: string; // Cloudinary image/PDF URL
+    mediaType?: 'text' | 'image' | 'pdf';
 }
 
 interface SlackPostMessageResult {
@@ -26,21 +28,44 @@ interface SlackPostMessageResult {
 export async function postToSlackLiveChat(
     params: SlackPostMessageParams
 ): Promise<SlackPostMessageResult> {
-    const { channelId, botToken, message, threadTs, visitorId, domain } = params;
+    const { channelId, botToken, message, threadTs, visitorId, domain, mediaUrl, mediaType } = params;
 
     try {
+        // Build the fallback text
+        const fallbackText = mediaUrl ? `${message} ${mediaUrl}` : message;
+
         // If threadTs is provided, post as thread reply; otherwise create new thread
         const payload: Record<string, unknown> = {
             channel: channelId,
-            text: message,
+            text: fallbackText,
         };
 
         if (threadTs) {
             // Reply in existing thread
             payload.thread_ts = threadTs;
+
+            // If there's an image, use blocks to display it inline
+            if (mediaUrl && mediaType === 'image') {
+                const blocks: Record<string, unknown>[] = [];
+                if (message && message !== '[file attachment]') {
+                    blocks.push({
+                        type: "section",
+                        text: { type: "mrkdwn", text: `👤 *Visitor:* ${message}` },
+                    });
+                }
+                blocks.push({
+                    type: "image",
+                    image_url: mediaUrl,
+                    alt_text: "Shared image",
+                });
+                payload.blocks = blocks;
+            } else if (mediaUrl && mediaType === 'pdf') {
+                // PDFs can't be displayed inline — send a link
+                payload.text = `👤 *Visitor:* ${message || ''} <${mediaUrl}|📄 View PDF>`;
+            }
         } else {
             // New thread - add rich formatting with visitor info
-            payload.blocks = [
+            const blocks: Record<string, unknown>[] = [
                 {
                     type: "section",
                     text: {
@@ -59,6 +84,22 @@ export async function postToSlackLiveChat(
                     },
                 },
             ];
+
+            // Add image block if the first message has an image
+            if (mediaUrl && mediaType === 'image') {
+                blocks.push({
+                    type: "image",
+                    image_url: mediaUrl,
+                    alt_text: "Shared image",
+                });
+            } else if (mediaUrl && mediaType === 'pdf') {
+                blocks.push({
+                    type: "section",
+                    text: { type: "mrkdwn", text: `<${mediaUrl}|📄 View PDF>` },
+                });
+            }
+
+            payload.blocks = blocks;
         }
 
         const response = await fetch("https://slack.com/api/chat.postMessage", {
@@ -97,10 +138,38 @@ export async function postAgentReplyToSlack(params: {
     botToken: string;
     threadTs: string;
     message: string;
+    mediaUrl?: string;
+    mediaType?: 'text' | 'image' | 'pdf';
 }): Promise<{ ok: boolean; error?: string }> {
-    const { channelId, botToken, threadTs, message } = params;
+    const { channelId, botToken, threadTs, message, mediaUrl, mediaType } = params;
 
     try {
+        const blocks: Record<string, unknown>[] = [
+            {
+                type: "section",
+                text: {
+                    type: "mrkdwn",
+                    text: `🤖 *Agent (Dashboard):* ${message}`,
+                },
+            },
+        ];
+
+        // Add image block if agent sent an image
+        if (mediaUrl && mediaType === 'image') {
+            blocks.push({
+                type: "image",
+                image_url: mediaUrl,
+                alt_text: "Agent shared image",
+            });
+        } else if (mediaUrl && mediaType === 'pdf') {
+            blocks.push({
+                type: "section",
+                text: { type: "mrkdwn", text: `<${mediaUrl}|📄 View PDF>` },
+            });
+        }
+
+        const fallbackText = mediaUrl ? `${message} ${mediaUrl}` : message;
+
         const response = await fetch("https://slack.com/api/chat.postMessage", {
             method: "POST",
             headers: {
@@ -110,16 +179,8 @@ export async function postAgentReplyToSlack(params: {
             body: JSON.stringify({
                 channel: channelId,
                 thread_ts: threadTs,
-                text: message,
-                blocks: [
-                    {
-                        type: "section",
-                        text: {
-                            type: "mrkdwn",
-                            text: `🤖 *Agent (Dashboard):* ${message}`,
-                        },
-                    },
-                ],
+                text: fallbackText,
+                blocks,
             }),
         });
 
