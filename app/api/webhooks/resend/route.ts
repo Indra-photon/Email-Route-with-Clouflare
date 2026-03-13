@@ -413,6 +413,12 @@ console.log("🔍 attachmentNote:", attachmentNote);
                 action_id: "set_status_resolved",
                 value: `resolved__${emailThread._id.toString()}`,
               },
+              {
+                type: "button",
+                text: { type: "plain_text", text: "💬 Canned Responses", emoji: true },
+                action_id: "canned_response_button",
+                value: emailThread._id.toString(),
+              },
             ],
           },
         ],
