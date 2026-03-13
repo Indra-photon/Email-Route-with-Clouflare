@@ -348,6 +348,12 @@ export async function POST(request: Request) {
       ? { type: "mrkdwn", text: `*Claimed by:*\n${emailThread.assignedToEmail}` }
       : null;
 
+      console.log("🔍 emailThread._id:", emailThread._id, typeof emailThread._id);
+console.log("🔍 emailThread._id.toString():", emailThread._id.toString());
+console.log("🔍 replyUrl:", replyUrl);
+console.log("🔍 snippet length:", snippet?.length);
+console.log("🔍 attachmentNote:", attachmentNote);
+
     const messagePayload = integration.type === "slack"
       ? {
         text: `📧 New email to \`${emailLower}\` — From: ${fromEmail} | Subject: ${subject}`,
@@ -542,6 +548,8 @@ ${snippet}
       console.log("✨ Successfully posted to", integration.type, "with reply link");
     }
 
+    console.log("📊 Logging email thread creation event for analytics...", messagePayload);
+    
     return NextResponse.json({
       success: true,
       message: "Email routed to integration"
