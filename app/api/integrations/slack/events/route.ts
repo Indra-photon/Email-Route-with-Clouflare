@@ -165,6 +165,14 @@ async function handleLiveChatReply(
     let mediaType: "text" | "image" | "pdf" = "text";
     let mediaFilename = "";
 
+    console.log(`🔄 handleLiveChatReply — text: "${replyText.slice(0, 50)}", files: ${slackFiles.length}, eventId: ${eventId}`);
+    if (slackFiles.length > 0) {
+      console.log("📂 Slack files:", JSON.stringify(slackFiles.map(f => ({
+        id: f.id, name: f.name, mimetype: f.mimetype, filetype: f.filetype,
+        has_url_private: !!f.url_private, has_url_private_download: !!f.url_private_download, mode: f.mode,
+      }))));
+    }
+
     if (slackFiles.length > 0) {
       const integration = await Integration.findOne({
         slackChannelId: channelId,
@@ -198,50 +206,62 @@ async function handleLiveChatReply(
             });
 
             if (fileRes.ok) {
-              const arrayBuf = await fileRes.arrayBuffer();
-              if (arrayBuf.byteLength > 0) {
-                const buffer = Buffer.from(arrayBuf);
-                const isPdf = mimetype === "application/pdf" || filename.toLowerCase().endsWith(".pdf");
-                const isImage = mimetype.startsWith("image/") || /\.(jpe?g|png|gif|webp)$/i.test(filename);
+              const contentType = fileRes.headers.get("content-type") || "";
+              console.log(`📡 File download: ${fileRes.status}, content-type: ${contentType}, size: ${fileRes.headers.get("content-length")}`);
 
-                if (isPdf || isImage) {
-                  // Re-upload to Cloudinary so the URL is permanent and public
-                  const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
-                    const uploadStream = cloudinary.uploader.upload_stream(
-                      {
-                        folder: "chat_uploads",
-                        resource_type: isPdf ? "raw" : "image",
-                        public_id: `${Date.now()}_${filename.replace(/\s+/g, "_")}`,
-                        access_mode: "public",
-                        access_control: [{ access_type: "anonymous" }],
-                      },
-                      (err, result) => {
-                        if (err || !result) return reject(err);
-                        resolve(result as { secure_url: string });
-                      }
-                    );
-                    uploadStream.end(buffer);
-                  });
+              if (contentType.includes("text/html")) {
+                console.error("❌ Slack returned HTML — auth failed");
+              } else {
+                const arrayBuf = await fileRes.arrayBuffer();
+                if (arrayBuf.byteLength > 0) {
+                  const buffer = Buffer.from(arrayBuf);
+                  const isPdf = mimetype === "application/pdf" || filename.toLowerCase().endsWith(".pdf");
+                  const isImage = mimetype.startsWith("image/") || /\.(jpe?g|png|gif|webp)$/i.test(filename);
 
-                  mediaUrl = uploadResult.secure_url;
-                  mediaType = isPdf ? "pdf" : "image";
-                  mediaFilename = filename;
-                  console.log(`📎 Slack→Cloudinary upload done: ${filename} → ${mediaUrl}`);
+                  if (isPdf || isImage) {
+                    // Re-upload to Cloudinary so the URL is permanent and public
+                    const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
+                      const uploadStream = cloudinary.uploader.upload_stream(
+                        {
+                          folder: "chat_uploads",
+                          resource_type: isPdf ? "raw" : "image",
+                          public_id: `${Date.now()}_${filename.replace(/\s+/g, "_")}`,
+                          access_mode: "public",
+                          access_control: [{ access_type: "anonymous" }],
+                        },
+                        (err, result) => {
+                          if (err || !result) {
+                            console.error("❌ Cloudinary upload error:", err);
+                            return reject(err);
+                          }
+                          resolve(result as { secure_url: string });
+                        }
+                      );
+                      uploadStream.end(buffer);
+                    });
+
+                    mediaUrl = uploadResult.secure_url;
+                    mediaType = isPdf ? "pdf" : "image";
+                    mediaFilename = filename;
+                    console.log(`📎 ✅ Slack→Cloudinary done: ${filename} → ${mediaUrl}`);
+                  }
                 }
               }
+            } else {
+              console.error(`❌ Slack file download failed: status ${fileRes.status}`);
             }
+            }
+          } catch (e) {
+            console.warn("⚠️ Could not process Slack file for live chat:", e);
           }
-        } catch (e) {
-          console.warn("⚠️ Could not process Slack file for live chat:", filename, e);
         }
       }
-    }
 
     // ── Save agent message to DB ──────────────────────────────────────────
     // Skip if both body and mediaUrl are empty (e.g. upload failed)
     const bodyText = mediaUrl ? (replyText.trim() || mediaFilename) : replyText.trim();
     if (!bodyText && !mediaUrl) {
-      console.warn("⚠️ Skipping empty message — no text and no media");
+      console.warn(`⚠️ Skipping empty message — replyText: "${replyText}", mediaUrl: "${mediaUrl}", files: ${slackFiles.length}`);
       return NextResponse.json({ ok: true });
     }
 
