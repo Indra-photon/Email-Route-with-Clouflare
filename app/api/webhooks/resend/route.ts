@@ -437,6 +437,8 @@ ${snippet}
     ) {
       // ── Slack App (OAuth) — use chat.postMessage ────────────────────────
       // This returns a message `ts` that we store so thread replies are matched.
+      console.log("📦 Message payload blocks:", JSON.stringify(messagePayload, null, 2));
+      
       const slackRes = await fetch("https://slack.com/api/chat.postMessage", {
         method: "POST",
         headers: {
@@ -450,6 +452,7 @@ ${snippet}
       });
 
       const slackData = await slackRes.json();
+      console.log("🔁 Slack response:", JSON.stringify(slackData, null, 2));
 
       if (!slackData.ok) {
         console.error("❌ Slack chat.postMessage failed:", slackData.error);
