@@ -238,13 +238,21 @@ async function handleLiveChatReply(
     }
 
     // ── Save agent message to DB ──────────────────────────────────────────
+    // Skip if both body and mediaUrl are empty (e.g. upload failed)
+    const bodyText = mediaUrl ? (replyText.trim() || mediaFilename) : replyText.trim();
+    if (!bodyText && !mediaUrl) {
+      console.warn("⚠️ Skipping empty message — no text and no media");
+      return NextResponse.json({ ok: true });
+    }
+
     const chatMessage = await ChatMessage.create({
       conversationId: conversation._id,
       widgetId: conversation.widgetId,
       sender: "agent",
-      body: mediaUrl ? (replyText.trim() || mediaFilename) : replyText.trim(),
+      body: bodyText,
       type: mediaType,
       mediaUrl,
+      slackEventId: eventId || null,
     });
 
     conversation.lastMessageAt = new Date();
@@ -358,12 +366,17 @@ export async function POST(request: Request) {
 
   // ── Deduplication ─────────────────────────────────────────────────────────
   // Slack retries the event if we don't respond within 3 seconds, which causes
-  // duplicate emails. We store the event_id and skip if already processed.
+  // duplicate messages. Check both EmailThread and ChatMessage for the event_id.
   const eventId = payload.event_id as string | undefined;
   if (eventId) {
-    const alreadyProcessed = await EmailThread.exists({ slackEventId: eventId });
-    if (alreadyProcessed) {
-      console.log("⚡ Duplicate Slack event — skipping:", eventId);
+    const alreadyInEmail = await EmailThread.exists({ slackEventId: eventId });
+    if (alreadyInEmail) {
+      console.log("⚡ Duplicate Slack event (email) — skipping:", eventId);
+      return NextResponse.json({ ok: true });
+    }
+    const alreadyInChat = await ChatMessage.exists({ slackEventId: eventId });
+    if (alreadyInChat) {
+      console.log("⚡ Duplicate Slack event (chat) — skipping:", eventId);
       return NextResponse.json({ ok: true });
     }
   }
