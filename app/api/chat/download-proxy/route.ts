@@ -18,13 +18,14 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: "Failed to fetch file" }, { status: 502 });
         }
 
-        const blob = await response.blob();
+        const arrayBuffer = await response.arrayBuffer();
+        const contentType = response.headers.get("content-type") || "application/octet-stream";
         const headers = new Headers();
-        headers.set("Content-Type", blob.type || "application/octet-stream");
+        headers.set("Content-Type", contentType);
         headers.set("Content-Disposition", `attachment; filename="${filename}"`);
-        headers.set("Content-Length", blob.size.toString());
+        headers.set("Content-Length", arrayBuffer.byteLength.toString());
 
-        return new NextResponse(blob, { headers });
+        return new NextResponse(Buffer.from(arrayBuffer), { headers });
     } catch {
         return NextResponse.json({ error: "Download failed" }, { status: 500 });
     }
