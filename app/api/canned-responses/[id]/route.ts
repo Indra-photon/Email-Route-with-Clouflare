@@ -1,61 +1,53 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import dbConnect from "@/lib/dbConnect";
 import { CannedResponse } from "@/app/api/models/CannedResponseModel";
-import { Workspace } from "@/app/api/models/WorkspaceModel";
 
-// PUT /api/canned-responses/[id]
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+
   try {
-    const { userId } = await auth();
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const { title, body } = await req.json();
-    if (!title && !body) {
-      return NextResponse.json({ error: "title or body is required" }, { status: 400 });
-    }
-
     await dbConnect();
+    const body = await req.json();
+    const { title, body: responseBody } = body;
 
-    const workspace = await Workspace.findOne({ ownerUserId: userId });
-    if (!workspace) return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
-
-    const updated = await CannedResponse.findOneAndUpdate(
-      { _id: params.id, workspaceId: workspace._id },
-      { ...(title && { title: title.trim() }), ...(body && { body: body.trim() }) },
+    const updated = await CannedResponse.findByIdAndUpdate(
+      id,
+      { ...(title && { title }), ...(responseBody && { body: responseBody }) },
       { new: true }
     );
 
-    if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!updated) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("PUT /api/canned-responses/[id] error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("❌ PUT /api/canned-responses/[id]:", error);
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }
 
-// DELETE /api/canned-responses/[id]
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const { userId } = await auth();
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
 
+  try {
     await dbConnect();
 
-    const workspace = await Workspace.findOne({ ownerUserId: userId });
-    if (!workspace) return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
+    const deleted = await CannedResponse.findByIdAndDelete(id);
 
-    const deleted = await CannedResponse.findOneAndDelete({
-      _id: params.id,
-      workspaceId: workspace._id,
-    });
-
-    if (!deleted) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!deleted) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("DELETE /api/canned-responses/[id] error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("❌ DELETE /api/canned-responses/[id]:", error);
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }
