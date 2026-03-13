@@ -193,40 +193,18 @@ async function handleLiveChatReply(
           }
 
           if (downloadUrl) {
-            const fileRes = await fetch(downloadUrl, {
-              headers: { Authorization: `Bearer ${botToken}` },
-            });
+            const isPdf = mimetype === "application/pdf" || filename.toLowerCase().endsWith(".pdf");
+            const isImage = mimetype.startsWith("image/") || /\.(jpe?g|png|gif|webp)$/i.test(filename);
 
-            if (fileRes.ok) {
-              const arrayBuf = await fileRes.arrayBuffer();
-              if (arrayBuf.byteLength > 0) {
-                const buffer = Buffer.from(arrayBuf);
-                const isPdf = mimetype === "application/pdf" || filename.toLowerCase().endsWith(".pdf");
-                const isImage = mimetype.startsWith("image/") || /\.(jpe?g|png|gif|webp)$/i.test(filename);
-
-                if (isPdf || isImage) {
-                  // Upload to Cloudinary
-                  const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
-                    const uploadStream = cloudinary.uploader.upload_stream(
-                      {
-                        folder: "chat_uploads",
-                        resource_type: isPdf ? "raw" : "image",
-                        public_id: `${Date.now()}_${filename.replace(/\s+/g, "_")}`,
-                      },
-                      (err, result) => {
-                        if (err || !result) return reject(err);
-                        resolve(result as { secure_url: string });
-                      }
-                    );
-                    uploadStream.end(buffer);
-                  });
-
-                  mediaUrl = uploadResult.secure_url;
-                  mediaType = isPdf ? "pdf" : "image";
-                  mediaFilename = filename;
-                  console.log(`📎 Slack→Cloudinary upload done: ${filename} → ${mediaUrl}`);
-                }
-              }
+            if (isPdf || isImage) {
+              // Build a proxy URL — no Cloudinary needed.
+              // The visitor's browser hits /api/slack/file-proxy which fetches
+              // the private Slack URL server-side using the bot token.
+              const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+              mediaUrl = `${appUrl}/api/slack/file-proxy?fileUrl=${encodeURIComponent(downloadUrl)}&channelId=${encodeURIComponent(channelId)}`;
+              mediaType = isPdf ? "pdf" : "image";
+              mediaFilename = filename;
+              console.log(`📎 Slack file proxy URL ready: ${filename} → ${mediaUrl}`);
             }
           }
         } catch (e) {
