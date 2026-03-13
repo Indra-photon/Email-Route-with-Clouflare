@@ -225,7 +225,7 @@ export async function POST(request: Request) {
         .replace(/\{support_email\}/g, thread.to || "");
 
       // Open reply modal with body pre-filled
-      await fetch("https://slack.com/api/views.open", {
+      await fetch("https://slack.com/api/views.push", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -268,7 +268,7 @@ export async function POST(request: Request) {
       const slackUserName = payload.user?.name;
 
       if (!replyText?.trim()) return NextResponse.json({ response_action: "clear" });
-
+      console.log("🚀 Firing reply for threadId:", threadId, "text length:", replyText.trim().length);
       // Fire and forget — must respond to Slack within 3s
       (async () => {
         try {
