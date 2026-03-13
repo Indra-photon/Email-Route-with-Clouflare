@@ -391,6 +391,29 @@ export async function POST(request: Request) {
               },
             ],
           },
+          {
+            type: "actions",
+            elements: [
+              {
+                type: "button",
+                text: { type: "plain_text", text: "🆕 Open", emoji: true },
+                action_id: "set_status",
+                value: `open__${emailThread._id}`,
+              },
+              {
+                type: "button",
+                text: { type: "plain_text", text: "🔄 In Progress", emoji: true },
+                action_id: "set_status",
+                value: `in_progress__${emailThread._id}`,
+              },
+              {
+                type: "button",
+                text: { type: "plain_text", text: "✅ Resolved", emoji: true },
+                action_id: "set_status",
+                value: `resolved__${emailThread._id}`,
+              },
+            ],
+          },
         ],
       }
       : {
