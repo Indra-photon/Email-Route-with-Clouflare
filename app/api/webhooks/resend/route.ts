@@ -389,11 +389,6 @@ export async function POST(request: Request) {
                 url: replyUrl,
                 style: "primary",
               },
-            ],
-          },
-          {
-            type: "actions",
-            elements: [
               {
                 type: "button",
                 text: { type: "plain_text", text: "🆕 Open", emoji: true },
