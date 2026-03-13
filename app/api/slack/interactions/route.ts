@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   }
 
   const action = payload.actions?.[0];
-  if (!action || action.action_id !== "set_status") {
+  if (!action || !action.action_id.startsWith("set_status")) {
     return NextResponse.json({ ok: true });
   }
 

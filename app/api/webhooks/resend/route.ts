@@ -398,19 +398,19 @@ console.log("🔍 attachmentNote:", attachmentNote);
               {
                 type: "button",
                 text: { type: "plain_text", text: "🆕 Open", emoji: true },
-                action_id: "set_status",
+                action_id: "set_status_open",
                 value: `open__${emailThread._id.toString()}`,
               },
               {
                 type: "button",
                 text: { type: "plain_text", text: "🔄 In Progress", emoji: true },
-                action_id: "set_status",
+                action_id: "set_status_in_progress",
                 value: `in_progress__${emailThread._id.toString()}`,
               },
               {
                 type: "button",
                 text: { type: "plain_text", text: "✅ Resolved", emoji: true },
-                action_id: "set_status",
+                action_id: "set_status_resolved",
                 value: `resolved__${emailThread._id.toString()}`,
               },
             ],
