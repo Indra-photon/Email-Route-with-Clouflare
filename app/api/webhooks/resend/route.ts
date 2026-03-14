@@ -165,6 +165,8 @@ export async function POST(request: Request) {
     let textBody = "";
     let htmlBody = "";
     let attachmentMetas: ResendAttachmentMeta[] = [];
+    let inReplyTo: string | null = null;
+    let references: string[] = [];
 
     try {
       console.log("📥 Fetching email content from Resend API...");
@@ -172,6 +174,36 @@ export async function POST(request: Request) {
 
       textBody = fullEmail?.text || "";
       htmlBody = fullEmail?.html || "";
+
+      // ── Extract threading headers ────────────────────────────────────────
+      const headersArray: Array<{ name: string; value: string }> =
+        (fullEmail as any)?.headers || [];
+      const getHeader = (name: string) => {
+        const found = headersArray.find(
+          (h: any) => h.name?.toLowerCase() === name.toLowerCase()
+        );
+        return found?.value?.trim() || null;
+      };
+
+      inReplyTo =
+        (fullEmail as any)?.in_reply_to ||
+        getHeader("in-reply-to") ||
+        emailData.in_reply_to ||
+        null;
+
+      const referencesRaw =
+        (fullEmail as any)?.references ||
+        getHeader("references") ||
+        emailData.references ||
+        "";
+      references =
+        typeof referencesRaw === "string"
+          ? referencesRaw.split(/\s+/).filter(Boolean)
+          : Array.isArray(referencesRaw)
+          ? referencesRaw
+          : [];
+
+      if (inReplyTo) console.log("🔗 In-Reply-To detected:", inReplyTo);
 
       const rawAttachments: any[] = (fullEmail as any)?.attachments || [];
       console.log("📎 Raw attachments from fullEmail:", JSON.stringify(rawAttachments.map((a: any) => ({
@@ -228,13 +260,32 @@ export async function POST(request: Request) {
       ? `\n📎 _${attachmentMetas.length} attachment(s): ${attachmentMetas.map(a => a.filename).join(", ")}_`
       : "";
 
+    // ── Look up parent thread for reply threading ────────────────────────
+    let parentThread: any = null;
+    if (inReplyTo) {
+      const refsToCheck = [inReplyTo, ...references].filter(Boolean);
+      console.log("🔗 In-Reply-To:", inReplyTo, "| references:", references);
+
+      parentThread = await EmailThread.findOne({
+        messageId: { $in: refsToCheck },
+        slackMessageTs: { $exists: true, $ne: null },
+        // no direction filter — match both inbound and outbound
+      }).sort({ createdAt: 1 }).lean();
+
+      if (parentThread) {
+        console.log("🧵 Found parent thread:", parentThread._id, "slackTs:", parentThread.slackMessageTs);
+      } else {
+        console.log("⚠️ No parent thread found — will post as new message");
+      }
+    }
+
     const emailThread = await EmailThread.create({
       workspaceId: alias.workspaceId,
       aliasId: alias._id,
       originalEmailId: emailData.email_id,
       messageId: emailData.message_id || `<${emailData.email_id}@resend.app>`,
-      inReplyTo: null,
-      references: [],
+      inReplyTo: inReplyTo,
+      references: references,
       from: fromEmail,
       fromName,
       to: emailLower,
@@ -291,38 +342,48 @@ export async function POST(request: Request) {
       : null;
 
     const messagePayload = integration.type === "slack"
-      ? {
-        text: `📧 New email to \`${emailLower}\` — From: ${fromEmail} | Subject: ${subject}`,
-        blocks: [
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: `📧 *New email to \`${emailLower}\`*`,
+      ? (() => {
+          const isReply = !!parentThread?.slackMessageTs;
+          const headerText = isReply
+            ? `↩️ *Reply from ${fromEmail}*`
+            : `📧 *New email to \`${emailLower}\`*`;
+          const fallbackText = isReply
+            ? `↩️ Reply from ${fromEmail} — ${subject}`
+            : `📧 New email to \`${emailLower}\` — From: ${fromEmail} | Subject: ${subject}`;
+
+          const blocks: any[] = [
+            {
+              type: "section",
+              text: { type: "mrkdwn", text: headerText },
             },
-          },
-          {
-            type: "section",
-            fields: [
-              { type: "mrkdwn", text: `*From:*\n${fromEmail}` },
-              { type: "mrkdwn", text: `*Subject:*\n${subject}` },
-              { type: "mrkdwn", text: `*Status:*\n${statusEmoji} ${statusLabel}` },
-              ...(claimField ? [claimField] : []),
-            ],
-          },
-          ...(snippet
-            ? [
-              {
-                type: "section",
-                text: {
-                  type: "mrkdwn",
-                  text: `>${snippet.replace(/\n/g, "\n>")}${attachmentNote}`,
-                },
+          ];
+
+          if (!isReply) {
+            blocks.push({
+              type: "section",
+              fields: [
+                { type: "mrkdwn", text: `*From:*\n${fromEmail}` },
+                { type: "mrkdwn", text: `*Subject:*\n${subject}` },
+                { type: "mrkdwn", text: `*Status:*\n${statusEmoji} ${statusLabel}` },
+                ...(claimField ? [claimField] : []),
+              ],
+            });
+          }
+
+          if (snippet) {
+            blocks.push({
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `>${snippet.replace(/\n/g, "\n>")}${attachmentNote}`,
               },
-            ]
-            : attachmentNote ? [{ type: "section", text: { type: "mrkdwn", text: attachmentNote } }] : []),
-          { type: "divider" },
-          {
+            });
+          } else if (attachmentNote) {
+            blocks.push({ type: "section", text: { type: "mrkdwn", text: attachmentNote } });
+          }
+
+          blocks.push({ type: "divider" });
+          blocks.push({
             type: "actions",
             elements: [
               {
@@ -356,9 +417,10 @@ export async function POST(request: Request) {
                 value: emailThread._id.toString(),
               },
             ],
-          },
-        ],
-      }
+          });
+
+          return { text: fallbackText, blocks, ...(isReply ? { thread_ts: parentThread.slackMessageTs } : {}) };
+        })()
       : {
         content: `📧 **New email to ${emailLower}**
 ${claimStatus}${statusLine}**From:** ${fromEmail}
