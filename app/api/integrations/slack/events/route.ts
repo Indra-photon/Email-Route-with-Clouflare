@@ -207,7 +207,8 @@ async function handleLiveChatReply(
   replyText: string,
   slackFiles: Array<Record<string, unknown>>,
   channelId: string,
-  eventId?: string
+  eventId?: string,
+  replyTs?: string
 ) {
   try {
     // ── Download Slack files and re-upload to Cloudinary ──────────────────
@@ -315,15 +316,26 @@ async function handleLiveChatReply(
       return NextResponse.json({ ok: true });
     }
 
-    const chatMessage = await ChatMessage.create({
-      conversationId: conversation._id,
-      widgetId: conversation.widgetId,
-      sender: "agent",
-      body: bodyText,
-      type: mediaType,
-      mediaUrl,
-      slackEventId: eventId || null,
-    });
+    let chatMessage: any;
+    try {
+      chatMessage = await ChatMessage.create({
+        conversationId: conversation._id,
+        widgetId: conversation.widgetId,
+        sender: "agent",
+        body: bodyText,
+        type: mediaType,
+        mediaUrl,
+        slackEventId: eventId || null,
+        slackMessageTs: replyTs || null,
+      });
+    } catch (createErr: any) {
+      if (createErr?.code === 11000) {
+        console.log("⚡ Duplicate live chat message blocked (Slack retry) for event:", eventId);
+        return NextResponse.json({ ok: true });
+      }
+      console.error("❌ Failed to save ChatMessage:", createErr);
+      return NextResponse.json({ ok: false }, { status: 500 });
+    }
 
     conversation.lastMessageAt = new Date();
     await conversation.save();
@@ -408,6 +420,39 @@ export async function POST(request: Request) {
 
   const event = payload.event as Record<string, unknown>;
 
+  // ── Handle Slack message deletions ────────────────────────────────────────
+  if (event.type === "message" && event.subtype === "message_deleted") {
+    const deletedTs = event.deleted_ts as string | undefined;
+    const channelId = event.channel as string | undefined;
+
+    if (deletedTs && channelId) {
+      await dbConnect();
+      const msgToDelete = await ChatMessage.findOne({ slackMessageTs: deletedTs }).lean();
+      if (msgToDelete) {
+        if (msgToDelete.mediaUrl) {
+          try {
+            const urlParts = msgToDelete.mediaUrl.split("/");
+            const fileWithExt = urlParts[urlParts.length - 1];
+            const folder = urlParts[urlParts.length - 2];
+            if (folder === "chat_uploads") {
+              const isPdf = msgToDelete.type === "pdf";
+              const publicId = isPdf
+                ? `chat_uploads/${fileWithExt}`
+                : `chat_uploads/${fileWithExt.replace(/\.[^.]+$/, "")}`;
+              await cloudinary.uploader.destroy(publicId, { resource_type: isPdf ? "raw" : "image" });
+              console.log("☁️ Deleted Cloudinary asset:", publicId);
+            }
+          } catch (e) {
+            console.warn("⚠️ Cloudinary delete failed for deleted Slack message:", e);
+          }
+        }
+        await ChatMessage.deleteOne({ _id: msgToDelete._id });
+        console.log("🗑️ Slack message deleted from DB:", msgToDelete._id);
+      }
+    }
+    return NextResponse.json({ ok: true });
+  }
+
   if (
     event.type !== "message" ||
     event.subtype === "bot_message" ||
@@ -471,7 +516,7 @@ export async function POST(request: Request) {
   });
 
   if (chatConversation) {
-    return await handleLiveChatReply(chatConversation, replyText, slackFiles, channelId, eventId);
+    return await handleLiveChatReply(chatConversation, replyText, slackFiles, channelId, eventId, replyTs);
   }
 
   // No match found - ignore

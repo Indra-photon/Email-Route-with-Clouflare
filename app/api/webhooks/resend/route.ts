@@ -176,13 +176,21 @@ export async function POST(request: Request) {
         console.warn("⚠️ Resend receiving API returned", emailRes.status);
       } else {
         const fullEmail = await emailRes.json();
+        console.log("📨 Full email response:", JSON.stringify({
+          keys: Object.keys(fullEmail || {}),
+          headersType: typeof fullEmail?.headers,
+          headersIsArray: Array.isArray(fullEmail?.headers),
+          in_reply_to: fullEmail?.in_reply_to,
+          references: fullEmail?.references,
+          headersPreview: fullEmail?.headers ? JSON.stringify(fullEmail.headers).slice(0, 200) : null,
+        }));
 
         textBody = fullEmail?.text || "";
         htmlBody = fullEmail?.html || "";
 
         // ── Extract threading headers ──────────────────────────────────────
         const headersArray: Array<{ name: string; value: string }> =
-          fullEmail?.headers || [];
+          Array.isArray(fullEmail?.headers) ? fullEmail.headers : [];
         const getHeader = (name: string) => {
           const found = headersArray.find(
             (h: any) => h.name?.toLowerCase() === name.toLowerCase()

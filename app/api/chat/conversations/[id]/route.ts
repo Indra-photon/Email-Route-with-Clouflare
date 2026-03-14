@@ -113,8 +113,13 @@ export async function DELETE(
                         const folder = urlParts[urlParts.length - 2];      // chat_uploads
 
                         if (folder === "chat_uploads") {
-                            const publicId = `chat_uploads/${fileWithExt.split('.')[0]}`;
-                            const resourceType = msg.type === "pdf" ? "raw" : "image";
+                            const isPdf = msg.type === "pdf";
+                            // PDFs: public_id includes extension (raw resource type)
+                            // Images: strip the last extension Cloudinary appended
+                            const publicId = isPdf
+                                ? `chat_uploads/${fileWithExt}`
+                                : `chat_uploads/${fileWithExt.replace(/\.[^.]+$/, "")}`;
+                            const resourceType = isPdf ? "raw" : "image";
 
                             return new Promise((resolve) => {
                                 cloudinary.uploader.destroy(publicId, { resource_type: resourceType }, (error, result) => {
