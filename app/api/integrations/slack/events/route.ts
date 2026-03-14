@@ -28,10 +28,6 @@ async function handleEmailThreadReply(
   replyTs?: string
 ) {
   try {
-    const replySubject = emailThread.subject.startsWith("Re:")
-      ? emailThread.subject
-      : `Re: ${emailThread.subject}`;
-
     const references = [emailThread.messageId, ...(emailThread.references || [])].filter(Boolean);
     const referencesHeader = references.join(" ");
 
@@ -108,11 +104,56 @@ async function handleEmailThreadReply(
       }
     }
 
+    // ── Save outbound reply to DB (before sending — acts as a dedup lock) ────
+    const replySubjectFinal = emailThread.subject.startsWith("Re:")
+      ? emailThread.subject
+      : `Re: ${emailThread.subject}`;
+
+    let outboundThread: any;
+    try {
+      outboundThread = await EmailThread.create({
+        workspaceId: emailThread.workspaceId,
+        aliasId: emailThread.aliasId,
+        originalEmailId: eventId || crypto.randomUUID(), // placeholder; updated after send
+        messageId: `<reply-${Date.now()}@email-router>`,
+        inReplyTo: emailThread.messageId,
+        references: [emailThread.messageId, ...(emailThread.references || [])].filter(Boolean),
+        from: fromAddress,
+        fromName: "",
+        to: emailThread.from,
+        subject: replySubjectFinal,
+        textBody: replyText || "(see attachment)",
+        htmlBody: "",
+        attachments: attachments.map((a) => ({
+          id: crypto.randomUUID(),
+          filename: a.filename,
+          content_type: "application/octet-stream",
+        })),
+        direction: "outbound",
+        status: "open",
+        statusUpdatedAt: new Date(),
+        slackMessageTs: replyTs || null,
+        slackChannelId: channelId,
+        slackEventId: eventId || null,
+        receivedAt: new Date(),
+        repliedAt: null,
+      });
+      console.log("💾 ✅ Outbound email thread saved:", outboundThread._id);
+    } catch (createErr: any) {
+      if (createErr?.code === 11000) {
+        // Duplicate key — Slack retry, email already being handled
+        console.log("⚡ Duplicate outbound record blocked (Slack retry) for event:", eventId);
+        return NextResponse.json({ ok: true });
+      }
+      console.error("❌ Failed to save outbound EmailThread:", createErr);
+      return NextResponse.json({ ok: false }, { status: 500 });
+    }
+
     // ── Send via Resend ────────────────────────────────────────────────────
     const emailPayload = {
       from: fromAddress,
       to: emailThread.from,
-      subject: replySubject,
+      subject: replySubjectFinal,
       text: replyText || "(see attachment)",
       headers: {
         "In-Reply-To": emailThread.messageId,
@@ -139,43 +180,10 @@ async function handleEmailThreadReply(
       sentEmailId = fallbackData?.id;
     }
 
-    // ── Save outbound reply to DB ──────────────────────────────────────────
-    const replySubjectFinal = emailThread.subject.startsWith("Re:")
-      ? emailThread.subject
-      : `Re: ${emailThread.subject}`;
-
-    console.log("💾 Saving outbound email thread...");
-    try {
-      await EmailThread.create({
-        workspaceId: emailThread.workspaceId,
-        aliasId: emailThread.aliasId,
-        originalEmailId: sentEmailId || crypto.randomUUID(),
-        messageId: `<reply-${Date.now()}@email-router>`,
-        inReplyTo: emailThread.messageId,
-        references: [emailThread.messageId, ...(emailThread.references || [])].filter(Boolean),
-        from: fromAddress,
-        fromName: "",
-        to: emailThread.from,
-        subject: replySubjectFinal,
-        textBody: replyText || "(see attachment)",
-        htmlBody: "",
-        attachments: attachments.map((a) => ({
-          id: crypto.randomUUID(),
-          filename: a.filename,
-          content_type: "application/octet-stream",
-        })),
-        direction: "outbound",
-        status: "open",
-        statusUpdatedAt: new Date(),
-        slackMessageTs: replyTs || null,
-        slackChannelId: channelId,
-        slackEventId: eventId || null,
-        receivedAt: new Date(),
-        repliedAt: null,
-      });
-      console.log("💾 ✅ Outbound email thread saved");
-    } catch (createErr) {
-      console.error("❌ Failed to save outbound EmailThread:", createErr);
+    // Update outbound record with the real Resend email ID
+    if (sentEmailId) {
+      outboundThread.originalEmailId = sentEmailId;
+      await outboundThread.save();
     }
 
     emailThread.slackEventId = eventId ?? null;

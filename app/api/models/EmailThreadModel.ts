@@ -197,6 +197,11 @@ const EmailThreadSchema = new Schema<IEmailThread>(
 
 EmailThreadSchema.index({ workspaceId: 1, createdAt: -1 });
 EmailThreadSchema.index({ originalEmailId: 1 });
+// Prevent duplicate outbound records for the same Slack event (race condition guard)
+EmailThreadSchema.index(
+  { slackEventId: 1 },
+  { unique: true, sparse: true, partialFilterExpression: { direction: "outbound" } }
+);
 
 export const EmailThread: Model<IEmailThread> =
   (mongoose.models.EmailThread as Model<IEmailThread>) ||
