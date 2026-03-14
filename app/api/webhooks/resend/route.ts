@@ -3,9 +3,6 @@ import dbConnect from "@/lib/dbConnect";
 import { Alias } from "@/app/api/models/AliasModel";
 import { Integration } from "@/app/api/models/IntegrationModel";
 import { EmailThread } from "@/app/api/models/EmailThreadModel";
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 type ResendAttachmentMeta = {
   id: string;
@@ -170,65 +167,74 @@ export async function POST(request: Request) {
 
     try {
       console.log("📥 Fetching email content from Resend API...");
-      const { data: fullEmail } = await resend.emails.receiving.get(emailData.email_id);
+      const emailRes = await fetch(
+        `https://api.resend.com/emails/receiving/${emailData.email_id}`,
+        { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` } }
+      );
 
-      textBody = fullEmail?.text || "";
-      htmlBody = fullEmail?.html || "";
+      if (!emailRes.ok) {
+        console.warn("⚠️ Resend receiving API returned", emailRes.status);
+      } else {
+        const fullEmail = await emailRes.json();
 
-      // ── Extract threading headers ────────────────────────────────────────
-      const headersArray: Array<{ name: string; value: string }> =
-        (fullEmail as any)?.headers || [];
-      const getHeader = (name: string) => {
-        const found = headersArray.find(
-          (h: any) => h.name?.toLowerCase() === name.toLowerCase()
-        );
-        return found?.value?.trim() || null;
-      };
+        textBody = fullEmail?.text || "";
+        htmlBody = fullEmail?.html || "";
 
-      inReplyTo =
-        (fullEmail as any)?.in_reply_to ||
-        getHeader("in-reply-to") ||
-        emailData.in_reply_to ||
-        null;
+        // ── Extract threading headers ──────────────────────────────────────
+        const headersArray: Array<{ name: string; value: string }> =
+          fullEmail?.headers || [];
+        const getHeader = (name: string) => {
+          const found = headersArray.find(
+            (h: any) => h.name?.toLowerCase() === name.toLowerCase()
+          );
+          return found?.value?.trim() || null;
+        };
 
-      const referencesRaw =
-        (fullEmail as any)?.references ||
-        getHeader("references") ||
-        emailData.references ||
-        "";
-      references =
-        typeof referencesRaw === "string"
-          ? referencesRaw.split(/\s+/).filter(Boolean)
-          : Array.isArray(referencesRaw)
-          ? referencesRaw
-          : [];
+        inReplyTo =
+          fullEmail?.in_reply_to ||
+          getHeader("in-reply-to") ||
+          emailData.in_reply_to ||
+          null;
 
-      if (inReplyTo) console.log("🔗 In-Reply-To detected:", inReplyTo);
+        const referencesRaw =
+          fullEmail?.references ||
+          getHeader("references") ||
+          emailData.references ||
+          "";
+        references =
+          typeof referencesRaw === "string"
+            ? referencesRaw.split(/\s+/).filter(Boolean)
+            : Array.isArray(referencesRaw)
+            ? referencesRaw
+            : [];
 
-      const rawAttachments: any[] = (fullEmail as any)?.attachments || [];
-      console.log("📎 Raw attachments from fullEmail:", JSON.stringify(rawAttachments.map((a: any) => ({
-        filename: a.filename || a.name,
-        content_type: a.content_type || a.type || a.mimeType,
-        hasContent: !!a.content,
-        hasDownloadUrl: !!a.download_url,
-        keys: Object.keys(a),
-      })), null, 2));
+        if (inReplyTo) console.log("🔗 In-Reply-To detected:", inReplyTo);
 
-      attachmentMetas = rawAttachments.map((a: any) => ({
-        id: a.id || `att_${Date.now()}_${Math.random().toString(36).slice(2)}`,
-        filename: a.filename || a.name || "attachment",
-        content_type: a.content_type || a.type || a.mimeType || "application/octet-stream",
-        download_url: a.download_url || "",
-        size: a.size,
-        content: a.content,
-      }));
+        const rawAttachments: any[] = fullEmail?.attachments || [];
+        console.log("📎 Raw attachments from fullEmail:", JSON.stringify(rawAttachments.map((a: any) => ({
+          filename: a.filename || a.name,
+          content_type: a.content_type || a.type || a.mimeType,
+          hasContent: !!a.content,
+          hasDownloadUrl: !!a.download_url,
+          keys: Object.keys(a),
+        })), null, 2));
 
-      console.log("✅ Email content retrieved:", {
-        hasText: !!textBody,
-        hasHtml: !!htmlBody,
-        textLength: textBody.length,
-        attachmentCount: attachmentMetas.length,
-      });
+        attachmentMetas = rawAttachments.map((a: any) => ({
+          id: a.id || `att_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+          filename: a.filename || a.name || "attachment",
+          content_type: a.content_type || a.type || a.mimeType || "application/octet-stream",
+          download_url: a.download_url || "",
+          size: a.size,
+          content: a.content,
+        }));
+
+        console.log("✅ Email content retrieved:", {
+          hasText: !!textBody,
+          hasHtml: !!htmlBody,
+          textLength: textBody.length,
+          attachmentCount: attachmentMetas.length,
+        });
+      }
     } catch (fetchError) {
       console.error("❌ Error fetching email content from Resend:", fetchError);
     }
