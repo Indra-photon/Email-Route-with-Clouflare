@@ -107,6 +107,8 @@ export async function POST(request: Request) {
                         await conversation.save();
                         console.log(`✅ Slack live chat thread created: ${slackResult.threadTs}`);
                     }
+                    // Save the individual Slack message ts so deletions from Slack sync to DB
+                    await chatMessage.updateOne({ slackMessageTs: slackResult.threadTs });
                 } else {
                     console.error("⚠️ Failed to post to Slack live chat:", slackResult.error);
                 }

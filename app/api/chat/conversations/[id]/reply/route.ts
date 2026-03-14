@@ -61,7 +61,7 @@ export async function POST(
                         integration.authMethod === "oauth" &&
                         integration.slackAccessToken
                     ) {
-                        await postAgentReplyToSlack({
+                        const slackResult = await postAgentReplyToSlack({
                             channelId: conversation.slackChannelId,
                             botToken: integration.slackAccessToken,
                             threadTs: conversation.slackThreadTs,
@@ -69,6 +69,9 @@ export async function POST(
                             mediaUrl: mediaUrl || undefined,
                             mediaType: (type as 'text' | 'image' | 'pdf') || 'text',
                         });
+                        if (slackResult.ok && slackResult.ts) {
+                            await chatMessage.updateOne({ slackMessageTs: slackResult.ts });
+                        }
                     }
                 }
             }
