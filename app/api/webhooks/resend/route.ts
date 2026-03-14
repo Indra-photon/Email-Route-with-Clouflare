@@ -7,6 +7,90 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+type ResendAttachmentMeta = {
+  id: string;
+  filename: string;
+  content_type: string;
+  download_url: string;
+  size?: number;
+  content?: string;
+};
+
+async function fetchAttachmentBufferFromResend(
+  emailId: string,
+  meta: ResendAttachmentMeta
+): Promise<Buffer | null> {
+  try {
+    // Strategy 1: base64 content already present in payload (rare but handle it)
+    if (meta.content) {
+      const buf = Buffer.from(meta.content, "base64");
+      if (buf.length > 0) return buf;
+    }
+
+    // Strategy 2: use provided download_url if available
+    if (meta.download_url) {
+      const fileRes = await fetch(meta.download_url, {
+        headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+      });
+      if (fileRes.ok) {
+        const buf = Buffer.from(await fileRes.arrayBuffer());
+        if (buf.length > 0) return buf;
+      }
+    }
+
+    // Strategy 3: Resend's actual endpoint for inbound email attachments
+    // The correct path uses the attachment `id` from the metadata
+    if (meta.id) {
+      const url = `https://api.resend.com/emails/${emailId}/attachments/${meta.id}`;
+      console.log(`📎 Trying Resend attachment endpoint: ${url}`);
+
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+          Accept: "application/json",
+        },
+      });
+
+      if (res.ok) {
+        const contentType = res.headers.get("content-type") || "";
+
+        if (contentType.includes("application/json")) {
+          // Resend may return { content: "<base64>", download_url: "..." }
+          const json = await res.json().catch(() => null) as any;
+
+          if (json?.content) {
+            const buf = Buffer.from(json.content, "base64");
+            if (buf.length > 0) return buf;
+          }
+
+          if (json?.download_url) {
+            const dlRes = await fetch(json.download_url, {
+              headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+            });
+            if (dlRes.ok) {
+              const buf = Buffer.from(await dlRes.arrayBuffer());
+              if (buf.length > 0) return buf;
+            }
+          }
+        } else {
+          // Binary response — take it directly
+          const buf = Buffer.from(await res.arrayBuffer());
+          if (buf.length > 0) return buf;
+        }
+      } else {
+        console.warn(`⚠️ Resend attachment endpoint returned ${res.status} for ${meta.filename}`);
+        // Log response body to understand what Resend is actually returning
+        const errText = await res.text().catch(() => "");
+        console.warn("⚠️ Response body:", errText.slice(0, 300));
+      }
+    }
+  } catch (err) {
+    console.warn("⚠️ Error fetching attachment bytes from Resend:", meta.filename, err);
+  }
+
+  return null;
+}
+
 export async function POST(request: Request) {
   try {
     // 1. Parse Resend webhook payload
@@ -88,7 +172,6 @@ export async function POST(request: Request) {
     // 7. Fetch full email content from Resend API
     let textBody = "";
     let htmlBody = "";
-    type ResendAttachmentMeta = { id: string; filename: string; content_type: string; download_url: string; size?: number; content?: string };
     let attachmentMetas: ResendAttachmentMeta[] = [];
 
     try {
@@ -318,7 +401,7 @@ ${snippet}
       // ── Slack App (OAuth) — use chat.postMessage ────────────────────────
       // This returns a message `ts` that we store so thread replies are matched.
       console.log("📦 Message payload blocks:", JSON.stringify(messagePayload, null, 2));
-      
+
       const slackRes = await fetch("https://slack.com/api/chat.postMessage", {
         method: "POST",
         headers: {
@@ -350,26 +433,16 @@ ${snippet}
       if (attachmentMetas.length > 0 && integration.slackAccessToken) {
         for (const meta of attachmentMetas) {
           try {
-            let fileBuffer: Buffer | null = null;
-
-            // Option A: use base64 content directly from fullEmail (fastest)
-            if (meta.content) {
-              fileBuffer = Buffer.from(meta.content, "base64");
-              console.log(`📎 Using base64 content for: ${meta.filename} (${fileBuffer.length} bytes)`);
-            }
-            // Option B: download via download_url
-            else if (meta.download_url) {
-              const fileRes = await fetch(meta.download_url, {
-                headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
-              });
-              if (!fileRes.ok) {
-                console.warn("⚠️ Could not download attachment:", meta.filename, fileRes.status);
-                continue;
-              }
-              fileBuffer = Buffer.from(await fileRes.arrayBuffer());
-              console.log(`📎 Downloaded attachment: ${meta.filename} (${fileBuffer.length} bytes)`);
+            const fileBuffer = await fetchAttachmentBufferFromResend(emailData.email_id, meta);
+            if (fileBuffer) {
+              console.log(`📎 Attachment bytes resolved: ${meta.filename} (${fileBuffer.length} bytes)`);
             } else {
-              console.warn("⚠️ No content or download_url for attachment:", meta.filename);
+              console.warn("⚠️ Could not resolve attachment bytes:", {
+                filename: meta.filename,
+                id: meta.id,
+                hasContent: !!meta.content,
+                hasDownloadUrl: !!meta.download_url,
+              });
               continue;
             }
 
@@ -384,7 +457,7 @@ ${snippet}
             const urlRes = await fetch("https://slack.com/api/files.getUploadURLExternal", {
               method: "POST",
               headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
+                "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
                 Authorization: `Bearer ${integration.slackAccessToken}`,
               },
               body: new URLSearchParams({
@@ -407,7 +480,7 @@ ${snippet}
             const completeRes = await fetch("https://slack.com/api/files.completeUploadExternal", {
               method: "POST",
               headers: {
-                "Content-Type": "application/json",
+                "Content-Type": "application/json; charset=utf-8",
                 Authorization: `Bearer ${integration.slackAccessToken}`,
               },
               body: JSON.stringify({
@@ -448,7 +521,7 @@ ${snippet}
     }
 
     console.log("📊 Logging email thread creation event for analytics...", messagePayload);
-    
+
     return NextResponse.json({
       success: true,
       message: "Email routed to integration"
