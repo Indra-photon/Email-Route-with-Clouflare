@@ -21,13 +21,11 @@ async function fetchAttachmentBufferFromResend(
   meta: ResendAttachmentMeta
 ): Promise<Buffer | null> {
   try {
-    // Strategy 1: base64 content already present in payload (rare but handle it)
     if (meta.content) {
       const buf = Buffer.from(meta.content, "base64");
       if (buf.length > 0) return buf;
     }
 
-    // Strategy 2: use provided download_url if available
     if (meta.download_url) {
       const fileRes = await fetch(meta.download_url, {
         headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
@@ -38,7 +36,6 @@ async function fetchAttachmentBufferFromResend(
       }
     }
 
-    // Strategy 3: Resend inbound email attachment endpoints
     if (meta.id) {
       const candidates = [
         `https://api.resend.com/emails/receiving/${emailId}/attachments/${meta.id}`,
@@ -59,7 +56,7 @@ async function fetchAttachmentBufferFromResend(
           const errText = await res.text().catch(() => "");
           console.warn(`⚠️ Resend attachment endpoint returned ${res.status} for ${meta.filename}`);
           console.warn("⚠️ Response body:", errText.slice(0, 300));
-          continue; // try next candidate
+          continue;
         }
 
         const contentType = res.headers.get("content-type") || "";
@@ -82,7 +79,6 @@ async function fetchAttachmentBufferFromResend(
             }
           }
         } else {
-          // Binary response — take it directly
           const buf = Buffer.from(await res.arrayBuffer());
           if (buf.length > 0) return buf;
         }
@@ -97,7 +93,6 @@ async function fetchAttachmentBufferFromResend(
 
 export async function POST(request: Request) {
   try {
-    // 1. Parse Resend webhook payload
     const payload = await request.json();
 
     console.log("📧 Received email webhook from Resend:", {
@@ -107,7 +102,6 @@ export async function POST(request: Request) {
       subject: payload.data?.subject,
     });
 
-    // 2. Verify it's an email.received event
     if (payload.type !== "email.received") {
       console.log("⚠️ Ignoring non-email event:", payload.type);
       return NextResponse.json({ message: "Event ignored" });
@@ -115,7 +109,6 @@ export async function POST(request: Request) {
 
     const emailData = payload.data;
 
-    // 3. Extract recipient email
     const recipientEmail = Array.isArray(emailData.to)
       ? emailData.to[0]
       : emailData.to;
@@ -125,7 +118,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No recipient" }, { status: 400 });
     }
 
-    // 4. Parse email address (support@acme.com → support + acme.com)
     const emailLower = recipientEmail.toLowerCase().trim();
     const atIndex = emailLower.indexOf("@");
 
@@ -138,7 +130,6 @@ export async function POST(request: Request) {
 
     console.log("🔍 Looking up alias:", { localPart, email: emailLower });
 
-    // 5. Look up alias in MongoDB
     await dbConnect();
 
     const alias = await Alias.findOne({
@@ -153,7 +144,6 @@ export async function POST(request: Request) {
 
     console.log("✅ Found alias:", alias.email);
 
-    // 6. Manually fetch integration
     if (!alias.integrationId) {
       console.warn("⚠️ No integration configured for alias:", alias.email);
       return NextResponse.json({ message: "No integration" }, { status: 200 });
@@ -166,14 +156,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "No integration" }, { status: 200 });
     }
 
-    // OAuth integrations use slackAccessToken instead of webhookUrl
     const isOAuth = integration.authMethod === "oauth";
     if (!isOAuth && !integration.webhookUrl) {
       console.warn("⚠️ Integration has no webhook URL:", alias.email);
       return NextResponse.json({ message: "No integration" }, { status: 200 });
     }
 
-    // 7. Fetch full email content from Resend API
     let textBody = "";
     let htmlBody = "";
     let attachmentMetas: ResendAttachmentMeta[] = [];
@@ -185,8 +173,6 @@ export async function POST(request: Request) {
       textBody = fullEmail?.text || "";
       htmlBody = fullEmail?.html || "";
 
-      // Pull attachments directly from the full email object — it contains base64 content
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rawAttachments: any[] = (fullEmail as any)?.attachments || [];
       console.log("📎 Raw attachments from fullEmail:", JSON.stringify(rawAttachments.map((a: any) => ({
         filename: a.filename || a.name,
@@ -202,7 +188,7 @@ export async function POST(request: Request) {
         content_type: a.content_type || a.type || a.mimeType || "application/octet-stream",
         download_url: a.download_url || "",
         size: a.size,
-        content: a.content, // base64 string if present
+        content: a.content,
       }));
 
       console.log("✅ Email content retrieved:", {
@@ -215,7 +201,6 @@ export async function POST(request: Request) {
       console.error("❌ Error fetching email content from Resend:", fetchError);
     }
 
-    // Fallback: try the separate attachments endpoint if no attachments found above
     if (attachmentMetas.length === 0) {
       try {
         const attachRes = await fetch(
@@ -233,9 +218,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // 8. Format message data
     const fromRaw = (emailData.from || "Unknown") as string;
-    // Extract display name from "John Doe <john@gmail.com>" format
     const fromNameMatch = fromRaw.match(/^(.+?)\s*</);
     const fromName = fromNameMatch ? fromNameMatch[1].trim() : "";
     const fromEmail = fromRaw;
@@ -245,7 +228,6 @@ export async function POST(request: Request) {
       ? `\n📎 _${attachmentMetas.length} attachment(s): ${attachmentMetas.map(a => a.filename).join(", ")}_`
       : "";
 
-    // 9. Save email to database
     const emailThread = await EmailThread.create({
       workspaceId: alias.workspaceId,
       aliasId: alias._id,
@@ -273,10 +255,8 @@ export async function POST(request: Request) {
     });
     console.log("💾 Email saved to database:", emailThread._id);
 
-    // 10. Generate reply link
     const replyUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/reply/${emailThread._id}`;
 
-    // 10.5. Check if ticket is claimed (for consistency, though new emails won't be claimed)
     let claimStatus = "";
     if (emailThread.assignedTo && emailThread.assignedToEmail) {
       claimStatus = integration.type === "slack"
@@ -284,7 +264,6 @@ export async function POST(request: Request) {
         : `👤 **Claimed by:** ${emailThread.assignedToEmail}\n`;
     }
 
-    // 10.6. Add status line
     const statusEmojis = {
       open: '🆕',
       in_progress: '🔄',
@@ -307,12 +286,9 @@ export async function POST(request: Request) {
       ? `${statusEmoji} *Status:* ${statusLabel}\n`
       : `${statusEmoji} **Status:** ${statusLabel}\n`;
 
-    // 11. Format Discord/Slack message with reply link and claim status
     const claimField = emailThread.assignedTo && emailThread.assignedToEmail
       ? { type: "mrkdwn", text: `*Claimed by:*\n${emailThread.assignedToEmail}` }
       : null;
-
-
 
     const messagePayload = integration.type === "slack"
       ? {
@@ -395,7 +371,6 @@ ${snippet}
 
     console.log("📤 Posting to", integration.type, "webhook");
 
-    // 12. Post to Slack (OAuth bot token) or Discord/Slack (webhook URL)
     if (
       integration.type === "slack" &&
       integration.authMethod === "oauth" &&
@@ -404,8 +379,8 @@ ${snippet}
     ) {
       console.log("📦 Message payload blocks:", JSON.stringify(messagePayload, null, 2));
 
-      // ── Upload attachments FIRST, then post message with image URLs ──
-      const uploadedFileUrls: { filename: string; permalink: string; content_type: string }[] = [];
+      // ── Upload attachments FIRST, then post message with images inline ──
+      const uploadedFiles: { filename: string; file_id: string; content_type: string }[] = [];
 
       if (attachmentMetas.length > 0) {
         for (const meta of attachmentMetas) {
@@ -441,7 +416,7 @@ ${snippet}
             });
             if (!uploadRes.ok) { console.warn("⚠️ Slack file upload failed:", meta.filename); continue; }
 
-            // Step 3: Complete upload WITHOUT channel (just to get permalink)
+            // Step 3: Complete upload without channel (gets file_id only)
             const completeRes = await fetch("https://slack.com/api/files.completeUploadExternal", {
               method: "POST",
               headers: {
@@ -455,35 +430,32 @@ ${snippet}
             const completeData = await completeRes.json();
             if (!completeData.ok) { console.warn("⚠️ Slack completeUpload failed:", completeData.error); continue; }
 
-            // Step 4: Get file info to retrieve permalink
-            const fileInfoRes = await fetch(`https://slack.com/api/files.info?file=${urlData.file_id}`, {
-              headers: { Authorization: `Bearer ${integration.slackAccessToken}` },
+            // Store file_id for use in image block
+            uploadedFiles.push({
+              filename: meta.filename,
+              file_id: urlData.file_id,
+              content_type: meta.content_type,
             });
-            const fileInfoData = await fileInfoRes.json();
-            if (fileInfoData.ok && fileInfoData.file?.permalink) {
-              uploadedFileUrls.push({
-                filename: meta.filename,
-                permalink: fileInfoData.file.permalink,
-                content_type: meta.content_type,
-              });
-              console.log(`📎 ✅ Got permalink for: ${meta.filename}`);
-            }
+            console.log(`📎 ✅ Uploaded to Slack, file_id: ${urlData.file_id} for: ${meta.filename}`);
+
           } catch (uploadErr) {
             console.warn("⚠️ Error uploading attachment:", meta.filename, uploadErr);
           }
         }
       }
 
-      // ── Build blocks with image blocks appended ──
-      const imageBlocks = uploadedFileUrls
+      // ── Build image blocks using slack_file + file_id ──
+      const imageBlocks = uploadedFiles
         .filter(f => f.content_type.startsWith("image/"))
         .map(f => ({
           type: "image",
-          image_url: f.permalink,
+          slack_file: {
+            id: f.file_id,
+          },
           alt_text: f.filename,
         }));
 
-      const nonImageFiles = uploadedFileUrls.filter(f => !f.content_type.startsWith("image/"));
+      const nonImageFiles = uploadedFiles.filter(f => !f.content_type.startsWith("image/"));
       const nonImageNote = nonImageFiles.length > 0
         ? `\n📎 _${nonImageFiles.map(f => f.filename).join(", ")}_`
         : "";
@@ -525,7 +497,7 @@ ${snippet}
       console.log("✨ Posted to Slack (OAuth) — ts:", slackData.ts);
 
     } else {
-      // ── Discord or legacy Slack webhook ────────────────────────────────
+      // ── Discord or legacy Slack webhook ──
       const webhookResponse = await fetch(integration.webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
