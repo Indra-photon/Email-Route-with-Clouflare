@@ -8,6 +8,7 @@ export interface IChatMessage extends Document {
     type: "text" | "image" | "pdf";
     mediaUrl: string;
     slackEventId?: string | null;
+    slackMessageTs?: string | null;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -46,6 +47,10 @@ const ChatMessageSchema = new Schema<IChatMessage>(
         slackEventId: {
             type: String,
             default: null,
+        },
+        slackMessageTs: {
+            type: String,
+            default: null,
             index: true,
             sparse: true,
         },
@@ -56,6 +61,8 @@ const ChatMessageSchema = new Schema<IChatMessage>(
 );
 
 ChatMessageSchema.index({ conversationId: 1, createdAt: 1 });
+// Prevent duplicate agent messages for the same Slack event (race condition guard)
+ChatMessageSchema.index({ slackEventId: 1 }, { unique: true, sparse: true });
 
 export const ChatMessage: Model<IChatMessage> =
     (mongoose.models.ChatMessage as Model<IChatMessage>) ||
