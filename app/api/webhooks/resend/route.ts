@@ -38,24 +38,33 @@ async function fetchAttachmentBufferFromResend(
       }
     }
 
-    // Strategy 3: Resend's actual endpoint for inbound email attachments
-    // The correct path uses the attachment `id` from the metadata
+    // Strategy 3: Resend inbound email attachment endpoints
     if (meta.id) {
-      const url = `https://api.resend.com/emails/${emailId}/attachments/${meta.id}`;
-      console.log(`📎 Trying Resend attachment endpoint: ${url}`);
+      const candidates = [
+        `https://api.resend.com/emails/receiving/${emailId}/attachments/${meta.id}`,
+        `https://api.resend.com/emails/receiving/${emailId}/attachments/${meta.id}/download`,
+      ];
 
-      const res = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-          Accept: "application/json",
-        },
-      });
+      for (const url of candidates) {
+        console.log(`📎 Trying Resend attachment endpoint: ${url}`);
 
-      if (res.ok) {
+        const res = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+            Accept: "application/json",
+          },
+        });
+
+        if (!res.ok) {
+          const errText = await res.text().catch(() => "");
+          console.warn(`⚠️ Resend attachment endpoint returned ${res.status} for ${meta.filename}`);
+          console.warn("⚠️ Response body:", errText.slice(0, 300));
+          continue; // try next candidate
+        }
+
         const contentType = res.headers.get("content-type") || "";
 
         if (contentType.includes("application/json")) {
-          // Resend may return { content: "<base64>", download_url: "..." }
           const json = await res.json().catch(() => null) as any;
 
           if (json?.content) {
@@ -77,11 +86,6 @@ async function fetchAttachmentBufferFromResend(
           const buf = Buffer.from(await res.arrayBuffer());
           if (buf.length > 0) return buf;
         }
-      } else {
-        console.warn(`⚠️ Resend attachment endpoint returned ${res.status} for ${meta.filename}`);
-        // Log response body to understand what Resend is actually returning
-        const errText = await res.text().catch(() => "");
-        console.warn("⚠️ Response body:", errText.slice(0, 300));
       }
     }
   } catch (err) {
