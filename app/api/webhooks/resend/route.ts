@@ -402,62 +402,23 @@ ${snippet}
       integration.slackAccessToken &&
       integration.slackChannelId
     ) {
-      // ── Slack App (OAuth) — use chat.postMessage ────────────────────────
-      // This returns a message `ts` that we store so thread replies are matched.
       console.log("📦 Message payload blocks:", JSON.stringify(messagePayload, null, 2));
 
-      const slackRes = await fetch("https://slack.com/api/chat.postMessage", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${integration.slackAccessToken}`,
-        },
-        body: JSON.stringify({
-          channel: integration.slackChannelId,
-          ...messagePayload,
-        }),
-      });
+      // ── Upload attachments FIRST, then post message with image URLs ──
+      const uploadedFileUrls: { filename: string; permalink: string; content_type: string }[] = [];
 
-      const slackData = await slackRes.json();
-      console.log("🔁 Slack response:", JSON.stringify(slackData, null, 2));
-
-      if (!slackData.ok) {
-        console.error("❌ Slack chat.postMessage failed:", slackData.error);
-        return NextResponse.json({ error: "Slack post failed" }, { status: 500 });
-      }
-
-      // Save the message ts + channel so we can match thread replies back to this email
-      emailThread.slackMessageTs = slackData.ts as string;
-      emailThread.slackChannelId = slackData.channel as string;
-      await emailThread.save();
-
-      console.log("✨ Posted to Slack (OAuth) — ts:", slackData.ts);
-
-      // ── Upload email attachments to the Slack thread ──────────────────
-      if (attachmentMetas.length > 0 && integration.slackAccessToken) {
+      if (attachmentMetas.length > 0) {
         for (const meta of attachmentMetas) {
           try {
             const fileBuffer = await fetchAttachmentBufferFromResend(emailData.email_id, meta);
-            if (fileBuffer) {
-              console.log(`📎 Attachment bytes resolved: ${meta.filename} (${fileBuffer.length} bytes)`);
-            } else {
-              console.warn("⚠️ Could not resolve attachment bytes:", {
-                filename: meta.filename,
-                id: meta.id,
-                hasContent: !!meta.content,
-                hasDownloadUrl: !!meta.download_url,
-              });
-              continue;
-            }
-
             if (!fileBuffer || fileBuffer.length === 0) {
-              console.warn("⚠️ Empty file buffer for:", meta.filename);
+              console.warn("⚠️ No bytes for attachment:", meta.filename);
               continue;
             }
 
             const fileSize = fileBuffer.length;
 
-            // 2. Get an upload URL from Slack
+            // Step 1: Get upload URL
             const urlRes = await fetch("https://slack.com/api/files.getUploadURLExternal", {
               method: "POST",
               headers: {
@@ -472,7 +433,7 @@ ${snippet}
             const urlData = await urlRes.json();
             if (!urlData.ok) { console.warn("⚠️ Slack getUploadURLExternal failed:", urlData.error); continue; }
 
-            // 3. Upload the file content to the upload URL
+            // Step 2: Upload bytes
             const uploadRes = await fetch(urlData.upload_url, {
               method: "POST",
               headers: { "Content-Type": meta.content_type || "application/octet-stream" },
@@ -480,7 +441,7 @@ ${snippet}
             });
             if (!uploadRes.ok) { console.warn("⚠️ Slack file upload failed:", meta.filename); continue; }
 
-            // 4. Complete the upload and share in the thread
+            // Step 3: Complete upload WITHOUT channel (just to get permalink)
             const completeRes = await fetch("https://slack.com/api/files.completeUploadExternal", {
               method: "POST",
               headers: {
@@ -489,21 +450,80 @@ ${snippet}
               },
               body: JSON.stringify({
                 files: [{ id: urlData.file_id }],
-                channel_id: integration.slackChannelId,
-                thread_ts: slackData.ts,
               }),
             });
             const completeData = await completeRes.json();
-            if (completeData.ok) {
-              console.log("📎 ✅ Uploaded attachment to Slack thread:", meta.filename);
-            } else {
-              console.warn("⚠️ Slack completeUploadExternal failed:", completeData.error, JSON.stringify(completeData));
+            if (!completeData.ok) { console.warn("⚠️ Slack completeUpload failed:", completeData.error); continue; }
+
+            // Step 4: Get file info to retrieve permalink
+            const fileInfoRes = await fetch(`https://slack.com/api/files.info?file=${urlData.file_id}`, {
+              headers: { Authorization: `Bearer ${integration.slackAccessToken}` },
+            });
+            const fileInfoData = await fileInfoRes.json();
+            if (fileInfoData.ok && fileInfoData.file?.permalink) {
+              uploadedFileUrls.push({
+                filename: meta.filename,
+                permalink: fileInfoData.file.permalink,
+                content_type: meta.content_type,
+              });
+              console.log(`📎 ✅ Got permalink for: ${meta.filename}`);
             }
           } catch (uploadErr) {
             console.warn("⚠️ Error uploading attachment:", meta.filename, uploadErr);
           }
         }
       }
+
+      // ── Build blocks with image blocks appended ──
+      const imageBlocks = uploadedFileUrls
+        .filter(f => f.content_type.startsWith("image/"))
+        .map(f => ({
+          type: "image",
+          image_url: f.permalink,
+          alt_text: f.filename,
+        }));
+
+      const nonImageFiles = uploadedFileUrls.filter(f => !f.content_type.startsWith("image/"));
+      const nonImageNote = nonImageFiles.length > 0
+        ? `\n📎 _${nonImageFiles.map(f => f.filename).join(", ")}_`
+        : "";
+
+      const finalPayload = {
+        ...messagePayload,
+        blocks: [
+          ...(messagePayload as any).blocks,
+          ...imageBlocks,
+          ...(nonImageNote ? [{ type: "section", text: { type: "mrkdwn", text: nonImageNote } }] : []),
+        ],
+      };
+
+      // ── Post the main message WITH images inline ──
+      const slackRes = await fetch("https://slack.com/api/chat.postMessage", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${integration.slackAccessToken}`,
+        },
+        body: JSON.stringify({
+          channel: integration.slackChannelId,
+          ...finalPayload,
+        }),
+      });
+
+      const slackData = await slackRes.json();
+      console.log("🔁 Slack response:", JSON.stringify(slackData, null, 2));
+
+      if (!slackData.ok) {
+        console.error("❌ Slack chat.postMessage failed:", slackData.error);
+        return NextResponse.json({ error: "Slack post failed" }, { status: 500 });
+      }
+
+      emailThread.slackMessageTs = slackData.ts as string;
+      emailThread.slackChannelId = slackData.channel as string;
+      await emailThread.save();
+
+      console.log("✨ Posted to Slack (OAuth) — ts:", slackData.ts);
+
     } else {
       // ── Discord or legacy Slack webhook ────────────────────────────────
       const webhookResponse = await fetch(integration.webhookUrl, {
