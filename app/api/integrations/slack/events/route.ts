@@ -24,7 +24,8 @@ async function handleEmailThreadReply(
   replyText: string,
   slackFiles: Array<Record<string, unknown>>,
   channelId: string,
-  eventId?: string
+  eventId?: string,
+  replyTs?: string
 ) {
   try {
     const replySubject = emailThread.subject.startsWith("Re:")
@@ -120,12 +121,13 @@ async function handleEmailThreadReply(
       ...(attachments.length > 0 ? { attachments } : {}),
     };
 
-    const { error } = await resend.emails.send(emailPayload);
+    const { data: sentData, error } = await resend.emails.send(emailPayload);
+    let sentEmailId = sentData?.id;
 
     if (error) {
       console.warn("⚠️ Resend rejected with attachments, retrying text-only:", error);
       const fallbackText = `${replyText}\n\n[Note: ${attachments.length} attachment(s) could not be forwarded]`;
-      const { error: fallbackError } = await resend.emails.send({
+      const { data: fallbackData, error: fallbackError } = await resend.emails.send({
         ...emailPayload,
         text: fallbackText,
         attachments: [],
@@ -134,6 +136,46 @@ async function handleEmailThreadReply(
         console.error("❌ Resend fallback also failed:", fallbackError);
         return NextResponse.json({ ok: false }, { status: 500 });
       }
+      sentEmailId = fallbackData?.id;
+    }
+
+    // ── Save outbound reply to DB ──────────────────────────────────────────
+    const replySubjectFinal = emailThread.subject.startsWith("Re:")
+      ? emailThread.subject
+      : `Re: ${emailThread.subject}`;
+
+    console.log("💾 Saving outbound email thread...");
+    try {
+      await EmailThread.create({
+        workspaceId: emailThread.workspaceId,
+        aliasId: emailThread.aliasId,
+        originalEmailId: sentEmailId || crypto.randomUUID(),
+        messageId: `<reply-${Date.now()}@email-router>`,
+        inReplyTo: emailThread.messageId,
+        references: [emailThread.messageId, ...(emailThread.references || [])].filter(Boolean),
+        from: fromAddress,
+        fromName: "",
+        to: emailThread.from,
+        subject: replySubjectFinal,
+        textBody: replyText || "(see attachment)",
+        htmlBody: "",
+        attachments: attachments.map((a) => ({
+          id: crypto.randomUUID(),
+          filename: a.filename,
+          content_type: "application/octet-stream",
+        })),
+        direction: "outbound",
+        status: "open",
+        statusUpdatedAt: new Date(),
+        slackMessageTs: replyTs || null,
+        slackChannelId: channelId,
+        slackEventId: eventId || null,
+        receivedAt: new Date(),
+        repliedAt: null,
+      });
+      console.log("💾 ✅ Outbound email thread saved");
+    } catch (createErr) {
+      console.error("❌ Failed to save outbound EmailThread:", createErr);
     }
 
     emailThread.slackEventId = eventId ?? null;
@@ -372,6 +414,7 @@ export async function POST(request: Request) {
   }
 
   const threadTs = event.thread_ts as string;
+  const replyTs = event.ts as string;
   const channelId = event.channel as string;
   const replyText = ((event.text as string) || "").trim();
 
@@ -410,7 +453,7 @@ export async function POST(request: Request) {
 
   // If email thread found, handle email reply (existing logic)
   if (emailThread) {
-    return await handleEmailThreadReply(emailThread, replyText, slackFiles, channelId, eventId);
+    return await handleEmailThreadReply(emailThread, replyText, slackFiles, channelId, eventId, replyTs);
   }
 
   // Try to match a live chat conversation
