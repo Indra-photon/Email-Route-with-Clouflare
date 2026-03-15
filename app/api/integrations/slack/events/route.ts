@@ -156,6 +156,7 @@ async function handleEmailThreadReply(
       subject: replySubjectFinal,
       text: replyText || "(see attachment)",
       headers: {
+        "Message-ID": outboundThread.messageId,   // ensure Gmail replies reference THIS ID
         "In-Reply-To": emailThread.messageId,
         ...(referencesHeader ? { References: referencesHeader } : {}),
       },

@@ -106,6 +106,18 @@ export async function POST(request: Request) {
 
     const emailData = payload.data;
 
+    // ── Log full emailData structure to find available fields ────────────────
+    console.log("📨 emailData keys:", JSON.stringify({
+      keys: Object.keys(emailData || {}),
+      email_id: emailData?.email_id,
+      message_id: emailData?.message_id,
+      in_reply_to: emailData?.in_reply_to,
+      references: emailData?.references,
+      headersType: typeof emailData?.headers,
+      headersIsArray: Array.isArray(emailData?.headers),
+      headersPreview: emailData?.headers ? JSON.stringify(emailData.headers).slice(0, 300) : null,
+    }));
+
     const recipientEmail = Array.isArray(emailData.to)
       ? emailData.to[0]
       : emailData.to;
@@ -189,6 +201,7 @@ export async function POST(request: Request) {
         htmlBody = fullEmail?.html || "";
 
         // ── Extract threading headers ──────────────────────────────────────
+        // fullEmail.headers can be an array [{name,value}] OR an object {"In-Reply-To":"..."}
         const headersArray: Array<{ name: string; value: string }> =
           Array.isArray(fullEmail?.headers) ? fullEmail.headers : [];
         const getHeader = (name: string) => {
@@ -198,16 +211,33 @@ export async function POST(request: Request) {
           return found?.value?.trim() || null;
         };
 
+        // emailData.headers from the webhook payload may also be an object
+        const getEmailDataHeader = (name: string): string | null => {
+          const h = emailData?.headers;
+          if (h && typeof h === "object" && !Array.isArray(h)) {
+            for (const key of Object.keys(h)) {
+              if (key.toLowerCase() === name.toLowerCase()) return (h as any)[key] || null;
+            }
+          }
+          if (Array.isArray(h)) {
+            const found = (h as any[]).find((x: any) => x.name?.toLowerCase() === name.toLowerCase());
+            return found?.value?.trim() || null;
+          }
+          return null;
+        };
+
         inReplyTo =
           fullEmail?.in_reply_to ||
           getHeader("in-reply-to") ||
-          emailData.in_reply_to ||
+          emailData?.in_reply_to ||
+          getEmailDataHeader("in-reply-to") ||
           null;
 
         const referencesRaw =
           fullEmail?.references ||
           getHeader("references") ||
-          emailData.references ||
+          emailData?.references ||
+          getEmailDataHeader("references") ||
           "";
         references =
           typeof referencesRaw === "string"
