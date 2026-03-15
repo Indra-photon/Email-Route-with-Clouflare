@@ -542,7 +542,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, LayoutGroup } from "motion/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -556,7 +556,8 @@ import {
   IconChevronDown,
   IconAt,
   IconPencil,
-  IconMessageDots
+  IconMessageDots,
+  IconMessageFilled
 } from "@tabler/icons-react";
 import { Heading } from "@/components/Heading";
 import { Paragraph } from "@/components/Paragraph";
@@ -601,27 +602,43 @@ type CannedResponse = {
 };
 
 type CannedFormState = "idle" | "loading" | "success";
+type ActiveTab = "edit" | "delete";
 
 // ─── Easing ───────────────────────────────────────────────────────────────────
 
 const easeOutCubic = [0.215, 0.61, 0.355, 1] as const;
 const easeOutQuint = [0.23, 1, 0.32, 1] as const;
-
+const easeInCubic = [0.55, 0.055, 0.675, 0.19] as const;
 
 function CannedResponseModal({
   aliasId,
   aliasEmail,
+  originRect,
   onClose,
 }: {
   aliasId: string;
   aliasEmail: string;
+  originRect: DOMRect | null;
   onClose: () => void;
 }) {
   const [responses, setResponses] = useState<CannedResponse[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // "add" | "saved" — which top-level view is active
+  const [view, setView] = useState<"add" | "saved">("add");
+
+  // dropdown open state for Saved Responses button
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // which sub-tab inside saved: "edit" | "delete"
+  const [activeTab, setActiveTab] = useState<ActiveTab>("edit");
+
+  // Add form
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [formState, setFormState] = useState<CannedFormState>("idle");
+
+  // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
@@ -678,10 +695,7 @@ function CannedResponseModal({
       const updated = await res.json();
       setResponses((prev) => prev.map((r) => (r._id === id ? updated : r)));
       setEditState("success");
-      setTimeout(() => {
-        setEditingId(null);
-        setEditState("idle");
-      }, 1000);
+      setTimeout(() => { setEditingId(null); setEditState("idle"); }, 1000);
     } catch {
       toast.error("Failed to update canned response");
       setEditState("idle");
@@ -697,11 +711,12 @@ function CannedResponseModal({
 
   return (
     <motion.div
+      layout
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.15 }}
+      // initial={{ opacity: 0 }}
+      // animate={{ opacity: 1 }}
+      // exit={{ opacity: 0 }}
+      // transition={{ duration: 0.15 }}
     >
       {/* Backdrop */}
       <motion.div
@@ -710,21 +725,61 @@ function CannedResponseModal({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        transition={{ duration: 0.08 }}
       />
 
       {/* Modal */}
       <motion.div
-        layoutId={`canned-modal-${aliasId}`}
-        className="relative z-10 w-full max-w-lg bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-xl overflow-hidden"
-        style={{ transformOrigin: "bottom left" }}
-        transition={{ type: "spring", stiffness: 320, damping: 30 }}
+        initial={originRect ? {
+          position: "fixed" as const,
+          top: originRect.top,
+          left: originRect.left,
+          width: originRect.width,
+          height: originRect.height,
+          borderRadius: 8,
+          opacity: 1,
+          x: 0,
+          y: 0,
+          scale: 1,
+        } : {
+          opacity: 0,
+          y: 2,
+        }}
+        animate={{
+          top: "50%",
+          left: "50%",
+          x: "-50%",
+          y: "-50%",
+          width: 512,
+          height: "auto",
+          borderRadius: 12,
+          opacity: 1,
+          scale: 1,
+          position: "fixed" as const,
+        }}
+        exit={originRect ? {
+          top: originRect.top,
+          left: originRect.left,
+          x: 0,
+          y: 0,
+          width: originRect.width,
+          height: originRect.height,
+          borderRadius: 8,
+          opacity: 0,
+        } : {
+          opacity: 0,
+          y: 2,
+        }}
+        transition={{ ease: [.23, 1, .32, 1], duration: 0.30 }}
+        className="relative min-h-[400px] z-10 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 shadow-xl overflow-hidden"
       >
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 4 }}
-          transition={{ duration: 0.18, delay: 0.05 }}
+          // layout
+          // initial={{ opacity: 0, y: 6 }}
+          // animate={{ opacity: 1, y: 0 }}
+          // exit={{ opacity: 0, y: 4 }}
+          // transition={{ duration: 0.18, delay: 0.05 }}
           className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 dark:border-neutral-800"
         >
           <div>
@@ -742,171 +797,345 @@ function CannedResponseModal({
           </button>
         </motion.div>
 
-        {/* Response list */}
+        {/* Top bar: Add New (left) + Saved Responses dropdown (right) */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.15, delay: 0.08 }}
-          className="max-h-64 overflow-y-auto px-5 py-3 space-y-2"
+          // layout
+          // initial={{ opacity: 0 }}
+          // animate={{ opacity: 1 }}
+          // exit={{ opacity: 0 }}
+          // transition={{ duration: 0.15, delay: 0.06 }}
+          className="flex items-center justify-between px-5 pt-3 pb-2"
         >
-          {loading && (
-            <div className="flex items-center justify-center py-6 gap-2">
-              <RefreshCw size={14} className="animate-spin text-neutral-400" />
-              <p className="text-xs font-schibsted text-neutral-400">Loading...</p>
-            </div>
-          )}
-
-          {!loading && responses.length === 0 && (
-            <p className="text-xs font-schibsted text-neutral-400 py-4 text-center">
-              No canned responses yet. Add one below.
-            </p>
-          )}
-
-          <AnimatePresence initial={false}>
-            {responses.map((r) => (
-              <motion.div
-                key={r._id}
+          {/* Add New button */}
+          <motion.button
+            layout
+            type="button"
+            onClick={() => {
+              setView("add");
+              setDropdownOpen(false);
+              setEditingId(null);
+            }}
+            className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-schibsted font-medium transition-colors focus:outline-none cursor-pointer ${
+              view === "add"
+                ? "text-neutral-900 dark:text-neutral-100"
+                : "text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300"
+            }`}
+          >
+            {view === "add" && (
+              <motion.span
                 layout
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 28 }}
-                className="overflow-hidden"
+                className="absolute inset-0 bg-neutral-100 dark:bg-neutral-800 rounded-md z-0"
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              />
+            )}
+            <span className="relative z-10 flex items-center gap-1.5">
+              <IconPlus size={12} />
+              Add New
+            </span>
+          </motion.button>
+
+          {/* Saved Responses dropdown trigger */}
+          {/* Right slot — swaps between "Saved Responses" button and Edit/Delete tabs */}
+          <AnimatePresence mode="wait" initial={false}>
+            {view === "add" ? (
+              <motion.button
+                key="saved-btn"
+                type="button"
+                onClick={() => {
+                  setView("saved");
+                  setActiveTab("edit");
+                  setEditingId(null);
+                }}
+                initial={{ opacity: 0, x: 6 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 6 }}
+                transition={{ duration: 0.13, ease: [0.23, 1, 0.32, 1] }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-schibsted font-medium text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors focus:outline-none cursor-pointer"
               >
-                <div className="border border-neutral-100 dark:border-neutral-800 rounded-lg p-3 bg-neutral-50 dark:bg-neutral-800/40">
-                  <AnimatePresence mode="wait" initial={false}>
-                    {editingId === r._id ? (
-                      <motion.div
-                        key="editing"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.12 }}
-                        className="space-y-2"
-                      >
-                        <input
-                          value={editTitle}
-                          onChange={(e) => setEditTitle(e.target.value)}
-                          className="w-full text-xs font-schibsted font-semibold bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md px-2.5 py-1.5 focus:outline-none focus:border-sky-400"
-                          placeholder="Title"
-                        />
-                        <textarea
-                          value={editBody}
-                          onChange={(e) => setEditBody(e.target.value)}
-                          rows={3}
-                          className="w-full text-xs font-schibsted bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md px-2.5 py-1.5 focus:outline-none focus:border-sky-400 resize-none"
-                          placeholder="Response body..."
-                        />
-                        <div className="flex items-center gap-2">
-                          <AnimatedButton
-                            idleLabel="Save"
-                            loadingLabel="Saving..."
-                            successLabel="Saved!"
-                            errorLabel="Failed"
-                            idleIcon={<IconCheck size={12} />}
-                            state={editState}
-                            onClick={() => handleEditSave(r._id)}
-                            idleWidth={60}
-                            loadingWidth={74}
-                            successWidth={66}
-                            errorWidth={60}
-                            className="px-3 py-1.5 rounded-md text-xs font-schibsted text-white bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center gap-1.5 overflow-hidden border-0 focus:outline-none cursor-pointer disabled:opacity-60"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setEditingId(null)}
-                            className="px-3 py-1.5 rounded-md text-xs font-schibsted text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="viewing"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.12 }}
-                      >
-                        <p className="text-xs font-schibsted font-semibold text-neutral-800 dark:text-neutral-200 mb-1">
-                          {r.title}
-                        </p>
-                        <p className="text-xs font-schibsted text-neutral-500 line-clamp-2 mb-2">
-                          {r.body}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => startEdit(r)}
-                            className="px-2.5 py-1 rounded-md text-xs font-schibsted text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none flex items-center gap-1"
-                          >
-                            <IconPencil size={11} />
-                            Edit
-                          </button>
-                          <AnimatedDeleteButton
-                            onDelete={async () => {
-                              try {
-                                const res = await fetch(`/api/canned-responses/${r._id}`, { method: "DELETE" });
-                                if (!res.ok) throw new Error("Failed");
-                                setTimeout(() => {
-                                  setResponses((prev) => prev.filter((x) => x._id !== r._id));
-                                }, 300);
-                                return "success";
-                              } catch {
-                                toast.error("Failed to delete");
-                                return "error";
-                              }
-                            }}
-                          />
-                        </div>
-                      </motion.div>
+                <IconMessageDots size={12} />
+                Saved Responses
+              </motion.button>
+            ) : (
+              <motion.div
+                key="sub-tabs"
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -6 }}
+                transition={{ duration: 0.13, ease: [0.23, 1, 0.32, 1] }}
+                className="flex items-center gap-0.5"
+              >
+                {(["edit", "delete"] as ActiveTab[]).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => {
+                      setActiveTab(tab);
+                      setEditingId(null);
+                    }}
+                    className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-schibsted font-medium transition-colors focus:outline-none cursor-pointer capitalize ${
+                      activeTab === tab
+                        ? "text-neutral-900 dark:text-neutral-100"
+                        : "text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300"
+                    }`}
+                  >
+                    {activeTab === tab && (
+                      <motion.span
+                        layoutId={`subtab-bubble-${aliasId}`}
+                        className="absolute inset-0 bg-neutral-100 dark:bg-neutral-800 rounded-md z-0"
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      />
                     )}
-                  </AnimatePresence>
-                </div>
+                    <span className="relative z-10 flex items-center gap-1.5">
+                      {tab === "edit" ? <IconPencil size={11} /> : <IconTrash size={11} />}
+                      {tab === "edit" ? "Edit" : "Delete"}
+                    </span>
+                  </button>
+                ))}
               </motion.div>
-            ))}
+            )}
           </AnimatePresence>
+
         </motion.div>
 
-        {/* Add new form */}
-        <motion.form
-          onSubmit={handleAdd}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.18, delay: 0.1 }}
-          className="px-5 py-4 border-t border-neutral-100 dark:border-neutral-800 space-y-2"
-        >
-          <p className="text-xs font-schibsted font-semibold text-neutral-700 dark:text-neutral-300">
-            Add new
-          </p>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Title (e.g. Password Reset)"
-            className="w-full text-xs font-schibsted bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md px-3 py-2 focus:outline-none focus:border-sky-400"
-          />
-          <textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="Response body... Use {customer_name}, {agent_name}"
-            rows={3}
-            className="w-full text-xs font-schibsted bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md px-3 py-2 focus:outline-none focus:border-sky-400 resize-none"
-          />
-          <AnimatedSubmitButton
-            idleLabel="Add Response"
-            loadingLabel="Adding..."
-            successLabel="Added!"
-            idleIcon={<IconPlus size={12} />}
-            state={formState}
-            idleWidth={110}
-            loadingWidth={90}
-            successWidth={76}
-            className="px-3 py-1.5 rounded-md text-xs font-schibsted text-white bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center gap-1.5 overflow-hidden border-0 focus:outline-none cursor-pointer disabled:opacity-60"
-          />
-        </motion.form>
+        {/* Content area */}
+        <motion.div  className="px-5 pb-1 overflow-hidden rounded-b-xl">
+          <AnimatePresence mode="wait" initial={false}>
+
+            {/* ── Add New view ── */}
+            {view === "add" && (
+              <motion.form
+                key="add-view"
+                layout
+                onSubmit={handleAdd}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
+                className="pt-1 pb-4 space-y-2"
+              >
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Title (e.g. Password Reset)"
+                  className="w-full text-xs font-schibsted bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md px-3 py-2 focus:outline-none focus:border-sky-400"
+                />
+                <textarea
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  placeholder="Response body... Use {customer_name}, {agent_name}"
+                  rows={4}
+                  className="w-full text-xs font-schibsted bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md px-3 py-2 focus:outline-none focus:border-sky-400 resize-none"
+                />
+                <AnimatedSubmitButton
+                  idleLabel="Add Response"
+                  loadingLabel="Adding..."
+                  successLabel="Added!"
+                  idleIcon={<IconPlus size={12} />}
+                  state={formState}
+                  idleWidth={110}
+                  loadingWidth={90}
+                  successWidth={76}
+                  className="px-3 py-1.5 rounded-md text-xs font-schibsted text-white bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center gap-1.5 overflow-hidden border-0 focus:outline-none cursor-pointer disabled:opacity-60"
+                />
+              </motion.form>
+            )}
+
+            {/* ── Saved Responses view ── */}
+            {view === "saved" && (
+              <motion.div
+                key="saved-view"
+                layout
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
+                className="pb-4"
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center py-8 gap-2">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                      className="w-3.5 h-3.5 border-2 border-neutral-300 border-t-neutral-500 rounded-full"
+                    />
+                    <p className="text-xs font-schibsted text-neutral-400">Loading...</p>
+                  </div>
+                ) : responses.length === 0 ? (
+                  <p className="text-xs font-schibsted text-neutral-400 py-6 text-center">
+                    No canned responses yet. Use Add New to create one.
+                  </p>
+                ) : (
+                  <AnimatePresence mode="wait" initial={false}>
+
+                    {/* Edit sub-tab */}
+                    {activeTab === "edit" && (
+                      <motion.div
+                        key="edit-tab"
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.13, ease: [0.23, 1, 0.32, 1] }}
+                        className="space-y-2 pt-1"
+                      >
+                        <AnimatePresence initial={false}>
+                          {responses.map((r) => (
+                            <motion.div
+                              key={r._id}
+                              layout
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                              transition={{ type: "spring", stiffness: 300, damping: 28 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="border border-neutral-100 dark:border-neutral-800 rounded-lg p-3 bg-neutral-50 dark:bg-neutral-800/40">
+                                <AnimatePresence mode="wait" initial={false}>
+                                  {editingId === r._id ? (
+                                    <motion.div
+                                      key="editing"
+                                      layout
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                      exit={{ opacity: 0 }}
+                                      transition={{ duration: 0.12 }}
+                                      className="space-y-2"
+                                    >
+                                      <input
+                                        value={editTitle}
+                                        onChange={(e) => setEditTitle(e.target.value)}
+                                        className="w-full text-xs font-schibsted font-semibold bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md px-2.5 py-1.5 focus:outline-none focus:border-sky-400"
+                                        placeholder="Title"
+                                      />
+                                      <textarea
+                                        value={editBody}
+                                        onChange={(e) => setEditBody(e.target.value)}
+                                        rows={3}
+                                        className="w-full text-xs font-schibsted bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md px-2.5 py-1.5 focus:outline-none focus:border-sky-400 resize-none"
+                                        placeholder="Response body..."
+                                      />
+                                      <div className="flex items-center gap-2">
+                                        <AnimatedButton
+                                          idleLabel="Save"
+                                          loadingLabel="Saving..."
+                                          successLabel="Saved!"
+                                          errorLabel="Failed"
+                                          idleIcon={<IconCheck size={12} />}
+                                          state={editState}
+                                          onClick={() => handleEditSave(r._id)}
+                                          idleWidth={60}
+                                          loadingWidth={74}
+                                          successWidth={66}
+                                          errorWidth={60}
+                                          className="px-3 py-1.5 rounded-md text-xs font-schibsted text-white bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center gap-1.5 overflow-hidden border-0 focus:outline-none cursor-pointer disabled:opacity-60"
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => setEditingId(null)}
+                                          className="px-3 py-1.5 rounded-md text-xs font-schibsted text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none"
+                                        >
+                                          Cancel
+                                        </button>
+                                      </div>
+                                    </motion.div>
+                                  ) : (
+                                    <motion.div
+                                      key="viewing"
+                                      layout
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                      exit={{ opacity: 0 }}
+                                      transition={{ duration: 0.12 }}
+                                      className="flex items-start justify-between gap-3"
+                                    >
+                                      <div className="min-w-0">
+                                        <p className="text-xs font-schibsted font-semibold text-neutral-800 dark:text-neutral-200 mb-0.5">
+                                          {r.title}
+                                        </p>
+                                        <p className="text-xs font-schibsted text-neutral-500 line-clamp-2">
+                                          {r.body}
+                                        </p>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => startEdit(r)}
+                                        className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-schibsted text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none"
+                                      >
+                                        <IconPencil size={11} />
+                                        Edit
+                                      </button>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
+                      </motion.div>
+                    )}
+
+                    {/* Delete sub-tab */}
+                    {activeTab === "delete" && (
+                      <motion.div
+                        key="delete-tab"
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.13, ease: [0.23, 1, 0.32, 1] }}
+                        className="space-y-2 pt-1"
+                      >
+                        <AnimatePresence initial={false}>
+                          {responses.map((r) => (
+                            <motion.div
+                              key={r._id}
+                              layout
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                              transition={{ type: "spring", stiffness: 300, damping: 28 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="border border-neutral-100 dark:border-neutral-800 rounded-lg p-3 bg-neutral-50 dark:bg-neutral-800/40 flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="text-xs font-schibsted font-semibold text-neutral-800 dark:text-neutral-200 mb-0.5">
+                                    {r.title}
+                                  </p>
+                                  <p className="text-xs font-schibsted text-neutral-500 line-clamp-2">
+                                    {r.body}
+                                  </p>
+                                </div>
+                                <div className="shrink-0">
+                                  <AnimatedDeleteButton
+                                    onDelete={async () => {
+                                      try {
+                                        const res = await fetch(`/api/canned-responses/${r._id}`, {
+                                          method: "DELETE",
+                                        });
+                                        if (!res.ok) throw new Error("Failed");
+                                        setTimeout(() => {
+                                          setResponses((prev) => prev.filter((x) => x._id !== r._id));
+                                        }, 300);
+                                        return "success";
+                                      } catch {
+                                        toast.error("Failed to delete");
+                                        return "error";
+                                      }
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
+                      </motion.div>
+                    )}
+
+                  </AnimatePresence>
+                )}
+              </motion.div>
+            )}
+
+          </AnimatePresence>
+        </motion.div>
       </motion.div>
     </motion.div>
   );
@@ -933,6 +1162,8 @@ function AliasCard({
   const [editIntegration, setEditIntegration] = useState(alias.integrationId ?? "");
   const isActive = alias.status === "active";
   const [cannedOpen, setCannedOpen] = useState(false);
+  const [originRect, setOriginRect] = useState<DOMRect | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const handleSaveIntegration = async () => {
     setSaveState("loading");
@@ -1067,17 +1298,19 @@ function AliasCard({
             </div>
 
             <div className="flex items-center gap-2 pt-1">
-            <motion.button
-              layoutId={`canned-modal-${alias.id}`}
-              type="button"
-              onClick={() => setCannedOpen(true)}
-              style={{ transformOrigin: "bottom left" }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-schibsted text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none"
-            >
-              <IconMessageDots size={13} />
-              Canned Responses
-            </motion.button>
-          </div>
+              <button
+                ref={triggerRef}
+                type="button"
+                onClick={() => {
+                  setOriginRect(triggerRef.current?.getBoundingClientRect() ?? null);
+                  setCannedOpen(true);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-schibsted font-semibold text-neutral-600 dark:text-neutral-400 border border-neutral-400 dark:border-neutral-700 hover:border-neutral-600 dark:hover:bg-neutral-800 transition-colors duration-150 ease-out cursor-pointer focus:outline-none"
+              >
+                <IconMessageFilled size={13} />
+                Canned Responses
+              </button>
+            </div>
           </div>
         </motion.div>
 
@@ -1087,6 +1320,7 @@ function AliasCard({
             <CannedResponseModal
               aliasId={alias.id}
               aliasEmail={alias.email}
+              originRect={originRect}
               onClose={() => setCannedOpen(false)}
             />
           )}
