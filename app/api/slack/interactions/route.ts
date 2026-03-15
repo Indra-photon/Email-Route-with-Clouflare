@@ -302,6 +302,56 @@ export async function POST(request: Request) {
         ? fromAddress.slice(fromAddress.indexOf("<") + 1, fromAddress.indexOf(">")).trim()
         : fromAddress;
 
+      // ── Find the root Slack thread ts for threading the reply ──────────
+      let slackThreadTs: string | null = thread.slackMessageTs || null;
+      let slackChannelId: string | null = thread.slackChannelId || null;
+
+      if (thread.inReplyTo && thread.slackMessageTs) {
+        // Walk up the reference chain to find the oldest (root) message with a Slack ts
+        const refsToCheck = [thread.inReplyTo, ...(thread.references || [])].filter(Boolean);
+        const rootThread = await EmailThread.findOne({
+          messageId: { $in: refsToCheck },
+          slackMessageTs: { $exists: true, $ne: null },
+          workspaceId: thread.workspaceId,
+        }).sort({ createdAt: 1 }).lean();
+
+        if (rootThread?.slackMessageTs) {
+          slackThreadTs = rootThread.slackMessageTs as string;
+          slackChannelId = (rootThread.slackChannelId as string) || slackChannelId;
+        }
+      }
+
+      // ── Post confirmation message to Slack thread ──────────────────────
+      let outboundSlackTs: string | null = null;
+      if (slackChannelId && slackThreadTs) {
+        const integration = await Integration.findOne({
+          slackChannelId,
+          authMethod: "oauth",
+        }).lean();
+
+        if (integration?.slackAccessToken) {
+          const slackRes = await fetch("https://slack.com/api/chat.postMessage", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${integration.slackAccessToken}`,
+            },
+            body: JSON.stringify({
+              channel: slackChannelId,
+              thread_ts: slackThreadTs,
+              text: `📤 *Reply sent* to ${thread.from}\n>${replyText.replace(/\n/g, "\n>")}`,
+            }),
+          });
+          const slackData = await slackRes.json();
+          if (slackData.ok) {
+            outboundSlackTs = slackData.ts as string;
+            console.log("📨 Canned response posted to Slack thread:", outboundSlackTs);
+          } else {
+            console.warn("⚠️ Slack postMessage failed:", slackData.error);
+          }
+        }
+      }
+
       await EmailThread.create({
         workspaceId: thread.workspaceId,
         aliasId: thread.aliasId,
@@ -319,6 +369,8 @@ export async function POST(request: Request) {
         statusUpdatedAt: new Date(),
         receivedAt: new Date(),
         repliedAt: new Date(),
+        slackMessageTs: outboundSlackTs,
+        slackChannelId: slackChannelId,
       });
 
       thread.status = "open";
