@@ -211,53 +211,37 @@ export async function POST(request: Request) {
 
       if (!thread || !cannedResponse) return NextResponse.json({ response_action: "clear" });
 
-      const integration = await Integration.findOne({
-        slackChannelId: thread.slackChannelId,
-        authMethod: "oauth",
-      }).lean();
-
-      if (!integration?.slackAccessToken) return NextResponse.json({ response_action: "clear" });
-
       // Substitute template variables
       const body = cannedResponse.body
         .replace(/\{customer_name\}/g, thread.fromName || thread.from)
         .replace(/\{agent_name\}/g, payload.user?.name || "")
         .replace(/\{support_email\}/g, thread.to || "");
 
-      // Open reply modal with body pre-filled
-      await fetch("https://slack.com/api/views.push", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${integration.slackAccessToken}`,
-        },
-        body: JSON.stringify({
-          trigger_id: payload.trigger_id,
-          view: {
-            type: "modal",
-            callback_id: "reply_modal",
-            private_metadata: threadId,
-            title: { type: "plain_text", text: "Reply to Email" },
-            submit: { type: "plain_text", text: "Send Reply" },
-            close: { type: "plain_text", text: "Cancel" },
-            blocks: [
-              {
-                type: "input",
-                block_id: "reply_text",
-                label: { type: "plain_text", text: "Your Reply" },
-                element: {
-                  type: "plain_text_input",
-                  action_id: "reply_input",
-                  multiline: true,
-                  initial_value: body,
-                },
+      // Push the reply modal directly in the response — avoids views.push race with response_action: "clear"
+      return NextResponse.json({
+        response_action: "push",
+        view: {
+          type: "modal",
+          callback_id: "reply_modal",
+          private_metadata: threadId,
+          title: { type: "plain_text", text: "Reply to Email" },
+          submit: { type: "plain_text", text: "Send Reply" },
+          close: { type: "plain_text", text: "Cancel" },
+          blocks: [
+            {
+              type: "input",
+              block_id: "reply_text",
+              label: { type: "plain_text", text: "Your Reply" },
+              element: {
+                type: "plain_text_input",
+                action_id: "reply_input",
+                multiline: true,
+                initial_value: body,
               },
-            ],
-          },
-        }),
+            },
+          ],
+        },
       });
-
-      return NextResponse.json({ response_action: "clear" });
     }
 
     // ── Reply modal submitted ──────────────────────────────────────────
