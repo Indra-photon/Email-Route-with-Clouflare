@@ -106,6 +106,18 @@ export async function POST(request: Request) {
 
     const emailData = payload.data;
 
+    // ── Log full emailData structure to find available fields ────────────────
+    console.log("📨 emailData keys:", JSON.stringify({
+      keys: Object.keys(emailData || {}),
+      email_id: emailData?.email_id,
+      message_id: emailData?.message_id,
+      in_reply_to: emailData?.in_reply_to,
+      references: emailData?.references,
+      headersType: typeof emailData?.headers,
+      headersIsArray: Array.isArray(emailData?.headers),
+      headersPreview: emailData?.headers ? JSON.stringify(emailData.headers).slice(0, 300) : null,
+    }));
+
     const recipientEmail = Array.isArray(emailData.to)
       ? emailData.to[0]
       : emailData.to;
@@ -182,39 +194,74 @@ export async function POST(request: Request) {
           headersIsArray: Array.isArray(fullEmail?.headers),
           in_reply_to: fullEmail?.in_reply_to,
           references: fullEmail?.references,
-          headersPreview: fullEmail?.headers ? JSON.stringify(fullEmail.headers).slice(0, 200) : null,
+          headers_in_reply_to: (fullEmail?.headers as any)?.["in-reply-to"] || null,
+          headers_references: (fullEmail?.headers as any)?.["references"] || null,
+          headersPreview: fullEmail?.headers ? JSON.stringify(fullEmail.headers).slice(0, 500) : null,
         }));
 
         textBody = fullEmail?.text || "";
         htmlBody = fullEmail?.html || "";
 
         // ── Extract threading headers ──────────────────────────────────────
-        const headersArray: Array<{ name: string; value: string }> =
-          Array.isArray(fullEmail?.headers) ? fullEmail.headers : [];
-        const getHeader = (name: string) => {
-          const found = headersArray.find(
-            (h: any) => h.name?.toLowerCase() === name.toLowerCase()
-          );
-          return found?.value?.trim() || null;
+        // fullEmail.headers is an object {"in-reply-to":"...", "references":"...", ...}
+        const getHeader = (name: string): string | null => {
+          const h = fullEmail?.headers;
+          if (!h) return null;
+          if (Array.isArray(h)) {
+            const found = (h as any[]).find((x: any) => x.name?.toLowerCase() === name.toLowerCase());
+            return found?.value?.trim() || null;
+          }
+          if (typeof h === "object") {
+            for (const key of Object.keys(h)) {
+              if (key.toLowerCase() === name.toLowerCase()) return (h as any)[key]?.trim() || null;
+            }
+          }
+          return null;
+        };
+
+        // emailData.headers from the webhook payload may also be an object
+        const getEmailDataHeader = (name: string): string | null => {
+          const h = emailData?.headers;
+          if (h && typeof h === "object" && !Array.isArray(h)) {
+            for (const key of Object.keys(h)) {
+              if (key.toLowerCase() === name.toLowerCase()) return (h as any)[key] || null;
+            }
+          }
+          if (Array.isArray(h)) {
+            const found = (h as any[]).find((x: any) => x.name?.toLowerCase() === name.toLowerCase());
+            return found?.value?.trim() || null;
+          }
+          return null;
         };
 
         inReplyTo =
           fullEmail?.in_reply_to ||
           getHeader("in-reply-to") ||
-          emailData.in_reply_to ||
+          emailData?.in_reply_to ||
+          getEmailDataHeader("in-reply-to") ||
           null;
 
-        const referencesRaw =
-          fullEmail?.references ||
-          getHeader("references") ||
-          emailData.references ||
-          "";
-        references =
-          typeof referencesRaw === "string"
-            ? referencesRaw.split(/\s+/).filter(Boolean)
-            : Array.isArray(referencesRaw)
-            ? referencesRaw
-            : [];
+        references = (() => {
+          const raw =
+            fullEmail?.references ||
+            getHeader("references") ||
+            emailData?.references ||
+            getEmailDataHeader("references") ||
+            "";
+          if (Array.isArray(raw)) return raw as string[];
+          if (typeof raw === "string" && raw.trim()) {
+            // Resend returns references as a JSON-encoded array string: '["<id1>","<id2>"]'
+            if (raw.trim().startsWith("[")) {
+              try {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) return parsed as string[];
+              } catch {}
+            }
+            // Fallback: standard RFC 2822 space-separated format
+            return raw.split(/\s+/).filter(Boolean);
+          }
+          return [];
+        })();
 
         if (inReplyTo) console.log("🔗 In-Reply-To detected:", inReplyTo);
 

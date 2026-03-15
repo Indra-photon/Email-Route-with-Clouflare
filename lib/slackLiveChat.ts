@@ -140,7 +140,7 @@ export async function postAgentReplyToSlack(params: {
     message: string;
     mediaUrl?: string;
     mediaType?: 'text' | 'image' | 'pdf';
-}): Promise<{ ok: boolean; error?: string }> {
+}): Promise<{ ok: boolean; ts?: string; error?: string }> {
     const { channelId, botToken, threadTs, message, mediaUrl, mediaType } = params;
 
     try {
@@ -191,7 +191,7 @@ export async function postAgentReplyToSlack(params: {
             return { ok: false, error: data.error };
         }
 
-        return { ok: true };
+        return { ok: true, ts: data.ts };
     } catch (error) {
         console.error("❌ Error posting agent reply to Slack:", error);
         return { ok: false, error: String(error) };
