@@ -241,18 +241,27 @@ export async function POST(request: Request) {
           getEmailDataHeader("in-reply-to") ||
           null;
 
-        const referencesRaw =
-          fullEmail?.references ||
-          getHeader("references") ||
-          emailData?.references ||
-          getEmailDataHeader("references") ||
-          "";
-        references =
-          typeof referencesRaw === "string"
-            ? referencesRaw.split(/\s+/).filter(Boolean)
-            : Array.isArray(referencesRaw)
-            ? referencesRaw
-            : [];
+        references = (() => {
+          const raw =
+            fullEmail?.references ||
+            getHeader("references") ||
+            emailData?.references ||
+            getEmailDataHeader("references") ||
+            "";
+          if (Array.isArray(raw)) return raw as string[];
+          if (typeof raw === "string" && raw.trim()) {
+            // Resend returns references as a JSON-encoded array string: '["<id1>","<id2>"]'
+            if (raw.trim().startsWith("[")) {
+              try {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) return parsed as string[];
+              } catch {}
+            }
+            // Fallback: standard RFC 2822 space-separated format
+            return raw.split(/\s+/).filter(Boolean);
+          }
+          return [];
+        })();
 
         if (inReplyTo) console.log("🔗 In-Reply-To detected:", inReplyTo);
 
