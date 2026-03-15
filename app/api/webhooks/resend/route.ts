@@ -194,21 +194,29 @@ export async function POST(request: Request) {
           headersIsArray: Array.isArray(fullEmail?.headers),
           in_reply_to: fullEmail?.in_reply_to,
           references: fullEmail?.references,
-          headersPreview: fullEmail?.headers ? JSON.stringify(fullEmail.headers).slice(0, 200) : null,
+          headers_in_reply_to: (fullEmail?.headers as any)?.["in-reply-to"] || null,
+          headers_references: (fullEmail?.headers as any)?.["references"] || null,
+          headersPreview: fullEmail?.headers ? JSON.stringify(fullEmail.headers).slice(0, 500) : null,
         }));
 
         textBody = fullEmail?.text || "";
         htmlBody = fullEmail?.html || "";
 
         // ── Extract threading headers ──────────────────────────────────────
-        // fullEmail.headers can be an array [{name,value}] OR an object {"In-Reply-To":"..."}
-        const headersArray: Array<{ name: string; value: string }> =
-          Array.isArray(fullEmail?.headers) ? fullEmail.headers : [];
-        const getHeader = (name: string) => {
-          const found = headersArray.find(
-            (h: any) => h.name?.toLowerCase() === name.toLowerCase()
-          );
-          return found?.value?.trim() || null;
+        // fullEmail.headers is an object {"in-reply-to":"...", "references":"...", ...}
+        const getHeader = (name: string): string | null => {
+          const h = fullEmail?.headers;
+          if (!h) return null;
+          if (Array.isArray(h)) {
+            const found = (h as any[]).find((x: any) => x.name?.toLowerCase() === name.toLowerCase());
+            return found?.value?.trim() || null;
+          }
+          if (typeof h === "object") {
+            for (const key of Object.keys(h)) {
+              if (key.toLowerCase() === name.toLowerCase()) return (h as any)[key]?.trim() || null;
+            }
+          }
+          return null;
         };
 
         // emailData.headers from the webhook payload may also be an object
