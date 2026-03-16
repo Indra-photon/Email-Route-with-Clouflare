@@ -27,11 +27,10 @@ export async function GET(request: NextRequest) {
     // Connect to database
     await dbConnect();
 
-    // Find all threads assigned to this user
+    // Find all inbound threads for this workspace
     const myTickets = await EmailThread.find({
       workspaceId: workspace._id,
       direction: "inbound",
-      assignedTo: userId,
     })
       .sort({ receivedAt: -1 })
       .limit(100)
