@@ -1,18 +1,11 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import { ChatWidget } from "@/app/api/models/ChatWidgetModel";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-    cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import { uploadToR2 } from "@/lib/r2";
 
 // POST /api/chat/visitor-upload
 // PUBLIC endpoint (no Clerk auth) — called by the visitor chat widget.
-// Validates the activation key, then uploads the file server-side via Cloudinary.
-// This avoids exposing CLOUDINARY_UPLOAD_PRESET or API keys to the client.
+// Validates the activation key, then uploads the file server-side via R2.
 export async function POST(request: Request) {
     try {
         const formData = await request.formData();
@@ -57,30 +50,13 @@ export async function POST(request: Request) {
 
         const fileType = file.type === "application/pdf" ? "pdf" : "image";
 
-        // Convert File to Buffer for Cloudinary
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
-        // Upload to Cloudinary (server-side signed upload)
-        const uploadResult = await new Promise<{ secure_url: string; public_id: string }>(
-            (resolve, reject) => {
-                const uploadStream = cloudinary.uploader.upload_stream(
-                    {
-                        folder: "chat_uploads",
-                        resource_type: fileType === "pdf" ? "raw" : "image",
-                        public_id: `${Date.now()}_${file.name.replace(/\s+/g, "_")}`,
-                    },
-                    (err, result) => {
-                        if (err || !result) return reject(err);
-                        resolve(result as { secure_url: string; public_id: string });
-                    }
-                );
-                uploadStream.end(buffer);
-            }
-        );
+        const publicUrl = await uploadToR2(buffer, file.name, file.type);
 
         return NextResponse.json({
-            url: uploadResult.secure_url,
+            url: publicUrl,
             type: fileType,
             filename: file.name,
         });
