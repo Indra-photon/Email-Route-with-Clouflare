@@ -114,6 +114,7 @@ export default function MyTicketsPage() {
 
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
+  const [convRefreshing, setConvRefreshing] = useState(false);
 
   // Mobile: show list or chat
   const [mobileView, setMobileView] = useState<"list" | "chat">("list");
@@ -160,6 +161,30 @@ export default function MyTicketsPage() {
     setMobileView("chat");
     fetchConversation(id);
   };
+
+  // ── Silently refresh the right-side conversation (no full-screen skeleton) ──
+  const refreshConversation = useCallback(async () => {
+    if (!selectedId) return;
+    setConvRefreshing(true);
+    try {
+      const res = await fetch(`/api/emails/threads/${selectedId}`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setThread(data.thread);
+      setMessages(data.messages);
+    } catch {
+      // silent fail — don't toast on background auto-refresh
+    } finally {
+      setConvRefreshing(false);
+    }
+  }, [selectedId]);
+
+  // ── Auto-refresh right panel every 10s when a conversation is open ────────
+  useEffect(() => {
+    if (!selectedId) return;
+    const interval = setInterval(refreshConversation, 10000);
+    return () => clearInterval(interval);
+  }, [selectedId, refreshConversation]);
 
   // ── Scroll to bottom when messages change ────────────────────────────────
   useEffect(() => {
@@ -500,6 +525,16 @@ export default function MyTicketsPage() {
                       <option value="waiting">Waiting</option>
                       <option value="resolved">Resolved</option>
                     </select>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={refreshConversation}
+                      disabled={convRefreshing}
+                      className="h-8 w-8"
+                      title="Refresh conversation"
+                    >
+                      <RefreshCw size={14} className={convRefreshing ? "animate-spin" : ""} />
+                    </Button>
                   </div>
                 </>
               )}
