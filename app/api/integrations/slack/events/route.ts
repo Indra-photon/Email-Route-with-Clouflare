@@ -8,13 +8,7 @@ import { Domain } from "@/app/api/models/DomainModel";
 import { ChatConversation } from "@/app/api/models/ChatConversationModel";
 import { ChatMessage } from "@/app/api/models/ChatMessageModel";
 import { Resend } from "resend";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import { uploadToR2, deleteFromR2 } from "@/lib/r2";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -270,31 +264,12 @@ async function handleLiveChatReply(
                   const isImage = mimetype.startsWith("image/") || /\.(jpe?g|png|gif|webp)$/i.test(filename);
 
                   if (isPdf || isImage) {
-                    // Re-upload to Cloudinary so the URL is permanent and public
-                    const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
-                      const uploadStream = cloudinary.uploader.upload_stream(
-                        {
-                          folder: "chat_uploads",
-                          resource_type: isPdf ? "raw" : "image",
-                          public_id: `${Date.now()}_${filename.replace(/\s+/g, "_")}`,
-                          access_mode: "public",
-                          access_control: [{ access_type: "anonymous" }],
-                        },
-                        (err, result) => {
-                          if (err || !result) {
-                            console.error("❌ Cloudinary upload error:", err);
-                            return reject(err);
-                          }
-                          resolve(result as { secure_url: string });
-                        }
-                      );
-                      uploadStream.end(buffer);
-                    });
-
-                    mediaUrl = uploadResult.secure_url;
+                    // Re-upload to R2 so the URL is permanent and public
+                    const contentTypeHeader = isPdf ? "application/pdf" : (mimetype || "image/jpeg");
+                    mediaUrl = await uploadToR2(buffer, filename, contentTypeHeader);
                     mediaType = isPdf ? "pdf" : "image";
                     mediaFilename = filename;
-                    console.log(`📎 ✅ Slack→Cloudinary done: ${filename} → ${mediaUrl}`);
+                    console.log(`📎 ✅ Slack→R2 done: ${filename} → ${mediaUrl}`);
                   }
                 }
               }
@@ -431,19 +406,10 @@ export async function POST(request: Request) {
       if (msgToDelete) {
         if (msgToDelete.mediaUrl) {
           try {
-            const urlParts = msgToDelete.mediaUrl.split("/");
-            const fileWithExt = urlParts[urlParts.length - 1];
-            const folder = urlParts[urlParts.length - 2];
-            if (folder === "chat_uploads") {
-              const isPdf = msgToDelete.type === "pdf";
-              const publicId = isPdf
-                ? `chat_uploads/${fileWithExt}`
-                : `chat_uploads/${fileWithExt.replace(/\.[^.]+$/, "")}`;
-              await cloudinary.uploader.destroy(publicId, { resource_type: isPdf ? "raw" : "image" });
-              console.log("☁️ Deleted Cloudinary asset:", publicId);
-            }
+            await deleteFromR2(msgToDelete.mediaUrl);
+            console.log("☁️ Deleted R2 asset for Slack message:", msgToDelete.mediaUrl);
           } catch (e) {
-            console.warn("⚠️ Cloudinary delete failed for deleted Slack message:", e);
+            console.warn("⚠️ R2 delete failed for deleted Slack message:", e);
           }
         }
         await ChatMessage.deleteOne({ _id: msgToDelete._id });
