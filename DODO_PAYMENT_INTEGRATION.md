@@ -818,17 +818,6 @@ Add a **Billing** nav item. Find the existing nav items array and add:
 Add all of these to `.env.local` (and to your production environment secrets):
 
 ```env
-# ── Dodo Payments ─────────────────────────────────────────────────────────────
-DODO_API_KEY=sk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-DODO_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-# Dodo Price IDs — get these from your Dodo dashboard after creating products
-DODO_PRICE_ID_STARTER=price_01JV...
-DODO_PRICE_ID_GROWTH=price_01JV...
-DODO_PRICE_ID_SCALE=price_01JV...
-
-# Your app's public URL (needed for success/cancel redirect URLs)
-NEXT_PUBLIC_APP_URL=https://yourdomain.com
 ```
 
 **Where each variable is used:**
