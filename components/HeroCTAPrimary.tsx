@@ -24,7 +24,7 @@ const ARROW_POSITIONS = [
   { x: 24, y: 24 }, // hidden
 ];
 
-export default function HeroCTAPrimary() {
+export default function HeroCTAPrimary({ text = "Get Started" }: { text?: string }) {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -55,17 +55,13 @@ export default function HeroCTAPrimary() {
 
         {/* Text */}
         <span
-          className="relative z-10 font-schibsted font-semibold text-white text-xl uppercase tracking-wide select-none"
-          style={{
-            fontFamily: "'Schibsted Grotesk', sans-serif",
-            padding: "16px 0px 16px 28px",
-          }}
+          className="relative z-10 font-schibsted font-semibold text-white text-xl uppercase tracking-wide select-none flex items-center justify-center flex-1 px-4 py-4"
         >
-          Get Started
+          {text}
         </span>
 
         {/* White box with dot → arrow animation */}
-        <div
+        {/* <div
           className="relative z-10 flex items-center justify-center rounded-xl m-2"
           style={{
             width: 45,
@@ -84,7 +80,6 @@ export default function HeroCTAPrimary() {
           >
             {DOT_POSITIONS.map((dot, i) => {
               const target = ARROW_POSITIONS[i];
-              // Dots 7 and 8 shrink to invisible (merged into arrow shaft)
               const shouldFade = i === 7 || i === 8;
 
               return (
@@ -108,8 +103,6 @@ export default function HeroCTAPrimary() {
               );
             })}
 
-            {/* Arrow connector lines — fade in on hover */}
-            {/* Dashed shaft */}
             <motion.path
             d="M8 38 L38 10"
             stroke="#000000"
@@ -119,7 +112,6 @@ export default function HeroCTAPrimary() {
             animate={{ opacity: hovered ? 1 : 0, pathLength: hovered ? 1 : 0 }}
             transition={{ duration: 0.35, delay: hovered ? 0.18 : 0 }}
             />
-            {/* Top wing */}
             <motion.path
             d="M28 8 L38 10"
             stroke="#000000"
@@ -128,7 +120,6 @@ export default function HeroCTAPrimary() {
             animate={{ opacity: hovered ? 1 : 0, pathLength: hovered ? 1 : 0 }}
             transition={{ duration: 0.2, delay: hovered ? 0.38 : 0 }}
             />
-            {/* Bottom wing */}
             <motion.path
             d="M38 10 L40 22"
             stroke="#000000"
@@ -138,7 +129,7 @@ export default function HeroCTAPrimary() {
             transition={{ duration: 0.2, delay: hovered ? 0.38 : 0 }}
             />
           </svg>
-        </div>
+        </div> */}
       </motion.button>
     </div>
   );

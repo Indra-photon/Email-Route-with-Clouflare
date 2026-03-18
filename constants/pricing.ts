@@ -24,7 +24,7 @@ export interface PricingPlan {
     domains: number | "unlimited";
     aliasesPerDomain: number | "unlimited";
     chatWidgets: number | "unlimited";
-    ticketsPerMonth: number | "unlimited";
+    totalEmails: number | "unlimited";
     dataRetentionDays: number | "unlimited";  // "unlimited" = full retention
   };
 
@@ -46,7 +46,7 @@ export const PRICING_PLANS: PricingPlan[] = [
       domains: 1,
       aliasesPerDomain: 3,
       chatWidgets: 1,
-      ticketsPerMonth: 200,
+      totalEmails: 3000,  // inbound + outbound combined
       dataRetentionDays: 15,
     },
 
@@ -57,11 +57,11 @@ export const PRICING_PLANS: PricingPlan[] = [
       { label: "Reply from Slack",                    included: true  },
       { label: "Ticket claiming & assignment",        included: true  },
       { label: "Basic reports",                       included: true  },
-      { label: "200 tickets / month",                 included: true  },
+      { label: "3000 inbound + outbound emails (600 - 700 tickets / month)",                 included: true  },
       { label: "15-day data retention",               included: true  },
       { label: "Email support",                       included: true  },
       { label: "Detailed reports",                    included: false },
-      { label: "Canned responses",                    included: false },
+      { label: "Pre-filled responses",                    included: false },
       { label: "AI analysis & content suggestions",   included: false },
     ],
   },
@@ -80,7 +80,7 @@ export const PRICING_PLANS: PricingPlan[] = [
       domains: 3,
       aliasesPerDomain: 5,
       chatWidgets: 3,           // 1 per domain
-      ticketsPerMonth: 600,
+      totalEmails: 9000,  // inbound + outbound combined
       dataRetentionDays: 90,    // 3 months
     },
 
@@ -91,13 +91,13 @@ export const PRICING_PLANS: PricingPlan[] = [
       { label: "Reply from Slack",                            included: true  },
       { label: "Ticket claiming & assignment",                included: true  },
       { label: "Detailed reports",                            included: true  },
-      { label: "600 tickets / month",                         included: true  },
+      { label: "9000 inbound + outbound emails (1500 - 1700 tickets / month)",                         included: true  },
       { label: "3-month data retention",                      included: true  },
       { label: "Priority email support",                      included: true  },
       {
-        label: "Canned responses",
+        label: "Pre-filled responses",
         included: true,
-        soon: true,
+        soon: false,
       },
       {
         label: "AI analysis — monthly digest & content suggestions",
@@ -121,7 +121,7 @@ export const PRICING_PLANS: PricingPlan[] = [
       domains: "unlimited",
       aliasesPerDomain: "unlimited",
       chatWidgets: "unlimited",
-      ticketsPerMonth: 2000,
+      totalEmails: "unlimited",
       dataRetentionDays: "unlimited",
     },
 
@@ -132,13 +132,13 @@ export const PRICING_PLANS: PricingPlan[] = [
       { label: "Reply from Slack",                            included: true  },
       { label: "Ticket claiming & assignment",                included: true  },
       { label: "Detailed reports",                            included: true  },
-      { label: "2,000 tickets / month",                       included: true  },
+      { label: "Unlimited inbound + outbound emails",                       included: true  },
       { label: "Full data retention",                         included: true  },
       { label: "Priority support via Slack",                  included: true  },
       {
-        label: "Canned responses",
+        label: "Pre-filled responses",
         included: true,
-        soon: true,
+        soon: false,
       },
       {
         label: "AI analysis — on-demand + weekly digest & content suggestions",

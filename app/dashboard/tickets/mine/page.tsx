@@ -4,8 +4,12 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft, RefreshCw, Send, Inbox } from "lucide-react";
+import { ArrowLeft, RefreshCw, Send, Inbox, X } from "lucide-react";
 import { toast } from "sonner";
+import AnimatedDropdown, { DropdownOption } from "@/components/ui/AnimatedDropdown";
+import { Paragraph } from "@/components/Paragraph";
+import { Heading } from "@/components/Heading";
+import { AnimatePresence, motion } from "motion/react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -106,6 +110,9 @@ export default function MyTicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentFilter, setCurrentFilter] = useState("all");
+  const [selectedDomain, setSelectedDomain] = useState("all");
+  const [dateRange, setDateRange] = useState("7d");
+  const [domains, setDomains] = useState<DropdownOption[]>([]);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [thread, setThread] = useState<ThreadDetail | null>(null);
@@ -120,6 +127,9 @@ export default function MyTicketsPage() {
   const [mobileView, setMobileView] = useState<"list" | "chat">("list");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const ticketListRef = useRef<HTMLDivElement>(null);
+  const ticketItemRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const [clipPath, setClipPath] = useState("inset(0 0 100% 0 round 0px)");
 
   // ── Fetch ticket list ────────────────────────────────────────────────────
   const fetchTickets = useCallback(async () => {
@@ -129,6 +139,14 @@ export default function MyTicketsPage() {
       if (!res.ok) throw new Error();
       const data = await res.json();
       setTickets(data.tickets || []);
+      const domRes = await fetch("/api/domains");
+      if (domRes.ok) {
+        const domData = await domRes.json();
+        setDomains([
+          { value: "all", label: "All Domains" },
+          ...domData.map((d: any) => ({ value: d.id, label: d.domain })),
+        ]);
+      }
     } catch {
       toast.error("Failed to load tickets");
     } finally {
@@ -156,10 +174,28 @@ export default function MyTicketsPage() {
     }
   }, []);
 
+  const updateClipPath = useCallback((id: string) => {
+  const container = ticketListRef.current;
+  const item = ticketItemRefs.current.get(id);
+  if (!container || !item) return;
+
+  const containerTop = container.getBoundingClientRect().top;
+  const itemTop = item.getBoundingClientRect().top;
+  const offsetTop = itemTop - containerTop + container.scrollTop;
+  const offsetBottom = container.offsetHeight - offsetTop - item.offsetHeight;
+
+  setClipPath(
+    `inset(${offsetTop}px 0 ${offsetBottom}px 0 round 0px)`
+  );
+}, []);
+
+
+
   const selectTicket = (id: string) => {
     setSelectedId(id);
     setMobileView("chat");
     fetchConversation(id);
+    updateClipPath(id);
   };
 
   // ── Silently refresh the right-side conversation (no full-screen skeleton) ──
@@ -182,14 +218,16 @@ export default function MyTicketsPage() {
   // ── Auto-refresh right panel every 10s when a conversation is open ────────
   useEffect(() => {
     if (!selectedId) return;
-    const interval = setInterval(refreshConversation, 10000);
+    const interval = setInterval(refreshConversation, 60000);
     return () => clearInterval(interval);
   }, [selectedId, refreshConversation]);
 
   // ── Scroll to bottom when messages change ────────────────────────────────
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [messages]);
+
+  
 
   // ── Send reply ───────────────────────────────────────────────────────────
   const sendReply = async () => {
@@ -283,6 +321,13 @@ export default function MyTicketsPage() {
     resolved: tickets.filter((t) => t.status === "resolved").length,
   };
 
+  useEffect(() => {
+  if (!selectedId) return;
+  // Small timeout to ensure refs are populated after render
+  const t = setTimeout(() => updateClipPath(selectedId), 50);
+  return () => clearTimeout(t);
+}, [selectedId, filtered, updateClipPath]);
+
   // ── Date-separator grouping ───────────────────────────────────────────────
   function renderMessages() {
     const nodes: React.ReactNode[] = [];
@@ -349,7 +394,7 @@ export default function MyTicketsPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-[calc(100vh-88px)] overflow-hidden border border-neutral-200 rounded-xl bg-white">
+    <div className="flex h-full overflow-hidden bg-white">
 
       {/* ── Left Panel: Ticket List ────────────────────────────────────── */}
       <div
@@ -357,15 +402,38 @@ export default function MyTicketsPage() {
           mobileView === "chat" ? "hidden sm:flex" : "flex"
         }`}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-4 border-b border-neutral-200 flex-shrink-0">
-          <h1 className="text-base font-semibold text-neutral-900 font-schibsted">My Tickets</h1>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" asChild className="h-8 w-8">
-              <Link href="/dashboard/tickets/unassigned" title="Unassigned">
-                <Inbox size={15} />
-              </Link>
-            </Button>
+        {/* ── Page Header ── */}
+        <div className="px-4 pb-3 border-b border-neutral-100 flex-shrink-0">
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <Heading variant="muted" className="font-bold text-neutral-900">
+                My Tickets
+              </Heading>
+                <Paragraph variant="default" className="text-neutral-600 mt-1">
+                Your support queue. Filter by domain or date to find what you need.
+                </Paragraph>
+            </div>
+          </div>
+        
+          {/* Controls row */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <AnimatedDropdown
+              options={domains}
+              value={selectedDomain}
+              onChange={setSelectedDomain}
+              placeholder="All Domains"
+              width="w-44"
+            />
+            <AnimatedDropdown
+              options={[
+                { value: "24h", label: "Last 24 hrs" },
+                { value: "7d",  label: "Last 7 days" },
+                { value: "15d", label: "Last 15 days" },
+              ]}
+              value={dateRange}
+              onChange={setDateRange}
+              width="w-36"
+            />
             <Button
               variant="ghost"
               size="icon"
@@ -424,23 +492,61 @@ export default function MyTicketsPage() {
               <p className="text-sm text-neutral-400 font-schibsted">No tickets found</p>
             </div>
           ) : (
-            <div className="divide-y divide-neutral-100">
+            // <div ref={ticketListRef} className="divide-y divide-neutral-100">
+            //   {filtered.map((ticket) => {
+            //     const cfg = STATUS_CONFIG[ticket.status] || STATUS_CONFIG.open;
+            //     const isSelected = ticket.id === selectedId;
+            //     return (
+            //       <button
+            //         key={ticket.id}
+            //         onClick={() => selectTicket(ticket.id)}
+            //         className={`w-full text-left flex items-start gap-3 px-4 py-3 transition-colors hover:bg-neutral-50 ${
+            //           isSelected ? "bg-sky-50 border-l-2 border-sky-500" : ""
+            //         }`}
+            //       >
+            //         {/* Avatar */}
+            //         <div className="w-9 h-9 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-sm font-bold flex-shrink-0 font-schibsted">
+            //           {senderInitial(ticket.fromName, ticket.from)}
+            //         </div>
+            //         {/* Info */}
+            //         <div className="flex-1 min-w-0">
+            //           <div className="flex items-center justify-between gap-1">
+            //             <p className="text-sm font-semibold text-neutral-900 font-schibsted truncate leading-tight">
+            //               {ticket.fromName || ticket.from}
+            //             </p>
+            //             <span className="text-[10px] text-neutral-400 font-schibsted shrink-0">
+            //               {timeAgo(ticket.receivedAt)}
+            //             </span>
+            //           </div>
+            //           <p className="text-xs text-neutral-500 font-schibsted truncate mt-0.5 leading-tight">
+            //             {ticket.subject}
+            //           </p>
+            //           <div className="mt-1.5 flex items-center gap-1.5">
+            //             <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
+            //             <span className={`text-[10px] font-schibsted font-medium ${cfg.className.split(" ")[1]}`}>
+            //               {cfg.label}
+            //             </span>
+            //           </div>
+            //         </div>
+            //       </button>
+            //     );
+            //   })}
+            // </div>
+            <div ref={ticketListRef} className="relative divide-y divide-neutral-100">
+
+              {/* ── Base layer ── */}
               {filtered.map((ticket) => {
                 const cfg = STATUS_CONFIG[ticket.status] || STATUS_CONFIG.open;
-                const isSelected = ticket.id === selectedId;
                 return (
                   <button
                     key={ticket.id}
+                    ref={(el) => { if (el) ticketItemRefs.current.set(ticket.id, el); }}
                     onClick={() => selectTicket(ticket.id)}
-                    className={`w-full text-left flex items-start gap-3 px-4 py-3 transition-colors hover:bg-neutral-50 ${
-                      isSelected ? "bg-sky-50 border-l-2 border-sky-500" : ""
-                    }`}
+                    className="w-full text-left flex items-start gap-3 px-4 py-3 transition-colors hover:bg-neutral-50"
                   >
-                    {/* Avatar */}
                     <div className="w-9 h-9 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-sm font-bold flex-shrink-0 font-schibsted">
                       {senderInitial(ticket.fromName, ticket.from)}
                     </div>
-                    {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1">
                         <p className="text-sm font-semibold text-neutral-900 font-schibsted truncate leading-tight">
@@ -463,17 +569,58 @@ export default function MyTicketsPage() {
                   </button>
                 );
               })}
+
+              {/* ── Overlay layer (clipped) ── */}
+              <div
+                className="absolute inset-0 overflow-hidden pointer-events-none"
+                style={{
+                  clipPath,
+                  transition: "clip-path 0.15s ease",
+                }}
+              >
+                <div className="bg-sky-100 divide-y divide-sky-100">
+                  {filtered.map((ticket) => {
+                    const cfg = STATUS_CONFIG[ticket.status] || STATUS_CONFIG.open;
+                    return (
+                      <div
+                        key={ticket.id}
+                        className="w-full text-left flex items-start gap-3 px-4 py-3"
+                      >
+                        <div className="w-9 h-9 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-sm font-bold flex-shrink-0 font-schibsted">
+                          {senderInitial(ticket.fromName, ticket.from)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-1">
+                            <p className="text-sm font-semibold text-sky-900 font-schibsted truncate leading-tight">
+                              {ticket.fromName || ticket.from}
+                            </p>
+                            <span className="text-[10px] text-sky-400 font-schibsted shrink-0">
+                              {timeAgo(ticket.receivedAt)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-sky-500 font-schibsted truncate mt-0.5 leading-tight">
+                            {ticket.subject}
+                          </p>
+                          <div className="mt-1.5 flex items-center gap-1.5">
+                            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
+                            <span className={`text-[10px] font-schibsted font-medium ${cfg.className.split(" ")[1]}`}>
+                              {cfg.label}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
             </div>
           )}
         </div>
       </div>
 
       {/* ── Right Panel: Conversation ──────────────────────────────────────── */}
-      <div
-        className={`flex flex-col flex-1 min-w-0 ${
-          mobileView === "list" ? "hidden sm:flex" : "flex"
-        }`}
-      >
+      <div className="hidden sm:flex flex-col flex-1 min-w-0">
         {!selectedId ? (
           /* Empty state */
           <div className="flex flex-col items-center justify-center h-full text-center px-6">
@@ -514,17 +661,18 @@ export default function MyTicketsPage() {
                   </div>
                   {/* Status + change */}
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <StatusBadge status={thread.status} />
-                    <select
+                    <AnimatedDropdown
+                      options={[
+                        { value: "open",        label: "Open" },
+                        { value: "in_progress", label: "In Progress" },
+                        { value: "waiting",     label: "Waiting" },
+                        { value: "resolved",    label: "Resolved" },
+                      ]}
                       value={thread.status}
-                      onChange={(e) => updateStatus(e.target.value)}
-                      className="text-xs border border-neutral-200 rounded-lg px-2 py-1 font-schibsted bg-white text-neutral-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-400"
-                    >
-                      <option value="open">Open</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="waiting">Waiting</option>
-                      <option value="resolved">Resolved</option>
-                    </select>
+                      onChange={(val) => updateStatus(val)}
+                      width="w-36"
+                      className="[&_button]:focus:ring-0 [&_button]:focus:outline-none [&_button]:focus:border-neutral-300"
+                    />
                     <Button
                       variant="ghost"
                       size="icon"
@@ -541,22 +689,39 @@ export default function MyTicketsPage() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1">
-              {convLoading ? (
-                <div className="flex flex-col gap-3 pt-6">
-                  {[1, 2, 3].map((n) => (
-                    <div key={n} className={`flex ${n % 2 === 0 ? "justify-end" : "justify-start"}`}>
-                      <div className="animate-pulse h-10 w-48 rounded-2xl bg-neutral-200" />
-                    </div>
-                  ))}
-                </div>
-              ) : messages.length === 0 ? (
-                <p className="text-center text-sm text-neutral-400 py-8 font-schibsted">No messages yet.</p>
-              ) : (
-                renderMessages()
-              )}
-              <div ref={messagesEndRef} />
-            </div>
+            <motion.div
+              className="flex-1 overflow-y-auto px-4 py-2 space-y-1"
+            >
+              <AnimatePresence>
+                {/* {convLoading && (
+                  <div className="flex flex-col gap-3 pt-6">
+                    {[1, 2, 3].map((n) => (
+                      <div key={n} className={`flex ${n % 2 === 0 ? "justify-end" : "justify-start"}`}>
+                        <div className="animate-pulse h-10 w-48 rounded-2xl bg-neutral-200" />
+                      </div>
+                    ))}
+                  </div>
+                )} */}
+                {!convLoading && messages.length === 0 && (
+                  <div className="text-center text-sm text-neutral-400 py-8 font-schibsted">
+                    No messages yet.
+                  </div>
+                )}
+                {!convLoading && messages.length > 0 && 
+                (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.1, ease: "easeOut" }}
+                  >
+                    {renderMessages()}
+                  </motion.div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </AnimatePresence>
+            </motion.div>
 
             {/* Reply Box */}
             <div className="border-t border-neutral-200 px-4 py-3 flex-shrink-0 bg-white">
@@ -586,6 +751,146 @@ export default function MyTicketsPage() {
           </>
         )}
       </div>
+
+      <AnimatePresence>
+        {mobileView === "chat" && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              className="fixed inset-0 z-40 bg-black/20 sm:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              onClick={() => { setMobileView("list"); setSelectedId(null); }}
+            />
+
+            {/* Sheet panel */}
+            <motion.div
+              className="fixed inset-x-0 bottom-0 z-50 h-[92vh] bg-white rounded-t-2xl flex flex-col sm:hidden"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ duration: 0.38, ease: [0.32, 0.72, 0, 1] }}
+            >
+              {/* Handle + close */}
+              <div className="flex items-center justify-between px-4 pt-3 pb-2 flex-shrink-0">
+                <div className="w-8 h-1 rounded-full bg-neutral-300 mx-auto absolute left-1/2 -translate-x-1/2" />
+                <div className="flex-1" />
+                <button
+                  onClick={() => { setMobileView("list"); setSelectedId(null); }}
+                  className="w-7 h-7 flex items-center justify-center rounded-full bg-neutral-100 hover:bg-neutral-200 transition-colors"
+                >
+                  <X size={14} className="text-neutral-500" />
+                </button>
+              </div>
+
+              {/* Conversation goes here next */}
+                {
+                  selectedId && (
+                    <>
+                    {/* Conversation Header */}
+                    <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-200 flex-shrink-0 bg-white">
+
+                      {thread && (
+                        <>
+                          {/* Avatar */}
+                          <div className="w-9 h-9 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-sm font-bold flex-shrink-0 font-schibsted">
+                            {senderInitial(thread.fromName, thread.from)}
+                          </div>
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] font-semibold text-neutral-900 font-schibsted leading-tight truncate">
+                              {thread.fromName || thread.from}
+                            </p>
+                            <p className="text-[11px] text-neutral-400 font-schibsted truncate leading-tight">
+                              {thread.subject}
+                            </p>
+                          </div>
+                          {/* Status + change */}
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <AnimatedDropdown
+                              options={[
+                                { value: "open",        label: "Open" },
+                                { value: "in_progress", label: "In Progress" },
+                                { value: "waiting",     label: "Waiting" },
+                                { value: "resolved",    label: "Resolved" },
+                              ]}
+                              value={thread.status}
+                              onChange={(val) => updateStatus(val)}
+                              width="w-24"
+                              className="[&_button]:focus:ring-0 [&_button]:focus:outline-none [&_button]:focus:border-neutral-300"
+                            />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={refreshConversation}
+                              disabled={convRefreshing}
+                              className="h-8 w-8"
+                              title="Refresh conversation"
+                            >
+                              <RefreshCw size={14} className={convRefreshing ? "animate-spin" : ""} />
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Messages */}
+                    <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.25, delay: 0.4 }}
+                    className="flex-1 overflow-y-auto px-4 py-2 space-y-1">
+                      {convLoading ? (
+                        <div className="flex flex-col gap-3 pt-6">
+                          {[1, 2, 3].map((n) => (
+                            <div key={n} className={`flex ${n % 2 === 0 ? "justify-end" : "justify-start"}`}>
+                              <div className="animate-pulse h-10 w-48 rounded-2xl bg-neutral-200" />
+                            </div>
+                          ))}
+                        </div>
+                      ) : messages.length === 0 ? (
+                        <p className="text-center text-sm text-neutral-400 py-8 font-schibsted">No messages yet.</p>
+                      ) : (
+                        renderMessages()
+                      )}
+                      <div ref={messagesEndRef} />
+                    </motion.div>
+
+                    {/* Reply Box */}
+                    <div className="border-t border-neutral-200 px-4 py-3 flex-shrink-0 bg-white">
+                      <div className="flex items-end gap-2 bg-white border border-neutral-200 rounded-xl px-3 py-2 focus-within:border-sky-300 focus-within:ring-2 focus-within:ring-sky-500/10 transition-all">
+                        <textarea
+                          value={reply}
+                          onChange={(e) => setReply(e.target.value)}
+                          onKeyDown={handleKeyDown}
+                          placeholder="Type a reply… (Enter to send, Shift+Enter for new line)"
+                          rows={2}
+                          className="flex-1 resize-none text-sm text-neutral-800 placeholder-neutral-400 outline-none bg-transparent max-h-32 overflow-auto font-schibsted"
+                        />
+                        <button
+                          onClick={sendReply}
+                          disabled={!reply.trim() || sending}
+                          className="flex-shrink-0 w-9 h-9 rounded-full bg-sky-500 flex items-center justify-center text-white transition-all hover:bg-sky-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                          aria-label="Send reply"
+                        >
+                          {sending ? (
+                            <RefreshCw size={14} className="animate-spin" />
+                          ) : (
+                            <Send size={14} />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                  )
+                }
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

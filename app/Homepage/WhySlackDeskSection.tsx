@@ -7,6 +7,8 @@ import { Paragraph } from "@/components/Paragraph";
 import { LaptopNotificationVisual } from "./LaptopNotificationVisual";
 import HeroCTAPrimary, { HeroCTASecondary } from "@/components/HeroCTAPrimary";
 import Link from "next/link";
+import CTAWrapper from "@/components/CTAWrapper";
+import { IconExternalLink } from "@tabler/icons-react";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -237,6 +239,9 @@ const PricingVisual = () => (
 //     </div>
 //   );
 // };
+
+
+
 const ChannelsVisual = () => {
   return (
     <div className="w-full relative" style={{ height: 110 }}>
@@ -754,21 +759,26 @@ export function WhySlackDeskSection() {
           </Heading>
 
           <div>
-            <Link
-              href="/dashboard">
-                <motion.button
-              whileTap={{ scale: 0.97 }}
-              className="relative w-64 flex items-center justify-center gap-0 overflow-hidden rounded-2xl bg-gradient-to-b from-sky-900 to-cyan-700 shadow-lg cursor-pointer"
+            <CTAWrapper
+              loggedInHref="/dashboard"
+              loggedOutHref="/sign-up"
+              loggedInText="Dashboard"
+              loggedOutText="Get Started"
             >
-      
-              {/* Text */}
-              <span
-                className="relative z-10 font-schibsted font-semibold text-white text-xl uppercase tracking-wide select-none px-8 py-4"
-              >
-                Get Started
-              </span>
-            </motion.button>
-              </Link>
+              {({ text }) => (
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  className="relative w-64 flex items-center justify-center gap-0 overflow-hidden rounded-2xl bg-gradient-to-b from-sky-900 to-cyan-700 shadow-lg cursor-pointer"
+                >
+                  <span
+                    className="group relative z-10 font-schibsted font-semibold text-white text-xl uppercase tracking-wide select-none px-8 py-4 flex items-center justify-center gap-3 "
+                  >
+                    {text}
+                    <IconExternalLink className="mb-1 text-sky-50 group-hover:text-white duration-150 ease-out" />
+                  </span>
+                </motion.button>
+              )}
+            </CTAWrapper>
           </div>
         </div>
         <Paragraph variant="home-par" className="max-w-3xl">
