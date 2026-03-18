@@ -10,6 +10,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1010.0",
     "@clerk/nextjs": "^6.36.5",
     "@geist-ui/core": "^2.3.8",
     "@next/third-parties": "^16.1.1",
@@ -20,7 +21,6 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@tabler/icons-react": "^3.36.0",
     "class-variance-authority": "^0.7.1",
-    "cloudinary": "^2.9.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.27",
     "geist": "^1.7.0",

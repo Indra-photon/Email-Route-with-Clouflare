@@ -5,13 +5,7 @@ import { getOrCreateWorkspaceForCurrentUser } from "@/app/api/workspace/helpers"
 import { ChatConversation } from "@/app/api/models/ChatConversationModel";
 import { ChatMessage } from "@/app/api/models/ChatMessageModel";
 import { ChatWidget } from "@/app/api/models/ChatWidgetModel";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-    cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import { deleteFromR2 } from "@/lib/r2";
 
 export async function GET(
     request: Request,
@@ -95,42 +89,19 @@ export async function DELETE(
             return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
         }
 
-        // 2. Find all messages with media to delete from Cloudinary
+        // 2. Find all messages with media to delete from R2
         const messagesWithMedia = await ChatMessage.find({
             conversationId: id,
             mediaUrl: { $exists: true, $ne: "" }
         }).lean();
 
-        // 3. Delete files from Cloudinary
+        // 3. Delete files from R2
         if (messagesWithMedia.length > 0) {
             const deletePromises = messagesWithMedia.map(msg => {
                 if (msg.mediaUrl) {
-                    // Extract public_id from cloudinary URL
-                    // Example URL: https://res.cloudinary.com/cloud_name/image/upload/v1234567890/chat_uploads/filename.jpg
-                    try {
-                        const urlParts = msg.mediaUrl.split('/');
-                        const fileWithExt = urlParts[urlParts.length - 1]; // filename.jpg
-                        const folder = urlParts[urlParts.length - 2];      // chat_uploads
-
-                        if (folder === "chat_uploads") {
-                            const isPdf = msg.type === "pdf";
-                            // PDFs: public_id includes extension (raw resource type)
-                            // Images: strip the last extension Cloudinary appended
-                            const publicId = isPdf
-                                ? `chat_uploads/${fileWithExt}`
-                                : `chat_uploads/${fileWithExt.replace(/\.[^.]+$/, "")}`;
-                            const resourceType = isPdf ? "raw" : "image";
-
-                            return new Promise((resolve) => {
-                                cloudinary.uploader.destroy(publicId, { resource_type: resourceType }, (error, result) => {
-                                    if (error) console.error(`Failed to delete Cloudinary asset ${publicId}:`, error);
-                                    resolve(result);
-                                });
-                            });
-                        }
-                    } catch (e) {
-                        console.error("Error parsing Cloudinary URL for deletion:", e);
-                    }
+                    return deleteFromR2(msg.mediaUrl).catch(e =>
+                        console.error(`Failed to delete R2 asset for ${msg.mediaUrl}:`, e)
+                    );
                 }
                 return Promise.resolve();
             });

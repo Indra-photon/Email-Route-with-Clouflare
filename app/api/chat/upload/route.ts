@@ -1,12 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-    cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import { uploadToR2 } from "@/lib/r2";
 
 // POST /api/chat/upload
 // Agent-side file upload — requires Clerk auth.
@@ -42,32 +36,13 @@ export async function POST(request: Request) {
 
         const fileType = file.type === "application/pdf" ? "pdf" : "image";
 
-        // Convert File to Buffer for Cloudinary
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
-        // Upload to Cloudinary
-        const uploadResult = await new Promise<{ secure_url: string; public_id: string }>(
-            (resolve, reject) => {
-                const uploadStream = cloudinary.uploader.upload_stream(
-                    {
-                        folder: "chat_uploads",
-                        resource_type: fileType === "pdf" ? "raw" : "image",
-                        public_id: `${Date.now()}_${file.name.replace(/\s+/g, "_")}`,
-                        access_mode: "public",
-                        access_control: [{ access_type: "anonymous" }],
-                    },
-                    (err, result) => {
-                        if (err || !result) return reject(err);
-                        resolve(result as { secure_url: string; public_id: string });
-                    }
-                );
-                uploadStream.end(buffer);
-            }
-        );
+        const publicUrl = await uploadToR2(buffer, file.name, file.type);
 
         return NextResponse.json({
-            url: uploadResult.secure_url,
+            url: publicUrl,
             type: fileType,
             filename: file.name,
         });
