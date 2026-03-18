@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -67,9 +67,89 @@ const navItems = [
   },
 ];
 
+function NavItem({ item, isActive }: { 
+  item: typeof navItems[0]; 
+  isActive: boolean;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+  return (
+    <Link
+      href={item.href}
+      className={`flex items-center gap-3 rounded-lg px-3 py-2.5 font-schibsted font-regular transition-all duration-150 ${
+        isActive ? "text-sky-800 font-semibold" : "text-neutral-600 hover:text-neutral-900"
+      }`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {item.tablerIcon ? (
+        <item.tablerIcon size={20} className={`shrink-0 ${isActive ? "text-sky-800" : "text-neutral-600"}`} />
+      ) : item.icon ? (
+        <item.icon className={`size-5 ${isActive ? "text-sky-800" : "text-neutral-600"}`} isAnimating={isHovered} />
+      ) : null}
+      <span className="text-sm">{item.label}</span>
+    </Link>
+  );
+}
+
+
+function NavLinks({
+  navListRef,
+  navItemRefs,
+  clipPath,
+  isActive,
+}: {
+  navListRef: React.RefObject<HTMLUListElement | null>;
+  navItemRefs: React.RefObject<Map<string, HTMLLIElement>>;
+  clipPath: string;
+  isActive: (href: string, exact?: boolean) => boolean;
+}) {
+  return (
+    <div className="relative">
+      {/* Base layer */}
+      <ul ref={navListRef} className="space-y-1">
+        {navItems.map((item) => (
+          <li
+            key={item.href}
+            ref={(el) => { if (el) navItemRefs.current.set(item.href, el); }}
+          >
+            <NavItem item={item} isActive={isActive(item.href, item.exact)} />
+          </li>
+        ))}
+      </ul>
+
+      {/* Overlay layer */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          clipPath,
+          transition: "clip-path 0.2s cubic-bezier(0.32, 0.72, 0, 1)",
+        }}
+      >
+        <ul className="space-y-1">
+          {navItems.map((item) => (
+            <li key={item.href}>
+              <div className="flex items-center gap-3 rounded-lg px-3 py-2.5 font-schibsted font-semibold bg-sky-100 text-sky-800">
+                {item.tablerIcon ? (
+                  <item.tablerIcon size={20} className="shrink-0 text-sky-800" />
+                ) : item.icon ? (
+                  <item.icon className="size-5 text-sky-800" isAnimating={false} />
+                ) : null}
+                <span className="text-sm">{item.label}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardNav({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navListRef = useRef<HTMLUListElement>(null);
+const navItemRefs = useRef<Map<string, HTMLLIElement>>(new Map());
+const [clipPath, setClipPath] = useState("inset(0 0 100% 0)");
 
   useEffect(() => {
     setMobileOpen(false);
@@ -80,44 +160,29 @@ export default function DashboardNav({ children }: { children: ReactNode }) {
     return pathname.startsWith(href);
   };
 
-  const NavLinks = () => (
-    <ul className="space-y-1">
-      {navItems.map((item) => {
-        const active = isActive(item.href, item.exact);
-        const [isHovered, setIsHovered] = useState(false);
+  const updateClipPath = useCallback((href: string) => {
+  const container = navListRef.current;
+  const item = navItemRefs.current.get(href);
+  if (!container || !item) return;
 
-        return (
-          <li key={item.href}>
-            <Link
-              href={item.href}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 font-schibsted font-regular transition-all duration-150 ${active
-                ? "bg-sky-100 text-sky-800 font-semibold"
-                : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
-                }`}
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-            >
-              {item.tablerIcon ? (
-                <item.tablerIcon
-                  size={20}
-                  className={`shrink-0 ${active ? "text-sky-800" : "text-neutral-600"}`}
-                />
-              ) : item.icon ? (
-                <item.icon
-                  className={`size-5 ${active ? "text-sky-800" : "text-neutral-600"}`}
-                  isAnimating={isHovered}
-                />
-              ) : null}
-              <span className="text-sm">{item.label}</span>
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
+  const offsetTop = item.offsetTop;
+  const offsetBottom = container.offsetHeight - offsetTop - item.offsetHeight;
+
+  setClipPath(
+    `inset(${offsetTop}px 0 ${offsetBottom}px 0)`
   );
+}, []);
+
+useEffect(() => {
+  const activeItem = navItems.find((item) => isActive(item.href, item.exact));
+  if (!activeItem) return;
+  const t = setTimeout(() => updateClipPath(activeItem.href), 50);
+  return () => clearTimeout(t);
+}, [pathname, updateClipPath]);
+
 
   return (
-    <div className="min-h-dvh flex">
+    <div className="flex h-dvh overflow-hidden bg-white">
       {/* Mobile hamburger button */}
       <button
         className="md:hidden fixed top-5 left-4 z-50 size-10 bg-white border border-neutral-200 rounded-lg flex items-center justify-center shadow-sm hover:bg-neutral-50 transition-colors"
@@ -153,7 +218,12 @@ export default function DashboardNav({ children }: { children: ReactNode }) {
 
         {/* Navigation */}
         <nav>
-          <NavLinks />
+          <NavLinks
+            navListRef={navListRef}
+            navItemRefs={navItemRefs}
+            clipPath={clipPath}
+            isActive={isActive}
+          />
         </nav>
 
         {/* Bottom section - User info or help link (optional) */}
@@ -176,7 +246,7 @@ export default function DashboardNav({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Page content */}
-      <main className="flex-1 min-w-0 px-4 md:px-6 lg:px-8 py-6 bg-white">
+      <main className="flex-1 min-w-0 px-4 md:px-6 lg:px-8 py-6 bg-white h-full overflow-hidden">
         {children}
       </main>
     </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import CTAWrapper from "@/components/CTAWrapper";
 import { motion, AnimatePresence } from "motion/react";
 import React, { useState, useEffect } from "react";
 
@@ -235,9 +236,18 @@ export const PricingBenefitsIllustration: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
         >
-          <button className="bg-gradient-to-b from-sky-900 to-cyan-700 text-white font-schibsted font-semibold px-8 py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-            Start for free
-          </button>
+          <CTAWrapper
+            loggedInHref="/dashboard"
+            loggedOutHref="/sign-up"
+            loggedInText="Go to Dashboard"
+            loggedOutText="Start for free"
+          >
+            {({ text }) => (
+              <button className="bg-gradient-to-b from-sky-900 to-cyan-700 text-white font-schibsted font-semibold px-8 py-3 rounded-lg transition-all duration-300 cursor-pointer">
+                {text}
+              </button>
+            )}
+          </CTAWrapper>
         </motion.div>
       </div>
     </div>
