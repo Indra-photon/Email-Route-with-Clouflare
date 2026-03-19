@@ -1,13 +1,25 @@
 // lib/dodo.ts
-// Thin typed wrapper around Dodo Payments REST API.
+// Wrapper around the official Dodo Payments TypeScript SDK.
 // Docs: https://docs.dodopayments.com
 
-const DODO_BASE_URL =
-  process.env.DODO_ENV === "live"
-    ? "https://live.dodopayments.com"
-    : "https://test.dodopayments.com";
+import DodoPayments from "dodopayments";
 
-type DodoHttpMethod = "GET" | "POST" | "PATCH" | "DELETE";
+function getDodoClient() {
+  const apiKey = process.env.DODO_API_KEY;
+  if (!apiKey) throw new Error("DODO_API_KEY environment variable is not set");
+
+  const environment =
+    process.env.DODO_ENV === "live" ? "live_mode" : "test_mode";
+
+  console.log(`🔍 Dodo SDK: environment=${environment}, key prefix=${apiKey.slice(0, 12)}...`);
+
+  return new DodoPayments({
+    bearerToken: apiKey,
+    environment,
+  });
+}
+
+// ─── Custom error class (kept for backward compatibility) ─────────────────────
 
 export class DodoError extends Error {
   status: number;
@@ -18,36 +30,14 @@ export class DodoError extends Error {
   }
 }
 
-async function dodoRequest<T = unknown>(
-  method: DodoHttpMethod,
-  path: string,
-  body?: Record<string, unknown>
-): Promise<T> {
-  const apiKey = process.env.DODO_API_KEY;
-  if (!apiKey) throw new Error("DODO_API_KEY environment variable is not set");
-
-  const res = await fetch(`${DODO_BASE_URL}${path}`, {
-    method,
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
-
-  if (!res.ok) {
-    let message = `Dodo API error ${res.status}`;
-    try {
-      const err = await res.json();
-      message = err.message || err.error || message;
-    } catch {}
-    throw new DodoError(message, res.status);
+function wrapDodoError(err: unknown): never {
+  if (err instanceof Error) {
+    // SDK wraps API errors — extract status if available
+    const anyErr = err as any;
+    const status = anyErr.status ?? anyErr.statusCode ?? 500;
+    throw new DodoError(err.message, status);
   }
-
-  // 204 No Content responses
-  if (res.status === 204) return undefined as T;
-
-  return res.json() as Promise<T>;
+  throw new DodoError("Unknown Dodo error", 500);
 }
 
 // ─── Checkout Sessions ────────────────────────────────────────────────────────
@@ -58,7 +48,7 @@ export interface DodoCheckoutSession {
 }
 
 export interface CreateCheckoutParams {
-  priceId: string;
+  priceId: string;          // This is the Dodo product ID (stored as dodoPriceId in DB)
   successUrl: string;
   cancelUrl: string;
   metadata?: Record<string, string>;
@@ -68,13 +58,19 @@ export interface CreateCheckoutParams {
 export async function createCheckoutSession(
   params: CreateCheckoutParams
 ): Promise<DodoCheckoutSession> {
-  return dodoRequest<DodoCheckoutSession>("POST", "/checkout/sessions", {
-    price_id: params.priceId,
-    success_url: params.successUrl,
-    cancel_url: params.cancelUrl,
-    metadata: params.metadata ?? {},
-    ...(params.customerId ? { customer_id: params.customerId } : {}),
-  });
+  const client = getDodoClient();
+  try {
+    const session = await client.checkoutSessions.create({
+      product_cart: [{ product_id: params.priceId, quantity: 1 }],
+      return_url: params.successUrl,
+      metadata: params.metadata ?? {},
+      ...(params.customerId ? { customer: { customer_id: params.customerId } } : {}),
+    });
+    console.log(`✅ Checkout session created: id=${session.session_id}, url=${session.checkout_url}`);
+    return { id: session.session_id, url: session.checkout_url ?? "" };
+  } catch (err) {
+    wrapDodoError(err);
+  }
 }
 
 // ─── Subscriptions ────────────────────────────────────────────────────────────
@@ -90,29 +86,54 @@ export interface DodoSubscription {
 }
 
 export async function getSubscription(subscriptionId: string): Promise<DodoSubscription> {
-  return dodoRequest<DodoSubscription>("GET", `/subscriptions/${subscriptionId}`);
+  const client = getDodoClient();
+  try {
+    const sub = await client.subscriptions.retrieve(subscriptionId);
+    return sub as unknown as DodoSubscription;
+  } catch (err) {
+    wrapDodoError(err);
+  }
 }
 
 export async function cancelSubscriptionAtPeriodEnd(
   subscriptionId: string
 ): Promise<DodoSubscription> {
-  return dodoRequest<DodoSubscription>("PATCH", `/subscriptions/${subscriptionId}`, {
-    cancel_at_period_end: true,
-  });
+  const client = getDodoClient();
+  try {
+    const sub = await client.subscriptions.update(subscriptionId, {
+      cancel_at_next_billing_date: true,
+    });
+    return sub as unknown as DodoSubscription;
+  } catch (err) {
+    wrapDodoError(err);
+  }
 }
 
 export async function resumeSubscription(
   subscriptionId: string
 ): Promise<DodoSubscription> {
-  return dodoRequest<DodoSubscription>("PATCH", `/subscriptions/${subscriptionId}`, {
-    cancel_at_period_end: false,
-  });
+  const client = getDodoClient();
+  try {
+    const sub = await client.subscriptions.update(subscriptionId, {
+      cancel_at_next_billing_date: false,
+    });
+    return sub as unknown as DodoSubscription;
+  } catch (err) {
+    wrapDodoError(err);
+  }
 }
 
 export async function cancelSubscriptionImmediately(
   subscriptionId: string
 ): Promise<void> {
-  return dodoRequest<void>("DELETE", `/subscriptions/${subscriptionId}`);
+  const client = getDodoClient();
+  try {
+    await client.subscriptions.update(subscriptionId, {
+      cancel_at_next_billing_date: true,
+    });
+  } catch (err) {
+    wrapDodoError(err);
+  }
 }
 
 // ─── Customer Portal ──────────────────────────────────────────────────────────
@@ -125,10 +146,13 @@ export async function createPortalSession(
   customerId: string,
   returnUrl: string
 ): Promise<DodoPortalSession> {
-  return dodoRequest<DodoPortalSession>("POST", "/portal/sessions", {
-    customer_id: customerId,
-    return_url: returnUrl,
-  });
+  const client = getDodoClient();
+  try {
+    const portal = await client.customers.customerPortal.create(customerId);
+    return { url: (portal as any).link ?? "" };
+  } catch (err) {
+    wrapDodoError(err);
+  }
 }
 
 // ─── Webhook Signature Verification ──────────────────────────────────────────
@@ -141,7 +165,6 @@ export function verifyDodoSignature(
   secret: string
 ): boolean {
   if (!signatureHeader) return false;
-  // Dodo uses HMAC-SHA256: signature = hmac(secret, rawBody)
   const expected = crypto
     .createHmac("sha256", secret)
     .update(rawBody)
