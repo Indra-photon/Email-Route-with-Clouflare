@@ -24,8 +24,9 @@ export async function GET() {
     const sub = await Subscription.findOne({ workspaceId: workspace._id }).lean();
 
     const now = new Date();
-    const planId = sub?.planId ?? "starter";
-    const plan = await PricingPlan.findOne({ id: planId }).lean();
+    // null = no active subscription (workspace exists but user hasn't purchased yet)
+    const planId = workspace.planId ?? null;
+    const plan = planId ? await PricingPlan.findOne({ id: planId }).lean() : null;
 
     // Compute derived values
     let daysUntilExpiry: number | null = null;
@@ -42,15 +43,15 @@ export async function GET() {
       sub?.status === "inactive" ||
       (sub?.currentPeriodEnd != null && now > sub.currentPeriodEnd);
 
-    const ticketLimit = plan?.limits.ticketsPerMonth ?? 200;
+    const ticketLimit = plan?.limits.ticketsPerMonth ?? null;
     const percentUsed =
-      ticketLimit === -1
+      ticketLimit === null || ticketLimit === -1
         ? 0
         : Math.round(((sub?.ticketCountInbound ?? 0) / ticketLimit) * 100);
 
     return NextResponse.json({
-      planId,
-      status: sub?.status ?? "inactive",
+      planId,                                              // null if no plan yet
+      status: sub?.status ?? (planId ? "inactive" : "no_plan"),
       currentPeriodStart: sub?.currentPeriodStart ?? null,
       currentPeriodEnd: sub?.currentPeriodEnd ?? null,
       cancelAtPeriodEnd: sub?.cancelAtPeriodEnd ?? false,
@@ -64,13 +65,7 @@ export async function GET() {
         ticketLimit,
         percentUsed,
       },
-      limits: plan?.limits ?? {
-        domains: 1,
-        aliasesPerDomain: 3,
-        chatWidgets: 1,
-        ticketsPerMonth: 200,
-        dataRetentionDays: 15,
-      },
+      limits: plan?.limits ?? null,                       // null = no plan limits to show
     });
   } catch (error) {
     console.error("❌ Subscription fetch error:", error);
