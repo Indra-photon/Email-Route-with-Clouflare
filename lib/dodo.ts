@@ -2,7 +2,10 @@
 // Thin typed wrapper around Dodo Payments REST API.
 // Docs: https://docs.dodopayments.com
 
-const DODO_BASE_URL = "https://api.dodopayments.com";
+const DODO_BASE_URL =
+  process.env.DODO_ENV === "live"
+    ? "https://live.dodopayments.com"
+    : "https://test.dodopayments.com";
 
 type DodoHttpMethod = "GET" | "POST" | "PATCH" | "DELETE";
 
