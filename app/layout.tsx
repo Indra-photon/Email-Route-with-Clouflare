@@ -107,6 +107,7 @@ export default async function RootLayout({
     return (
       <html lang="en">
         <body
+          suppressHydrationWarning
           className={`${geistSans.variable} ${geistMono.variable} ${schibstedGrotesk.variable} antialiased`}
         >
           {children}
@@ -120,6 +121,7 @@ export default async function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
+          suppressHydrationWarning
           className={`${geistSans.variable} ${geistMono.variable} ${schibstedGrotesk.variable} antialiased`}
         >
           <NavBar />
