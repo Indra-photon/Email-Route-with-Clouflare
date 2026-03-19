@@ -16,14 +16,14 @@ async function assertAdmin(): Promise<string | null> {
 // PATCH /api/admin/pricing/[planId] — update a plan and revalidate pricing page
 export async function PATCH(
   request: Request,
-  { params }: { params: { planId: string } }
+  { params }: { params: Promise<{ planId: string }> }
 ) {
   const userId = await assertAdmin();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { planId } = params;
+  const { planId } = await params;
   if (!["starter", "growth", "scale"].includes(planId)) {
     return NextResponse.json({ error: "Invalid planId" }, { status: 400 });
   }
