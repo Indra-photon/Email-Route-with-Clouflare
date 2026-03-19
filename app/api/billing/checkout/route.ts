@@ -38,10 +38,14 @@ export async function POST(request: Request) {
 
     const plan = await PricingPlan.findOne({ id: planId, isVisible: true });
     if (!plan) {
+      console.log(`❌ Plan not found in DB for planId: "${planId}"`);
       return NextResponse.json({ error: "Plan not found" }, { status: 404 });
     }
 
+    console.log(`✅ Plan found: id=${plan.id}, name=${plan.name}, dodoPriceId="${plan.dodoPriceId}"`);
+
     if (!plan.dodoPriceId) {
+      console.log(`❌ dodoPriceId is empty for plan "${planId}"`);
       return NextResponse.json(
         { error: "Plan is not yet configured for payments. Contact support." },
         { status: 503 }
@@ -82,7 +86,7 @@ export async function POST(request: Request) {
     // ── Create new Dodo checkout session ─────────────────────────────────────
     const session = await createCheckoutSession({
       priceId: plan.dodoPriceId,
-      successUrl: `${appUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      successUrl: `${appUrl}/billing/success`,
       cancelUrl: `${appUrl}/billing/cancelled`,
       metadata: {
         workspaceId: workspace._id.toString(),

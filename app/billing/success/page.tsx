@@ -1,40 +1,70 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import Link from "next/link";
 
 export default function BillingSuccessPage() {
   const [status, setStatus] = useState<"loading" | "active" | "timeout">("loading");
   const [planName, setPlanName] = useState("");
-  const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    let attempts = 0;
-    const maxAttempts = 10;
+    const subscriptionId = searchParams.get("subscription_id");
 
-    const poll = async () => {
-      attempts++;
-      const res = await fetch("/api/billing/subscription", { cache: "no-store" });
-      const data = await res.json();
-
-      if (data.status === "active") {
-        setPlanName(data.planId.charAt(0).toUpperCase() + data.planId.slice(1));
-        setStatus("active");
-        return;
+    const activate = async () => {
+      if (!subscriptionId) {
+        console.warn("⚠️ No subscription_id in URL — falling back to polling only");
+        return false;
       }
+      try {
+        const res = await fetch("/api/billing/activate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subscriptionId }),
+        });
+        const data = await res.json();
+        if (data.success && data.status === "active") {
+          setPlanName(
+            data.planId.charAt(0).toUpperCase() + data.planId.slice(1)
+          );
+          setStatus("active");
+          return true;
+        }
+      } catch (err) {
+        console.error("❌ Activate error:", err);
+      }
+      return false;
+    };
 
-      if (attempts >= maxAttempts) {
+    const poll = async (attempts = 0): Promise<void> => {
+      if (attempts >= 12) {
         setStatus("timeout");
         return;
       }
-
-      setTimeout(poll, 2000);
+      const res = await fetch("/api/billing/subscription", { cache: "no-store" });
+      const data = await res.json();
+      if (data.status === "active") {
+        setPlanName(
+          data.planId.charAt(0).toUpperCase() + data.planId.slice(1)
+        );
+        setStatus("active");
+        return;
+      }
+      await new Promise((r) => setTimeout(r, 2000));
+      return poll(attempts + 1);
     };
 
-    poll();
-  }, []);
+    (async () => {
+      // First try to activate immediately using the subscription_id from URL
+      const activated = await activate();
+      // If not activated yet (e.g. no subscription_id), fall back to polling
+      if (!activated) {
+        await poll();
+      }
+    })();
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
