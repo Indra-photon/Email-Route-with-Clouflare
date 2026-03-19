@@ -3,6 +3,8 @@ import dbConnect from "@/lib/dbConnect";
 import { auth } from "@clerk/nextjs/server";
 import { Domain } from "@/app/api/models/DomainModel";
 import { getOrCreateWorkspaceForCurrentUser } from "@/app/api/workspace/helpers";
+import { checkDomainLimit } from "@/lib/checkPlanLimits";
+import { getSubscriptionGuard } from "@/lib/checkSubscriptionStatus";
 
 export async function GET() {
   try {
@@ -57,6 +59,23 @@ export async function POST(request: Request) {
 
     await dbConnect();
     const workspace = await getOrCreateWorkspaceForCurrentUser();
+
+    // ── Plan guard ────────────────────────────────────────────────────────────
+    const { isExpired } = await getSubscriptionGuard(workspace._id);
+    if (isExpired) {
+      return NextResponse.json(
+        { error: "Your plan has expired. Please renew to add domains.", upgradeRequired: true },
+        { status: 403 }
+      );
+    }
+    const limitError = await checkDomainLimit(workspace._id);
+    if (limitError) {
+      return NextResponse.json(
+        { error: limitError, upgradeRequired: true },
+        { status: 403 }
+      );
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     const doc = await Domain.create({
       workspaceId: workspace._id,

@@ -180,6 +180,8 @@ import { Alias } from "@/app/api/models/AliasModel";
 import { Domain } from "@/app/api/models/DomainModel";
 import { Integration } from "@/app/api/models/IntegrationModel";
 import { getOrCreateWorkspaceForCurrentUser } from "@/app/api/workspace/helpers";
+import { checkAliasLimit } from "@/lib/checkPlanLimits";
+import { getSubscriptionGuard } from "@/lib/checkSubscriptionStatus";
 
 export async function GET() {
   try {
@@ -261,6 +263,23 @@ export async function POST(request: Request) {
         { status: 404 }
       );
     }
+
+    // ── Plan guard ────────────────────────────────────────────────────────────
+    const { isExpired } = await getSubscriptionGuard(workspace._id);
+    if (isExpired) {
+      return NextResponse.json(
+        { error: "Your plan has expired. Please renew to add aliases.", upgradeRequired: true },
+        { status: 403 }
+      );
+    }
+    const limitError = await checkAliasLimit(workspace._id, domainId);
+    if (limitError) {
+      return NextResponse.json(
+        { error: limitError, upgradeRequired: true },
+        { status: 403 }
+      );
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     const trimmedLocalPart = localPart.trim().toLowerCase();
     const email = `${trimmedLocalPart}@${domain.domain}`;

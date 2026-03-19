@@ -1,0 +1,158 @@
+import { NextResponse } from "next/server";
+import dbConnect from "@/lib/dbConnect";
+import { Workspace } from "@/app/api/models/WorkspaceModel";
+import { Subscription } from "@/app/api/models/SubscriptionModel";
+import { verifyDodoSignature } from "@/lib/dodo";
+
+export async function POST(request: Request) {
+  const rawBody = await request.text();
+  const signatureHeader = request.headers.get("dodo-signature");
+  const webhookSecret = process.env.DODO_WEBHOOK_SECRET;
+
+  // ── Verify signature ───────────────────────────────────────────────────────
+  if (!webhookSecret || !verifyDodoSignature(rawBody, signatureHeader, webhookSecret)) {
+    console.error("❌ Dodo webhook: invalid signature");
+    return new Response("Invalid signature", { status: 400 });
+  }
+
+  let event: Record<string, unknown>;
+  try {
+    event = JSON.parse(rawBody);
+  } catch {
+    return new Response("Invalid JSON", { status: 400 });
+  }
+
+  const type = event.type as string;
+  const data = (event.data ?? {}) as Record<string, unknown>;
+  const metadata = (event.metadata ?? data.metadata ?? {}) as Record<string, string>;
+
+  await dbConnect();
+
+  const workspaceId = metadata.workspaceId;
+
+  try {
+    switch (type) {
+      // ── Subscription activated (new purchase OR upgrade) ─────────────────
+      case "subscription.activated": {
+        if (!workspaceId) break;
+
+        const planId = (metadata.planId ?? "starter") as "starter" | "growth" | "scale";
+        const periodStart = data.current_period_start
+          ? new Date(data.current_period_start as string)
+          : new Date();
+        const periodEnd = data.current_period_end
+          ? new Date(data.current_period_end as string)
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+        const sub = await Subscription.findOneAndUpdate(
+          { workspaceId },
+          {
+            planId,
+            status: "active",
+            dodoCustomerId: data.customer_id as string,
+            dodoSubscriptionId: data.id as string,
+            currentPeriodStart: periodStart,
+            currentPeriodEnd: periodEnd,
+            cancelAtPeriodEnd: false,
+            pendingPlanId: null,
+            ticketCountInbound: 0,
+            ticketCountOutbound: 0,
+            usagePeriodStart: new Date(),
+          },
+          { upsert: true, new: true }
+        );
+
+        await Workspace.findByIdAndUpdate(workspaceId, {
+          planId,
+          subscriptionId: sub._id,
+        });
+
+        console.log(`✅ Webhook: subscription activated — workspace ${workspaceId} → ${planId}`);
+        break;
+      }
+
+      // ── Subscription cancelled ─────────────────────────────────────────────
+      case "subscription.cancelled": {
+        const subId = data.id as string;
+        const sub = await Subscription.findOne({ dodoSubscriptionId: subId });
+        if (!sub) break;
+
+        // If a downgrade was pending → auto-activate the new plan checkout
+        // (In practice, you'd redirect user to the new plan checkout via email,
+        //  or handle via a scheduled job. For now, reset to starter.)
+        const newPlanId = sub.pendingPlanId ?? "starter";
+
+        sub.status = "cancelled";
+        sub.planId = newPlanId;
+        sub.cancelAtPeriodEnd = false;
+        sub.pendingPlanId = null;
+        await sub.save();
+
+        await Workspace.findByIdAndUpdate(sub.workspaceId, { planId: newPlanId });
+
+        console.log(`✅ Webhook: subscription cancelled → reset to ${newPlanId}`);
+        break;
+      }
+
+      // ── Subscription past due ─────────────────────────────────────────────
+      case "subscription.past_due": {
+        const subId = data.id as string;
+        await Subscription.findOneAndUpdate(
+          { dodoSubscriptionId: subId },
+          { status: "past_due" }
+        );
+        console.log(`⚠️ Webhook: subscription past_due — ${subId}`);
+        break;
+      }
+
+      // ── Payment succeeded (monthly renewal) ───────────────────────────────
+      case "payment.succeeded": {
+        const subId = (data.subscription_id ?? data.id) as string | undefined;
+        if (!subId) break;
+
+        const periodStart = data.current_period_start
+          ? new Date(data.current_period_start as string)
+          : new Date();
+        const periodEnd = data.current_period_end
+          ? new Date(data.current_period_end as string)
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+        await Subscription.findOneAndUpdate(
+          { dodoSubscriptionId: subId },
+          {
+            status: "active",
+            currentPeriodStart: periodStart,
+            currentPeriodEnd: periodEnd,
+            ticketCountInbound: 0,
+            ticketCountOutbound: 0,
+            usagePeriodStart: new Date(),
+          }
+        );
+        console.log(`✅ Webhook: payment.succeeded — counters reset for sub ${subId}`);
+        break;
+      }
+
+      // ── Payment failed ─────────────────────────────────────────────────────
+      case "payment.failed": {
+        const subId = (data.subscription_id ?? data.id) as string | undefined;
+        if (!subId) break;
+
+        await Subscription.findOneAndUpdate(
+          { dodoSubscriptionId: subId },
+          { status: "past_due" }
+        );
+        console.log(`❌ Webhook: payment.failed → past_due for sub ${subId}`);
+        break;
+      }
+
+      default:
+        console.log(`ℹ️ Dodo webhook: unhandled event type "${type}"`);
+    }
+  } catch (err) {
+    console.error("❌ Dodo webhook handler error:", err);
+    // Still return 200 to Dodo — don't trigger retries for handler errors
+  }
+
+  // Always return 200 to acknowledge receipt
+  return new Response("ok", { status: 200 });
+}

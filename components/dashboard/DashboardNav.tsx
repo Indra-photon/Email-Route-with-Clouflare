@@ -15,6 +15,7 @@ import {
   Zap,
   Menu,
   X,
+  CreditCard,
 } from "lucide-react";
 
 import { IconMail, IconDashboard, IconInbox, IconGlobe, IconAtSign, IconZap } from "@/constants/icons";
@@ -64,6 +65,12 @@ const navItems = [
     label: "Live Chats",
     icon: null,
     tablerIcon: IconMessages,
+  },
+  {
+    href: "/dashboard/billing",
+    label: "Billing",
+    icon: null,
+    tablerIcon: CreditCard,
   },
 ];
 

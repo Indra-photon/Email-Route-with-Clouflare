@@ -1,8 +1,12 @@
 import mongoose, { Schema, type Document, type Model, Types } from "mongoose";
 
+export type PlanId = "starter" | "growth" | "scale";
+
 export interface IWorkspace extends Document {
   ownerUserId: string;
   name: string;
+  planId: PlanId | null;           // null = no paid plan yet
+  subscriptionId?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -18,6 +22,16 @@ const WorkspaceSchema = new Schema<IWorkspace>(
       type: String,
       required: true,
       default: "Default Workspace",
+    },
+    planId: {
+      type: String,
+      enum: ["starter", "growth", "scale", null],
+      default: null,   // null = no active subscription (must purchase)
+    },
+    subscriptionId: {
+      type: Schema.Types.ObjectId,
+      ref: "Subscription",
+      default: null,
     },
   },
   {

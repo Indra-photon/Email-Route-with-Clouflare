@@ -6,6 +6,8 @@ import { ChatWidget } from "@/app/api/models/ChatWidgetModel";
 import { Integration } from "@/app/api/models/IntegrationModel";
 import { Domain } from "@/app/api/models/DomainModel";
 import crypto from "crypto";
+import { checkWidgetLimit } from "@/lib/checkPlanLimits";
+import { getSubscriptionGuard } from "@/lib/checkSubscriptionStatus";
 
 export async function GET(request: Request) {
     try {
@@ -65,6 +67,23 @@ export async function POST(request: Request) {
 
         await dbConnect();
         const workspace = await getOrCreateWorkspaceForCurrentUser();
+
+        // ── Plan guard ──────────────────────────────────────────────────────────
+        const { isExpired } = await getSubscriptionGuard(workspace._id);
+        if (isExpired) {
+            return NextResponse.json(
+                { error: "Your plan has expired. Please renew to create chat widgets.", upgradeRequired: true },
+                { status: 403 }
+            );
+        }
+        const limitError = await checkWidgetLimit(workspace._id);
+        if (limitError) {
+            return NextResponse.json(
+                { error: limitError, upgradeRequired: true },
+                { status: 403 }
+            );
+        }
+        // ───────────────────────────────────────────────────────────────────────
 
         // Verify domain belongs to this workspace
         const domainDoc = await Domain.findOne({
