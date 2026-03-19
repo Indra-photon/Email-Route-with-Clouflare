@@ -265,7 +265,13 @@ export async function POST(request: Request) {
     }
 
     // ── Plan guard ────────────────────────────────────────────────────────────
-    const { isExpired } = await getSubscriptionGuard(workspace._id);
+    const { isExpired, hasNoPlan } = await getSubscriptionGuard(workspace._id);
+    if (hasNoPlan) {
+      return NextResponse.json(
+        { error: "You need an active plan to add aliases. Please purchase a plan.", upgradeRequired: true },
+        { status: 403 }
+      );
+    }
     if (isExpired) {
       return NextResponse.json(
         { error: "Your plan has expired. Please renew to add aliases.", upgradeRequired: true },

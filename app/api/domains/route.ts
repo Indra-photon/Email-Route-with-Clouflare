@@ -61,7 +61,13 @@ export async function POST(request: Request) {
     const workspace = await getOrCreateWorkspaceForCurrentUser();
 
     // ── Plan guard ────────────────────────────────────────────────────────────
-    const { isExpired } = await getSubscriptionGuard(workspace._id);
+    const { isExpired, hasNoPlan } = await getSubscriptionGuard(workspace._id);
+    if (hasNoPlan) {
+      return NextResponse.json(
+        { error: "You need an active plan to add domains. Please purchase a plan.", upgradeRequired: true },
+        { status: 403 }
+      );
+    }
     if (isExpired) {
       return NextResponse.json(
         { error: "Your plan has expired. Please renew to add domains.", upgradeRequired: true },

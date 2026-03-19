@@ -243,6 +243,19 @@ export default function DomainAddForm({
 
       const body = await res.json().catch(() => ({}));
 
+      // ── Plan / limit guard ────────────────────────────────────────────────
+      if (res.status === 403 && body.upgradeRequired) {
+        setStatus("idle");
+        toast.error(body.error || "Plan required", {
+          action: {
+            label: "View Plans →",
+            onClick: () => window.location.href = "/pricing",
+          },
+          duration: 6000,
+        });
+        return;
+      }
+
       if (!res.ok && res.status !== 409) {
         throw new Error(body.error || "Failed to add domain");
       }
