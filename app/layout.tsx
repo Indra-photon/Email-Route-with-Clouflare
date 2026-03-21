@@ -99,22 +99,21 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const headersList = await headers();
-  const skipClerk = headersList.get("x-skip-clerk") === "true";
-  console.log('>> LAYOUT HEADERS - skipClerk:', skipClerk, 'raw:', headersList.get("x-skip-clerk"));
+  // const headersList = await headers();
+  // const skipClerk = headersList.get("x-skip-clerk") === "true";
 
-  if (skipClerk) {
-    return (
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} ${schibstedGrotesk.variable} antialiased`}
-        >
-          {children}
-          <Toaster position="top-right" />
-        </body>
-      </html>
-    );
-  }
+  // if (skipClerk) {
+  //   return (
+  //     <html lang="en">
+  //       <body
+  //         className={`${geistSans.variable} ${geistMono.variable} ${schibstedGrotesk.variable} antialiased`}
+  //       >
+  //         {children}
+  //         <Toaster position="top-right" />
+  //       </body>
+  //     </html>
+  //   );
+  // }
 
   return (
     <ClerkProvider>

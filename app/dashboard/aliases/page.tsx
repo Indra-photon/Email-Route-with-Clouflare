@@ -1,545 +1,3 @@
-
-// "use client";
-
-// import { useState, useEffect } from "react";
-// import { motion, AnimatePresence, LayoutGroup } from "motion/react";
-// import { Card, CardContent } from "@/components/ui/card";
-// import { Badge } from "@/components/ui/badge";
-// import { toast } from "sonner";
-// import {
-//   IconCheck,
-//   IconTrash,
-//   IconPlus,
-//   IconX,
-//   IconMail,
-//   IconChevronDown,
-//   IconAt,
-// } from "@tabler/icons-react";
-// import { Heading } from "@/components/Heading";
-// import { Paragraph } from "@/components/Paragraph";
-// import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
-// import { AnimatedSubmitButton } from "@/components/ui/AnimatedSubmitButton";
-// import { AnimatedDeleteButton } from "@/components/ui/AnimatedDeleteButton";
-// import { CustomLink } from "@/components/CustomLink";
-// import { RefreshCw } from "lucide-react";
-// import AliasesPageSkeleton from "@/components/dashboard/AliasesPageSkeleton";
-
-// // ─── Types ────────────────────────────────────────────────────────────────────
-
-// type DomainOption = {
-//   id: string;
-//   domain: string;
-// };
-
-// type Alias = {
-//   id: string;
-//   localPart: string;
-//   email: string;
-//   status: string;
-//   domain: string;
-//   integrationId: string | null;
-//   integrationName?: string | null;
-//   integrationType?: string | null;
-//   createdAt: string;
-// };
-
-// type IntegrationOption = {
-//   id: string;
-//   name: string;
-//   type: "slack" | "discord";
-// };
-
-// // ─── Easing ───────────────────────────────────────────────────────────────────
-
-// const easeOutCubic = [0.215, 0.61, 0.355, 1] as const;
-// const easeOutQuint = [0.23, 1, 0.32, 1] as const;
-
-// // ─── Alias Card ───────────────────────────────────────────────────────────────
-
-// type BtnState = "idle" | "loading" | "success" | "error";
-
-// function AliasCard({
-//   alias,
-//   integrations,
-//   onDelete,
-//   onUpdate,
-// }: {
-//   alias: Alias;
-//   integrations: IntegrationOption[];
-//   onDelete: (id: string) => void;
-//   onUpdate: (updated: Alias) => void;
-// }) {
-//   const [isOpen, setIsOpen] = useState(false);
-//   const [deleteState, setDeleteState] = useState<BtnState>("idle");
-//   const [saveState, setSaveState] = useState<BtnState>("idle");
-//   const [editIntegration, setEditIntegration] = useState(alias.integrationId ?? "");
-//   const isActive = alias.status === "active";
-
-//   const handleSaveIntegration = async () => {
-//     setSaveState("loading");
-//     try {
-//       const res = await fetch(`/api/aliases/${alias.id}`, {
-//         method: "PATCH",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({ integrationId: editIntegration || null }),
-//       });
-//       if (!res.ok) throw new Error((await res.json()).error || "Failed to update");
-//       const updated: Alias = await res.json();
-//       onUpdate(updated);
-//       setSaveState("success");
-//       toast.success("Integration updated");
-//       setTimeout(() => setSaveState("idle"), 1500);
-//     } catch (err: any) {
-//       toast.error(err.message || "Failed to update integration");
-//       setSaveState("error");
-//       setTimeout(() => setSaveState("idle"), 2000);
-//     }
-//   };
-
-//   return (
-//     <motion.div
-//       layout
-//       style={{ transformOrigin: "top center" }}
-//       variants={{
-//         hidden: { opacity: 0, scaleY: 0 },
-//         show:   { opacity: 1, scaleY: 1 },
-//       }}
-//       animate="show"
-//       exit={{ opacity: 0, scaleY: 0.85 }}
-//       transition={{
-//         layout: { type: "spring", stiffness: 400, damping: 28 },
-//         opacity: {
-//           duration: 0.15,
-//           ease: [0.4, 0, 1, 1],  // ease-in on exit feels decisive
-//         },
-//         scaleY: {
-//           type: "spring",
-//           stiffness: 400,
-//           damping: 28,
-//         },
-//       }}
-//     >
-//       <Card className="bg-neutral-50 rounded-xl hover:bg-neutral-100 transition-colors duration-300 ease-out">
-//         <CardContent className="p-4 flex items-center gap-4">
-//           {/* Icon */}
-//           <div className="shrink-0 w-8 h-8 rounded-md bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center">
-//             <IconAt size={15} className="text-white" />
-//           </div>
-
-//           {/* Email + status — clickable */}
-//           <button
-//             type="button"
-//             onClick={() => setIsOpen((o) => !o)}
-//             className="flex-1 min-w-0 text-left cursor-pointer focus:outline-none"
-//           >
-//             <p className="font-schibsted font-bold text-sm text-neutral-900 dark:text-neutral-100 truncate">
-//               {alias.email}
-//             </p>
-//             <div className="mt-0.5">
-//               <Badge className={`border-0 font-schibsted tracking-tight rounded-sm ${
-//                 isActive
-//                   ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-//                   : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"
-//               }`}>
-//                 {isActive ? "Active" : "Inactive"}
-//               </Badge>
-//             </div>
-//           </button>
-
-//           {/* Chevron */}
-//           <button
-//             type="button"
-//             onClick={() => setIsOpen((o) => !o)}
-//             className="shrink-0 w-7 h-7 flex items-center justify-center rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none"
-//             aria-label={isOpen ? "Collapse" : "Expand"}
-//           >
-//             <motion.span
-//               animate={{ rotate: isOpen ? 180 : 0 }}
-//               transition={{ type: "spring", stiffness: 300, damping: 25 }}
-//               className="flex items-center justify-center"
-//             >
-//               <IconChevronDown size={15} className="text-neutral-500" />
-//             </motion.span>
-//           </button>
-
-//           <AnimatedDeleteButton
-//             onDelete={async () => {
-//               try {
-//                 const res = await fetch(`/api/aliases/${alias.id}`, { method: "DELETE" });
-//                 if (!res.ok) throw new Error((await res.json()).error || "Failed to delete");
-//                 toast.success(`Alias "${alias.email}" deleted`);
-//                 setTimeout(() => onDelete(alias.id), 400);
-//                 return "success";
-//               } catch (err: any) {
-//                 toast.error(err.message || "Failed to delete alias");
-//                 return "error";
-//               }
-//             }}
-//           />
-//         </CardContent>
-
-//         {/* Expanded panel — always mounted so state is preserved */}
-//         <motion.div
-//           initial={false}
-//           animate={{ height: isOpen ? "auto" : 0, opacity: isOpen ? 1 : 0 }}
-//           transition={{ duration: 0.3, ease: easeOutQuint }}
-//           style={{ overflow: "hidden" }}
-//         >
-//           <div className="px-4 pb-4 pt-1 border-t border-neutral-100 dark:border-neutral-800 mt-1 space-y-4">
-//             <div className="grid grid-cols-2 gap-3">
-//               <div>
-//                 <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Local Part</p>
-//                 <p className="text-sm font-schibsted font-medium text-neutral-900 dark:text-neutral-100">{alias.localPart}</p>
-//               </div>
-//               <div>
-//                 <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Domain</p>
-//                 <p className="text-sm font-schibsted font-medium text-neutral-900 dark:text-neutral-100">{alias.domain}</p>
-//               </div>
-//               <div>
-//                 <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Created</p>
-//                 <p className="text-sm font-schibsted text-neutral-700 dark:text-neutral-300 tabular-nums">
-//                   {new Date(alias.createdAt).toLocaleString()}
-//                 </p>
-//               </div>
-//               <div>
-//                 <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Status</p>
-//                 <p className="text-sm font-schibsted font-medium text-neutral-900 dark:text-neutral-100">{alias.status}</p>
-//               </div>
-//             </div>
-//           </div>
-//         </motion.div>
-//       </Card>
-//     </motion.div>
-//   );
-// }
-
-// // ─── Add Alias Form ───────────────────────────────────────────────────────────
-
-// type FormStatus = "idle" | "loading" | "success";
-
-// function AliasAddForm({
-//   domains,
-//   integrations,
-//   onAliasAdded,
-// }: {
-//   domains: DomainOption[];
-//   integrations: IntegrationOption[];
-//   onAliasAdded: (alias: Alias) => void;
-// }) {
-//   const [status, setStatus] = useState<FormStatus>("idle");
-//   const [selectedDomainId, setSelectedDomainId] = useState(domains[0]?.id ?? "");
-//   const [localPart, setLocalPart] = useState("");
-//   const [selectedIntegrationId, setSelectedIntegrationId] = useState(integrations[0]?.id ?? "");
-
-//   useEffect(() => {
-//     if (!selectedDomainId && domains.length > 0) setSelectedDomainId(domains[0].id);
-//   }, [domains, selectedDomainId]);
-
-//   useEffect(() => {
-//     if (!selectedIntegrationId && integrations.length > 0) setSelectedIntegrationId(integrations[0].id);
-//   }, [integrations, selectedIntegrationId]);
-
-//   const isBusy = status !== "idle";
-//   const selectedDomain = domains.find((d) => d.id === selectedDomainId);
-
-//   const handleSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault();
-//     if (!selectedDomainId || !localPart.trim() || isBusy) return;
-
-//     setStatus("loading");
-
-//     try {
-//       const res = await fetch("/api/aliases", {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({
-//           domainId: selectedDomainId,
-//           localPart: localPart.trim(),
-//           integrationId: selectedIntegrationId || undefined,
-//         }),
-//       });
-
-//       if (!res.ok) {
-//         const body = await res.json().catch(() => ({}));
-//         throw new Error(body.error || "Failed to create alias");
-//       }
-
-//       const created: Alias = await res.json();
-
-//       setTimeout(() => {
-//         setStatus("success");
-//         toast.success(`Alias ${created.email} created`);
-//         setLocalPart("");
-//         onAliasAdded(created);
-//         setTimeout(() => setStatus("idle"), 100);
-//       }, 1000);
-//     } catch (err) {
-//       setStatus("idle");
-//       toast.error(err instanceof Error ? err.message : "Failed to create alias");
-//     }
-//   };
-
-//   return (
-//     <div className="flex items-end gap-4">
-//       <form onSubmit={handleSubmit} className="space-y-3">
-//         <div className="flex flex-wrap gap-2 items-end">
-//           <div className="flex flex-col space-y-1">
-//             <label className="text-lg font-schibsted text-neutral-700 dark:text-neutral-300">Local part</label>
-//             <input
-//               type="text"
-//               value={localPart}
-//               onChange={(e) => setLocalPart(e.target.value)}
-//               placeholder="support"
-//               required
-//               disabled={isBusy || domains.length === 0}
-//               className="w-40 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-schibsted text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 transition-colors duration-100 focus:border-sky-800 dark:focus:border-neutral-400 outline-none focus:outline-none [box-shadow:none] focus:[box-shadow:none] disabled:opacity-50 disabled:cursor-not-allowed"
-//             />
-//           </div>
-
-//           <div className="flex flex-col space-y-1">
-//             <AnimatedDropdown
-//               label="Domain"
-//               options={domains.map((d) => ({ value: d.id, label: d.domain }))}
-//               value={selectedDomainId}
-//               onChange={setSelectedDomainId}
-//               placeholder="No domains available"
-//               disabled={isBusy || domains.length === 0}
-//               width="w-48"
-//             />
-//           </div>
-
-//           <div className="flex flex-col space-y-1">
-//             <AnimatedDropdown
-//               label="Integration"
-//               options={[
-//                 { value: "", label: "None" },
-//                 ...integrations.map((i) => ({ value: i.id, label: `${i.name} (${i.type})` })),
-//               ]}
-//               value={selectedIntegrationId}
-//               onChange={setSelectedIntegrationId}
-//               placeholder="Select integration"
-//               disabled={isBusy}
-//               width="w-48"
-//             />
-//           </div>
-
-//           <AnimatedSubmitButton
-//             idleLabel="Add"
-//             loadingLabel="Adding..."
-//             successLabel="Added"
-//             idleIcon={<IconPlus size={16} strokeWidth={2.5} />}
-//             state={status}
-//             idleWidth={230}
-//             loadingWidth={110}
-//             successWidth={200}
-//             disabled={isBusy || domains.length === 0}
-//             className="font-schibsted w-32 px-4 py-2 rounded-md bg-gradient-to-t from-sky-900 to-cyan-600 text-white border-0 shadow-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 cursor-pointer flex items-center justify-center gap-2 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
-//           />
-
-//           <CustomLink
-//             href="/docs/aliases"
-//             className="text-sm font-schibsted text-sky-700 hover:text-sky-900 dark:text-sky-400 dark:hover:text-sky-300 transition-colors underline pb-2"
-//           >
-//             Read our docs
-//           </CustomLink>
-//         </div>
-
-//         {/* <AnimatePresence>
-//           {localPart.trim() && selectedDomain && (
-//             <motion.p
-//               initial={{ opacity: 0, y: -4 }}
-//               animate={{ opacity: 1, y: 0 }}
-//               exit={{ opacity: 0, y: -4 }}
-//               transition={{ duration: 0.15, ease: easeOutCubic }}
-//               className="text-xs font-schibsted text-neutral-500 dark:text-neutral-400"
-//             >
-//               Your email address becomes:{" "}
-//               <span className="font-medium text-neutral-700 dark:text-neutral-200">
-//                 {localPart.trim().toLowerCase()}@{selectedDomain.domain}
-//               </span>
-//             </motion.p>
-//           )}
-//         </AnimatePresence> */}
-//       </form>
-//     </div>
-//   );
-// }
-
-// // ─── Empty State ──────────────────────────────────────────────────────────────
-
-// function EmptyState() {
-//   return (
-//     <motion.div
-//       key="empty"
-//       initial={{ scale: 0.95, y: 10 }}
-//       animate={{scale: 1, y: 0 }}
-//       transition={{ duration: 0.10, ease: easeOutCubic }}
-//       className="flex flex-col items-center justify-center py-12 px-6 gap-3"
-//     >
-//       <div className="w-10 h-10 rounded-full bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center opacity-40">
-//         <IconMail size={18} className="text-white" />
-//       </div>
-//       <Paragraph variant="muted" className="text-center max-w-lg">
-//         No aliases yet. Create one using the form above to start routing emails to your integrations.
-//       </Paragraph>
-//     </motion.div>
-//   );
-// }
-
-// // ─── Loading State ────────────────────────────────────────────────────────────
-
-// function LoadingState() {
-//   return (
-//     <motion.div
-//       key="loading"
-//       initial={{ opacity: 0.6 }}
-//       animate={{ opacity: 1 }}
-//       exit={{ opacity: 0 }}
-//       transition={{ duration: 0.2, ease: easeOutCubic }}
-//       className="flex items-center justify-center py-12 gap-2"
-//     >
-//       <div className="flex flex-col items-center gap-4">
-//         <RefreshCw className="size-8 text-neutral-400 animate-spin" />
-//       <Paragraph variant="muted" className="text-xs">Loading aliases...</Paragraph>
-//       </div>
-//     </motion.div>
-//   );
-// }
-
-// // ─── Root Export ──────────────────────────────────────────────────────────────
-
-// export default function AliasesPage() {
-//   const [domains, setDomains] = useState<DomainOption[]>([]);
-//   const [aliases, setAliases] = useState<Alias[]>([]);
-//   const [integrations, setIntegrations] = useState<IntegrationOption[]>([]);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     const fetchInitial = async () => {
-//       try {
-//         setLoading(true);
-
-//         const [domainsRes, aliasesRes, integrationsRes] = await Promise.all([
-//           fetch("/api/domains"),
-//           fetch("/api/aliases"),
-//           fetch("/api/integrations"),
-//         ]);
-
-//         if (!domainsRes.ok) throw new Error("Failed to load domains");
-//         if (!aliasesRes.ok) throw new Error("Failed to load aliases");
-//         if (!integrationsRes.ok) throw new Error("Failed to load integrations");
-
-//         const domainsData = await domainsRes.json();
-//         const aliasesData: Alias[] = await aliasesRes.json();
-//         const integrationsData = await integrationsRes.json();
-
-//         setDomains(domainsData.map((d: any) => ({ id: d.id, domain: d.domain })));
-//         setAliases(aliasesData);
-//         setIntegrations(
-//           integrationsData.map((i: any) => ({ id: i.id, name: i.name, type: i.type }))
-//         );
-//       } catch (err) {
-//         console.error(err);
-//         toast.error("Could not load aliases or domains. Please try again.");
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchInitial();
-//   }, []);
-
-//   const handleDelete = (id: string) => {
-//     setAliases((prev) => prev.filter((a) => a.id !== id));
-//   };
-
-//   const handleUpdate = (updated: Alias) => {
-//     setAliases((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
-//   };
-
-//   const handleAliasAdded = (alias: Alias) => {
-//     setAliases((prev) => [alias, ...prev]);
-//   };
-
-//   return (
-//     <motion.div
-//       // initial={{ scale: 0.95, y: 2 }}
-//       // animate={{ scale: 1, y: 0 }}
-//       // transition={{ duration: 0.03, ease: easeOutCubic }}
-//       className="space-y-6"
-//     >
-//       <div>
-//         <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
-//           Create Email Aliases for Your Domains
-//         </Heading>
-//         <Paragraph variant="default" className="text-neutral-600 dark:text-neutral-400 mt-1">
-//           Set up email addresses like support@yourdomain.com and route them to your Slack or Discord channels. Each alias can be connected to any integration.
-//         </Paragraph>
-//       </div>
-
-//       <AliasAddForm
-//         domains={domains}
-//         integrations={integrations}
-//         onAliasAdded={handleAliasAdded}
-//       />
-
-
-
-//       <motion.div
-//       // transition={{ type: "spring", stiffness: 300, damping: 28 }}
-//       className="pt-3 pb-3">
-//         <Card className="min-h-[120px]">
-//           <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
-//             Your Email Aliases
-//           </Heading>
-//           <Paragraph variant="small" className="text-neutral-600 dark:text-neutral-400 mt-1 pb-5">
-//             View and manage all your email aliases. Click any alias to see details or update its integration settings.
-//             </Paragraph>
-
-//             <AnimatePresence mode="wait">
-//               {loading && (
-//                 <motion.div
-//                   key="skeleton"
-//                   initial={{ opacity: 0 }}
-//                   animate={{ opacity: 1 }}
-//                   exit={{ opacity: 0 }}
-//                   transition={{ duration: 0.15, ease: easeOutCubic }}
-//                 >
-//                   <AliasesPageSkeleton />
-//                 </motion.div>
-//               )}
-
-//               {!loading && aliases.length === 0 && <EmptyState key="empty" />}
-
-//               {!loading && aliases.length > 0 && (
-//                 <motion.div
-//                   key="list"
-//                   layout
-//                   className="space-y-2"
-//                 >
-//                   <AnimatePresence mode="popLayout">
-//                     {aliases.map((a) => (
-//                       <AliasCard
-//                         key={a.id}
-//                         alias={a}
-//                         integrations={integrations}
-//                         onDelete={handleDelete}
-//                         onUpdate={handleUpdate}
-//                       />
-//                     ))}
-//                   </AnimatePresence>
-//                 </motion.div>
-//               )}
-//             </AnimatePresence>
-//         </Card>
-//       </motion.div>
-//     </motion.div>
-//   );
-// }
-
-
-
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -568,6 +26,7 @@ import { CustomLink } from "@/components/CustomLink";
 import { RefreshCw } from "lucide-react";
 import AliasesPageSkeleton from "@/components/dashboard/AliasesPageSkeleton";
 import { AnimatedButton } from "@/components/dashboard/DomainsTable";
+import useMeasure from "react-use-measure";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -643,23 +102,9 @@ function CannedResponseModal({
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
   const [editState, setEditState] = useState<CannedFormState>("idle");
-  const [exitType, setExitType] = useState<'success' | 'cancel' | null>(null);
-  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
 
-  useEffect(() => {
-    const updateSize = () => setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    updateSize();
-    window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
-  }, []);
-
-  const initialXPx = buttonPosition.x - windowSize.width / 2;
-  const initialYPx = buttonPosition.y - windowSize.height / 2;
-
-  // Reset exitType when modal opens
-  useEffect(() => {
-    setExitType(null);
-  }, []);
+  const [elementRef, bounds] = useMeasure();
+  console.log("bounds.height", bounds.height, "view:", view);
 
   useEffect(() => {
     const fetchResponses = async () => {
@@ -728,64 +173,40 @@ function CannedResponseModal({
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 "
+    initial={{
+            opacity: 0,
+            y: -10
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+            transition: { type: "spring", stiffness: 300, damping: 23, duration: 0.18 }
+          }}
+          exit={{
+            opacity: 0,
+            transition: { duration: 0.25, ease: "easeInOut" }
+          }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
       {/* Backdrop */}
       <motion.div
         className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"
         onClick={() => {
-          setExitType('cancel');
           onClose();
         }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.08 }}
       />
 
       {/* Modal */}
-        <motion.div
-          initial={{
-            opacity: 0,
-            scale: 0.3,
-            y: -10
-          }}
-          animate={{
-            opacity: 1,
-            scale: 1,
-            x: 0,
-            y: 0,
-            transition: {
-              ease: [.215, .61, .355, 1],
-              duration: 0.2
-            }
-          }}
-          exit={
-            exitType === 'success'
-              ? {
-                  opacity: 0,
-                  scale: 0.1,
-                  x: initialXPx,
-                  y: initialYPx,
-                  transition: { duration: 0.5, ease: [.23, 1, .32, 1] }
-                }
-              : {
-                  opacity: 0.8,
-                  rotateZ: 15,
-                  y: windowSize.height,
-                  transformOrigin: 'top left',
-                  transition: { duration: 0.5, ease: [.55, .085, .68, .53] }
-                }
-          }
-          className=""
-        >
+        <motion.div>
           <motion.div
-          layout
-          transition={{ type: "spring", stiffness: 300, damping: 10 }}
-          className="relative min-h-[450px] min-w-[400px] rounded-xl z-10 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 shadow-xl overflow-hidden">
+          initial={false}
+          animate={{ height: bounds.height ? bounds.height : null }}
+          transition={{ type: "spring", stiffness: 300, damping: 23, duration: 0.18 }}
+          onUpdate={(latest) => console.log("motion height:", latest.height)}
+          className="relative w-[420px] overflow-hidden rounded-xl z-10 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 shadow-xl">
+          <div ref={elementRef} className="overflow-hidden rounded-xl">
               {/* Header */}
-              <motion.div
-                layout
+              <motion.div  
                 className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 dark:border-neutral-800"
               >
                 <div>
@@ -797,7 +218,6 @@ function CannedResponseModal({
                 <button
                   type="button"
                   onClick={() => {
-                    setExitType('cancel');
                     onClose();
                   }}
                   className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none"
@@ -808,7 +228,6 @@ function CannedResponseModal({
 
               {/* Top bar: Add New (left) + Saved Responses dropdown (right) */}
               <motion.div
-                layout
                 className="flex items-center justify-between px-5 pt-3 pb-2"
               >
                 {/* Add New button */}
@@ -837,84 +256,83 @@ function CannedResponseModal({
                   </span>
                 </motion.button>
 
-                {/* Saved Responses dropdown trigger */}
-                {/* Right slot — swaps between "Saved Responses" button and Edit/Delete tabs */}
-                <AnimatePresence mode="wait" initial={false}>
-                  {view === "add" ? (
-                    <motion.button
-                      key="saved-btn"
-                      type="button"
-                      onClick={() => {
-                        setView("saved");
-                        setActiveTab("edit");
-                        setEditingId(null);
-                      }}
-                      initial={{ opacity: 0, x: 6 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 6 }}
-                      transition={{ duration: 0.13, ease: [0.23, 1, 0.32, 1] }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-schibsted font-medium text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors focus:outline-none cursor-pointer"
-                    >
-                      <IconMessageDots size={12} />
-                      Saved Responses
-                    </motion.button>
-                  ) : (
-                    <motion.div
-                      key="sub-tabs"
-                      initial={{ opacity: 0, x: -6 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -6 }}
-                      transition={{ duration: 0.13, ease: [0.23, 1, 0.32, 1] }}
-                      className="flex items-center gap-0.5"
-                    >
-                      {(["edit", "delete"] as ActiveTab[]).map((tab) => (
-                        <button
-                          key={tab}
-                          type="button"
-                          onClick={() => {
-                            setActiveTab(tab);
-                            setEditingId(null);
-                          }}
-                          className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-schibsted font-medium transition-colors focus:outline-none cursor-pointer capitalize ${
-                            activeTab === tab
-                              ? "text-neutral-900 dark:text-neutral-100"
-                              : "text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300"
-                          }`}
-                        >
-                          {activeTab === tab && (
-                            <motion.span
-                              layoutId={`subtab-bubble-${aliasId}`}
-                              className="absolute inset-0 bg-neutral-100 dark:bg-neutral-800 rounded-md z-0"
-                              transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                            />
-                          )}
-                          <span className="relative z-10 flex items-center gap-1.5">
-                            {tab === "edit" ? <IconPencil size={11} /> : <IconTrash size={11} />}
-                            {tab === "edit" ? "Edit" : "Delete"}
-                          </span>
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <div>
+                  <AnimatePresence mode="wait" initial={false}>
+                    {view === "add" ? (
+                      <motion.button
+                        key="saved-btn"
+                        type="button"
+                        onClick={() => {
+                          setView("saved");
+                          setActiveTab("edit");
+                          setEditingId(null);
+                        }}
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.13, ease: [0.23, 1, 0.32, 1] }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-schibsted font-medium text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors focus:outline-none cursor-pointer"
+                      >
+                        <IconMessageDots size={12} />
+                        Saved Responses
+                      </motion.button>
+                    ) : (
+                      <motion.div
+                        key="sub-tabs"
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.13, ease: [0.23, 1, 0.32, 1] }}
+                        className="flex items-center gap-0.5"
+                      >
+                        {(["edit", "delete"] as ActiveTab[]).map((tab) => (
+                          <button
+                            key={tab}
+                            type="button"
+                            onClick={() => {
+                              setActiveTab(tab);
+                              setEditingId(null);
+                            }}
+                            className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-schibsted font-medium transition-colors focus:outline-none cursor-pointer capitalize ${
+                              activeTab === tab
+                                ? "text-neutral-900 dark:text-neutral-100"
+                                : "text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300"
+                            }`}
+                          >
+                            {activeTab === tab && (
+                              <motion.span
+                                layoutId={`subtab-bubble-${aliasId}`}
+                                className="absolute inset-0 bg-neutral-100 dark:bg-neutral-800 rounded-md z-0"
+                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                              />
+                            )}
+                            <span className="relative z-10 flex items-center gap-1.5">
+                              {tab === "edit" ? <IconPencil size={11} /> : <IconTrash size={11} />}
+                              {tab === "edit" ? "Edit" : "Delete"}
+                            </span>
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
               </motion.div>
 
               {/* Content area */}
               <motion.div
-              className="px-5 pb-1 overflow-hidden rounded-b-xl">
-                <AnimatePresence mode="wait" initial={false}>
+              className="px-5 pb-1 rounded-b-xl">
+                <AnimatePresence mode="popLayout" initial={false}>
 
                   {/* ── Add New view ── */}
                   {view === "add" && (
                     <motion.form
                       key="add-view"
-                      layout
                       onSubmit={handleAdd}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }}
-                      transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
+                      initial={{ opacity: 0, y: -10, filter: "blur(4px)" }}
+                      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                      exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
+                      transition={{ duration: 0.20, ease: "easeOut" }}
                       className="pt-1 pb-4 space-y-2"
                     >
                       <input
@@ -948,7 +366,6 @@ function CannedResponseModal({
                   {view === "saved" && (
                     <motion.div
                       key="saved-view"
-                      layout
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -6 }}
@@ -1140,6 +557,7 @@ function CannedResponseModal({
 
                 </AnimatePresence>
               </motion.div>
+            </div>
           </motion.div>
         </motion.div>
     </motion.div>
@@ -1394,10 +812,10 @@ function AliasAddForm({
 
       setTimeout(() => {
         setStatus("success");
-        toast.success(`Alias ${created.email} created`);
-        setLocalPart("");
+        toast.success(`Alias "${created.email}" created`);
+        setLocalPart("");  // ← correct
         onAliasAdded(created);
-        setTimeout(() => setStatus("idle"), 100);
+        setTimeout(() => setStatus("idle"), 2500);
       }, 1000);
     } catch (err) {
       setStatus("idle");
@@ -1513,6 +931,7 @@ function EmptyState() {
 }
 
 
+
 // ─── Root Export ──────────────────────────────────────────────────────────────
 
 export default function AliasesPage() {
@@ -1520,6 +939,11 @@ export default function AliasesPage() {
   const [aliases, setAliases] = useState<Alias[]>([]);
   const [integrations, setIntegrations] = useState<IntegrationOption[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cannedButtonPos, setCannedButtonPos] = useState({ x: 0, y: 0 });
+const cannedTriggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+const [cannedAliasId, setCannedAliasId] = useState<string | null>(null);
+const [mobileAlias, setMobileAlias] = useState<Alias | null>(null);
+
 
   useEffect(() => {
     const fetchInitial = async () => {
@@ -1573,13 +997,13 @@ export default function AliasesPage() {
       // initial={{ scale: 0.95, y: 2 }}
       // animate={{ scale: 1, y: 0 }}
       // transition={{ duration: 0.03, ease: easeOutCubic }}
-      className="space-y-6"
+      className="space-y-6 border border-neutral-400 rounded-lg p-4 min-h-screen"
     >
       <div>
         <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
           Create Email Aliases for Your Domains
         </Heading>
-        <Paragraph variant="default" className="text-neutral-600 dark:text-neutral-400 mt-1">
+        <Paragraph variant="small" className="text-neutral-600 dark:text-neutral-400 mt-1">
           Set up email addresses like support@yourdomain.com and route them to your Slack or Discord channels. Each alias can be connected to any integration.
         </Paragraph>
       </div>
@@ -1590,7 +1014,7 @@ export default function AliasesPage() {
         onAliasAdded={handleAliasAdded}
       />
 
-
+      <div className="border-t border-neutral-400 dark:border-neutral-800" />
 
       <motion.div
       // transition={{ type: "spring", stiffness: 300, damping: 28 }}
@@ -1603,7 +1027,7 @@ export default function AliasesPage() {
             View and manage all your email aliases. Click any alias to see details or update its integration settings.
             </Paragraph>
 
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="wait" initial={false}>
               {loading && (
                 <motion.div
                   key="skeleton"
@@ -1616,30 +1040,257 @@ export default function AliasesPage() {
                 </motion.div>
               )}
 
-              {!loading && aliases.length === 0 && <EmptyState key="empty" />}
+              {!loading && aliases.length === 0 && (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15, ease: easeOutCubic }}
+                >
+                  <EmptyState />
+                </motion.div>
+              )}
+
 
               {!loading && aliases.length > 0 && (
                 <motion.div
-                  key="list"
-                  layout
-                  className="space-y-2"
-                >
-                  <AnimatePresence mode="popLayout">
-                    {aliases.map((a) => (
-                      <AliasCard
-                        key={a.id}
-                        alias={a}
-                        integrations={integrations}
-                        onDelete={handleDelete}
-                        onUpdate={handleUpdate}
-                      />
-                    ))}
-                  </AnimatePresence>
+                  key="table"
+                  initial={{ opacity: 0.90, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0.90, scale: 0.98 }}
+                  transition={{ duration: 0.15, ease: easeOutCubic }}
+                  style={{ transformOrigin: "top center" }}
+                  className="hidden md:block overflow-x-auto rounded-lg border border-neutral-900 dark:border-neutral-700">
+
+                  <motion.table className="min-w-full text-xs overflow-visible font-schibsted">
+                    <thead>
+                      <tr>
+                        {["Email", "Status", "Domain", "Integration", "Created At", "Canned Responses", "Actions"].map((h) => (
+                          <th key={h} className="px-3 py-2 text-left font-schibsted bg-linear-to-b from-sky-700 to-cyan-600 text-neutral-50">
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {aliases.map((a) => (
+                        <tr key={a.id} className="border-t border-neutral-900 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors duration-150">
+                          <td className="px-3 py-2 font-schibsted font-semibold text-neutral-700 dark:text-neutral-300">
+                            {a.email}
+                          </td>
+                          <td className="px-3 py-2">
+                            <span className={`inline-flex items-center rounded-sm px-2 py-0.5 font-schibsted font-semibold border ${
+                              a.status === "active"
+                                ? "bg-green-50 border-green-900 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                : "bg-neutral-100 border-neutral-400 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"
+                            }`}>
+                              {a.status === "active" ? "Active" : "Inactive"}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 font-schibsted text-neutral-500 dark:text-neutral-400">
+                            {a.domain}
+                          </td>
+                          <td className="px-3 py-2 font-schibsted text-neutral-500 dark:text-neutral-400">
+                            {a.integrationName ?? "—"}
+                          </td>
+                          <td className="px-3 py-2 font-schibsted text-neutral-500 dark:text-neutral-400 tabular-nums">
+                            {new Date(a.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                          </td>
+                          <td className="px-3 py-2">
+                              <button
+                                type="button"
+                                ref={(el) => { cannedTriggerRefs.current[a.id] = el; }}
+                                onClick={() => {
+                                  const rect = cannedTriggerRefs.current[a.id]?.getBoundingClientRect();
+                                  if (rect) setCannedButtonPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+                                  setCannedAliasId(a.id);
+                                }}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-schibsted font-semibold text-neutral-600 dark:text-neutral-400 border border-neutral-300 dark:border-neutral-700 hover:border-neutral-600 hover:text-neutral-900 dark:hover:bg-neutral-800 transition-colors duration-150 cursor-pointer focus:outline-none"
+                              >
+                                <IconMessageFilled size={12} />
+                                Canned Responses
+                              </button>
+                          </td>
+                          <td className="px-3 py-2">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-schibsted text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none"
+                                >
+                                  <IconPencil size={11} />
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    try {
+                                      const res = await fetch(`/api/aliases/${a.id}`, { method: "DELETE" });
+                                      if (!res.ok) throw new Error((await res.json()).error || "Failed to delete");
+                                      toast.success(`Alias "${a.email}" deleted`);
+                                      handleDelete(a.id);
+                                    } catch (err: any) {
+                                      toast.error(err.message || "Failed to delete alias");
+                                    }
+                                  }}
+                                  className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-schibsted text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer focus:outline-none"
+                                >
+                                  <IconTrash size={11} />
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </motion.table>
+
+                  <div className="block md:hidden space-y-px rounded-lg border border-neutral-900 dark:border-neutral-700 overflow-hidden">
+                  {aliases.map((a) => (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => setMobileAlias(a)}
+                      className="w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-neutral-100 dark:border-neutral-800 last:border-0 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors cursor-pointer focus:outline-none"
+                    >
+                      <div className="min-w-0 text-left">
+                        <p className="text-xs font-schibsted font-semibold text-neutral-800 dark:text-neutral-200 truncate">{a.email}</p>
+                        <p className="text-xs font-schibsted text-neutral-400 truncate">{a.domain}</p>
+                      </div>
+                      <span className={`ml-3 shrink-0 inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-schibsted font-semibold border ${
+                        a.status === "active"
+                          ? "bg-green-50 border-green-900 text-green-800"
+                          : "bg-neutral-100 border-neutral-400 text-neutral-600"
+                      }`}>
+                        {a.status === "active" ? "Active" : "Inactive"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
                 </motion.div>
+
+        
               )}
             </AnimatePresence>
         </Card>
       </motion.div>
+
+      <AnimatePresence>
+          {cannedAliasId && (
+            <CannedResponseModal
+              aliasId={cannedAliasId}
+              aliasEmail={aliases.find((a) => a.id === cannedAliasId)?.email ?? ""}
+              buttonPosition={cannedButtonPos}
+              onClose={() => setCannedAliasId(null)}
+            />
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+  {mobileAlias && (
+    <>
+      <motion.div
+        className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={() => setMobileAlias(null)}
+      />
+      <motion.div
+        className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-neutral-900 rounded-t-2xl border-t border-neutral-200 dark:border-neutral-700 shadow-xl"
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
+        {/* Handle */}
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 rounded-full bg-neutral-300 dark:bg-neutral-600" />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-100 dark:border-neutral-800">
+          <p className="text-sm font-schibsted font-semibold text-neutral-900 dark:text-neutral-100">{mobileAlias.email}</p>
+          <button
+            type="button"
+            onClick={() => setMobileAlias(null)}
+            className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none"
+          >
+            <IconX size={15} className="text-neutral-500" />
+          </button>
+        </div>
+
+        {/* Details */}
+        <div className="px-5 py-4 grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-xs font-schibsted font-semibold text-neutral-400 mb-0.5">Local Part</p>
+            <p className="text-sm font-schibsted text-neutral-800 dark:text-neutral-200">{mobileAlias.localPart}</p>
+          </div>
+          <div>
+            <p className="text-xs font-schibsted font-semibold text-neutral-400 mb-0.5">Domain</p>
+            <p className="text-sm font-schibsted text-neutral-800 dark:text-neutral-200">{mobileAlias.domain}</p>
+          </div>
+          <div>
+            <p className="text-xs font-schibsted font-semibold text-neutral-400 mb-0.5">Integration</p>
+            <p className="text-sm font-schibsted text-neutral-800 dark:text-neutral-200">{mobileAlias.integrationName ?? "—"}</p>
+          </div>
+          <div>
+            <p className="text-xs font-schibsted font-semibold text-neutral-400 mb-0.5">Status</p>
+            <span className={`inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-schibsted font-semibold border ${
+              mobileAlias.status === "active"
+                ? "bg-green-50 border-green-900 text-green-800"
+                : "bg-neutral-100 border-neutral-400 text-neutral-600"
+            }`}>
+              {mobileAlias.status === "active" ? "Active" : "Inactive"}
+            </span>
+          </div>
+          <div>
+            <p className="text-xs font-schibsted font-semibold text-neutral-400 mb-0.5">Created At</p>
+            <p className="text-sm font-schibsted text-neutral-800 dark:text-neutral-200 tabular-nums">
+              {new Date(mobileAlias.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+            </p>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="px-5 pb-8 pt-2 border-t border-neutral-100 dark:border-neutral-800 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              const rect = cannedTriggerRefs.current[mobileAlias.id]?.getBoundingClientRect();
+              if (rect) setCannedButtonPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+              setCannedAliasId(mobileAlias.id);
+              setMobileAlias(null);
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-schibsted font-semibold text-neutral-600 dark:text-neutral-400 border border-neutral-300 dark:border-neutral-700 hover:border-neutral-600 transition-colors cursor-pointer focus:outline-none"
+          >
+            <IconMessageFilled size={12} />
+            Canned Responses
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                const res = await fetch(`/api/aliases/${mobileAlias.id}`, { method: "DELETE" });
+                if (!res.ok) throw new Error((await res.json()).error || "Failed to delete");
+                toast.success(`Alias "${mobileAlias.email}" deleted`);
+                handleDelete(mobileAlias.id);
+                setMobileAlias(null);
+              } catch (err: any) {
+                toast.error(err.message || "Failed to delete alias");
+              }
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-schibsted font-semibold text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900 hover:bg-red-50 transition-colors cursor-pointer focus:outline-none"
+          >
+            <IconTrash size={12} />
+            Delete
+          </button>
+        </div>
+      </motion.div>
+    </>
+  )}
+</AnimatePresence>
     </motion.div>
   );
 }

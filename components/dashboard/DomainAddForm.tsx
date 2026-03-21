@@ -227,63 +227,65 @@ export default function DomainAddForm({
   const [status, setStatus] = useState<Status>("idle");
   const [value, setValue] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const domain = value.trim().toLowerCase();
-    if (!domain || status !== "idle") return;
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  const domain = value.trim().toLowerCase();
+  if (!domain || status !== "idle") return;
 
-    setStatus("loading");
+  setStatus("loading");
 
+  try {
+    const res = await fetch("/api/domains", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ domain }),
+    });
+
+    const body = await res.json().catch(() => ({}));
+
+    if (!res.ok && res.status !== 409) {
+      throw new Error(body.error || "Failed to add domain");
+    }
+
+    const newDomain: DomainRow = body;
+
+    let prefetchedDetail: DomainRow["prefetchedDetail"] = undefined;
     try {
-      const res = await fetch("/api/domains", {
+      const resendRes = await fetch("/api/domains/add-to-resend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domain }),
+        body: JSON.stringify({ domainId: newDomain.id }),
       });
-
-      const body = await res.json().catch(() => ({}));
-
-      if (!res.ok && res.status !== 409) {
-        throw new Error(body.error || "Failed to add domain");
-      }
-
-      const newDomain: DomainRow = body;
-
-      // ── Await add-to-resend so records are ready before card appears ──
-      setStatus("loading"); // keep loading state during Resend setup (~5-6s)
-      let prefetchedDetail: DomainRow["prefetchedDetail"] = undefined;
-      try {
-        const resendRes = await fetch("/api/domains/add-to-resend", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ domainId: newDomain.id }),
-        });
-        if (resendRes.ok) {
-          const resendBody = await resendRes.json();
-          // Use the domain data returned by add-to-resend as prefetched detail
-          if (resendBody.domain) {
-            prefetchedDetail = {
-              resendDomainId: resendBody.domain.resendDomainId,
-              dnsRecords: resendBody.domain.dnsRecords || [],
-              receivingEnabled: resendBody.domain.receivingEnabled || false,
-              receivingMxRecords: resendBody.domain.receivingMxRecords || [],
-              lastCheckedAt: null,
-            };
-          }
+      if (resendRes.ok) {
+        const resendBody = await resendRes.json();
+        if (resendBody.domain) {
+          prefetchedDetail = {
+            resendDomainId: resendBody.domain.resendDomainId,
+            dnsRecords: resendBody.domain.dnsRecords || [],
+            receivingEnabled: resendBody.domain.receivingEnabled || false,
+            receivingMxRecords: resendBody.domain.receivingMxRecords || [],
+            lastCheckedAt: null,
+          };
         }
-      } catch {
-        // Non-fatal — card still shows, just without prefetched data
       }
+    } catch {
+      // Non-fatal
+    }
 
+    // ← same pattern as integration
+    setTimeout(() => {
+      setStatus("success");
       toast.success("Domain added — expand the card below to see your DNS records.");
       setValue("");
       onDomainAdded({ ...newDomain, prefetchedDetail });
-      setStatus("idle");
-    } catch (err) {
-      setStatus("idle");
-      toast.error(err instanceof Error ? err.message : "Failed to add domain");
-    }
-  };
+      setTimeout(() => setStatus("idle"), 2500);  // ← holds success for 2.5s
+    }, 1000);  // ← holds loading for 1s after API resolves
+
+  } catch (err) {
+    setStatus("idle");
+    toast.error(err instanceof Error ? err.message : "Failed to add domain");
+  }
+};
 
   const isLoading = status === "loading";
   const isSuccess = status === "success";

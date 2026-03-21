@@ -134,13 +134,13 @@ function IntegrationAddForm({
       const created: Integration = await res.json();
 
       setTimeout(() => {
-        setStatus("success");
-        toast.success(`Integration "${created.name}" added`);
-        setName("");
-        setWebhookUrl("");
-        onIntegrationAdded(created);
-        setTimeout(() => setStatus("idle"), 100);
-      }, 1000);
+      setStatus("success");
+      toast.success(`Integration "${created.name}" added`);
+      setName("");
+      setWebhookUrl("");
+      onIntegrationAdded(created);
+      setTimeout(() => setStatus("idle"), 2500);  // ← holds success for 2.5s
+    }, 1000);
     } catch (err) {
       setStatus("idle");
       toast.error(err instanceof Error ? err.message : "Failed to add integration");
@@ -533,10 +533,7 @@ export default function IntegrationsPage() {
 
   return (
     <motion.div
-      // initial={{ opacity: 0.90, scale: 0.95, y: 2, }}
-      // animate={{ opacity: 1, scale: 1, y: 0 }}
-      // transition={{ duration: 0.03, ease: easeOutCubic }}
-      className="space-y-6"
+      className="space-y-6 border border-neutral-400 rounded-lg p-4 min-h-screen"
     >
       <div>
         <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
@@ -548,6 +545,7 @@ export default function IntegrationsPage() {
       </div>
 
       <IntegrationAddForm onIntegrationAdded={handleIntegrationAdded} />
+      <div className="border-t border-neutral-400 dark:border-neutral-800" />
 
       <motion.div
       // transition={{ type: "spring", stiffness: 300, damping: 28 }}
