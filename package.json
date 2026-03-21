@@ -22,6 +22,7 @@
     "@tabler/icons-react": "^3.36.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dodopayments": "^2.23.2",
     "framer-motion": "^12.23.27",
     "geist": "^1.7.0",
     "lucide-react": "^0.562.0",

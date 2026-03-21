@@ -265,12 +265,28 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion, LayoutGroup } from "motion/react";
 
+<<<<<<< HEAD
 import { Menu, X } from "lucide-react";
+=======
+// Lucide icons
+import {
+  LayoutDashboard,
+  Mail,
+  Inbox,
+  Globe,
+  AtSign,
+  Zap,
+  Menu,
+  X,
+  CreditCard,
+} from "lucide-react";
+>>>>>>> master
 
 import { IconDashboard, IconMail, IconGlobe, IconAtSign, IconZap } from "@/constants/icons";
 import { IconMessageCircle, IconMessages } from "@tabler/icons-react";
 
 const navItems = [
+<<<<<<< HEAD
   { href: "/dashboard", label: "Dashboard", icon: IconDashboard, exact: true },
   { href: "/dashboard/tickets/mine", label: "My Tickets", icon: IconMail },
   { href: "/dashboard/domains", label: "Domains", icon: IconGlobe },
@@ -278,6 +294,57 @@ const navItems = [
   { href: "/dashboard/aliases", label: "Aliases", icon: IconAtSign },
   { href: "/dashboard/chat-widgets", label: "Chat Widgets", icon: null, tablerIcon: IconMessageCircle },
   { href: "/dashboard/live-chats", label: "Live Chats", icon: null, tablerIcon: IconMessages },
+=======
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+    icon: IconDashboard,
+    exact: true,
+  },
+  {
+    href: "/dashboard/tickets/mine",
+    label: "My Tickets",
+    icon: IconMail,
+  },
+  // {
+  //   href: "/dashboard/tickets/unassigned",
+  //   label: "Unassigned",
+  //   icon: IconInbox,
+  // },
+  {
+    href: "/dashboard/domains",
+    label: "Domains",
+    icon: IconGlobe,
+  },
+  {
+    href: "/dashboard/integrations",
+    label: "Integrations",
+    icon: IconZap,
+  },
+  {
+    href: "/dashboard/aliases",
+    label: "Aliases",
+    icon: IconAtSign,
+  },
+  {
+    href: "/dashboard/chat-widgets",
+    label: "Chat Widgets",
+    icon: null,
+    tablerIcon: IconMessageCircle,
+  },
+  {
+    href: "/dashboard/live-chats",
+    label: "Live Chats",
+    icon: null,
+    tablerIcon: IconMessages,
+  },
+  {
+    href: "/dashboard/billing",
+    label: "Billing",
+    icon: null,
+    tablerIcon: CreditCard,
+  },
+>>>>>>> master
 ];
 
 function NavItem({

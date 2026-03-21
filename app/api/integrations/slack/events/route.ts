@@ -9,6 +9,8 @@ import { ChatConversation } from "@/app/api/models/ChatConversationModel";
 import { ChatMessage } from "@/app/api/models/ChatMessageModel";
 import { Resend } from "resend";
 import { uploadToR2, deleteFromR2 } from "@/lib/r2";
+import { getSubscriptionGuard } from "@/lib/checkSubscriptionStatus";
+import { checkTicketLimit } from "@/lib/checkPlanLimits";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -19,9 +21,48 @@ async function handleEmailThreadReply(
   slackFiles: Array<Record<string, unknown>>,
   channelId: string,
   eventId?: string,
-  replyTs?: string
+  replyTs?: string,
+  slackUserId?: string
 ) {
   try {
+    // ── Subscription guard — check BEFORE any DB write or Resend call ────────
+    const { isExpired } = await getSubscriptionGuard(emailThread.workspaceId);
+    const limitError = await checkTicketLimit(emailThread.workspaceId);
+
+    if (isExpired || limitError) {
+      // Fetch botToken to send an ephemeral Slack message
+      const blockingIntegration = await Integration.findOne({
+        slackChannelId: channelId,
+        authMethod: "oauth",
+      }).lean();
+      const botToken = blockingIntegration?.slackAccessToken;
+
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://yourapp.com";
+      const reason = isExpired
+        ? `⚠️ Your reply was *not sent* — your plan has expired. Renew now: ${appUrl}/pricing`
+        : `⚠️ Your reply was *not sent* — ${limitError}. Upgrade your plan: ${appUrl}/pricing`;
+
+      if (botToken && slackUserId) {
+        await fetch("https://slack.com/api/chat.postEphemeral", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${botToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            channel: channelId,
+            thread_ts: replyTs,
+            user: slackUserId,
+            text: reason,
+          }),
+        });
+      }
+
+      // Always return 200 to Slack — non-200 causes Slack to retry 3 more times
+      console.warn(`⛔ Reply blocked for workspace ${emailThread.workspaceId}: ${isExpired ? "plan expired" : limitError}`);
+      return NextResponse.json({ ok: true });
+    }
+    // ── End subscription guard ───────────────────────────────────────────────
     const references = [emailThread.messageId, ...(emailThread.references || [])].filter(Boolean);
     const referencesHeader = references.join(" ");
 

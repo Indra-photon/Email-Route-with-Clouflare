@@ -102,6 +102,7 @@ export default async function RootLayout({
   // const headersList = await headers();
   // const skipClerk = headersList.get("x-skip-clerk") === "true";
 
+<<<<<<< HEAD
   // if (skipClerk) {
   //   return (
   //     <html lang="en">
@@ -114,11 +115,27 @@ export default async function RootLayout({
   //     </html>
   //   );
   // }
+=======
+  if (skipClerk) {
+    return (
+      <html lang="en">
+        <body
+          suppressHydrationWarning
+          className={`${geistSans.variable} ${geistMono.variable} ${schibstedGrotesk.variable} antialiased`}
+        >
+          {children}
+          <Toaster position="top-right" />
+        </body>
+      </html>
+    );
+  }
+>>>>>>> master
 
   return (
     <ClerkProvider>
       <html lang="en">
         <body
+          suppressHydrationWarning
           className={`${geistSans.variable} ${geistMono.variable} ${schibstedGrotesk.variable} antialiased`}
         >
           <NavBar />
