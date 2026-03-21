@@ -792,6 +792,8 @@ export default function DomainsTable({ initialDomains }: { initialDomains: Domai
 
       <DomainAddForm onDomainAdded={handleDomainAdded} />
 
+      <div className="border-t border-neutral-400 dark:border-neutral-800" />
+
       <div className=" pt-3 pb-3">
 
         <Card className="min-h-[120px] overflow-hidden">

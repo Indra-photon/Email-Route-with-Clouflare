@@ -394,16 +394,16 @@ export default function MyTicketsPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-full overflow-hidden bg-white">
+    <div className="flex h-full overflow-hidden bg-white border border-neutral-400 rounded-lg max-h-screen">
 
       {/* ── Left Panel: Ticket List ────────────────────────────────────── */}
       <div
-        className={`flex flex-col w-full sm:w-[520px] flex-shrink-0 border-r border-neutral-200 ${
+        className={`flex flex-col w-full sm:w-[520px] flex-shrink-0 border-r border-neutral-400 ${
           mobileView === "chat" ? "hidden sm:flex" : "flex"
         }`}
       >
         {/* ── Page Header ── */}
-        <div className="px-4 pb-3 border-b border-neutral-100 flex-shrink-0">
+        <div className="p-4 border-b border-neutral-100 flex-shrink-0">
           <div className="flex items-start justify-between mb-3">
             <div>
               <Heading variant="muted" className="font-bold text-neutral-900">
@@ -447,8 +447,7 @@ export default function MyTicketsPage() {
           </div>
         </div>
 
-        {/* Status Filter Tabs */}
-        <div className="flex gap-1 px-3 py-2 border-b border-neutral-100 flex-shrink-0 overflow-x-auto">
+        <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-b from-sky-800 to-cyan-600 border-b border-neutral-100 overflow-x-auto">
           {[
             { key: "all", label: "All" },
             { key: "open", label: "Open" },
@@ -459,15 +458,25 @@ export default function MyTicketsPage() {
             <button
               key={f.key}
               onClick={() => setCurrentFilter(f.key)}
-              className={`rounded-lg px-2.5 py-1 text-xs font-schibsted font-medium whitespace-nowrap transition-all ${
-                currentFilter === f.key
-                  ? "bg-sky-100 text-sky-800"
-                  : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700"
-              }`}
+              style={{ WebkitTapHighlightColor: "transparent" }}
+              className="relative rounded-lg px-2.5 py-1 text-xs font-schibsted font-medium cursor-pointer whitespace-nowrap"
             >
-              {f.label}
-              <span className="ml-1 opacity-60">
-                ({statusCounts[f.key as keyof typeof statusCounts]})
+              {currentFilter === f.key && (
+                <motion.div
+                  layoutId="filter-bubble"
+                  className="absolute inset-0 bg-sky-100 rounded-lg"
+                  style={{ borderRadius: 8 }}
+                  transition={{ type: "spring", bounce: 0.1, duration: 0.2 }}
+                />
+              )}
+
+              <span className={`relative z-10 transition-colors duration-250 ${
+                currentFilter === f.key ? "text-sky-800" : "text-neutral-100"
+              }`}>
+                {f.label}
+                <span className="ml-1">
+                  ({statusCounts[f.key as keyof typeof statusCounts]})
+                </span>
               </span>
             </button>
           ))}

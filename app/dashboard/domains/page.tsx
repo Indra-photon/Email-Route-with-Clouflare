@@ -93,16 +93,18 @@ async function DomainListLoader() {
 // ── Page renders instantly — skeleton shows while loader fetches ──────────────
 export default function DomainsPage() {
   return (
-<>
-     <div className="mb-6">
-      <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">Add Your Domains</Heading>
-      <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400">
-        Add and verify your domains to use for email aliases.
-      </Paragraph>
-    </div>
-    <Suspense fallback={<DomainsTableSkeleton />}>
-      <DomainListLoader />
-    </Suspense>
-</>
+    <div className="border border-neutral-400 rounded-lg p-4 min-h-screen">
+        <div className="mb-6 ">
+          <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">Add Your Domains</Heading>
+          <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400">
+            Add and verify your domains to use for email aliases.
+          </Paragraph>
+        </div>
+      
+
+        <Suspense fallback={<DomainsTableSkeleton />}>
+          <DomainListLoader />
+        </Suspense>
+      </div>
   );
 }
