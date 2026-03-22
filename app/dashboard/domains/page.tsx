@@ -4,10 +4,10 @@
 // import dbConnect from "@/lib/dbConnect";
 // import { getOrCreateWorkspaceForCurrentUser } from "@/app/api/workspace/helpers";
 // import { Domain } from "@/app/api/models/DomainModel";
-// import DomainAddForm from "@/components/dashboard/DomainAddForm";
 // import DomainsTable from "@/components/dashboard/DomainsTable";
-// import { Heading } from "@/components/Heading";
+// import DomainsTableSkeleton from "@/components/dashboard/DomainsTableSkeleton";
 // import { Paragraph } from "@/components/Paragraph";
+// import { Heading } from "@/components/Heading";
 
 // export type DomainRow = {
 //   id: string;
@@ -18,7 +18,8 @@
 //   createdAt: string;
 // };
 
-// export default async function DomainsPage() {
+// // ── This component does the blocking DB work ──────────────────────────────────
+// async function DomainListLoader() {
 //   const { userId } = await auth();
 //   if (!userId) redirect("/sign-in");
 
@@ -39,8 +40,25 @@
 //     createdAt: d.createdAt.toISOString(),
 //   }));
 
+//   return <DomainsTable initialDomains={domains} />;
+// }
+
+// // ── Page renders instantly — skeleton shows while loader fetches ──────────────
+// export default function DomainsPage() {
 //   return (
-//     <DomainsTable initialDomains={domains} />
+//     <div className="border border-neutral-400 rounded-lg p-4 min-h-screen">
+//         <div className="mb-6 ">
+//           <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">Add Your Domains</Heading>
+//           <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400">
+//             Add and verify your domains to use for email aliases.
+//           </Paragraph>
+//         </div>
+      
+
+//         <Suspense fallback={<DomainsTableSkeleton />}>
+//           <DomainListLoader />
+//         </Suspense>
+//       </div>
 //   );
 // }
 
@@ -65,7 +83,7 @@ export type DomainRow = {
   createdAt: string;
 };
 
-// ── This component does the blocking DB work ──────────────────────────────────
+// ── Blocking DB loader ────────────────────────────────────────────────────────
 async function DomainListLoader() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
@@ -90,21 +108,22 @@ async function DomainListLoader() {
   return <DomainsTable initialDomains={domains} />;
 }
 
-// ── Page renders instantly — skeleton shows while loader fetches ──────────────
+// ── Page ──────────────────────────────────────────────────────────────────────
 export default function DomainsPage() {
   return (
-    <div className="border border-neutral-400 rounded-lg p-4 min-h-screen">
-        <div className="mb-6 ">
-          <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">Add Your Domains</Heading>
-          <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400">
-            Add and verify your domains to use for email aliases.
-          </Paragraph>
-        </div>
-      
-
-        <Suspense fallback={<DomainsTableSkeleton />}>
-          <DomainListLoader />
-        </Suspense>
+    <div className="space-y-6 border border-neutral-400 rounded-lg p-4">
+      <div>
+        <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
+          Add Your Domains
+        </Heading>
+        <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+          Add and verify your domains to use for email aliases and receive emails at your custom address.
+        </Paragraph>
       </div>
+
+      <Suspense fallback={<DomainsTableSkeleton />}>
+        <DomainListLoader />
+      </Suspense>
+    </div>
   );
 }

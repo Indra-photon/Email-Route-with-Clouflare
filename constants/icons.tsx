@@ -1530,3 +1530,70 @@ export function CopyIcon({ copied, size = 18 }: CopyIconProps) {
     </span>
   );
 }
+
+
+interface InfoIconAnimatedProps {
+  isHovered: boolean;
+  stroke?: string;
+  size?: number;
+}
+
+const circleCircumference = 56.55; // 2 * PI * 9
+const dotLength = 1;
+const stemLength = 7;
+
+export function InfoIconAnimated({
+  isHovered,
+  stroke = "#0284c7",
+  size = 18,
+}: InfoIconAnimatedProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={stroke}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {/* Circle */}
+      <circle
+        cx="12"
+        cy="12"
+        r="9"
+        strokeDasharray={circleCircumference}
+        strokeDashoffset={isHovered ? 0 : circleCircumference}
+        style={{
+          transition: isHovered
+            ? "stroke-dashoffset 0.5s ease-in-out"
+            : "stroke-dashoffset 0.3s ease-in-out",
+        }}
+      />
+      {/* Dot */}
+      <path
+        d="M12 9h.01"
+        strokeDasharray={dotLength}
+        strokeDashoffset={isHovered ? 0 : dotLength}
+        style={{
+          transition: isHovered
+            ? "stroke-dashoffset 0.2s ease-in-out 0.45s"
+            : "stroke-dashoffset 0.15s ease-in-out",
+        }}
+      />
+      {/* Stem */}
+      <path
+        d="M11 12h1v4h1"
+        strokeDasharray={stemLength}
+        strokeDashoffset={isHovered ? 0 : stemLength}
+        style={{
+          transition: isHovered
+            ? "stroke-dashoffset 0.25s ease-in-out 0.6s"
+            : "stroke-dashoffset 0.15s ease-in-out",
+        }}
+      />
+    </svg>
+  );
+}
