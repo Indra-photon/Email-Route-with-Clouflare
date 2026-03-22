@@ -421,7 +421,7 @@ export default function DashboardNav({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="flex h-dvh overflow-hidden">
+    <div className="flex h-dvh pt-1">
 
       {/* Mobile hamburger */}
       <button

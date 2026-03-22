@@ -4,6 +4,9 @@ import { AlertCircle, CheckCircle2, Info, Lightbulb, XCircle } from "lucide-reac
 import { Paragraph } from "@/components/Paragraph";
 import { IconBulb } from "@/constants/icons";
 import { useState } from "react";
+import { InfoIconAnimated } from "@/constants/icons";
+
+
 
 interface CalloutProps {
   type?: "info" | "warning" | "success" | "error" | "tip";
@@ -25,6 +28,7 @@ export function Callout({
       bgColor: "bg-sky-50",
       borderColor: "border-sky-200",
       iconColor: "text-sky-600",
+      ringColor: "ring-sky-400",
       titleColor: "text-sky-900",
       textColor: "text-sky-800",
     },
@@ -33,6 +37,7 @@ export function Callout({
       bgColor: "bg-amber-50",
       borderColor: "border-amber-200",
       iconColor: "text-amber-600",
+      ringColor: "ring-amber-400",
       titleColor: "text-amber-900",
       textColor: "text-amber-800",
     },
@@ -41,6 +46,7 @@ export function Callout({
       bgColor: "bg-green-50",
       borderColor: "border-green-200",
       iconColor: "text-green-600",
+      ringColor: "ring-green-400",
       titleColor: "text-green-900",
       textColor: "text-green-800",
     },
@@ -49,44 +55,51 @@ export function Callout({
       bgColor: "bg-red-50",
       borderColor: "border-red-200",
       iconColor: "text-red-600",
+      ringColor: "ring-red-400",
       titleColor: "text-red-900",
       textColor: "text-red-800",
     },
     tip: {
-      icon: IconBulb,
+      icon: Lightbulb,
       bgColor: "bg-sky-50",
       borderColor: "border-sky-200",
       iconColor: "text-sky-600",
+      ringColor: "ring-sky-400",
       titleColor: "text-sky-900",
       textColor: "text-sky-800",
     },
   };
 
-  const { icon: Icon, bgColor, borderColor, iconColor, titleColor, textColor } =
+  const { icon: Icon, bgColor, borderColor, iconColor, ringColor, titleColor, textColor } =
     config[type];
 
   return (
     <div
-      className={`rounded-lg border ${borderColor} ${bgColor} p-4 ${className}`}
+      className={`relative rounded-lg border ${borderColor} ${bgColor} pt-6 px-4 pb-4 mt-4 ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="flex gap-3">
+      {/* Inset badge icon on top-left corner */}
+      <div
+        className={`absolute -top-3 left-4 flex items-center justify-center border-b border-sky-200 size-6 rounded-full ${bgColor}`}
+      >
         {type === "tip" ? (
-          <IconBulb isActive={isHovered} className={`size-5 shrink-0 mt-0.5 ${iconColor}`} />
+          <IconBulb isActive={isHovered} className={`size-4 ${iconColor}`} />
         ) : (
-          <Icon className={`size-5 shrink-0 mt-0.5 ${iconColor}`} />
+          <Icon className={`size-4 ${iconColor}`} />
         )}
-        <div className="flex-1">
-          {title && (
-            <Paragraph variant="small" className={`font-semibold mb-2 ${titleColor}`}>
-              {title}
-            </Paragraph>
-          )}
-          <Paragraph variant="small" className={` ${textColor}`}>
-            {children}
+      </div>
+
+      {/* Content */}
+      <div>
+        {title && (
+          <Paragraph variant="small" className={`font-semibold mb-2 ${titleColor}`}>
+            {title}
           </Paragraph>
-        </div>
+        )}
+        <Paragraph variant="small" className={textColor}>
+          {children}
+        </Paragraph>
       </div>
     </div>
   );
