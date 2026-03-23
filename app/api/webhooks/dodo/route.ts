@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import { Workspace } from "@/app/api/models/WorkspaceModel";
 import { Subscription } from "@/app/api/models/SubscriptionModel";
+import { Alias } from "@/app/api/models/AliasModel";
 import { verifyDodoSignature } from "@/lib/dodo";
 
 export async function POST(request: Request) {
@@ -67,6 +68,12 @@ export async function POST(request: Request) {
           subscriptionId: sub._id,
         });
 
+        // Re-activate all aliases that were paused due to limit
+        await Alias.updateMany(
+          { workspaceId },
+          { $set: { status: "active" } }
+        );
+
         console.log(`✅ Webhook: subscription activated — workspace ${workspaceId} → ${planId}`);
         break;
       }
@@ -117,7 +124,7 @@ export async function POST(request: Request) {
           ? new Date(data.current_period_end as string)
           : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
-        await Subscription.findOneAndUpdate(
+        const updatedSub = await Subscription.findOneAndUpdate(
           { dodoSubscriptionId: subId },
           {
             status: "active",
@@ -126,8 +133,18 @@ export async function POST(request: Request) {
             ticketCountInbound: 0,
             ticketCountOutbound: 0,
             usagePeriodStart: new Date(),
-          }
+          },
+          { new: true }
         );
+
+        // Re-activate all aliases that were paused due to limit
+        if (updatedSub?.workspaceId) {
+          await Alias.updateMany(
+            { workspaceId: updatedSub.workspaceId },
+            { $set: { status: "active" } }
+          );
+        }
+
         console.log(`✅ Webhook: payment.succeeded — counters reset for sub ${subId}`);
         break;
       }
