@@ -3,6 +3,7 @@ import dbConnect from "@/lib/dbConnect";
 import { Alias } from "@/app/api/models/AliasModel";
 import { Integration } from "@/app/api/models/IntegrationModel";
 import { EmailThread } from "@/app/api/models/EmailThreadModel";
+import { Subscription } from "@/app/api/models/SubscriptionModel";
 
 type ResendAttachmentMeta = {
   id: string;
@@ -366,6 +367,13 @@ export async function POST(request: Request) {
       receivedAt: new Date(emailData.created_at || Date.now()),
     });
     console.log("💾 Email saved to database:", emailThread._id);
+
+    // ── Increment inbound ticket counter on the workspace's subscription ──
+    await Subscription.updateOne(
+      { workspaceId: alias.workspaceId },
+      { $inc: { ticketCountInbound: 1 } }
+    );
+
 
     const replyUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/reply/${emailThread._id}`;
 
