@@ -18,6 +18,9 @@ export interface SubscriptionUsage {
   ticketCountOutbound: number;
   ticketLimit: number;
   percentUsed: number;
+  domainCount: number;
+  aliasCount: number;
+  chatWidgetCount: number;
 }
 
 export interface SubscriptionData {

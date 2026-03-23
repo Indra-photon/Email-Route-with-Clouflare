@@ -6,7 +6,6 @@ import { Subscription } from "@/app/api/models/SubscriptionModel";
 import { PricingPlan } from "@/app/api/models/PricingPlanModel";
 import { Domain } from "@/app/api/models/DomainModel";
 import { Alias } from "@/app/api/models/AliasModel";
-import { EmailThread } from "@/app/api/models/EmailThreadModel";
 import type { Types } from "mongoose";
 
 // ─── Resolve live plan limits from DB ─────────────────────────────────────────
@@ -28,13 +27,8 @@ export async function checkTicketLimit(
   const limit = plan.limits.ticketsPerMonth;
   if (limit === -1) return null; // unlimited
 
-  // Count inbound tickets since the current usage period started
-  const periodStart = sub?.usagePeriodStart ?? new Date(0);
-  const count = await EmailThread.countDocuments({
-    workspaceId,
-    direction: "inbound",
-    receivedAt: { $gte: periodStart },
-  });
+  // Use the atomically-maintained counter — no extra EmailThread query needed
+  const count = sub?.ticketCountInbound ?? 0;
 
   if (count >= limit) {
     return `Ticket limit reached (${limit}/month on ${plan.name} plan)`;

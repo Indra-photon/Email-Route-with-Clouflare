@@ -67,6 +67,7 @@ import { CannedResponse } from "@/app/api/models/CannedResponseModel";
 import { Integration } from "@/app/api/models/IntegrationModel";
 import { Alias } from "@/app/api/models/AliasModel";
 import { Domain } from "@/app/api/models/DomainModel";
+import { Subscription } from "@/app/api/models/SubscriptionModel";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -372,6 +373,12 @@ export async function POST(request: Request) {
         slackMessageTs: outboundSlackTs,
         slackChannelId: slackChannelId,
       });
+
+      // ── Increment outbound reply counter on the workspace's subscription ──
+      await Subscription.updateOne(
+        { workspaceId: thread.workspaceId },
+        { $inc: { ticketCountOutbound: 1 } }
+      );
 
       thread.status = "open";
       thread.statusUpdatedAt = new Date();

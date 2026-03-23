@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import Link from "next/link";
 
-export default function BillingSuccessPage() {
+function BillingSuccessContent() {
   const [status, setStatus] = useState<"loading" | "active" | "timeout">("loading");
   const [planName, setPlanName] = useState("");
   const searchParams = useSearchParams();
@@ -136,5 +136,19 @@ export default function BillingSuccessPage() {
         )}
       </motion.div>
     </div>
+  );
+}
+
+export default function BillingSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <div className="w-12 h-12 border-2 border-sky-800 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <BillingSuccessContent />
+    </Suspense>
   );
 }

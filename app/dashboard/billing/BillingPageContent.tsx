@@ -316,13 +316,13 @@ const PLAN_META: Record<PlanId, {
     name: "Starter",
     price: 19,
     description: "For small teams getting started",
-    highlights: ["500 tickets/month", "3 domains", "5 aliases/domain", "2 chat widgets"],
+    highlights: ["200 tickets/month", "1 domain", "3 aliases/domain", "1 chat widget"],
   },
   growth: {
     name: "Growth",
     price: 59,
     description: "For growing teams with more volume",
-    highlights: ["2,000 tickets/month", "10 domains", "20 aliases/domain", "10 chat widgets"],
+    highlights: ["600 tickets/month", "3 domains", "5 aliases/domain", "3 chat widgets"],
   },
   scale: {
     name: "Scale",
@@ -506,6 +506,7 @@ export default function BillingPageContent() {
   const [cancelling, setCancelling] = useState(false);
   const [resuming, setResuming] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [reactivating, setReactivating] = useState(false);
   const [activePageTab, setActivePageTab] = useState<PageTab>("overview");
 
   const handleCancel = async () => {
@@ -534,6 +535,19 @@ export default function BillingPageContent() {
     if (res.ok) window.open(json.portalUrl, "_blank");
     else alert(json.error ?? "Failed to open portal");
     setPortalLoading(false);
+  };
+
+  const handleReactivateAliases = async () => {
+    setReactivating(true);
+    const res = await fetch("/api/billing/reactivate-aliases", { method: "POST" });
+    const json = await res.json();
+    if (res.ok) {
+      alert(`✅ ${json.message}`);
+      refresh();
+    } else {
+      alert(json.error ?? "Failed to reactivate aliases");
+    }
+    setReactivating(false);
   };
 
   if (isLoading) {
@@ -713,6 +727,15 @@ export default function BillingPageContent() {
                       label="Change plan"
                       variant="primary"
                     />
+                    {data.status === "active" && (
+                      <ActionButton
+                        onClick={handleReactivateAliases}
+                        loading={reactivating}
+                        label="Reactivate aliases"
+                        loadingLabel="Reactivating…"
+                        variant="default"
+                      />
+                    )}
                     {data.cancelAtPeriodEnd || data.status === "cancelled" ? (
                       <ActionButton
                         onClick={handleResume}
@@ -749,10 +772,10 @@ export default function BillingPageContent() {
                 )}
                 <div className="space-y-4 max-w-xl">
                   <UsageBar label="Inbound tickets"  current={data.usage.ticketCountInbound}  max={data.limits?.ticketsPerMonth ?? -1} />
-                  <UsageBar label="Outbound replies" current={data.usage.ticketCountOutbound} max={-1} />
-                  <UsageBar label="Domains"          current={0} max={data.limits?.domains ?? -1} />
-                  <UsageBar label="Aliases / domain" current={0} max={data.limits?.aliasesPerDomain ?? -1} />
-                  <UsageBar label="Chat widgets"     current={0} max={data.limits?.chatWidgets ?? -1} />
+                  <UsageBar label="Outbound replies" current={data.usage.ticketCountOutbound} max={0} />
+                  <UsageBar label="Domains"          current={data.usage.domainCount ?? 0} max={data.limits?.domains ?? -1} />
+                  <UsageBar label="Aliases / domain" current={data.usage.aliasCount ?? 0} max={data.limits?.aliasesPerDomain ?? -1} />
+                  <UsageBar label="Chat widgets"     current={data.usage.chatWidgetCount ?? 0} max={data.limits?.chatWidgets ?? -1} />
                 </div>
               </motion.div>
             )}

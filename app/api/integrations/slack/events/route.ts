@@ -7,6 +7,7 @@ import { Alias } from "@/app/api/models/AliasModel";
 import { Domain } from "@/app/api/models/DomainModel";
 import { ChatConversation } from "@/app/api/models/ChatConversationModel";
 import { ChatMessage } from "@/app/api/models/ChatMessageModel";
+import { Subscription } from "@/app/api/models/SubscriptionModel";
 import { Resend } from "resend";
 import { uploadToR2, deleteFromR2 } from "@/lib/r2";
 import { getSubscriptionGuard } from "@/lib/checkSubscriptionStatus";
@@ -37,12 +38,16 @@ async function handleEmailThreadReply(
       }).lean();
       const botToken = blockingIntegration?.slackAccessToken;
 
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://yourapp.com";
+      const appUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://yourapp.com";
       const reason = isExpired
         ? `⚠️ Your reply was *not sent* — your plan has expired. Renew now: ${appUrl}/pricing`
         : `⚠️ Your reply was *not sent* — ${limitError}. Upgrade your plan: ${appUrl}/pricing`;
 
       if (botToken && slackUserId) {
+        const headerText = isExpired
+          ? `⛔ *Your reply was not sent* — your plan has expired.`
+          : `⛔ *Your reply was not sent* — ${limitError}.`;
+
         await fetch("https://slack.com/api/chat.postEphemeral", {
           method: "POST",
           headers: {
@@ -53,7 +58,29 @@ async function handleEmailThreadReply(
             channel: channelId,
             thread_ts: replyTs,
             user: slackUserId,
-            text: reason,
+            text: headerText,
+            blocks: [
+              {
+                type: "section",
+                text: { type: "mrkdwn", text: headerText },
+              },
+              {
+                type: "actions",
+                elements: [
+                  {
+                    type: "button",
+                    text: { type: "plain_text", text: "🚀 Upgrade Plan", emoji: true },
+                    url: `${appUrl}/dashboard/billing`,
+                    style: "primary",
+                  },
+                  {
+                    type: "button",
+                    text: { type: "plain_text", text: "💳 View Pricing", emoji: true },
+                    url: `${appUrl}/pricing`,
+                  },
+                ],
+              },
+            ],
           }),
         });
       }
@@ -174,6 +201,13 @@ async function handleEmailThreadReply(
         repliedAt: null,
       });
       console.log("💾 ✅ Outbound email thread saved:", outboundThread._id);
+
+      // ── Increment outbound reply counter on the workspace's subscription ──
+      await Subscription.updateOne(
+        { workspaceId: emailThread.workspaceId },
+        { $inc: { ticketCountOutbound: 1 } }
+      );
+
     } catch (createErr: any) {
       if (createErr?.code === 11000) {
         // Duplicate key — Slack retry, email already being handled

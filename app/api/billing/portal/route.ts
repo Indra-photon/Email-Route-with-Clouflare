@@ -27,7 +27,7 @@ export async function POST() {
       );
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const appUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
     const session = await createPortalSession(
       sub.dodoCustomerId,
       `${appUrl}/dashboard/billing`

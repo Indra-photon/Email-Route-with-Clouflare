@@ -4,6 +4,9 @@ import dbConnect from "@/lib/dbConnect";
 import { Workspace } from "@/app/api/models/WorkspaceModel";
 import { Subscription } from "@/app/api/models/SubscriptionModel";
 import { PricingPlan } from "@/app/api/models/PricingPlanModel";
+import { Domain } from "@/app/api/models/DomainModel";
+import { Alias } from "@/app/api/models/AliasModel";
+import { ChatWidget } from "@/app/api/models/ChatWidgetModel";
 import { seedPricingPlans } from "@/lib/seedPricingPlans";
 
 export async function GET() {
@@ -24,7 +27,6 @@ export async function GET() {
     const sub = await Subscription.findOne({ workspaceId: workspace._id }).lean();
 
     const now = new Date();
-    // null = no active subscription (workspace exists but user hasn't purchased yet)
     const planId = workspace.planId ?? null;
     const plan = planId ? await PricingPlan.findOne({ id: planId }).lean() : null;
 
@@ -49,8 +51,15 @@ export async function GET() {
         ? 0
         : Math.round(((sub?.ticketCountInbound ?? 0) / ticketLimit) * 100);
 
+    // Query real resource counts for usage tab
+    const [domainCount, aliasCount, chatWidgetCount] = await Promise.all([
+      Domain.countDocuments({ workspaceId: workspace._id }),
+      Alias.countDocuments({ workspaceId: workspace._id }),
+      ChatWidget.countDocuments({ workspaceId: workspace._id }),
+    ]);
+
     return NextResponse.json({
-      planId,                                              // null if no plan yet
+      planId,
       status: sub?.status ?? (planId ? "inactive" : "no_plan"),
       currentPeriodStart: sub?.currentPeriodStart ?? null,
       currentPeriodEnd: sub?.currentPeriodEnd ?? null,
@@ -64,8 +73,11 @@ export async function GET() {
         ticketCountOutbound: sub?.ticketCountOutbound ?? 0,
         ticketLimit,
         percentUsed,
+        domainCount,
+        aliasCount,
+        chatWidgetCount,
       },
-      limits: plan?.limits ?? null,                       // null = no plan limits to show
+      limits: plan?.limits ?? null,
     });
   } catch (error) {
     console.error("❌ Subscription fetch error:", error);
