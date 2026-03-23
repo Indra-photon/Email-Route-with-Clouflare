@@ -44,6 +44,10 @@ async function handleEmailThreadReply(
         : `⚠️ Your reply was *not sent* — ${limitError}. Upgrade your plan: ${appUrl}/pricing`;
 
       if (botToken && slackUserId) {
+        const headerText = isExpired
+          ? `⛔ *Your reply was not sent* — your plan has expired.`
+          : `⛔ *Your reply was not sent* — ${limitError}.`;
+
         await fetch("https://slack.com/api/chat.postEphemeral", {
           method: "POST",
           headers: {
@@ -54,7 +58,29 @@ async function handleEmailThreadReply(
             channel: channelId,
             thread_ts: replyTs,
             user: slackUserId,
-            text: reason,
+            text: headerText,
+            blocks: [
+              {
+                type: "section",
+                text: { type: "mrkdwn", text: headerText },
+              },
+              {
+                type: "actions",
+                elements: [
+                  {
+                    type: "button",
+                    text: { type: "plain_text", text: "🚀 Upgrade Plan", emoji: true },
+                    url: `${appUrl}/dashboard/billing`,
+                    style: "primary",
+                  },
+                  {
+                    type: "button",
+                    text: { type: "plain_text", text: "💳 View Pricing", emoji: true },
+                    url: `${appUrl}/pricing`,
+                  },
+                ],
+              },
+            ],
           }),
         });
       }
