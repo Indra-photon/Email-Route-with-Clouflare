@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const appUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
     const existingSub = await Subscription.findOne({ workspaceId: workspace._id });
 
     // ── Downgrade: cancel at period end + record pendingPlanId ───────────────
