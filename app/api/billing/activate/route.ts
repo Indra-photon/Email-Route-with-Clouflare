@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import dbConnect from "@/lib/dbConnect";
 import { Workspace } from "@/app/api/models/WorkspaceModel";
 import { Subscription } from "@/app/api/models/SubscriptionModel";
+import { Alias } from "@/app/api/models/AliasModel";
 import { getSubscription } from "@/lib/dodo";
 
 export async function POST(request: Request) {
@@ -78,6 +79,13 @@ export async function POST(request: Request) {
     // Update workspace plan
     workspace.planId = planId as "starter" | "growth" | "scale";
     await workspace.save();
+
+    // Re-activate all aliases that were paused due to an inbound limit
+    const aliasResult = await Alias.updateMany(
+      { workspaceId: workspace._id },
+      { $set: { status: "active" } }
+    );
+    console.log(`✅ Reactivated ${aliasResult.modifiedCount} aliases for workspace ${workspaceId}`);
 
     console.log(`✅ Subscription activated: workspace=${workspaceId}, plan=${planId}`);
 
