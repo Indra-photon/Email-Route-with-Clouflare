@@ -239,6 +239,11 @@ export async function POST(request: Request) {
                       url: upgradeUrl,
                       style: "primary",
                     },
+                    {
+                      type: "button",
+                      text: { type: "plain_text", text: "💳 View Pricing", emoji: true },
+                      url: `${appUrl}/pricing`,
+                    },
                   ],
                 },
               ],
