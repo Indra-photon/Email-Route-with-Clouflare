@@ -506,6 +506,7 @@ export default function BillingPageContent() {
   const [cancelling, setCancelling] = useState(false);
   const [resuming, setResuming] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [reactivating, setReactivating] = useState(false);
   const [activePageTab, setActivePageTab] = useState<PageTab>("overview");
 
   const handleCancel = async () => {
@@ -534,6 +535,19 @@ export default function BillingPageContent() {
     if (res.ok) window.open(json.portalUrl, "_blank");
     else alert(json.error ?? "Failed to open portal");
     setPortalLoading(false);
+  };
+
+  const handleReactivateAliases = async () => {
+    setReactivating(true);
+    const res = await fetch("/api/billing/reactivate-aliases", { method: "POST" });
+    const json = await res.json();
+    if (res.ok) {
+      alert(`✅ ${json.message}`);
+      refresh();
+    } else {
+      alert(json.error ?? "Failed to reactivate aliases");
+    }
+    setReactivating(false);
   };
 
   if (isLoading) {
@@ -713,6 +727,15 @@ export default function BillingPageContent() {
                       label="Change plan"
                       variant="primary"
                     />
+                    {data.status === "active" && (
+                      <ActionButton
+                        onClick={handleReactivateAliases}
+                        loading={reactivating}
+                        label="Reactivate aliases"
+                        loadingLabel="Reactivating…"
+                        variant="default"
+                      />
+                    )}
                     {data.cancelAtPeriodEnd || data.status === "cancelled" ? (
                       <ActionButton
                         onClick={handleResume}
