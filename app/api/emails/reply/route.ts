@@ -5,6 +5,7 @@ import { EmailThread } from "@/app/api/models/EmailThreadModel";
 import { Workspace } from "@/app/api/models/WorkspaceModel";
 import { Alias } from "@/app/api/models/AliasModel";
 import { Domain } from "@/app/api/models/DomainModel";
+import { Subscription } from "@/app/api/models/SubscriptionModel";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -163,6 +164,12 @@ export async function POST(request: Request) {
       receivedAt: new Date(),
       repliedAt: new Date(),
     });
+
+    // ── Increment outbound reply counter on the workspace's subscription ──
+    await Subscription.updateOne(
+      { workspaceId: workspace._id },
+      { $inc: { ticketCountOutbound: 1 } }
+    );
 
     // Save thread updates (including auto-claim)
     // Status becomes "open" after a reply — waiting for customer's next message
