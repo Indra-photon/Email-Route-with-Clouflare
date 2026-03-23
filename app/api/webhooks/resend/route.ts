@@ -4,6 +4,8 @@ import { Alias } from "@/app/api/models/AliasModel";
 import { Integration } from "@/app/api/models/IntegrationModel";
 import { EmailThread } from "@/app/api/models/EmailThreadModel";
 import { Subscription } from "@/app/api/models/SubscriptionModel";
+import { checkTicketLimit } from "@/lib/checkPlanLimits";
+import { getSubscriptionGuard } from "@/lib/checkSubscriptionStatus";
 
 type ResendAttachmentMeta = {
   id: string;
@@ -144,7 +146,8 @@ export async function POST(request: Request) {
 
     const alias = await Alias.findOne({
       localPart: localPart,
-      email: emailLower
+      email: emailLower,
+      status: "active",
     }).lean().exec();
 
     if (!alias) {
@@ -171,6 +174,86 @@ export async function POST(request: Request) {
       console.warn("⚠️ Integration has no webhook URL:", alias.email);
       return NextResponse.json({ message: "No integration" }, { status: 200 });
     }
+
+    // ── Subscription guard: block inbound if plan expired or ticket limit reached ──
+    const { isExpired } = await getSubscriptionGuard(alias.workspaceId);
+    const limitError = await checkTicketLimit(alias.workspaceId);
+
+    if (isExpired || limitError) {
+      const reason = isExpired ? "plan expired" : limitError;
+      const appUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://yourapp.com";
+      const visitorEmail = emailData.from as string;
+      const visitorSubject = emailData.subject as string;
+
+      console.warn(`⛔ Inbound email blocked for workspace ${alias.workspaceId}: ${reason}`);
+
+      // 1️⃣ Mark ALL workspace aliases as inactive so future emails silently miss
+      await Alias.updateMany(
+        { workspaceId: alias.workspaceId },
+        { $set: { status: "inactive" } }
+      );
+      console.log("🔕 All aliases set to inactive for workspace:", alias.workspaceId.toString());
+
+      // 2️⃣ Notify the workspace owner on Slack
+      try {
+        const notifyIntegration = await Integration.findOne({
+          workspaceId: alias.workspaceId,
+          type: "slack",
+          authMethod: "oauth",
+        }).lean();
+
+        if (notifyIntegration?.slackAccessToken && notifyIntegration?.slackChannelId) {
+          const upgradeUrl = `${appUrl}/dashboard/billing`;
+          await fetch("https://slack.com/api/chat.postMessage", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${notifyIntegration.slackAccessToken}`,
+            },
+            body: JSON.stringify({
+              channel: notifyIntegration.slackChannelId,
+              text: `⚠️ Missed email — inbound limit reached`,
+              blocks: [
+                {
+                  type: "section",
+                  text: {
+                    type: "mrkdwn",
+                    text: [
+                      `⚠️ *Missed inbound email — limit reached!*`,
+                      `Someone tried to email \`${emailLower}\` but it was *not delivered* because your monthly inbound limit has been reached. All your aliases are now *paused*.`,
+                      ``,
+                      `*From:* ${visitorEmail}`,
+                      `*Subject:* ${visitorSubject}`,
+                      ``,
+                      `Upgrade your plan to re-activate your aliases and receive emails again.`,
+                    ].join("\n"),
+                  },
+                },
+                { type: "divider" },
+                {
+                  type: "actions",
+                  elements: [
+                    {
+                      type: "button",
+                      text: { type: "plain_text", text: "🚀 Upgrade Plan", emoji: true },
+                      url: upgradeUrl,
+                      style: "primary",
+                    },
+                  ],
+                },
+              ],
+            }),
+          });
+          console.log("🔔 Slack limit-exceeded alert sent to workspace:", alias.workspaceId.toString());
+        }
+      } catch (slackErr) {
+        console.warn("⚠️ Could not send Slack limit alert:", slackErr);
+      }
+
+      // Return 200 so Resend doesn’t retry the webhook
+      return NextResponse.json({ message: "Limit reached" }, { status: 200 });
+    }
+    // ── End subscription guard ──
 
     let textBody = "";
     let htmlBody = "";
