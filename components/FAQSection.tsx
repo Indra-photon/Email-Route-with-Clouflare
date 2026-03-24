@@ -130,9 +130,9 @@ export function FAQSection() {
                       className="w-full text-left py-6 flex items-start justify-between gap-4 transition-colors"
                       aria-expanded={isOpen}
                     >
-                      <span className="text-lg font-schibsted font-semibold text-neutral-900 flex-1 pr-4">
+                      <Paragraph variant="home-par" className="text-neutral-900 font-schibsted flex-1 pr-4">
                         {faq.question}
-                      </span>
+                      </Paragraph>
                       <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
                         <motion.div
                           animate={{ rotate: isOpen ? 180 : 0 }}
@@ -159,9 +159,9 @@ export function FAQSection() {
                         className="overflow-hidden"
                       >
                         <div className="pb-6 pr-10">
-                          <p className="text-base font-schibsted text-neutral-600 leading-relaxed">
+                          <Paragraph variant="home-par" className="text-neutral-700">
                             {faq.answer}
-                          </p>
+                          </Paragraph>
                         </div>
                       </motion.div>
                     )}

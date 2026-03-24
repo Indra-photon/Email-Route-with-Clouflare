@@ -526,22 +526,23 @@ export function BenefitsSection() {
         <Grid.System unstable_useContainer>
           <div className="w-full">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 xl:px-0 py-16">
-              <Heading 
-                as="h2" 
-                className="text-neutral-900 mb-4 leading-tight font-semibold"
+              <p className="font-schibsted text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4">
+                Proven impact
+              </p>
+              <motion.div
+                className="mb-8"
+                initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
+                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
               >
-                <motion.div
-                  initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
-                  whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
-                >
-                Real results. Real teams. Real fast.
-                </motion.div>
-              </Heading>
-              <Paragraph variant="home-par">
-                From startups to scale-ups, teams using our platform see dramatic improvements in response times, ticket handling, and customer satisfaction—without adding headcount.
-              </Paragraph>
+                <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
+                  Real results. Real teams. Real fast.{" "}
+                </Heading>
+                <Heading as="span" className="text-neutral-400 leading-tight font-semibold">
+                  From startups to scale-ups, teams see dramatic improvements — without adding headcount.
+                </Heading>
+              </motion.div>
 
               <div className="border-y border-neutral-200 relative overflow-hidden ">
                 <div className="grid grid-cols-3 border-x border-neutral-200 overflow-hidden">
@@ -585,12 +586,17 @@ export function BenefitsSection() {
       {/* Tablet Layout */}
       <div className="hidden md:block lg:hidden">
         <div className="max-w-5xl mx-auto px-6 py-12">
-          <h2 className="text-2xl md:text-3xl font-schibsted font-semibold tracking-tight leading-tight mb-4 text-neutral-900">
-            Real results. Real teams. Real fast.
-          </h2>
-          <p className="text-base md:text-lg text-neutral-600 font-schibsted font-normal mb-10 leading-relaxed">
-            From startups to scale-ups, teams using our platform see dramatic improvements in response times, ticket handling, and customer satisfaction—without adding headcount.
+          <p className="font-schibsted text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4">
+            Proven impact
           </p>
+          <div className="mb-10">
+            <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
+              Real results. Real teams. Real fast.{" "}
+            </Heading>
+            <Heading as="span" className="text-neutral-400 leading-tight font-semibold">
+              From startups to scale-ups, teams see dramatic improvements — without adding headcount.
+            </Heading>
+          </div>
           
           <div className="border-y border-neutral-200">
             <div className="grid grid-cols-2 border-x border-neutral-200">
@@ -622,12 +628,17 @@ export function BenefitsSection() {
       {/* Mobile Layout */}
       <div className="block md:hidden">
         <div className="container mx-auto px-4 py-10">
-          <h2 className="text-xl sm:text-2xl font-schibsted font-semibold tracking-tight leading-tight mb-3 text-neutral-900">
-            Real results. Real teams. Real fast.
-          </h2>
-          <p className="text-sm sm:text-base text-neutral-600 font-schibsted font-normal mb-8 leading-relaxed">
-            From startups to scale-ups, teams using our platform see dramatic improvements in response times, ticket handling, and customer satisfaction—without adding headcount.
+          <p className="font-schibsted text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4">
+            Proven impact
           </p>
+          <div className="mb-8">
+            <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
+              Real results. Real teams. Real fast.{" "}
+            </Heading>
+            <Heading as="span" className="text-neutral-400 leading-tight font-semibold">
+              From startups to scale-ups, teams see dramatic improvements — without adding headcount.
+            </Heading>
+          </div>
           
           <div className="border-y border-neutral-200">
             <div className="grid grid-cols-1 border-x border-neutral-200">

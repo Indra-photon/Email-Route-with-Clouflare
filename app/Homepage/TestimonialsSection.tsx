@@ -119,23 +119,26 @@ export function TestimonialsSection() {
   return (
     <section className="w-full bg-white py-16 md:py-20 lg:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 xl:px-0">
-        <Heading 
-          as="h2" 
-          className="text-neutral-900 mb-4 leading-tight font-semibold"
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
-            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
-          >
-           Trusted by teams that value <span className="">fast support</span>.
-          </motion.div>
-        </Heading>
+        {/* Eyebrow */}
+        <p className="font-schibsted text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4">
+          What teams are saying
+        </p>
 
-        <Paragraph variant="home-par">
-          From startups to scale-ups, teams using our platform see dramatic improvements in response times, ticket handling, and customer satisfaction—without adding headcount.
-        </Paragraph>
+        {/* Inline heading + subheading */}
+        <motion.div
+          className="mb-10"
+          initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
+          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
+        >
+          <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
+            Trusted by teams that value fast support.{" "}
+          </Heading>
+          <Heading as="span" className="text-neutral-400 leading-tight font-semibold">
+            From startups to scale-ups — faster responses, without adding headcount.
+          </Heading>
+        </motion.div>
 
         {/* Main Testimonials Grid with Auto-Rotation */}
         <div className="grid grid-cols-1 md:grid-cols-3 border border-neutral-200 overflow-hidden rounded-t-lg min-h-[320px]">

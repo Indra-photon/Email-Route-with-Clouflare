@@ -21,7 +21,7 @@ export const Paragraph = <T extends React.ElementType = "p">({
     muted: "text-xs sm:text-sm md:text-base text-neutral-900 font-schibsted font-regular mb-8 leading-relaxed",
     small: "text-xs sm:text-sm md:text-base text-neutral-900 font-schibsted font-regular leading-relaxed",
     "docs-par": "text-sm sm:text-base md:text-lg text-neutral-900 font-schibsted font-regular mb-8 leading-relaxed",
-    "home-par": "text-xl md:text-2xl text-neutral-900 font-schibsted font-regular mb-8 leading-relaxed",
+    "home-par": "text-base md:text-xl text-neutral-900 font-schibsted font-regular",
   };
   
   return (

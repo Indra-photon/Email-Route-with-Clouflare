@@ -372,40 +372,44 @@ export function HeroSection() {
 
       {/* ── Hero content ──────────────────────────────────────────────────── */}
       <Container className="pt-20 pb-10">
-        <div className="max-w-3xl">
+        <div className="flex flex-col lg:flex-row lg:gap-12">
 
-          {/* Heading */}
-          <Heading
-            as="h1"
-            className="text-neutral-900 mb-6 leading-tight"
-          >
-            Streamline your customer tickets from{" "}
-            <span className="text-sky-800">One Workspace.</span>
-          </Heading>
-
-          {/* Subheading */}
-          <Paragraph variant="home-par" className="mb-8 max-w-2xl">
-            Manage tickets, respond to inquiries, and collaborate with your
-            team without leaving your workspace. No time waste, no missing
-            emails, no cluttered inbox — instant support with a small team.
-          </Paragraph>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-start gap-4">
-            <CTAWrapper
-              loggedInHref="/dashboard"
-              loggedOutHref="/sign-up"
-              loggedInText="Dashboard"
-              loggedOutText="Get Started"
+          {/* Heading — 3/5 width on desktop */}
+          <div className="lg:w-3/5">
+            <Heading
+              as="h1"
+              className="text-neutral-900 leading-tight"
             >
-              {({ text }) => <HeroCTAPrimary text={text} />}
-            </CTAWrapper>
-            <HeroCTASecondary />
+              Streamline your customer tickets from{" "}
+              <span className="text-sky-800">One Workspace.</span>
+            </Heading>
           </div>
 
-          {/* Social proof */}
-          <div className="py-8">
-            <LiveTeamJoin initialCount={500} intervalMs={5000} />
+          {/* Subheading + CTAs + Social proof — 2/5 width on desktop */}
+          <div className="lg:w-2/5 mt-6 lg:mt-0 flex flex-col justify-center">
+            <Paragraph variant="home-par" className="mb-8">
+              Manage tickets, respond to inquiries, and collaborate with your
+              team without leaving your workspace. No time waste, no missing
+              emails, no cluttered inbox — instant support with a small team.
+            </Paragraph>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row items-start gap-4">
+              <CTAWrapper
+                loggedInHref="/dashboard"
+                loggedOutHref="/sign-up"
+                loggedInText="Dashboard"
+                loggedOutText="Get Started"
+              >
+                {({ text }) => <HeroCTAPrimary text={text} />}
+              </CTAWrapper>
+              <HeroCTASecondary />
+            </div>
+
+            {/* Social proof */}
+            <div className="py-8">
+              <LiveTeamJoin initialCount={500} intervalMs={5000} />
+            </div>
           </div>
 
         </div>
