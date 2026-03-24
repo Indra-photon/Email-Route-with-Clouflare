@@ -3,7 +3,6 @@ import { Geist, Geist_Mono, Schibsted_Grotesk } from "next/font/google";
 import "./globals.css";
 import { GoogleTagManager } from '@next/third-parties/google'
 import { Toaster } from "@/components/ui/sonner"
-import { NavBar } from "@/components/NavBar";
 import {
   ClerkProvider,
   SignInButton,
@@ -111,7 +110,6 @@ export default async function RootLayout({
           suppressHydrationWarning
           className={`${geistSans.variable} ${geistMono.variable} ${schibstedGrotesk.variable} antialiased`}
         >
-          <NavBar />
           <UserSync />
           {children}
           <GoogleTagManager gtmId="Your GTM ID" />

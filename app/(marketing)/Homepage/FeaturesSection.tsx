@@ -4,7 +4,7 @@
 // "use client";
 
 // import React, { useState } from "react";
-// import { SitemapIcon, MessagesIcon, StackPerspectiveIcon, UsersIcon, AnalyticsIcon } from "../../constants/icons";
+// import { SitemapIcon, MessagesIcon, StackPerspectiveIcon, UsersIcon, AnalyticsIcon } from "@/constants/icons";
 // import { EmailToSlackIllustration } from "./EmailToSlackIllustration";
 // import { ChatToSlackIllustration } from "./ChatToSlackIllustration";
 // import { Heading } from "@/components/Heading";
@@ -160,7 +160,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { SitemapIcon, MessagesIcon, StackPerspectiveIcon, UsersIcon, AnalyticsIcon } from "../../constants/icons";
+import { SitemapIcon, MessagesIcon, StackPerspectiveIcon, UsersIcon, AnalyticsIcon } from "@/constants/icons";
 import { EmailToSlackIllustration } from "./EmailToSlackIllustration";
 import { ChatToSlackIllustration } from "./ChatToSlackIllustration";
 import { Heading } from "@/components/Heading";
