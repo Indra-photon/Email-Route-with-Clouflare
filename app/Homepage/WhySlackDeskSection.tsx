@@ -8,7 +8,6 @@ import { LaptopNotificationVisual } from "./LaptopNotificationVisual";
 import HeroCTAPrimary, { HeroCTASecondary } from "@/components/HeroCTAPrimary";
 import Link from "next/link";
 import CTAWrapper from "@/components/CTAWrapper";
-import { IconExternalLink } from "@tabler/icons-react";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -604,8 +603,8 @@ const cards: CardData[] = [
     id: 1,
     number: "01",
     Icon: SlackIcon,
-    title: "Lives inside Your Workspace",
-    description: "Your team is already in Slack all day. SlackDesk runs entirely inside your workspace — no new tabs, no new logins, zero onboarding.",
+    title: "No new tools to learn.",
+    description: "SlackDesk lives inside Slack. Your team replies from where they already work — no logins, no tabs, no onboarding.",
     Visual: LaptopNotificationVisual,
     featured: false,
   },
@@ -613,8 +612,8 @@ const cards: CardData[] = [
     id: 2,
     number: "02",
     Icon: ChannelsIcon,
-    title: "One inbox. Every channel.",
-    description: "Email, live chat, Discord — all routed into dedicated Slack channels automatically. One place for every customer conversation. Nothing falls through.",
+    title: "Every channel. One place.",
+    description: "Email, live chat, Discord — routed into dedicated Slack channels automatically. Nothing falls through.",
     Visual: ChannelsVisual,
     featured: true,
   },
@@ -622,8 +621,8 @@ const cards: CardData[] = [
     id: 3,
     number: "03",
     Icon: AnalyticsIcon,
-    title: "Product insights, not just support tickets",
-    description: "Your #1 feature request is buried in 400 support tickets. We find it, rank it, and hand your product team a brief. No analyst needed.",
+    title: "Support data that ships features.",
+    description: "We surface your top recurring issues, ranked by volume. Your product team gets a brief — no analyst needed.",
     Visual: AnalyticsVisual,
     featured: false,
   },
@@ -631,8 +630,8 @@ const cards: CardData[] = [
     id: 4,
     number: "04",
     Icon: PricingIcon,
-    title: "Flat pricing, not per-seat",
-    description: "Intercom charges per agent. We don't. Add your whole team, contractors, founders — one flat price no matter how many people reply.",
+    title: "One price. Unlimited seats.",
+    description: "Add your whole team — founders, contractors, agents. No per-seat fees. Ever.",
     Visual: PricingVisual,
     featured: false,
   },
@@ -643,7 +642,7 @@ const cards: CardData[] = [
 const SmallCard = ({ card, delay = 0 }: { card: CardData; delay?: number }) => (
   <motion.div
     className="relative flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white"
-    style={{ height: 360 }}
+    style={{ height: 460 }}
     initial={{ opacity: 0, y: 16 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
@@ -666,16 +665,13 @@ const SmallCard = ({ card, delay = 0 }: { card: CardData; delay?: number }) => (
     {/* Bottom text — always pinned to bottom */}
     <div className="mt-auto px-5 pb-5">
       <div className="flex items-center gap-2 mb-1.5">
-        {/* <span className="text-sky-800">
-          <card.Icon />
-        </span> */}
-        <h3 className="flex-1 text-lg lg:text-xl font-schibsted font-semibold tracking-tight leading-tight text-sky-800">
+        <Heading as="h3" variant="small" className="text-sky-800 font-normal leading-snug">
           {card.title}
-        </h3>
+        </Heading>
       </div>
-      <p className="text-sm font-schibsted font-normal text-neutral-600">
+      <Paragraph variant="home-par" className="">
         {card.description}
-      </p>
+      </Paragraph>
     </div>
   </motion.div>
 );
@@ -723,12 +719,12 @@ const FeaturedCard = ({ card, delay = 0 }: { card: CardData; delay?: number }) =
 
     {/* ── Bottom zone: white, text ── */}
     <div className="flex flex-col flex-1 bg-white px-5 pt-9 pb-6">
-      <h3 className="flex-1 text-lg lg:text-xl font-schibsted font-semibold tracking-tight text-sky-800">
+      <Heading as="h3" variant="small" className="text-sky-800 font-normal mb-1.5">
         {card.title}
-      </h3>
-      <p className="text-sm font-schibsted font-normal text-neutral-600">
+      </Heading>
+      <Paragraph variant="home-par" className="leading-tight">
         {card.description}
-      </p>
+      </Paragraph>
     </div>
   </motion.div>
 );
@@ -743,47 +739,45 @@ export function WhySlackDeskSection() {
     <section className="w-full bg-white py-16 md:py-20 lg:py-24">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 xl:px-0">
 
-        <div className="flex items-center justify-between">
-          <Heading 
-          as="h2" 
-          className="text-neutral-900 mb-4 leading-tight font-semibold"
-          >
-            <motion.div
-                initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
-                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
-            >
-            Why teams switch to SlackDesk.
-            </motion.div>
-          </Heading>
+        {/* Eyebrow */}
+        <p className="font-schibsted text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4">
+          Why teams switch
+        </p>
 
-          <div>
-            <CTAWrapper
-              loggedInHref="/dashboard"
-              loggedOutHref="/sign-up"
-              loggedInText="Dashboard"
-              loggedOutText="Get Started"
-            >
-              {({ text }) => (
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
-                  className="relative w-64 flex items-center justify-center gap-0 overflow-hidden rounded-2xl bg-gradient-to-b from-sky-900 to-cyan-700 shadow-lg cursor-pointer"
-                >
-                  <span
-                    className="group relative z-10 font-schibsted font-semibold text-white text-xl uppercase tracking-wide select-none px-8 py-4 flex items-center justify-center gap-3 "
-                  >
-                    {text}
-                    <IconExternalLink className="mb-1 text-sky-50 group-hover:text-white duration-150 ease-out" />
-                  </span>
-                </motion.button>
-              )}
-            </CTAWrapper>
-          </div>
+        {/* Inline heading + subheading */}
+        <motion.div
+          className="mb-6"
+          initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
+          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
+        >
+          <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
+            Why teams switch to SlackDesk.{" "}
+          </Heading>
+          <Heading as="span" className="text-neutral-400 leading-tight font-semibold">
+            We stripped away the bloat. What's left works the way your team actually works.
+          </Heading>
+        </motion.div>
+
+        {/* CTA */}
+        <div className="mb-10">
+          {/* <CTAWrapper
+            loggedInHref="/dashboard"
+            loggedOutHref="/sign-up"
+            loggedInText="Dashboard"
+            loggedOutText="Get Started"
+          >
+            {({ text }) => (
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                className="font-schibsted font-semibold text-sm uppercase tracking-wide px-6 py-2.5 rounded-full bg-gradient-to-b from-sky-900 to-cyan-700 text-white shadow-lg cursor-pointer"
+              >
+                {text}
+              </motion.button>
+            )}
+          </CTAWrapper> */}
         </div>
-        <Paragraph variant="home-par" className="max-w-3xl">
-        We stripped away the bloat and complexity. What's left is pure simplicity — a tool that works the way your team actually works.
-        </Paragraph>
 
         {/* ── Desktop: all 4 cards, same bottom baseline, card 02 taller ── */}
         <div className="hidden lg:flex items-end gap-3">

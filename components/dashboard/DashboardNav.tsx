@@ -1,9 +1,11 @@
+
 // "use client";
 
-// import { ReactNode, useCallback, useRef } from "react";
+// import { ReactNode } from "react";
 // import Link from "next/link";
 // import { usePathname } from "next/navigation";
 // import { useState, useEffect } from "react";
+// import { motion, LayoutGroup } from "motion/react";
 
 // // Lucide icons
 // import {
@@ -15,11 +17,11 @@
 //   Zap,
 //   Menu,
 //   X,
+//   CreditCard,
 // } from "lucide-react";
 
-// import { IconMail, IconDashboard, IconInbox, IconGlobe, IconAtSign, IconZap } from "@/constants/icons";
-// import { IconExternalLink, IconMessageCircle, IconMessages } from "@tabler/icons-react";
-// import { CustomLink } from "../CustomLink";
+// import { IconDashboard, IconMail, IconGlobe, IconAtSign, IconZap } from "@/constants/icons";
+// import { IconMessageCircle, IconMessages } from "@tabler/icons-react";
 
 // const navItems = [
 //   {
@@ -65,93 +67,91 @@
 //     icon: null,
 //     tablerIcon: IconMessages,
 //   },
+//   {
+//     href: "/dashboard/billing",
+//     label: "Billing",
+//     icon: null,
+//     tablerIcon: CreditCard,
+//   },
 // ];
 
-// function NavItem({ item, isActive }: { 
-//   item: typeof navItems[0]; 
+// function NavItem({
+//   item,
+//   isActive,
+// }: {
+//   item: typeof navItems[0];
 //   isActive: boolean;
 // }) {
 //   const [isHovered, setIsHovered] = useState(false);
+
 //   return (
 //     <Link
 //       href={item.href}
-//       className={`flex items-center gap-3 rounded-lg px-3 py-2.5 font-schibsted font-regular transition-all duration-150 ${
-//         isActive ? "text-sky-800 font-semibold" : "text-neutral-50 hover:text-neutral-100"
-//       }
-//       ${isHovered && !isActive ? "bg-neutral-100/20" : ""}
-//       `}
 //       onMouseEnter={() => setIsHovered(true)}
 //       onMouseLeave={() => setIsHovered(false)}
+//       style={{ WebkitTapHighlightColor: "transparent" }}
+//       className="relative flex items-center gap-3 rounded-lg px-3 py-2.5 font-schibsted transition-colors duration-150"
 //     >
-//       {item.tablerIcon ? (
-//         <item.tablerIcon size={20} className={`shrink-0 ${isActive ? "text-sky-800" : "text-neutral-600"}`} />
-//       ) : item.icon ? (
-//         <item.icon className={`size-5 ${isActive ? "text-sky-800" : "text-neutral-50"}`} isAnimating={isHovered} />
-//       ) : null}
-//       <span className="text-sm">{item.label}</span>
+//       {/* Sliding background bubble */}
+//       {isActive && (
+//         <motion.div
+//           layoutId="nav-bubble"
+//           className="absolute inset-0 bg-neutral-100 rounded-lg"
+//           style={{ borderRadius: 8 }}
+//           // transition={{ type: "spring", bounce: 0.2, duration: 0.3 }}
+//           transition={{ ease: [.23, 1, .32, 1], duration: 0.3 }}
+//         />
+//       )}
+
+//       {/* Hover background — only when not active */}
+//       {!isActive && isHovered && (
+//         <div className="absolute inset-0 bg-neutral-100/20 rounded-lg" />
+//       )}
+
+//       {/* Icon */}
+//       <span className="relative z-10">
+//         {item.tablerIcon ? (
+//           <item.tablerIcon
+//             size={20}
+//             className={`shrink-0 ${isActive ? "text-sky-800" : "text-neutral-50"}`}
+//           />
+//         ) : item.icon ? (
+//           <item.icon
+//             className={`size-5 ${isActive ? "text-sky-800" : "text-neutral-50"}`}
+//             isAnimating={isHovered}
+//           />
+//         ) : null}
+//       </span>
+
+//       {/* Label */}
+//       <span
+//         className={`relative z-10 text-sm font-schibsted ${
+//           isActive ? "text-sky-800 font-semibold" : "text-neutral-50"
+//         }`}
+//       >
+//         {item.label}
+//       </span>
 //     </Link>
 //   );
 // }
 
-
-// function NavLinks({
-//   navListRef,
-//   navItemRefs,
-//   clipPath,
-//   isActive,
-// }: {
-//   navListRef: React.RefObject<HTMLUListElement | null>;
-//   navItemRefs: React.RefObject<Map<string, HTMLLIElement>>;
-//   clipPath: string;
-//   isActive: (href: string, exact?: boolean) => boolean;
-// }) {
+// function NavLinks({ isActive }: { isActive: (href: string, exact?: boolean) => boolean }) {
 //   return (
-//     <div className="relative">
-//       {/* Base layer */}
-//       <ul ref={navListRef} className="space-y-1">
+//     <LayoutGroup>
+//       <ul className="space-y-1">
 //         {navItems.map((item) => (
-//           <li
-//             key={item.href}
-//             ref={(el) => { if (el) navItemRefs.current.set(item.href, el); }}
-//           >
+//           <li key={item.href}>
 //             <NavItem item={item} isActive={isActive(item.href, item.exact)} />
 //           </li>
 //         ))}
 //       </ul>
-
-//       {/* Overlay layer */}
-//       <div
-//         className="absolute inset-0 pointer-events-none"
-//         style={{
-//           clipPath,
-//           transition: "clip-path 0.2s cubic-bezier(0.32, 0.72, 0, 1)",
-//         }}
-//       >
-//         <ul className="space-y-1">
-//           {navItems.map((item) => (
-//             <li key={item.href}>
-//               <div className="flex items-center gap-3 rounded-lg px-3 py-2.5 font-schibsted font-semibold bg-neutral-100 text-sky-800">
-//                 {item.tablerIcon ? (
-//                   <item.tablerIcon size={20} className="shrink-0 text-sky-800" />
-//                 ) : item.icon ? (
-//                   <item.icon className="size-5 text-sky-800" isAnimating={false} />
-//                 ) : null}
-//                 <span className="text-sm">{item.label}</span>
-//               </div>
-//             </li>
-//           ))}
-//         </ul>
-//       </div>
-//     </div>
+//     </LayoutGroup>
 //   );
 // }
 
 // export default function DashboardNav({ children }: { children: ReactNode }) {
 //   const pathname = usePathname();
 //   const [mobileOpen, setMobileOpen] = useState(false);
-//   const navListRef = useRef<HTMLUListElement>(null);
-// const navItemRefs = useRef<Map<string, HTMLLIElement>>(new Map());
-// const [clipPath, setClipPath] = useState("inset(0 0 100% 0)");
 
 //   useEffect(() => {
 //     setMobileOpen(false);
@@ -162,30 +162,10 @@
 //     return pathname.startsWith(href);
 //   };
 
-//   const updateClipPath = useCallback((href: string) => {
-//   const container = navListRef.current;
-//   const item = navItemRefs.current.get(href);
-//   if (!container || !item) return;
-
-//   const offsetTop = item.offsetTop;
-//   const offsetBottom = container.offsetHeight - offsetTop - item.offsetHeight;
-
-//   setClipPath(
-//     `inset(${offsetTop}px 0 ${offsetBottom}px 0)`
-//   );
-// }, []);
-
-// useEffect(() => {
-//   const activeItem = navItems.find((item) => isActive(item.href, item.exact));
-//   if (!activeItem) return;
-//   const t = setTimeout(() => updateClipPath(activeItem.href), 50);
-//   return () => clearTimeout(t);
-// }, [pathname, updateClipPath]);
-
-
 //   return (
-//     <div className="flex h-dvh overflow-hidden">
-//       {/* Mobile hamburger button */}
+//     <div className="flex h-dvh pt-1">
+
+//       {/* Mobile hamburger */}
 //       <button
 //         className="md:hidden fixed top-5 left-4 z-50 size-10 bg-white border border-neutral-200 rounded-lg flex items-center justify-center shadow-sm hover:bg-neutral-50 transition-colors"
 //         onClick={() => setMobileOpen((o) => !o)}
@@ -206,55 +186,31 @@
 //         />
 //       )}
 
-//       {/* Sidebar — desktop always visible, mobile slide-in */}
+//       {/* Sidebar */}
 //       <aside
-//         className={`fixed bg-sky-800 md:static top-0 left-0 h-full md:h-auto z-40 w-64 border-r border-neutral-200 px-4 py-6 transition-transform duration-200 md:translate-x-0 ${mobileOpen ? "translate-x-0 shadow-xl" : "-translate-x-full"
-//           }`}
+//         className={`fixed bg-sky-800 md:static top-0 left-0 h-full md:h-auto z-40 w-64 border-r border-neutral-200 px-4 py-6 transition-transform duration-200 md:translate-x-0 ${
+//           mobileOpen ? "translate-x-0 shadow-xl" : "-translate-x-full"
+//         }`}
 //       >
-//         {/* Logo/Brand */}
 //         <div className="mb-8 flex items-center gap-2 px-3">
 //           <h2 className="text-lg font-schibsted font-semibold text-neutral-100">
 //             Manage your tickets with ease
 //           </h2>
 //         </div>
 
-//         {/* Navigation */}
 //         <nav>
-//           <NavLinks
-//             navListRef={navListRef}
-//             navItemRefs={navItemRefs}
-//             clipPath={clipPath}
-//             isActive={isActive}
-//           />
+//           <NavLinks isActive={isActive} />
 //         </nav>
-
-//         {/* Bottom section - User info or help link (optional) */}
-//         {/* <div className="mt-8 px-3">
-//           <div className="rounded-lg bg-gradient-to-t from-sky-900 to-cyan-700 border border-neutral-50 p-3">
-//             <p className="text-xs font-schibsted font-medium text-neutral-50 pb-2">
-//               Need Help?
-//             </p>
-//             <CustomLink
-//               href="/docs"
-//               className="flex text-sm font-schibsted font-normal text-white hover:text-neutral-100 transition-colors"
-//             >
-//               <span className="size-4 mr-1">
-//                 <IconExternalLink size={16} className="text-neutral-50" />
-//               </span>
-//               View Documentation
-//             </CustomLink>
-//           </div>
-//         </div> */}
 //       </aside>
 
 //       {/* Page content */}
 //       <main className="flex-1 min-w-0 px-4 md:px-6 lg:px-8 py-6 bg-white h-full overflow-hidden">
 //         {children}
 //       </main>
+
 //     </div>
 //   );
 // }
-
 
 
 "use client";
@@ -263,81 +219,179 @@ import { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { motion, LayoutGroup } from "motion/react";
-
-// Lucide icons
-import {
-  LayoutDashboard,
-  Mail,
-  Inbox,
-  Globe,
-  AtSign,
-  Zap,
-  Menu,
-  X,
-  CreditCard,
-} from "lucide-react";
-
+import { motion, LayoutGroup, AnimatePresence } from "motion/react";
+import { Menu, X, CreditCard, User } from "lucide-react";
 import { IconDashboard, IconMail, IconGlobe, IconAtSign, IconZap } from "@/constants/icons";
 import { IconMessageCircle, IconMessages } from "@tabler/icons-react";
+import { useUserStore } from "@/lib/store";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-const navItems = [
+// ─── Easing ──────────────────────────────────────────────────────────────────
+const EASE_OUT_QUART: [number, number, number, number] = [0.165, 0.84, 0.44, 1];
+
+// ─── Nav Groups ──────────────────────────────────────────────────────────────
+const navGroups = [
   {
-    href: "/dashboard",
-    label: "Dashboard",
-    icon: IconDashboard,
-    exact: true,
+    label: "OVERVIEW",
+    items: [
+      {
+        href: "/dashboard",
+        label: "Dashboard",
+        icon: IconDashboard,
+        tablerIcon: null,
+        exact: true,
+      },
+    ],
   },
   {
-    href: "/dashboard/tickets/mine",
-    label: "My Tickets",
-    icon: IconMail,
-  },
-  // {
-  //   href: "/dashboard/tickets/unassigned",
-  //   label: "Unassigned",
-  //   icon: IconInbox,
-  // },
-  {
-    href: "/dashboard/domains",
-    label: "Domains",
-    icon: IconGlobe,
-  },
-  {
-    href: "/dashboard/integrations",
-    label: "Integrations",
-    icon: IconZap,
-  },
-  {
-    href: "/dashboard/aliases",
-    label: "Aliases",
-    icon: IconAtSign,
+    label: "MANAGE",
+    items: [
+      {
+        href: "/dashboard/tickets/mine",
+        label: "My Tickets",
+        icon: IconMail,
+        tablerIcon: null,
+        exact: false,
+      },
+      {
+        href: "/dashboard/live-chats",
+        label: "Live Chats",
+        icon: null,
+        tablerIcon: IconMessages,
+        exact: false,
+      },
+    ],
   },
   {
-    href: "/dashboard/chat-widgets",
-    label: "Chat Widgets",
-    icon: null,
-    tablerIcon: IconMessageCircle,
+    label: "CONFIGURE",
+    items: [
+      {
+        href: "/dashboard/domains",
+        label: "Domains",
+        icon: IconGlobe,
+        tablerIcon: null,
+        exact: false,
+      },
+      {
+        href: "/dashboard/integrations",
+        label: "Integrations",
+        icon: IconZap,
+        tablerIcon: null,
+        exact: false,
+      },
+      {
+        href: "/dashboard/aliases",
+        label: "Aliases",
+        icon: IconAtSign,
+        tablerIcon: null,
+        exact: false,
+      },
+      {
+        href: "/dashboard/chat-widgets",
+        label: "Chat Widgets",
+        icon: null,
+        tablerIcon: IconMessageCircle,
+        exact: false,
+      },
+    ],
   },
   {
-    href: "/dashboard/live-chats",
-    label: "Live Chats",
-    icon: null,
-    tablerIcon: IconMessages,
-  },
-  {
-    href: "/dashboard/billing",
-    label: "Billing",
-    icon: null,
-    tablerIcon: CreditCard,
+    label: "ACCOUNT",
+    items: [
+      {
+        href: "/dashboard/billing",
+        label: "Billing",
+        icon: null,
+        tablerIcon: CreditCard,
+        exact: false,
+      },
+      {
+        href: "/profile",
+        label: "Profile",
+        icon: null,
+        tablerIcon: User,
+        exact: false,
+      },
+    ],
   },
 ];
+
+// ─── Logo Mark ────────────────────────────────────────────────────────────────
+function LogoMark() {
+  return (
+    <Link href="/" className="flex items-center gap-2 group">
+      <div className="size-8 rounded-lg bg-sky-700 flex items-center justify-center transition-colors duration-200 group-hover:bg-sky-600">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="text-white"
+        >
+          <path d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z" />
+        </svg>
+      </div>
+      <span className="font-schibsted font-semibold text-base text-white tracking-tight">
+        Email Router
+      </span>
+    </Link>
+  );
+}
+
+// ─── User Profile Card ────────────────────────────────────────────────────────
+function UserProfileCard() {
+  const user = useUserStore((state) => state.user);
+
+  const getInitials = (name?: string) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  return (
+    <div className="px-3 py-4 border-b border-sky-700/50">
+      <div className="flex items-center gap-3">
+        <Avatar className="size-9 border-2 border-sky-600/50 shrink-0">
+          <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
+          <AvatarFallback className="bg-sky-700 text-white text-sm font-schibsted font-semibold">
+            {getInitials(user?.name)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-schibsted font-semibold text-white truncate">
+            {user?.name || "User"}
+          </p>
+          <p className="text-xs font-schibsted text-sky-300/70 truncate">
+            {user?.email || ""}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Nav Item ─────────────────────────────────────────────────────────────────
+type NavItemType = {
+  href: string;
+  label: string;
+  icon: any;
+  tablerIcon: any;
+  exact: boolean;
+};
 
 function NavItem({
   item,
   isActive,
 }: {
-  item: typeof navItems[0];
+  item: NavItemType;
   isActive: boolean;
 }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -350,32 +404,44 @@ function NavItem({
       style={{ WebkitTapHighlightColor: "transparent" }}
       className="relative flex items-center gap-3 rounded-lg px-3 py-2.5 font-schibsted transition-colors duration-150"
     >
-      {/* Sliding background bubble */}
+      {/* Active background bubble */}
       {isActive && (
         <motion.div
           layoutId="nav-bubble"
-          className="absolute inset-0 bg-neutral-100 rounded-lg"
+          className="absolute inset-0 bg-white/15 rounded-lg"
           style={{ borderRadius: 8 }}
-          // transition={{ type: "spring", bounce: 0.2, duration: 0.3 }}
-          transition={{ ease: [.23, 1, .32, 1], duration: 0.3 }}
+          transition={{ ease: [0.23, 1, 0.32, 1], duration: 0.3 }}
         />
       )}
 
       {/* Hover background — only when not active */}
       {!isActive && isHovered && (
-        <div className="absolute inset-0 bg-neutral-100/20 rounded-lg" />
+        <div className="absolute inset-0 bg-white/8 rounded-lg" />
+      )}
+
+      {/* Active left accent bar */}
+      {isActive && (
+        <motion.div
+          layoutId="nav-accent"
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-white rounded-full"
+          transition={{ ease: [0.23, 1, 0.32, 1], duration: 0.3 }}
+        />
       )}
 
       {/* Icon */}
       <span className="relative z-10">
         {item.tablerIcon ? (
           <item.tablerIcon
-            size={20}
-            className={`shrink-0 ${isActive ? "text-sky-800" : "text-neutral-50"}`}
+            size={18}
+            className={`shrink-0 transition-colors duration-150 ${
+              isActive ? "text-white" : "text-white/70"
+            }`}
           />
         ) : item.icon ? (
           <item.icon
-            className={`size-5 ${isActive ? "text-sky-800" : "text-neutral-50"}`}
+            className={`size-[18px] transition-colors duration-150 ${
+              isActive ? "text-white" : "text-white/70"
+            }`}
             isAnimating={isHovered}
           />
         ) : null}
@@ -383,8 +449,8 @@ function NavItem({
 
       {/* Label */}
       <span
-        className={`relative z-10 text-sm font-schibsted ${
-          isActive ? "text-sky-800 font-semibold" : "text-neutral-50"
+        className={`relative z-10 text-sm font-schibsted transition-colors duration-150 ${
+          isActive ? "text-white font-semibold" : "text-neutral-200 font-medium"
         }`}
       >
         {item.label}
@@ -393,24 +459,69 @@ function NavItem({
   );
 }
 
-function NavLinks({ isActive }: { isActive: (href: string, exact?: boolean) => boolean }) {
+// ─── Nav Group ────────────────────────────────────────────────────────────────
+function NavGroup({
+  group,
+  isActive,
+}: {
+  group: (typeof navGroups)[0];
+  isActive: (href: string, exact?: boolean) => boolean;
+}) {
   return (
-    <LayoutGroup>
-      <ul className="space-y-1">
-        {navItems.map((item) => (
+    <div className="mb-8">
+      {/* Section Header */}
+      <p className="px-3 mb-1 mt-4 text-[13px] font-schibsted font-semibold tracking-widest text-stone-100 uppercase select-none">
+        {group.label}
+      </p>
+
+      {/* Items */}
+      <ul className="space-y-0.5 pl-3">
+        {group.items.map((item) => (
           <li key={item.href}>
             <NavItem item={item} isActive={isActive(item.href, item.exact)} />
           </li>
         ))}
       </ul>
-    </LayoutGroup>
+    </div>
   );
 }
 
+// ─── Sidebar Content ──────────────────────────────────────────────────────────
+function SidebarContent({
+  isActive,
+  onClose,
+}: {
+  isActive: (href: string, exact?: boolean) => boolean;
+  onClose?: () => void;
+}) {
+  return (
+    <div className="flex flex-col h-full bg-sky-800">
+      {/* User Profile */}
+      <UserProfileCard />
+
+      {/* Nav Groups */}
+      <nav className="flex-1 px-2 py-2 overflow-y-auto scrollbar-none">
+        <LayoutGroup>
+          {navGroups.map((group) => (
+            <NavGroup key={group.label} group={group} isActive={isActive} />
+          ))}
+        </LayoutGroup>
+      </nav>
+
+      {/* Bottom — Logo pinned */}
+      <div className="px-4 py-4 border-t border-sky-700/50">
+        <LogoMark />
+      </div>
+    </div>
+  );
+}
+
+// ─── Main DashboardNav ────────────────────────────────────────────────────────
 export default function DashboardNav({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Close mobile menu on route change
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
@@ -421,51 +532,78 @@ export default function DashboardNav({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="flex h-dvh pt-1">
+    <div className="flex h-dvh">
+      {/* ── Desktop Sidebar ─────────────────────────────── */}
+      <aside className="hidden md:flex md:flex-col w-56 shrink-0 border-r border-sky-900/40 shadow-xl shadow-sky-900/10">
+        <SidebarContent isActive={isActive} />
+      </aside>
 
-      {/* Mobile hamburger */}
+      {/* ── Mobile Hamburger ────────────────────────────── */}
       <button
-        className="md:hidden fixed top-5 left-4 z-50 size-10 bg-white border border-neutral-200 rounded-lg flex items-center justify-center shadow-sm hover:bg-neutral-50 transition-colors"
+        className="md:hidden fixed top-4 left-4 z-50 size-10 bg-sky-800 border border-sky-700 rounded-lg flex items-center justify-center shadow-md hover:bg-sky-700 transition-colors"
         onClick={() => setMobileOpen((o) => !o)}
         aria-label="Toggle menu"
       >
-        {mobileOpen ? (
-          <X className="size-5 text-neutral-900" />
-        ) : (
-          <Menu className="size-5 text-neutral-900" />
-        )}
+        <AnimatePresence mode="wait" initial={false}>
+          {mobileOpen ? (
+            <motion.span
+              key="close"
+              initial={{ rotate: -90, opacity: 0 }}
+              animate={{ rotate: 0, opacity: 1 }}
+              exit={{ rotate: 90, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <X className="size-4 text-white" />
+            </motion.span>
+          ) : (
+            <motion.span
+              key="open"
+              initial={{ rotate: 90, opacity: 0 }}
+              animate={{ rotate: 0, opacity: 1 }}
+              exit={{ rotate: -90, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <Menu className="size-4 text-white" />
+            </motion.span>
+          )}
+        </AnimatePresence>
       </button>
 
-      {/* Mobile overlay */}
-      {mobileOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black/30 z-40"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
+      {/* ── Mobile Overlay ──────────────────────────────── */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            key="overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setMobileOpen(false)}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
+          />
+        )}
+      </AnimatePresence>
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed bg-sky-800 md:static top-0 left-0 h-full md:h-auto z-40 w-64 border-r border-neutral-200 px-4 py-6 transition-transform duration-200 md:translate-x-0 ${
-          mobileOpen ? "translate-x-0 shadow-xl" : "-translate-x-full"
-        }`}
-      >
-        <div className="mb-8 flex items-center gap-2 px-3">
-          <h2 className="text-lg font-schibsted font-semibold text-neutral-100">
-            Manage your tickets with ease
-          </h2>
-        </div>
+      {/* ── Mobile Drawer ───────────────────────────────── */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.aside
+            key="drawer"
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            transition={{ duration: 0.3, ease: EASE_OUT_QUART }}
+            className="fixed top-0 left-0 bottom-0 w-56 z-50 md:hidden shadow-2xl"
+          >
+            <SidebarContent isActive={isActive} onClose={() => setMobileOpen(false)} />
+          </motion.aside>
+        )}
+      </AnimatePresence>
 
-        <nav>
-          <NavLinks isActive={isActive} />
-        </nav>
-      </aside>
-
-      {/* Page content */}
-      <main className="flex-1 min-w-0 px-4 md:px-6 lg:px-8 py-6 bg-white h-full overflow-hidden">
+      {/* ── Page Content ────────────────────────────────── */}
+      <main className="flex-1 min-w-0 overflow-y-auto bg-neutral-50 px-10">
         {children}
       </main>
-
     </div>
   );
 }

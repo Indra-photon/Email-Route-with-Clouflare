@@ -14,18 +14,15 @@ import { WhySlackDeskSection } from "./Homepage/WhySlackDeskSection";
 export default function Home() {
   return (
     <div className="">
-      <section>
+      <section className="flex flex-col gap-24">
         <HeroSection />
-        {/* <SectionSeparator /> */}
         <BenefitsSection />
         <FeaturesSection />
         <WhySlackDeskSection />
         <TestimonialsSection />
         <FAQSection />
         <Footer />
-
       </section>
-      
     </div>
   );
 }

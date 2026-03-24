@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
-import {IconBrandYoutubeFilled} from "@tabler/icons-react";
 
 // 3x3 dot grid positions (normalized 0-1 in a 48x48 box)
 const DOT_POSITIONS = [
@@ -28,14 +27,13 @@ export default function HeroCTAPrimary({ text = "Get Started" }: { text?: string
   const [hovered, setHovered] = useState(false);
 
   return (
-    <div className="flex flex-col gap-8">
-
+    <div>
       {/* THE BUTTON */}
       <motion.button
         onHoverStart={() => setHovered(true)}
         onHoverEnd={() => setHovered(false)}
         whileTap={{ scale: 0.97 }}
-        className="relative w-64 flex items-center justify-between gap-0 overflow-hidden rounded-2xl bg-gradient-to-b from-sky-900 to-cyan-700 shadow-lg cursor-pointer"
+        className="relative flex items-center justify-between gap-0 overflow-hidden rounded-full bg-gradient-to-b from-sky-900 to-cyan-700 shadow-lg cursor-pointer"
       >
         {/* Shimmer sweep on hover */}
         {/* <motion.div
@@ -55,7 +53,7 @@ export default function HeroCTAPrimary({ text = "Get Started" }: { text?: string
 
         {/* Text */}
         <span
-          className="relative z-10 font-schibsted font-semibold text-white text-xl uppercase tracking-wide select-none flex items-center justify-center flex-1 px-4 py-4"
+          className="relative z-10 font-schibsted font-semibold text-white text-sm uppercase tracking-wide select-none flex items-center justify-center flex-1 px-6 py-2.5"
         >
           {text}
         </span>
@@ -144,20 +142,15 @@ export function HeroCTASecondary() {
       onHoverStart={() => setHovered(true)}
       onHoverEnd={() => setHovered(false)}
       whileTap={{ scale: 0.97 }}
-      className="relative flex items-center gap-3 px-7 py-4 rounded-2xl border-2 border-neutral-200 bg-white hover:border-neutral-300 transition-colors duration-200 cursor-pointer group"
+      className="relative flex items-center px-6 py-2.5 rounded-full border border-neutral-200 bg-white hover:border-neutral-300 transition-colors duration-200 cursor-pointer group"
     >
-      {/* Play icon */}
-      <div className="relative flex items-center justify-center w-7 h-7 rounded-full bg-neutral-100 group-hover:bg-neutral-200 transition-colors duration-200 flex-shrink-0">
-        <IconBrandYoutubeFilled size={14} color="#ef4444" />
-      </div>
-
-      <span className="font-schibsted font-semibold text-neutral-800 text-xl tracking-wide select-none">
+      <span className="font-schibsted font-semibold text-neutral-800 text-sm uppercase tracking-wide select-none">
         See How It Works
       </span>
 
       {/* Subtle underline slide */}
       <motion.div
-        className="absolute bottom-3 left-7 right-7 h-px bg-neutral-300"
+        className="absolute bottom-2 left-5 right-5 h-px bg-neutral-300"
         initial={{ scaleX: 0, originX: 0 }}
         animate={{ scaleX: hovered ? 1 : 0 }}
         transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}

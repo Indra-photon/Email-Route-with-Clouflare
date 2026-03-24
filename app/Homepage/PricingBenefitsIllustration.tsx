@@ -230,7 +230,7 @@ export const PricingBenefitsIllustration: React.FC = () => {
         />
 
         {/* CTA Button */}
-        <motion.div 
+        {/* <motion.div 
           className="mt-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -248,7 +248,7 @@ export const PricingBenefitsIllustration: React.FC = () => {
               </button>
             )}
           </CTAWrapper>
-        </motion.div>
+        </motion.div> */}
       </div>
     </div>
   );
