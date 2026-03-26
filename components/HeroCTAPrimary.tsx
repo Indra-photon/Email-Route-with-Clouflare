@@ -36,7 +36,7 @@ export default function HeroCTAPrimary({ text = "Get Started" }: { text?: string
         className="relative flex items-center justify-between gap-0 overflow-hidden rounded-full bg-gradient-to-b from-sky-900 to-cyan-700 shadow-lg cursor-pointer"
       >
         {/* Shimmer sweep on hover */}
-        {/* <motion.div
+        <motion.div
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
@@ -49,7 +49,7 @@ export default function HeroCTAPrimary({ text = "Get Started" }: { text?: string
               : { backgroundPositionX: "200%" }
           }
           transition={{ duration: 0.7, ease: "easeInOut" }}
-        /> */}
+        />
 
         {/* Text */}
         <span

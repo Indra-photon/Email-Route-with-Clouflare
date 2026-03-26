@@ -225,6 +225,8 @@ import { IconDashboard, IconMail, IconGlobe, IconAtSign, IconZap } from "@/const
 import { IconMessageCircle, IconMessages } from "@tabler/icons-react";
 import { useUserStore } from "@/lib/store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { DashboardBreadcrumb } from "@/components/dashboard/DashboardBreadcrumb";
+import { RightPanel } from "./right-panel/RightPanel";
 
 // ─── Easing ──────────────────────────────────────────────────────────────────
 const EASE_OUT_QUART: [number, number, number, number] = [0.165, 0.84, 0.44, 1];
@@ -601,8 +603,12 @@ export default function DashboardNav({ children }: { children: ReactNode }) {
       </AnimatePresence>
 
       {/* ── Page Content ────────────────────────────────── */}
-      <main className="flex-1 min-w-0 overflow-y-auto bg-neutral-50 px-10">
-        {children}
+      <main className="flex-1 min-w-0 flex overflow-hidden bg-neutral-50">
+        <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+          <DashboardBreadcrumb />
+          <div className="px-10 py-6">{children}</div>
+        </div>
+        <RightPanel />
       </main>
     </div>
   );
