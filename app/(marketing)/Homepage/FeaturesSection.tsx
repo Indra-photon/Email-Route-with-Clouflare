@@ -238,11 +238,12 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, Icon, Ill
     >
       {/* Illustration on top */}
       {Illustration ? (
-        <div className="flex items-center justify-center p-6 bg-white border-b border-neutral-200 h-[420px]">
+        <div className="relative bg-white border-b border-neutral-200 h-[420px] overflow-hidden">
           <Illustration />
         </div>
       ) : (
-        <div className="w-full h-[420px] bg-gradient-to-br from-neutral-100 via-neutral-50 to-neutral-100 border-b border-neutral-200" />
+        <div className="flex items-center justify-center p-6 bg-white border-b border-neutral-200">
+        </div>
       )}
 
       {/* Text below */}
