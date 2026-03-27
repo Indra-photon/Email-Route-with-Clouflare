@@ -232,22 +232,21 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, Icon, Ill
 
   return (
     <div
-      className={`relative flex flex-col overflow-hidden rounded-xl border border-neutral-200 shadow-md shadow-black/10 ring-1 ring-black/10 transition-all duration-300 bg-neutral-50 group ${span}`}
+      className={`relative flex flex-col overflow-hidden rounded-xl border border-neutral-200 shadow-md shadow-black/10 ring-1 ring-black/10 transition-all duration-300 bg-white group ${span}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Illustration on top */}
+      {/* Illustration — masked at bottom, fades into card background */}
       {Illustration ? (
-        <div className="relative bg-white border-b border-neutral-200 h-[420px] overflow-hidden">
+        <div className="relative h-[420px] overflow-hidden mask-b-from-90%">
           <Illustration />
         </div>
       ) : (
-        <div className="flex items-center justify-center p-6 bg-white border-b border-neutral-200">
-        </div>
+        <div className="h-[420px]" />
       )}
 
-      {/* Text below */}
-      <div className="p-6 z-10 flex flex-col gap-4">
+      {/* Text — pulled up into the faded zone via negative margin */}
+      <div className="-mt-4 p-6 z-10 flex flex-col gap-3">
         <div className="flex items-start gap-3">
           <Icon x={isHovered ? 4 : 0} y={isHovered ? -2 : 0} />
           <Heading as="h3" variant="small" className="text-sky-800 font-normal leading-snug">

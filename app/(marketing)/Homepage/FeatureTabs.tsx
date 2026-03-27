@@ -578,8 +578,8 @@ export function FeatureTabs() {
 
                 {/* Right — illustration ─────────────────────────────── */}
                 <div className="flex-1 flex items-center justify-center bg-neutral-50 p-10">
-                  <div className="bg-white/75 ring-1 ring-neutral-200 overflow-hidden rounded-t-[2.5rem] border border-transparent px-2 pt-2 shadow-md relative">
-                    <div className="bg-white ring-1 ring-neutral-100 overflow-hidden rounded-t-[2rem] p-6 h-[460px] w-[380px]">
+                  {/* <div className="bg-white/75 ring-1 ring-neutral-200 overflow-hidden rounded-t-[2.5rem] border border-transparent px-2 pt-2 shadow-md relative">
+                    <div className="bg-white ring-1 ring-neutral-100 overflow-hidden rounded-t-[2rem] p-6 h-[460px] w-[380px]"> */}
                       {illustrations[activeTab] ?? (
                         <div className="w-full h-full bg-neutral-50 flex items-center justify-center">
                           <span className="font-schibsted text-sm text-neutral-400">
@@ -587,8 +587,8 @@ export function FeatureTabs() {
                           </span>
                         </div>
                       )}
-                    </div>
-                  </div>
+                    {/* </div>
+                  </div> */}
                 </div>
               </motion.div>
             </AnimatePresence>
