@@ -38,9 +38,10 @@ const footerSections: FooterSection[] = [
     links: [
       { label: "About", href: "/about" },
       { label: "Blog", href: "/blog" },
-      { label: "Careers", href: "/careers" },
       { label: "Contact", href: "/contact" },
-      { label: "Privacy Policy", href: "/privacy" }
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms-of-service" },
+      { label: "Terms and Conditions", href: "/terms-and-conditions" }
     ]
   },
   {
