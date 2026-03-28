@@ -31,13 +31,14 @@ export async function GET() {
   const redirectUri = `${siteUrl}/api/integrations/slack/callback`;
 
   // Scopes needed:
-  //   incoming-webhook  → shows channel picker on the OAuth consent screen
-  //   chat:write        → bot can post messages
-  //   channels:history  → bot can read channel messages (for event matching)
-  //   channels:join     → bot can join public channels (needed to receive events)
-  //   files:write       → bot can upload incoming email attachments to Slack
-  //   files:read        → bot can read file metadata when required
-  const scopes = "incoming-webhook,chat:write,channels:history,channels:join,files:write,files:read";
+  //   incoming-webhook       → shows channel picker on the OAuth consent screen
+  //   chat:write             → bot can post messages
+  //   chat:write.customize   → bot can post with custom username & icon
+  //   channels:history       → bot can read channel messages (for event matching)
+  //   channels:join          → bot can join public channels (needed to receive events)
+  //   files:write            → bot can upload incoming email attachments to Slack
+  //   files:read             → bot can read file metadata when required
+  const scopes = "incoming-webhook,chat:write,chat:write.customize,channels:history,channels:join,files:write,files:read";
 
   const slackUrl = new URL("https://slack.com/oauth/v2/authorize");
   slackUrl.searchParams.set("client_id", clientId);
