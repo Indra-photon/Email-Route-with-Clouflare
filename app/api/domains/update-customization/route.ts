@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { Domain } from "@/app/api/models/DomainModel";
 import { Workspace } from "@/app/api/models/WorkspaceModel";
-import connectDB from "@/app/api/utils/connectDB";
+import dbConnect from "@/lib/dbConnect";
 
 export async function PATCH(request: Request) {
   try {
@@ -11,7 +11,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectDB();
+    await dbConnect();
 
     const body = await request.json();
     const { domainId, botName, botAvatar, botDescription } = body;
