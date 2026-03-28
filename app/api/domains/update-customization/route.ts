@@ -4,6 +4,55 @@ import { Domain } from "@/app/api/models/DomainModel";
 import { Workspace } from "@/app/api/models/WorkspaceModel";
 import dbConnect from "@/lib/dbConnect";
 
+export async function GET(request: Request) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await dbConnect();
+
+    const { searchParams } = new URL(request.url);
+    const domainId = searchParams.get("domainId");
+
+    if (!domainId) {
+      return NextResponse.json({ error: "Domain ID is required" }, { status: 400 });
+    }
+
+    const domain = await Domain.findById(domainId);
+    if (!domain) {
+      return NextResponse.json({ error: "Domain not found" }, { status: 404 });
+    }
+
+    const workspace = await Workspace.findOne({
+      _id: domain.workspaceId,
+      ownerUserId: userId,
+    });
+
+    if (!workspace) {
+      return NextResponse.json({ error: "Forbidden - you don't own this domain" }, { status: 403 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      domain: {
+        _id: domain._id,
+        domain: domain.domain,
+        botName: domain.botName,
+        botAvatar: domain.botAvatar,
+        botDescription: domain.botDescription,
+      },
+    });
+  } catch (error) {
+    console.error("GET /api/domains/update-customization error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch customization" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function PATCH(request: Request) {
   try {
     const { userId } = await auth();
@@ -32,7 +81,7 @@ export async function PATCH(request: Request) {
     // Verify user owns this domain's workspace
     const workspace = await Workspace.findOne({
       _id: domain.workspaceId,
-      clerkUserId: userId,
+      ownerUserId: userId,
     });
 
     if (!workspace) {
