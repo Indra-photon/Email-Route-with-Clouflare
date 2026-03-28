@@ -31,6 +31,10 @@ export interface IDomain extends Document {
   receivingRequestId?: Types.ObjectId;
   receivingMxRecords?: IMxRecord[];
   lastCheckedAt?: Date | null;
+  // Bot customization fields
+  botName?: string;
+  botAvatar?: string;
+  botDescription?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -103,6 +107,19 @@ const DomainSchema = new Schema<IDomain>(
     },
     lastCheckedAt: {
       type: Date,
+      default: null,
+    },
+    // Bot customization fields
+    botName: {
+      type: String,
+      default: null,
+    },
+    botAvatar: {
+      type: String,
+      default: null,
+    },
+    botDescription: {
+      type: String,
       default: null,
     },
   },

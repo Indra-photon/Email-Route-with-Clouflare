@@ -4,6 +4,7 @@ import { Alias } from "@/app/api/models/AliasModel";
 import { Integration } from "@/app/api/models/IntegrationModel";
 import { EmailThread } from "@/app/api/models/EmailThreadModel";
 import { Subscription } from "@/app/api/models/SubscriptionModel";
+import { Domain } from "@/app/api/models/DomainModel";
 import { checkTicketLimit } from "@/lib/checkPlanLimits";
 import { getSubscriptionGuard } from "@/lib/checkSubscriptionStatus";
 
@@ -598,17 +599,46 @@ ${snippet}
     ) {
       console.log("📦 Message payload blocks:", JSON.stringify(messagePayload, null, 2));
 
+      // ── Fetch domain customization settings ──
+      let customBotName: string | null = null;
+      let customBotAvatar: string | null = null;
+      
+      try {
+        const domain = await Domain.findById(alias.domainId).lean().exec();
+        if (domain) {
+          customBotName = domain.botName || null;
+          customBotAvatar = domain.botAvatar || null;
+          console.log("🎨 Domain customization:", { 
+            domain: domain.domain, 
+            botName: customBotName, 
+            botAvatar: customBotAvatar 
+          });
+        }
+      } catch (err) {
+        console.warn("⚠️ Failed to fetch domain customization, using defaults:", err);
+      }
+
       // ── Post main message first ──
+      const postMessageBody: any = {
+        channel: integration.slackChannelId,
+        ...messagePayload,
+      };
+      
+      // Add custom bot name and avatar if set
+      if (customBotName) {
+        postMessageBody.username = customBotName;
+      }
+      if (customBotAvatar) {
+        postMessageBody.icon_url = customBotAvatar;
+      }
+
       const slackRes = await fetch("https://slack.com/api/chat.postMessage", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${integration.slackAccessToken}`,
         },
-        body: JSON.stringify({
-          channel: integration.slackChannelId,
-          ...messagePayload,
-        }),
+        body: JSON.stringify(postMessageBody),
       });
 
       const slackData = await slackRes.json();
