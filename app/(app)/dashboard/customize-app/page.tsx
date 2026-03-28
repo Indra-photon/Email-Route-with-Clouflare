@@ -10,7 +10,7 @@ import { Loader2, Palette } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 type Domain = {
-  _id: string;
+  id: string;
   domain: string;
   botName?: string | null;
   botAvatar?: string | null;
@@ -127,7 +127,7 @@ export default function CustomizeAppPage() {
     }
   };
 
-  const selectedDomain = domains.find((d) => d._id === selectedDomainId);
+  const selectedDomain = domains.find((d) => d.id === selectedDomainId);
 
   if (isLoadingDomains) {
     return (
@@ -194,11 +194,11 @@ export default function CustomizeAppPage() {
             <div className="flex flex-wrap gap-2">
               {domains.map((domain) => (
                 <button
-                  key={domain._id}
-                  onClick={() => setSelectedDomainId(domain._id)}
+                  key={domain.id}
+                  onClick={() => setSelectedDomainId(domain.id)}
                   disabled={isSaving}
                   className={`px-4 py-2 rounded-lg border font-schibsted text-sm font-medium transition-all duration-150 ${
-                    selectedDomainId === domain._id
+                    selectedDomainId === domain.id
                       ? "border-sky-600 bg-sky-50 text-sky-700 dark:bg-sky-900/20 dark:text-sky-400"
                       : "border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:border-neutral-400"
                   } ${isSaving ? "opacity-50 cursor-not-allowed" : ""}`}
