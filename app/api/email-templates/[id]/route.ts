@@ -27,7 +27,7 @@ export async function PUT(
         ...(name !== undefined && { name: name.trim() }),
         ...(subject !== undefined && { subject: subject.trim() }),
         ...(body !== undefined && { body: body.trim() }),
-        ...(htmlBody !== undefined && { htmlBody: htmlBody.trim() }),
+        htmlBody: "", // Force clear deprecated field
       },
       { new: true }
     );

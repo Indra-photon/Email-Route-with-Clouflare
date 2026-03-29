@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       name: name.trim(),
       subject: (subject || "").trim(),
       body: (body || "").trim(),
-      htmlBody: (htmlBody || "").trim(),
+      htmlBody: "", // Force clear deprecated field
       createdBy: userId,
     });
 
