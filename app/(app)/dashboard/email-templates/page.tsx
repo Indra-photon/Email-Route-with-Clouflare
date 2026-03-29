@@ -1,147 +1,481 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "motion/react";
+import { Heading } from "@/components/Heading";
+import { Paragraph } from "@/components/Paragraph";
 import {
-  IconPlus,
-  IconPencil,
-  IconTrash,
-  IconCheck,
-  IconX,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
   IconTemplate,
-  IconVariable,
-  IconInfoCircle,
-  IconLoader2,
+  IconTrash,
+  IconPencil,
   IconEye,
+  IconPlus,
+  IconX,
+  IconCheck,
+  IconCode,
+  IconAlignLeft,
+  IconVariable,
+  IconChevronDown,
 } from "@tabler/icons-react";
+import { Loader2 } from "lucide-react";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Types ─────────────────────────────────────────────────────────────────────
 
 type EmailTemplate = {
   _id: string;
   name: string;
   subject: string;
-  body: string;
-  htmlWrapper: string;
+  body: string;       // plain text body
+  htmlBody?: string;  // html body (optional)
   createdAt: string;
 };
 
-type FormState = "idle" | "loading" | "success" | "error";
+type EditorMode = "plain" | "html";
+type FormStatus = "idle" | "loading" | "success";
 
-// ─── Supported variables ──────────────────────────────────────────────────────
+// ─── Variable reference ─────────────────────────────────────────────────────────
 
-const SUPPORTED_VARS = [
-  { key: "{name}", description: "Customer's name (from email)" },
-  { key: "{email}", description: "Customer's email address" },
-  { key: "{subject}", description: "Original email subject" },
-  { key: "{date}", description: "Today's date" },
-  { key: "{agent}", description: "Slack admin/agent name" },
+const VARS = [
+  { key: "{name}",    desc: "Customer name" },
+  { key: "{email}",   desc: "Customer email" },
+  { key: "{subject}", desc: "Email subject" },
+  { key: "{date}",    desc: "Today's date" },
+  { key: "{agent}",   desc: "Agent / admin name" },
 ];
 
-// ─── Variable chip ────────────────────────────────────────────────────────────
-
-function VarChip({
-  varKey,
-  onClick,
-}: {
-  varKey: string;
-  onClick: (v: string) => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={() => onClick(varKey)}
-      title={`Click to copy ${varKey}`}
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700 text-[11px] font-mono font-medium hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-colors cursor-pointer select-none"
-    >
-      {varKey}
-    </button>
-  );
-}
-
-// ─── Preview Modal ────────────────────────────────────────────────────────────
+// ─── Preview Modal ───────────────────────────────────────────────────────────────
 
 function PreviewModal({
-  template,
+  name,
+  subject,
+  body,
+  htmlBody,
   onClose,
 }: {
-  template: EmailTemplate;
+  name: string;
+  subject: string;
+  body: string;
+  htmlBody: string;
   onClose: () => void;
 }) {
-  const preview = template.body
-    .replace(/\{name\}/g, "John Smith")
-    .replace(/\{email\}/g, "john.smith@example.com")
-    .replace(/\{subject\}/g, template.subject || "Support Request")
-    .replace(/\{date\}/g, new Date().toLocaleDateString())
-    .replace(/\{agent\}/g, "Sarah (Support)");
+  const [tab, setTab] = useState<"plain" | "html">("plain");
+
+  const sampleVars = (text: string) =>
+    text
+      .replace(/\{name\}/g, "Jane Smith")
+      .replace(/\{email\}/g, "jane@example.com")
+      .replace(/\{subject\}/g, subject || "Support Request")
+      .replace(/\{date\}/g, new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }))
+      .replace(/\{agent\}/g, "Alex (Support)");
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-    >
-      <motion.div
-        className="absolute inset-0 bg-black/40 backdrop-blur-[3px]"
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
         onClick={onClose}
       />
       <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 12 }}
+        initial={{ opacity: 0, scale: 0.97, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96, y: 12 }}
+        exit={{ opacity: 0, scale: 0.97, y: 10 }}
         transition={{ type: "spring", stiffness: 350, damping: 28 }}
-        className="relative z-10 w-full max-w-lg bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-700 overflow-hidden"
+        className="relative z-10 w-full max-w-2xl bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-700 overflow-hidden"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 dark:border-neutral-800">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800">
           <div>
-            <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-              Template Preview
+            <p className="font-schibsted font-semibold text-neutral-900 dark:text-neutral-100 text-base">
+              Preview — {name || "Template"}
             </p>
-            <p className="text-xs text-neutral-500 mt-0.5">
+            <p className="font-schibsted text-xs text-neutral-500 mt-0.5">
               Variables filled with sample data
             </p>
           </div>
           <button
-            type="button"
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
           >
-            <IconX size={14} className="text-neutral-500" />
+            <IconX size={15} className="text-neutral-500" />
           </button>
         </div>
 
-        {/* Email preview */}
-        <div className="p-5 space-y-3">
-          <div className="bg-neutral-50 dark:bg-neutral-800/50 rounded-xl p-4 border border-neutral-100 dark:border-neutral-800">
-            <div className="flex items-center gap-2 mb-3 pb-3 border-b border-neutral-200 dark:border-neutral-700">
-              <span className="text-xs font-medium text-neutral-500">Subject:</span>
-              <span className="text-xs text-neutral-800 dark:text-neutral-200">
-                {template.subject
-                  .replace(/\{name\}/g, "John Smith")
-                  .replace(/\{email\}/g, "john.smith@example.com")
-                  .replace(/\{subject\}/g, "Support Request")
-                  .replace(/\{date\}/g, new Date().toLocaleDateString())
-                  .replace(/\{agent\}/g, "Sarah (Support)") || "(no subject)"}
+        {/* Tab toggle */}
+        <div className="flex gap-1 px-6 pt-4">
+          {(["plain", "html"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-schibsted font-medium transition-all duration-150 ${
+                tab === t
+                  ? "bg-sky-600 text-white"
+                  : "text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              }`}
+            >
+              {t === "plain" ? "Plain Text" : "HTML"}
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div className="px-6 py-4 space-y-3 max-h-[60vh] overflow-y-auto">
+          <div className="rounded-lg bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 p-4 space-y-3">
+            <div className="flex gap-2 text-xs font-schibsted">
+              <span className="font-semibold text-neutral-500 w-14 shrink-0">Subject:</span>
+              <span className="text-neutral-800 dark:text-neutral-200">
+                {sampleVars(subject) || "(no subject)"}
               </span>
             </div>
-            <pre className="text-xs text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap font-sans leading-relaxed">
-              {preview}
-            </pre>
+            <div className="border-t border-neutral-200 dark:border-neutral-700 pt-3">
+              {tab === "plain" ? (
+                <pre className="text-xs font-schibsted text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap leading-relaxed">
+                  {sampleVars(body) || "(empty)"}
+                </pre>
+              ) : htmlBody ? (
+                <div
+                  className="text-sm text-neutral-800 dark:text-neutral-200 prose dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: sampleVars(htmlBody) }}
+                />
+              ) : (
+                <p className="text-xs font-schibsted text-neutral-400 italic">
+                  No HTML body defined — plain text will be sent.
+                </p>
+              )}
+            </div>
           </div>
-          <p className="text-[11px] text-neutral-400 flex items-center gap-1">
-            <IconInfoCircle size={12} />
-            This is how the email will look when sent. CSS/HTML wrapper is applied on send.
+          <p className="text-[11px] font-schibsted text-neutral-400">
+            * Variables replaced with sample data for preview purposes.
           </p>
         </div>
       </motion.div>
-    </motion.div>
+    </div>
   );
 }
 
-// ─── Template Card ────────────────────────────────────────────────────────────
+// ─── Editor section (plain + html with toggle) ──────────────────────────────────
+
+function BodyEditor({
+  plainValue,
+  htmlValue,
+  onPlainChange,
+  onHtmlChange,
+  disabled,
+}: {
+  plainValue: string;
+  htmlValue: string;
+  onPlainChange: (v: string) => void;
+  onHtmlChange: (v: string) => void;
+  disabled?: boolean;
+}) {
+  const [mode, setMode] = useState<EditorMode>("plain");
+
+  const inputClass =
+    "w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-mono text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 transition-colors duration-100 focus:border-sky-600 outline-none resize-none disabled:opacity-50 disabled:cursor-not-allowed";
+
+  return (
+    <div className="space-y-2">
+      {/* Mode toggle bar */}
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-schibsted text-neutral-700 dark:text-neutral-300 font-medium">
+          Body
+        </span>
+        <div className="ml-auto flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg p-0.5">
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => setMode("plain")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-schibsted font-medium transition-all duration-150 ${
+              mode === "plain"
+                ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm"
+                : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            <IconAlignLeft size={12} />
+            Plain Text
+          </button>
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => setMode("html")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-schibsted font-medium transition-all duration-150 ${
+              mode === "html"
+                ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm"
+                : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            <IconCode size={12} />
+            HTML
+          </button>
+        </div>
+      </div>
+
+      {/* Textarea */}
+      <AnimatePresence mode="wait" initial={false}>
+        {mode === "plain" ? (
+          <motion.div
+            key="plain"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15 }}
+          >
+            <textarea
+              value={plainValue}
+              onChange={(e) => onPlainChange(e.target.value)}
+              disabled={disabled}
+              rows={8}
+              placeholder={`Hi {name},\n\nThank you for reaching out about "{subject}".\n\n...\n\nBest regards,\n{agent}`}
+              className={inputClass}
+            />
+            <p className="text-xs font-schibsted text-neutral-400 mt-1">
+              Plain text sent via Slack → email. Variables auto-replaced on send.
+            </p>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="html"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15 }}
+          >
+            <textarea
+              value={htmlValue}
+              onChange={(e) => onHtmlChange(e.target.value)}
+              disabled={disabled}
+              rows={10}
+              placeholder={`<!DOCTYPE html>\n<html>\n<body style="font-family:sans-serif;...">\n  <p>Hi {name},</p>\n  ...\n</body>\n</html>`}
+              className={inputClass}
+            />
+            <p className="text-xs font-schibsted text-neutral-400 mt-1">
+              Full HTML/CSS wrapper. This is what the customer receives via email.
+              Variables like <code className="bg-neutral-100 dark:bg-neutral-800 px-1 rounded">{"{name}"}</code> are replaced before sending.
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─── Add Template Form ──────────────────────────────────────────────────────────
+
+function AddTemplateCard({ onAdd }: { onAdd: (t: EmailTemplate) => void }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const [htmlBody, setHtmlBody] = useState("");
+  const [status, setStatus] = useState<FormStatus>("idle");
+  const [previewing, setPreviewing] = useState(false);
+
+  const isBusy = status !== "idle";
+
+  const insertVar = (v: string) => setBody((b) => b + v);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || (!body.trim() && !htmlBody.trim())) return;
+    setStatus("loading");
+    try {
+      const res = await fetch("/api/email-templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          subject: subject.trim(),
+          body: body.trim(),
+          htmlBody: htmlBody.trim() || undefined,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      const created = await res.json();
+      onAdd(created);
+      setName(""); setSubject(""); setBody(""); setHtmlBody("");
+      setStatus("success");
+      toast.success("Template created!");
+      setTimeout(() => { setStatus("idle"); setOpen(false); }, 1200);
+    } catch {
+      setStatus("idle");
+      toast.error("Failed to create template");
+    }
+  };
+
+  const inputClass =
+    "w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-schibsted text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 transition-colors duration-100 focus:border-sky-600 outline-none disabled:opacity-50 disabled:cursor-not-allowed";
+
+  return (
+    <Card>
+      {/* Toggle row */}
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center gap-3 px-6 py-4 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors cursor-pointer focus:outline-none group rounded-xl"
+      >
+        <div className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center group-hover:bg-sky-50 dark:group-hover:bg-sky-900/20 transition-colors">
+          <IconPlus size={15} className="text-neutral-500 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors" />
+        </div>
+        <div className="text-left flex-1">
+          <p className="font-schibsted font-semibold text-sm text-neutral-700 dark:text-neutral-300">
+            New Template
+          </p>
+          <p className="font-schibsted text-xs text-neutral-400">
+            Create a reusable reply template with dynamic variables
+          </p>
+        </div>
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        >
+          <IconChevronDown size={15} className="text-neutral-400" />
+        </motion.span>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 28 }}
+            className="overflow-hidden"
+          >
+            <form onSubmit={handleSubmit} className="px-6 pb-6 pt-2 border-t border-neutral-100 dark:border-neutral-800 space-y-4">
+
+              {/* Name */}
+              <div className="flex flex-col space-y-1">
+                <label className="text-sm font-schibsted text-neutral-700 dark:text-neutral-300 font-medium">
+                  Template Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Welcome Response"
+                  disabled={isBusy}
+                  required
+                  className={inputClass}
+                />
+              </div>
+
+              {/* Subject */}
+              <div className="flex flex-col space-y-1">
+                <label className="text-sm font-schibsted text-neutral-700 dark:text-neutral-300 font-medium">
+                  Email Subject
+                </label>
+                <input
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  placeholder="e.g. Re: {subject}"
+                  disabled={isBusy}
+                  className={inputClass}
+                />
+              </div>
+
+              {/* Variable chips */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-xs font-schibsted text-neutral-500 flex items-center gap-1 mr-1">
+                  <IconVariable size={12} /> Insert variable:
+                </span>
+                {VARS.map((v) => (
+                  <button
+                    key={v.key}
+                    type="button"
+                    title={v.desc}
+                    disabled={isBusy}
+                    onClick={() => insertVar(v.key)}
+                    className="px-2 py-0.5 rounded border border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-800 text-[11px] font-mono text-neutral-600 dark:text-neutral-400 hover:border-sky-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {v.key}
+                  </button>
+                ))}
+              </div>
+
+              {/* Body editor */}
+              <BodyEditor
+                plainValue={body}
+                htmlValue={htmlBody}
+                onPlainChange={setBody}
+                onHtmlChange={setHtmlBody}
+                disabled={isBusy}
+              />
+
+              {/* Actions */}
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={isBusy || !name.trim() || (!body.trim() && !htmlBody.trim())}
+                  className={`relative inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-schibsted text-sm font-medium transition-all duration-200 overflow-hidden min-w-[140px] ${
+                    status === "success"
+                      ? "bg-green-600 text-white"
+                      : "bg-sky-600 hover:bg-sky-700 text-white"
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  <AnimatePresence mode="wait">
+                    {status === "loading" && (
+                      <motion.span key="l" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
+                        <Loader2 className="size-4 animate-spin" /> Creating...
+                      </motion.span>
+                    )}
+                    {status === "success" && (
+                      <motion.span key="s" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
+                        <IconCheck size={15} /> Created!
+                      </motion.span>
+                    )}
+                    {status === "idle" && (
+                      <motion.span key="i" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
+                        <IconPlus size={15} /> Create Template
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isBusy || (!body.trim() && !htmlBody.trim())}
+                  onClick={() => setPreviewing(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 font-schibsted text-sm font-medium transition-colors duration-150 disabled:opacity-50 cursor-pointer"
+                >
+                  <IconEye size={14} /> Preview
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isBusy}
+                  onClick={() => { setOpen(false); setName(""); setSubject(""); setBody(""); setHtmlBody(""); }}
+                  className="px-4 py-2.5 rounded-lg border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 font-schibsted text-sm font-medium transition-colors duration-150 disabled:opacity-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Preview modal */}
+      <AnimatePresence>
+        {previewing && (
+          <PreviewModal
+            name={name || "New Template"}
+            subject={subject}
+            body={body}
+            htmlBody={htmlBody}
+            onClose={() => setPreviewing(false)}
+          />
+        )}
+      </AnimatePresence>
+    </Card>
+  );
+}
+
+// ─── Template Card ──────────────────────────────────────────────────────────────
 
 function TemplateCard({
   template,
@@ -153,20 +487,29 @@ function TemplateCard({
   onDelete: (id: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
   const [editName, setEditName] = useState(template.name);
   const [editSubject, setEditSubject] = useState(template.subject);
   const [editBody, setEditBody] = useState(template.body);
-  const [saveState, setSaveState] = useState<FormState>("idle");
-  const [deleteState, setDeleteState] = useState<FormState>("idle");
-  const [previewing, setPreviewing] = useState(false);
+  const [editHtmlBody, setEditHtmlBody] = useState(template.htmlBody ?? "");
+  const [saveStatus, setSaveStatus] = useState<FormStatus>("idle");
+  const [delStatus, setDelStatus] = useState<FormStatus>("idle");
 
-  const insertVar = (v: string) => {
-    setEditBody((b) => b + v);
+  const isBusy = saveStatus !== "idle" || delStatus !== "idle";
+
+  const insertVar = (v: string) => setEditBody((b) => b + v);
+
+  const startEdit = () => {
+    setEditName(template.name);
+    setEditSubject(template.subject);
+    setEditBody(template.body);
+    setEditHtmlBody(template.htmlBody ?? "");
+    setEditing(true);
   };
 
   const handleSave = async () => {
-    if (!editName.trim() || !editBody.trim()) return;
-    setSaveState("loading");
+    if (!editName.trim() || (!editBody.trim() && !editHtmlBody.trim())) return;
+    setSaveStatus("loading");
     try {
       const res = await fetch(`/api/email-templates/${template._id}`, {
         method: "PUT",
@@ -175,40 +518,36 @@ function TemplateCard({
           name: editName.trim(),
           subject: editSubject.trim(),
           body: editBody.trim(),
+          htmlBody: editHtmlBody.trim() || undefined,
         }),
       });
-      if (!res.ok) throw new Error("Failed to update");
+      if (!res.ok) throw new Error("Failed");
       const updated = await res.json();
       onUpdate(updated);
-      setSaveState("success");
-      toast.success("Template updated");
-      setTimeout(() => {
-        setEditing(false);
-        setSaveState("idle");
-      }, 900);
+      setSaveStatus("success");
+      toast.success("Template saved");
+      setTimeout(() => { setSaveStatus("idle"); setEditing(false); }, 1000);
     } catch {
-      setSaveState("error");
-      toast.error("Failed to update template");
-      setTimeout(() => setSaveState("idle"), 1500);
+      setSaveStatus("idle");
+      toast.error("Failed to save template");
     }
   };
 
   const handleDelete = async () => {
-    setDeleteState("loading");
+    setDelStatus("loading");
     try {
-      const res = await fetch(`/api/email-templates/${template._id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("Failed to delete");
-      setDeleteState("success");
+      const res = await fetch(`/api/email-templates/${template._id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed");
       toast.success("Template deleted");
-      setTimeout(() => onDelete(template._id), 400);
+      setTimeout(() => onDelete(template._id), 350);
     } catch {
-      setDeleteState("error");
+      setDelStatus("idle");
       toast.error("Failed to delete template");
-      setTimeout(() => setDeleteState("idle"), 1500);
     }
   };
+
+  const inputClass =
+    "w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-schibsted text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 transition-colors duration-100 focus:border-sky-600 outline-none resize-none disabled:opacity-50 disabled:cursor-not-allowed";
 
   return (
     <>
@@ -216,181 +555,225 @@ function TemplateCard({
         layout
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.97 }}
+        exit={{ opacity: 0, scale: 0.98 }}
         transition={{ type: "spring", stiffness: 300, damping: 28 }}
-        className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden"
       >
-        <AnimatePresence mode="wait" initial={false}>
-          {editing ? (
-            <motion.div
-              key="edit"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="p-5 space-y-3"
-            >
-              {/* Template Name */}
-              <input
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                placeholder="Template name (e.g. Welcome Response)"
-                className="w-full text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-violet-400 dark:focus:border-violet-500 text-neutral-900 dark:text-neutral-100 transition-colors"
-              />
-
-              {/* Subject */}
-              <input
-                value={editSubject}
-                onChange={(e) => setEditSubject(e.target.value)}
-                placeholder="Email subject (e.g. Re: {subject})"
-                className="w-full text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-violet-400 dark:focus:border-violet-500 text-neutral-900 dark:text-neutral-100 transition-colors"
-              />
-
-              {/* Variable chips */}
-              <div className="flex flex-wrap gap-1.5 items-center">
-                <span className="text-[11px] text-neutral-400 font-medium flex items-center gap-1 mr-1">
-                  <IconVariable size={12} />
-                  Insert:
-                </span>
-                {SUPPORTED_VARS.map((v) => (
-                  <VarChip key={v.key} varKey={v.key} onClick={insertVar} />
-                ))}
-              </div>
-
-              {/* Body textarea */}
-              <textarea
-                value={editBody}
-                onChange={(e) => setEditBody(e.target.value)}
-                rows={6}
-                placeholder="Template body..."
-                className="w-full text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-violet-400 dark:focus:border-violet-500 text-neutral-900 dark:text-neutral-100 resize-none transition-colors font-mono"
-              />
-
-              {/* Actions */}
-              <div className="flex items-center gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={saveState === "loading"}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-br from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 disabled:opacity-60 transition-all cursor-pointer focus:outline-none"
+        <Card>
+          <CardContent className="p-0">
+            <AnimatePresence mode="wait" initial={false}>
+              {!editing ? (
+                /* ── View mode ── */
+                <motion.div
+                  key="view"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="p-5 flex items-start gap-4"
                 >
-                  {saveState === "loading" ? (
-                    <IconLoader2 size={13} className="animate-spin" />
-                  ) : saveState === "success" ? (
-                    <IconCheck size={13} />
-                  ) : (
-                    <IconCheck size={13} />
-                  )}
-                  {saveState === "loading"
-                    ? "Saving..."
-                    : saveState === "success"
-                    ? "Saved!"
-                    : "Save"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditing(false);
-                    setEditName(template.name);
-                    setEditSubject(template.subject);
-                    setEditBody(template.body);
-                  }}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none"
-                >
-                  Cancel
-                </button>
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="view"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="p-5"
-            >
-              <div className="flex items-start gap-3">
-                {/* Icon */}
-                <div className="shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-sm">
-                  <IconTemplate size={16} className="text-white" />
-                </div>
+                  {/* Icon */}
+                  <div className="shrink-0 w-9 h-9 rounded-lg bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center mt-0.5">
+                    <IconTemplate size={16} className="text-white" />
+                  </div>
 
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate">
-                    {template.name}
-                  </p>
-                  {template.subject && (
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5 truncate">
-                      Subject: {template.subject}
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-schibsted font-bold text-sm text-neutral-900 dark:text-neutral-100 truncate">
+                      {template.name}
                     </p>
-                  )}
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1.5 line-clamp-2 font-mono leading-relaxed">
-                    {template.body}
+                    {template.subject && (
+                      <p className="font-schibsted text-xs text-neutral-500 dark:text-neutral-400 mt-0.5 truncate">
+                        Subject: {template.subject}
+                      </p>
+                    )}
+                    <p className="font-schibsted text-xs text-neutral-400 mt-1.5 line-clamp-2 font-mono leading-relaxed">
+                      {template.body}
+                    </p>
+
+                    {/* Variable tags detected */}
+                    {(() => {
+                      const found = VARS.filter((v) => template.body.includes(v.key));
+                      if (!found.length) return null;
+                      return (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {found.map((v) => (
+                            <span
+                              key={v.key}
+                              className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-500"
+                            >
+                              {v.key}
+                            </span>
+                          ))}
+                          {template.htmlBody && (
+                            <span className="text-[10px] font-schibsted px-1.5 py-0.5 rounded border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 flex items-center gap-1">
+                              <IconCode size={10} /> HTML
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="shrink-0 flex items-center gap-1">
+                    <button
+                      type="button"
+                      title="Preview"
+                      onClick={() => setPreviewing(true)}
+                      className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer focus:outline-none"
+                    >
+                      <IconEye size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      title="Edit"
+                      disabled={isBusy}
+                      onClick={startEdit}
+                      className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors cursor-pointer focus:outline-none disabled:opacity-50"
+                    >
+                      <IconPencil size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      title="Delete"
+                      disabled={isBusy}
+                      onClick={handleDelete}
+                      className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 text-neutral-400 hover:text-red-500 transition-colors cursor-pointer focus:outline-none disabled:opacity-50"
+                    >
+                      {delStatus === "loading"
+                        ? <Loader2 size={14} className="animate-spin" />
+                        : <IconTrash size={14} />}
+                    </button>
+                  </div>
+                </motion.div>
+              ) : (
+                /* ── Edit mode ── */
+                <motion.div
+                  key="edit"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="p-5 space-y-4"
+                >
+                  <p className="font-schibsted font-semibold text-sm text-neutral-700 dark:text-neutral-300">
+                    Editing — {template.name}
                   </p>
 
-                  {/* Variable tags detected */}
-                  {(() => {
-                    const found = SUPPORTED_VARS.filter((v) =>
-                      template.body.includes(v.key)
-                    );
-                    if (!found.length) return null;
-                    return (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {found.map((v) => (
-                          <span
-                            key={v.key}
-                            className="text-[10px] px-1.5 py-0.5 rounded-md bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 border border-violet-100 dark:border-violet-800 font-mono"
-                          >
-                            {v.key}
-                          </span>
-                        ))}
-                      </div>
-                    );
-                  })()}
-                </div>
+                  {/* Name */}
+                  <div className="flex flex-col space-y-1">
+                    <label className="text-xs font-schibsted font-medium text-neutral-600 dark:text-neutral-400">Template Name</label>
+                    <input
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder="Template name"
+                      disabled={isBusy}
+                      className={inputClass}
+                    />
+                  </div>
 
-                {/* Action buttons */}
-                <div className="shrink-0 flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewing(true)}
-                    title="Preview"
-                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 hover:text-violet-600 transition-colors cursor-pointer focus:outline-none"
-                  >
-                    <IconEye size={15} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditing(true)}
-                    title="Edit"
-                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors cursor-pointer focus:outline-none"
-                  >
-                    <IconPencil size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleDelete}
-                    disabled={deleteState === "loading"}
-                    title="Delete"
-                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-neutral-400 hover:text-red-500 transition-colors cursor-pointer focus:outline-none disabled:opacity-50"
-                  >
-                    {deleteState === "loading" ? (
-                      <IconLoader2 size={14} className="animate-spin" />
-                    ) : (
-                      <IconTrash size={14} />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                  {/* Subject */}
+                  <div className="flex flex-col space-y-1">
+                    <label className="text-xs font-schibsted font-medium text-neutral-600 dark:text-neutral-400">Email Subject</label>
+                    <input
+                      value={editSubject}
+                      onChange={(e) => setEditSubject(e.target.value)}
+                      placeholder="e.g. Re: {subject}"
+                      disabled={isBusy}
+                      className={inputClass}
+                    />
+                  </div>
+
+                  {/* Variable chips */}
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-xs font-schibsted text-neutral-500 flex items-center gap-1 mr-1">
+                      <IconVariable size={12} /> Insert:
+                    </span>
+                    {VARS.map((v) => (
+                      <button
+                        key={v.key}
+                        type="button"
+                        title={v.desc}
+                        disabled={isBusy}
+                        onClick={() => insertVar(v.key)}
+                        className="px-2 py-0.5 rounded border border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-800 text-[11px] font-mono text-neutral-600 dark:text-neutral-400 hover:border-sky-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer disabled:opacity-50"
+                      >
+                        {v.key}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Body editor with toggle */}
+                  <BodyEditor
+                    plainValue={editBody}
+                    htmlValue={editHtmlBody}
+                    onPlainChange={setEditBody}
+                    onHtmlChange={setEditHtmlBody}
+                    disabled={isBusy}
+                  />
+
+                  {/* Buttons */}
+                  <div className="flex items-center gap-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleSave}
+                      disabled={isBusy || !editName.trim() || (!editBody.trim() && !editHtmlBody.trim())}
+                      className={`relative inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-schibsted text-sm font-medium transition-all duration-200 min-w-[110px] ${
+                        saveStatus === "success"
+                          ? "bg-green-600 text-white"
+                          : "bg-sky-600 hover:bg-sky-700 text-white"
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      <AnimatePresence mode="wait">
+                        {saveStatus === "loading" && (
+                          <motion.span key="l" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
+                            <Loader2 className="size-4 animate-spin" /> Saving...
+                          </motion.span>
+                        )}
+                        {saveStatus === "success" && (
+                          <motion.span key="s" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
+                            <IconCheck size={15} /> Saved!
+                          </motion.span>
+                        )}
+                        {saveStatus === "idle" && (
+                          <motion.span key="i" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
+                            <IconCheck size={15} /> Save
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setPreviewing(true)}
+                      disabled={isBusy}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 font-schibsted text-sm font-medium transition-colors duration-150 disabled:opacity-50 cursor-pointer"
+                    >
+                      <IconEye size={14} /> Preview
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setEditing(false)}
+                      disabled={isBusy}
+                      className="px-4 py-2.5 rounded-lg border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 font-schibsted text-sm font-medium transition-colors duration-150 disabled:opacity-50 cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </CardContent>
+        </Card>
       </motion.div>
 
+      {/* Preview modal */}
       <AnimatePresence>
         {previewing && (
           <PreviewModal
-            template={template}
+            name={editing ? editName : template.name}
+            subject={editing ? editSubject : template.subject}
+            body={editing ? editBody : template.body}
+            htmlBody={editing ? editHtmlBody : (template.htmlBody ?? "")}
             onClose={() => setPreviewing(false)}
           />
         )}
@@ -399,263 +782,109 @@ function TemplateCard({
   );
 }
 
-// ─── Add Form ─────────────────────────────────────────────────────────────────
-
-function AddTemplateForm({ onAdd }: { onAdd: (t: EmailTemplate) => void }) {
-  const [name, setName] = useState("");
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
-  const [state, setState] = useState<FormState>("idle");
-  const [open, setOpen] = useState(false);
-
-  const insertVar = (v: string) => setBody((b) => b + v);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || !body.trim()) return;
-    setState("loading");
-    try {
-      const res = await fetch("/api/email-templates", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          subject: subject.trim(),
-          body: body.trim(),
-        }),
-      });
-      if (!res.ok) throw new Error("Failed to create");
-      const created = await res.json();
-      onAdd(created);
-      setName("");
-      setSubject("");
-      setBody("");
-      setState("success");
-      toast.success("Template created!");
-      setTimeout(() => {
-        setState("idle");
-        setOpen(false);
-      }, 1200);
-    } catch {
-      setState("error");
-      toast.error("Failed to create template");
-      setTimeout(() => setState("idle"), 1500);
-    }
-  };
-
-  return (
-    <div className="rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-700 overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center gap-3 px-5 py-4 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors cursor-pointer focus:outline-none group"
-      >
-        <div className="w-9 h-9 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center group-hover:bg-violet-100 dark:group-hover:bg-violet-900/30 transition-colors">
-          <IconPlus
-            size={16}
-            className="text-neutral-500 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors"
-          />
-        </div>
-        <div className="text-left">
-          <p className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-            New Template
-          </p>
-          <p className="text-xs text-neutral-400">
-            Create a reusable template with dynamic variables
-          </p>
-        </div>
-        <motion.div
-          animate={{ rotate: open ? 45 : 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="ml-auto"
-        >
-          <IconPlus size={14} className="text-neutral-400" />
-        </motion.div>
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 28 }}
-            className="overflow-hidden"
-          >
-            <form
-              onSubmit={handleSubmit}
-              className="px-5 pb-5 pt-2 space-y-3 border-t border-neutral-100 dark:border-neutral-800"
-            >
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Template name (e.g. Welcome Response)"
-                required
-                className="w-full text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-violet-400 dark:focus:border-violet-500 text-neutral-900 dark:text-neutral-100 transition-colors"
-              />
-              <input
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="Email subject — e.g. Re: {subject}"
-                className="w-full text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-violet-400 dark:focus:border-violet-500 text-neutral-900 dark:text-neutral-100 transition-colors"
-              />
-
-              {/* Variable chips */}
-              <div className="flex flex-wrap gap-1.5 items-center">
-                <span className="text-[11px] text-neutral-400 font-medium flex items-center gap-1 mr-1">
-                  <IconVariable size={12} />
-                  Insert variable:
-                </span>
-                {SUPPORTED_VARS.map((v) => (
-                  <VarChip key={v.key} varKey={v.key} onClick={insertVar} />
-                ))}
-              </div>
-
-              <textarea
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder={`Hi {name},\n\nThank you for your message regarding "{subject}"...\n\nBest,\n{agent}`}
-                rows={6}
-                required
-                className="w-full text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-violet-400 dark:focus:border-violet-500 text-neutral-900 dark:text-neutral-100 resize-none transition-colors font-mono"
-              />
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="submit"
-                  disabled={state === "loading" || !name.trim() || !body.trim()}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-br from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 disabled:opacity-60 transition-all cursor-pointer focus:outline-none shadow-sm"
-                >
-                  {state === "loading" ? (
-                    <IconLoader2 size={13} className="animate-spin" />
-                  ) : state === "success" ? (
-                    <IconCheck size={13} />
-                  ) : (
-                    <IconPlus size={13} />
-                  )}
-                  {state === "loading"
-                    ? "Creating..."
-                    : state === "success"
-                    ? "Created!"
-                    : "Create Template"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
+// ─── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function EmailTemplatesPage() {
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await fetch("/api/email-templates");
-        if (!res.ok) throw new Error("Failed to load");
-        setTemplates(await res.json());
-      } catch {
-        toast.error("Could not load templates");
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+    fetch("/api/email-templates")
+      .then((r) => r.json())
+      .then(setTemplates)
+      .catch(() => toast.error("Could not load templates"))
+      .finally(() => setLoading(false));
   }, []);
 
+  if (loading) {
+    return (
+      <div className="border border-neutral-400 rounded-lg p-4 min-h-screen flex items-center justify-center">
+        <Loader2 className="size-8 animate-spin text-neutral-400" />
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10 space-y-8">
+    <div className="border border-neutral-400 rounded-lg p-4 min-h-screen">
       {/* Page Header */}
-      <div className="flex items-start gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-200 dark:shadow-violet-900/30">
-          <IconTemplate size={22} className="text-white" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-            Email Templates
-          </h1>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-            Create reusable templates with dynamic variables. These appear in
-            Slack so your team can send polished replies instantly.
-          </p>
-        </div>
+      <div className="mb-6">
+        <Heading
+          variant="muted"
+          className="font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2"
+        >
+          <IconTemplate size={22} className="shrink-0" />
+          Email Templates
+        </Heading>
+        <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400">
+          Create and manage reusable email templates. Your Slack team can pick a
+          template, edit it, and send a polished reply — variables like{" "}
+          <code className="text-xs bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded font-mono">
+            {"{name}"}
+          </code>{" "}
+          are auto-filled from the email data.
+        </Paragraph>
       </div>
 
-      {/* Variable reference */}
-      <div className="rounded-2xl bg-violet-50 dark:bg-violet-900/10 border border-violet-100 dark:border-violet-800/50 p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <IconVariable size={15} className="text-violet-600 dark:text-violet-400" />
-          <p className="text-xs font-semibold text-violet-700 dark:text-violet-300">
-            Supported Variables — click to copy
-          </p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {SUPPORTED_VARS.map((v) => (
-            <button
-              key={v.key}
-              type="button"
-              onClick={() => {
-                navigator.clipboard.writeText(v.key);
-                toast.success(`${v.key} copied!`);
-              }}
-              className="flex items-center gap-2.5 text-left hover:bg-violet-100 dark:hover:bg-violet-900/30 rounded-xl px-3 py-2 transition-colors cursor-pointer group"
-            >
-              <span className="font-mono text-[11px] font-semibold text-violet-700 dark:text-violet-300 bg-violet-100 dark:bg-violet-900/40 px-2 py-0.5 rounded-md border border-violet-200 dark:border-violet-700">
-                {v.key}
-              </span>
-              <span className="text-xs text-neutral-600 dark:text-neutral-400 group-hover:text-neutral-800 dark:group-hover:text-neutral-200 transition-colors">
-                {v.description}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+      <div className="max-w-3xl space-y-6">
 
-      {/* How it works note */}
-      <div className="rounded-2xl bg-sky-50 dark:bg-sky-900/10 border border-sky-100 dark:border-sky-800/50 p-4 flex gap-3">
-        <IconInfoCircle
-          size={16}
-          className="text-sky-500 shrink-0 mt-0.5"
-        />
-        <p className="text-xs text-sky-700 dark:text-sky-300 leading-relaxed">
-          <strong>How it works:</strong> When a new email arrives in Slack, your
-          team sees a <strong>📋 Templates</strong> button. Clicking it opens a
-          modal with your templates listed. Variables like <code>{"{name}"}</code>{" "}
-          are automatically filled from the email data. The agent can edit the
-          pre-filled text, then hit Send — and a properly formatted email is
-          delivered to the customer.
-        </p>
-      </div>
+        {/* Variable Reference Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <IconVariable size={17} />
+              Supported Variables
+            </CardTitle>
+            <CardDescription>
+              Click any variable to copy it. Use these in your subject or body.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {VARS.map((v) => (
+                <button
+                  key={v.key}
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(v.key);
+                    toast.success(`${v.key} copied!`);
+                  }}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors text-left cursor-pointer group border border-transparent hover:border-neutral-200 dark:hover:border-neutral-700"
+                >
+                  <code className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 group-hover:border-sky-300 group-hover:text-sky-700 dark:group-hover:text-sky-400 transition-colors">
+                    {v.key}
+                  </code>
+                  <span className="text-xs font-schibsted text-neutral-500 dark:text-neutral-400 group-hover:text-neutral-700 dark:group-hover:text-neutral-200 transition-colors">
+                    {v.desc}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Template list */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-            {loading
-              ? "Loading..."
-              : `${templates.length} Template${templates.length !== 1 ? "s" : ""}`}
-          </h2>
-        </div>
+        {/* How it works */}
+        <Card>
+          <CardHeader>
+            <CardTitle>How it works in Slack</CardTitle>
+            <CardDescription>
+              When an email arrives in Slack, your team sees a{" "}
+              <strong>📋 Templates</strong> button. Clicking it opens a modal
+              listing your templates. After selecting one, a pre-filled reply
+              modal opens — the agent can edit the text and hit{" "}
+              <strong>✉️ Send Email</strong>. The customer receives a properly
+              formatted email.
+            </CardDescription>
+          </CardHeader>
+        </Card>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-16 gap-3 text-neutral-400">
-            <IconLoader2 size={18} className="animate-spin" />
-            <span className="text-sm">Loading templates...</span>
+        {/* Template list */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between mb-1">
+            <p className="font-schibsted font-semibold text-sm text-neutral-700 dark:text-neutral-300">
+              {templates.length} Template{templates.length !== 1 ? "s" : ""}
+            </p>
           </div>
-        ) : (
+
           <AnimatePresence mode="popLayout" initial={false}>
             {templates.map((t) => (
               <TemplateCard
@@ -672,14 +901,12 @@ export default function EmailTemplatesPage() {
               />
             ))}
           </AnimatePresence>
-        )}
 
-        {/* Add form */}
-        {!loading && (
-          <AddTemplateForm
+          {/* Add form */}
+          <AddTemplateCard
             onAdd={(t) => setTemplates((prev) => [t, ...prev])}
           />
-        )}
+        </div>
       </div>
     </div>
   );
