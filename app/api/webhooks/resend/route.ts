@@ -574,6 +574,12 @@ export async function POST(request: Request) {
                 action_id: "canned_response_button",
                 value: emailThread._id.toString(),
               },
+              {
+                type: "button",
+                text: { type: "plain_text", text: "📋 Templates", emoji: true },
+                action_id: "template_button",
+                value: emailThread._id.toString(),
+              },
             ],
           });
 
