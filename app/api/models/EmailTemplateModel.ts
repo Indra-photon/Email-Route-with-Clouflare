@@ -61,6 +61,11 @@ const EmailTemplateSchema = new Schema<IEmailTemplate>(
 
 EmailTemplateSchema.index({ workspaceId: 1, createdAt: -1 });
 
+// Delete the cached model so schema changes (e.g. body becoming optional)
+// take effect immediately without requiring a full server restart.
+if (mongoose.models.EmailTemplate) {
+  delete mongoose.models.EmailTemplate;
+}
+
 export const EmailTemplate: Model<IEmailTemplate> =
-  (mongoose.models.EmailTemplate as Model<IEmailTemplate>) ||
   mongoose.model<IEmailTemplate>("EmailTemplate", EmailTemplateSchema);

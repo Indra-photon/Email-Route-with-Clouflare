@@ -274,6 +274,7 @@ function AddTemplateCard({ onAdd }: { onAdd: (t: EmailTemplate) => void }) {
   const [body, setBody] = useState("");
   const [htmlBody, setHtmlBody] = useState("");
   const [status, setStatus] = useState<FormStatus>("idle");
+  const [previewing, setPreviewing] = useState(false);
 
   const isBusy = status !== "idle";
 
@@ -406,7 +407,7 @@ function AddTemplateCard({ onAdd }: { onAdd: (t: EmailTemplate) => void }) {
               />
 
               {/* Actions */}
-              <div className="flex items-center gap-3 pt-2">
+              <div className="flex flex-wrap items-center gap-3 pt-2">
                 <button
                   type="submit"
                   disabled={isBusy || !name.trim() || (!body.trim() && !htmlBody.trim())}
@@ -434,6 +435,16 @@ function AddTemplateCard({ onAdd }: { onAdd: (t: EmailTemplate) => void }) {
                     )}
                   </AnimatePresence>
                 </button>
+
+                <button
+                  type="button"
+                  disabled={isBusy || (!body.trim() && !htmlBody.trim())}
+                  onClick={() => setPreviewing(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 font-schibsted text-sm font-medium transition-colors duration-150 disabled:opacity-50 cursor-pointer"
+                >
+                  <IconEye size={14} /> Preview
+                </button>
+
                 <button
                   type="button"
                   disabled={isBusy}
@@ -445,6 +456,19 @@ function AddTemplateCard({ onAdd }: { onAdd: (t: EmailTemplate) => void }) {
               </div>
             </form>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Preview modal */}
+      <AnimatePresence>
+        {previewing && (
+          <PreviewModal
+            name={name || "New Template"}
+            subject={subject}
+            body={body}
+            htmlBody={htmlBody}
+            onClose={() => setPreviewing(false)}
+          />
         )}
       </AnimatePresence>
     </Card>
