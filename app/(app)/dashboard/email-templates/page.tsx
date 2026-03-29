@@ -20,6 +20,7 @@ import {
   IconPlus,
   IconX,
   IconCheck,
+  IconTerminal,
   IconCode,
   IconAlignLeft,
   IconVariable,
@@ -49,7 +50,7 @@ const VARS = [
   { key: "{subject}", desc: "Email subject" },
   { key: "{date}",    desc: "Today's date" },
   { key: "{agent}",   desc: "Agent / admin name" },
-  { key: "{message}", desc: "Slack reply text (HTML mode)" },
+  { key: "[message] ... [/message]", desc: "Slack editable region (HTML mode)" },
 ];
 
 // ─── Preview Modal ───────────────────────────────────────────────────────────────
@@ -58,25 +59,27 @@ function PreviewModal({
   name,
   subject,
   body,
-  htmlBody,
   onClose,
 }: {
   name: string;
   subject: string;
   body: string;
-  htmlBody: string;
   onClose: () => void;
 }) {
-  const [tab, setTab] = useState<"plain" | "html">("plain");
+  const isHtml = /<[a-z][\s\S]*>/i.test(body);
 
-  const sampleVars = (text: string) =>
-    text
+  const sampleVars = (text: string) => {
+    let result = text
       .replace(/\{name\}/g, "Jane Smith")
       .replace(/\{email\}/g, "jane@example.com")
       .replace(/\{subject\}/g, subject || "Support Request")
       .replace(/\{date\}/g, new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }))
-      .replace(/\{agent\}/g, "Alex (Support)")
-      .replace(/\{message\}/g, body ? body.replace(/\n/g, "<br/>") : "Your custom edit text from Slack will go here.");
+      .replace(/\{agent\}/g, "Alex (Support)");
+      
+    // Drop the [message] tags for preview rendering
+    result = result.replace(/\[message\]([\s\S]*?)\[\/message\]/ig, (_, match) => match);
+    return result;
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -109,24 +112,6 @@ function PreviewModal({
           </button>
         </div>
 
-        {/* Tab toggle */}
-        <div className="flex gap-1 px-6 pt-4">
-          {(["plain", "html"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-schibsted font-medium transition-all duration-150 ${
-                tab === t
-                  ? "bg-sky-600 text-white"
-                  : "text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-              }`}
-            >
-              {t === "plain" ? "Plain Text" : "HTML"}
-            </button>
-          ))}
-        </div>
-
-        {/* Content */}
         <div className="px-6 py-4 space-y-3 max-h-[60vh] overflow-y-auto">
           <div className="rounded-lg bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 p-4 space-y-3">
             <div className="flex gap-2 text-xs font-schibsted">
@@ -136,19 +121,15 @@ function PreviewModal({
               </span>
             </div>
             <div className="border-t border-neutral-200 dark:border-neutral-700 pt-3">
-              {tab === "plain" ? (
+              {isHtml ? (
+                <div
+                  className="text-sm text-neutral-800 dark:text-neutral-200 prose dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: sampleVars(body) }}
+                />
+              ) : (
                 <pre className="text-xs font-schibsted text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap leading-relaxed">
                   {sampleVars(body) || "(empty)"}
                 </pre>
-              ) : htmlBody ? (
-                <div
-                  className="text-sm text-neutral-800 dark:text-neutral-200 prose dark:prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{ __html: sampleVars(htmlBody) }}
-                />
-              ) : (
-                <p className="text-xs font-schibsted text-neutral-400 italic">
-                  No HTML body defined — plain text will be sent.
-                </p>
               )}
             </div>
           </div>
@@ -164,106 +145,41 @@ function PreviewModal({
 // ─── Editor section (plain + html with toggle) ──────────────────────────────────
 
 function BodyEditor({
-  plainValue,
-  htmlValue,
-  onPlainChange,
-  onHtmlChange,
+  value,
+  onChange,
   disabled,
 }: {
-  plainValue: string;
-  htmlValue: string;
-  onPlainChange: (v: string) => void;
-  onHtmlChange: (v: string) => void;
+  value: string;
+  onChange: (v: string) => void;
   disabled?: boolean;
 }) {
-  const [mode, setMode] = useState<EditorMode>("plain");
-
   const inputClass =
     "w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-mono text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 transition-colors duration-100 focus:border-sky-600 outline-none resize-none disabled:opacity-50 disabled:cursor-not-allowed";
 
   return (
     <div className="space-y-2">
-      {/* Mode toggle bar */}
       <div className="flex items-center gap-2">
         <span className="text-sm font-schibsted text-neutral-700 dark:text-neutral-300 font-medium">
           Body
         </span>
-        <div className="ml-auto flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg p-0.5">
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={() => setMode("plain")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-schibsted font-medium transition-all duration-150 ${
-              mode === "plain"
-                ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm"
-                : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
-          >
-            <IconAlignLeft size={12} />
-            Plain Text
-          </button>
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={() => setMode("html")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-schibsted font-medium transition-all duration-150 ${
-              mode === "html"
-                ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm"
-                : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
-          >
-            <IconCode size={12} />
-            HTML
-          </button>
-        </div>
       </div>
 
-      {/* Textarea */}
-      <AnimatePresence mode="wait" initial={false}>
-        {mode === "plain" ? (
-          <motion.div
-            key="plain"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15 }}
-          >
-            <textarea
-              value={plainValue}
-              onChange={(e) => onPlainChange(e.target.value)}
-              disabled={disabled}
-              rows={8}
-              placeholder={`Hi {name},\n\nThank you for reaching out about "{subject}".\n\n...\n\nBest regards,\n{agent}`}
-              className={inputClass}
-            />
-            <div className="mt-2 text-xs font-schibsted text-neutral-600 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800/50 px-3 py-2.5 rounded-lg border border-neutral-200 dark:border-neutral-700/50">
-              <strong className="text-neutral-900 dark:text-neutral-100 block mb-0.5 flex items-center gap-1.5"><IconAlignLeft size={14} /> Plain Text Usage:</strong>
-              This text is what your team reads and edits inside the Slack reply modal. When they click Send, this text gets injected into your HTML design exactly where the <code className="font-mono bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-1 rounded text-[10px] text-sky-600 dark:text-sky-400">{"{message}"}</code> tag is placed.
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="html"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15 }}
-          >
-            <textarea
-              value={htmlValue}
-              onChange={(e) => onHtmlChange(e.target.value)}
-              disabled={disabled}
-              rows={10}
-              placeholder={`<!DOCTYPE html>\n<html>\n<body style="font-family:sans-serif;...">\n  <p>Hi {name},</p>\n  <p>{message}</p>\n</body>\n</html>`}
-              className={inputClass}
-            />
-            <div className="mt-2 text-xs font-schibsted text-sky-800 dark:text-sky-200 bg-sky-50 dark:bg-sky-900/20 px-3 py-2.5 rounded-lg border border-sky-100 dark:border-sky-800">
-              <strong className="block mb-0.5 flex items-center gap-1.5"><IconCode size={14} /> Crucial Rule for HTML:</strong>
-              You MUST map your Plain Text (from the other tab) into this design by placing the <code className="font-mono bg-white/60 dark:bg-sky-900/50 border border-sky-200 dark:border-sky-700 px-1 rounded text-[10px]">{"{message}"}</code> tag between your paragraph tags, like <code className="font-mono bg-white/60 dark:bg-sky-900/50 border border-sky-200 dark:border-sky-700 px-1 rounded text-[10px]">{"<p>{message}</p>"}</code>. 
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        rows={12}
+        placeholder={`Hi {name},\n\nThank you for reaching out about "{subject}".\n\n...\n-- OR --\n<html>...[message]Hi {name}...[/message]...</html>`}
+        className={inputClass}
+      />
+      <div className="mt-2 text-xs font-schibsted text-sky-800 dark:text-sky-200 bg-sky-50 dark:bg-sky-900/20 px-3 py-3 rounded-lg border border-sky-100 dark:border-sky-800">
+        <strong className="block mb-1 font-semibold flex items-center gap-1.5"><IconTerminal size={14} /> Smart Slack Integration</strong>
+        <ul className="list-disc pl-4 space-y-1.5 text-sky-700 dark:text-sky-300">
+          <li><strong>Plain Text:</strong> Write normal text. The complete text will be editable in Slack and sent as a normal email.</li>
+          <li><strong>Editable HTML:</strong> Paste your HTML and wrap your message in <code className="font-mono bg-white/60 dark:bg-sky-900/50 border border-sky-200 dark:border-sky-700 px-1 rounded text-[10px]">{"[message] Your text [/message]"}</code>. Only the content between the tags will be editable in Slack.</li>
+          <li><strong>Static HTML:</strong> Paste HTML without tags. The agent in Slack will not see messy code, and the template will send exactly as designed.</li>
+        </ul>
+      </div>
     </div>
   );
 }
@@ -275,7 +191,6 @@ function AddTemplateCard({ onAdd }: { onAdd: (t: EmailTemplate) => void }) {
   const [name, setName] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
-  const [htmlBody, setHtmlBody] = useState("");
   const [status, setStatus] = useState<FormStatus>("idle");
   const [previewing, setPreviewing] = useState(false);
 
@@ -285,7 +200,7 @@ function AddTemplateCard({ onAdd }: { onAdd: (t: EmailTemplate) => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || (!body.trim() && !htmlBody.trim())) return;
+    if (!name.trim() || !body.trim()) return;
     setStatus("loading");
     try {
       const res = await fetch("/api/email-templates", {
@@ -295,13 +210,12 @@ function AddTemplateCard({ onAdd }: { onAdd: (t: EmailTemplate) => void }) {
           name: name.trim(),
           subject: subject.trim(),
           body: body.trim(),
-          htmlBody: htmlBody.trim() || undefined,
         }),
       });
       if (!res.ok) throw new Error("Failed");
       const created = await res.json();
       onAdd(created);
-      setName(""); setSubject(""); setBody(""); setHtmlBody("");
+      setName(""); setSubject(""); setBody("");
       setStatus("success");
       toast.success("Template created!");
       setTimeout(() => { setStatus("idle"); setOpen(false); }, 1200);
@@ -402,10 +316,8 @@ function AddTemplateCard({ onAdd }: { onAdd: (t: EmailTemplate) => void }) {
 
               {/* Body editor */}
               <BodyEditor
-                plainValue={body}
-                htmlValue={htmlBody}
-                onPlainChange={setBody}
-                onHtmlChange={setHtmlBody}
+                value={body}
+                onChange={setBody}
                 disabled={isBusy}
               />
 
@@ -413,7 +325,7 @@ function AddTemplateCard({ onAdd }: { onAdd: (t: EmailTemplate) => void }) {
               <div className="flex flex-wrap items-center gap-3 pt-2">
                 <button
                   type="submit"
-                  disabled={isBusy || !name.trim() || (!body.trim() && !htmlBody.trim())}
+                  disabled={isBusy || !name.trim() || !body.trim()}
                   className={`relative inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-schibsted text-sm font-medium transition-all duration-200 overflow-hidden min-w-[140px] ${
                     status === "success"
                       ? "bg-green-600 text-white"
@@ -441,7 +353,7 @@ function AddTemplateCard({ onAdd }: { onAdd: (t: EmailTemplate) => void }) {
 
                 <button
                   type="button"
-                  disabled={isBusy || (!body.trim() && !htmlBody.trim())}
+                  disabled={isBusy || !body.trim()}
                   onClick={() => setPreviewing(true)}
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 font-schibsted text-sm font-medium transition-colors duration-150 disabled:opacity-50 cursor-pointer"
                 >
@@ -451,7 +363,7 @@ function AddTemplateCard({ onAdd }: { onAdd: (t: EmailTemplate) => void }) {
                 <button
                   type="button"
                   disabled={isBusy}
-                  onClick={() => { setOpen(false); setName(""); setSubject(""); setBody(""); setHtmlBody(""); }}
+                  onClick={() => { setOpen(false); setName(""); setSubject(""); setBody(""); }}
                   className="px-4 py-2.5 rounded-lg border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 font-schibsted text-sm font-medium transition-colors duration-150 disabled:opacity-50 cursor-pointer"
                 >
                   Cancel
@@ -469,7 +381,6 @@ function AddTemplateCard({ onAdd }: { onAdd: (t: EmailTemplate) => void }) {
             name={name || "New Template"}
             subject={subject}
             body={body}
-            htmlBody={htmlBody}
             onClose={() => setPreviewing(false)}
           />
         )}
@@ -494,7 +405,6 @@ function TemplateCard({
   const [editName, setEditName] = useState(template.name);
   const [editSubject, setEditSubject] = useState(template.subject);
   const [editBody, setEditBody] = useState(template.body);
-  const [editHtmlBody, setEditHtmlBody] = useState(template.htmlBody ?? "");
   const [saveStatus, setSaveStatus] = useState<FormStatus>("idle");
   const [delStatus, setDelStatus] = useState<FormStatus>("idle");
 
@@ -505,13 +415,12 @@ function TemplateCard({
   const startEdit = () => {
     setEditName(template.name);
     setEditSubject(template.subject);
-    setEditBody(template.body);
-    setEditHtmlBody(template.htmlBody ?? "");
+    setEditBody(template.htmlBody ? template.htmlBody : template.body);
     setEditing(true);
   };
 
   const handleSave = async () => {
-    if (!editName.trim() || (!editBody.trim() && !editHtmlBody.trim())) return;
+    if (!editName.trim() || !editBody.trim()) return;
     setSaveStatus("loading");
     try {
       const res = await fetch(`/api/email-templates/${template._id}`, {
@@ -521,7 +430,6 @@ function TemplateCard({
           name: editName.trim(),
           subject: editSubject.trim(),
           body: editBody.trim(),
-          htmlBody: editHtmlBody.trim() || undefined,
         }),
       });
       if (!res.ok) throw new Error("Failed");
@@ -706,10 +614,8 @@ function TemplateCard({
 
                   {/* Body editor with toggle */}
                   <BodyEditor
-                    plainValue={editBody}
-                    htmlValue={editHtmlBody}
-                    onPlainChange={setEditBody}
-                    onHtmlChange={setEditHtmlBody}
+                    value={editBody}
+                    onChange={setEditBody}
                     disabled={isBusy}
                   />
 
@@ -718,7 +624,7 @@ function TemplateCard({
                     <button
                       type="button"
                       onClick={handleSave}
-                      disabled={isBusy || !editName.trim() || (!editBody.trim() && !editHtmlBody.trim())}
+                      disabled={isBusy || !editName.trim() || !editBody.trim()}
                       className={`relative inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-schibsted text-sm font-medium transition-all duration-200 min-w-[110px] ${
                         saveStatus === "success"
                           ? "bg-green-600 text-white"
@@ -775,8 +681,7 @@ function TemplateCard({
           <PreviewModal
             name={editing ? editName : template.name}
             subject={editing ? editSubject : template.subject}
-            body={editing ? editBody : template.body}
-            htmlBody={editing ? editHtmlBody : (template.htmlBody ?? "")}
+            body={editing ? editBody : (template.htmlBody ? template.htmlBody : template.body)}
             onClose={() => setPreviewing(false)}
           />
         )}

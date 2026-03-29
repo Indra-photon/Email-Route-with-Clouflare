@@ -379,18 +379,26 @@ export async function POST(request: Request) {
 
       const agentName = payload.user?.name || payload.user?.real_name || "Support Team";
 
-      // Auto-fill all variables in both subject and body
-      const filledBody = substituteVars(template.body, thread, agentName);
+      const rawTemplate = template.body || template.htmlBody || "";
+      const filledTemplate = substituteVars(rawTemplate, thread, agentName);
+      
+      const isHtml = /<[a-z][\s\S]*>/i.test(filledTemplate);
+      const messageMatch = filledTemplate.match(/\[message\]([\s\S]*?)\[\/message\]/i);
+
+      let slackInitialText = "";
+      if (messageMatch) {
+        slackInitialText = messageMatch[1].replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
+      } else if (isHtml) {
+        slackInitialText = "";
+      } else {
+        slackInitialText = filledTemplate;
+      }
+
       const filledSubject = substituteVars(
         template.subject || `Re: ${thread.subject}`,
         thread,
         agentName
       );
-
-      // Also fill variables in htmlBody if present
-      const filledHtmlBody = template.htmlBody
-        ? substituteVars(template.htmlBody, thread, agentName)
-        : "";
 
       // Push reply modal pre-filled with template — agent can still edit
       return NextResponse.json({
@@ -398,8 +406,7 @@ export async function POST(request: Request) {
         view: {
           type: "modal",
           callback_id: "template_reply_modal",
-          // pass threadId + filledSubject + htmlBody in metadata
-          private_metadata: JSON.stringify({ threadId, subject: filledSubject, htmlBody: filledHtmlBody }),
+          private_metadata: JSON.stringify({ threadId, subject: filledSubject, templateId: template._id }),
           title: { type: "plain_text", text: "📋 Send Template Reply" },
           submit: { type: "plain_text", text: "✉️ Send Email" },
           close: { type: "plain_text", text: "Cancel" },
@@ -418,13 +425,14 @@ export async function POST(request: Request) {
               label: { type: "plain_text", text: "Message (editable)" },
               hint: {
                 type: "plain_text",
-                text: "Variables have been auto-filled. You can still edit freely before sending.",
+                text: messageMatch ? "You are editing the [message] section of the template." : isHtml ? "Static HTML template. Add an optional note below." : "Variables have been auto-filled. You can edit freely before sending.",
               },
+              optional: (isHtml && !messageMatch) ? true : false,
               element: {
                 type: "plain_text_input",
                 action_id: "template_reply_input",
                 multiline: true,
-                initial_value: filledBody,
+                ...(slackInitialText ? { initial_value: slackInitialText } : {})
               },
             },
           ],
@@ -436,12 +444,12 @@ export async function POST(request: Request) {
     if (callbackId === "template_reply_modal") {
       let threadId: string;
       let subjectOverride: string | null = null;
-      let templateHtmlBody: string = "";
+      let templateId: string | null = null;
       try {
         const meta = JSON.parse(payload.view.private_metadata);
         threadId = meta.threadId;
         subjectOverride = meta.subject || null;
-        templateHtmlBody = meta.htmlBody || "";
+        templateId = meta.templateId || null;
       } catch {
         threadId = payload.view.private_metadata;
       }
@@ -450,12 +458,33 @@ export async function POST(request: Request) {
         payload.view.state.values?.template_reply_body?.template_reply_input?.value || ""
       ).trim();
 
-      if (!replyText) return NextResponse.json({ response_action: "clear" });
-
       await dbConnect();
 
       const thread = await EmailThread.findById(threadId);
       if (!thread) return NextResponse.json({ response_action: "clear" });
+
+      let finalHtmlBody = "";
+      let finalPlainText = replyText;
+      const agentName = payload.user?.name || payload.user?.real_name || "Support Team";
+
+      if (templateId) {
+        const template = await EmailTemplate.findById(templateId).lean();
+        if (template) {
+          const rawTemplate = template.body || template.htmlBody || "";
+          const filledTemplate = substituteVars(rawTemplate, thread, agentName);
+          const isHtml = /<[a-z][\s\S]*>/i.test(filledTemplate);
+          
+          if (filledTemplate.match(/\[message\]([\s\S]*?)\[\/message\]/i)) {
+             finalHtmlBody = filledTemplate.replace(/\[message\][\s\S]*?\[\/message\]/ig, replyText.replace(/\n/g, "<br/>"));
+             finalPlainText = replyText;
+          } else if (isHtml) {
+             finalHtmlBody = filledTemplate + (replyText ? `<br><br><p>${replyText.replace(/\n/g, "<br/>")}</p>` : "");
+             finalPlainText = replyText;
+          } else {
+             finalPlainText = replyText || filledTemplate;
+          }
+        }
+      }
 
       const alias = await Alias.findById(thread.aliasId).lean();
       const domain = alias
@@ -476,20 +505,11 @@ export async function POST(request: Request) {
       const references = [thread.messageId, ...(thread.references || [])].filter(Boolean);
       const referencesHeader = references.join(" ");
 
-      // Use template htmlBody if available, else build a minimal wrapper
-      let htmlBody = templateHtmlBody;
-      
-      if (htmlBody) {
-        if (htmlBody.includes("{message}")) {
-          htmlBody = htmlBody.replace(/\{message\}/g, replyText.replace(/\n/g, "<br/>"));
-        } else {
-          // They supplied HTML but didn't put {message}
-          // The plain text text part still contains replyText
-        }
-      } else {
-        htmlBody = `<!DOCTYPE html>
+      // If missing HTML but we have text, build basic HTML
+      if (!finalHtmlBody) {
+        finalHtmlBody = `<!DOCTYPE html>
 <html><body style="font-family:sans-serif;font-size:14px;line-height:1.6;color:#1a1a1a;max-width:600px;margin:0 auto;padding:24px">
-${replyText.replace(/\n/g, "<br/>")}
+${finalPlainText.replace(/\n/g, "<br/>")}
 </body></html>`;
       }
 
@@ -497,8 +517,8 @@ ${replyText.replace(/\n/g, "<br/>")}
         from: fromAddress,
         to: thread.from,
         subject: replySubject,
-        text: replyText,
-        html: htmlBody,
+        text: finalPlainText,
+        html: finalHtmlBody,
         headers: {
           "In-Reply-To": thread.messageId,
           ...(referencesHeader ? { References: referencesHeader } : {}),
@@ -569,8 +589,8 @@ ${replyText.replace(/\n/g, "<br/>")}
         from: storedFrom,
         to: thread.from,
         subject: replySubject,
-        textBody: replyText,
-        htmlBody,
+        textBody: finalPlainText,
+        htmlBody: finalHtmlBody,
         direction: "outbound",
         status: "waiting",
         statusUpdatedAt: new Date(),
