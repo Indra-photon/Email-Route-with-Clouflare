@@ -76,10 +76,27 @@ function substituteVars(
   thread: { from: string; fromName?: string; subject: string; to: string },
   agentName: string
 ): string {
-  const name = thread.fromName?.trim() || thread.from.replace(/<[^>]+>/, "").trim() || thread.from;
+  let name = thread.fromName?.trim();
+  
+  const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/;
+  const emailMatch = thread.from.match(emailRegex);
+  const email = emailMatch ? emailMatch[1] : thread.from;
+
+  if (!name) {
+    const noTags = thread.from.replace(/<[^>]+>/, "").trim();
+    if (noTags && !noTags.includes("@")) {
+      name = noTags;
+    } else {
+      name = email.split("@")[0];
+    }
+  }
+
+  // Capitalize name
+  name = name.charAt(0).toUpperCase() + name.slice(1);
+
   return text
     .replace(/\{name\}/g, name)
-    .replace(/\{email\}/g, thread.from)
+    .replace(/\{email\}/g, email)
     .replace(/\{subject\}/g, thread.subject)
     .replace(/\{date\}/g, new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }))
     .replace(/\{agent\}/g, agentName || "Support Team");
@@ -460,11 +477,21 @@ export async function POST(request: Request) {
       const referencesHeader = references.join(" ");
 
       // Use template htmlBody if available, else build a minimal wrapper
-      const htmlBody = templateHtmlBody ||
-        `<!DOCTYPE html>
+      let htmlBody = templateHtmlBody;
+      
+      if (htmlBody) {
+        if (htmlBody.includes("{message}")) {
+          htmlBody = htmlBody.replace(/\{message\}/g, replyText.replace(/\n/g, "<br/>"));
+        } else {
+          // They supplied HTML but didn't put {message}
+          // The plain text text part still contains replyText
+        }
+      } else {
+        htmlBody = `<!DOCTYPE html>
 <html><body style="font-family:sans-serif;font-size:14px;line-height:1.6;color:#1a1a1a;max-width:600px;margin:0 auto;padding:24px">
 ${replyText.replace(/\n/g, "<br/>")}
 </body></html>`;
+      }
 
       const { data: sentEmail, error: sendError } = await resend.emails.send({
         from: fromAddress,

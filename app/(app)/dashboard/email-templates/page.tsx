@@ -49,6 +49,7 @@ const VARS = [
   { key: "{subject}", desc: "Email subject" },
   { key: "{date}",    desc: "Today's date" },
   { key: "{agent}",   desc: "Agent / admin name" },
+  { key: "{message}", desc: "Slack reply text (HTML mode)" },
 ];
 
 // ─── Preview Modal ───────────────────────────────────────────────────────────────
@@ -74,7 +75,8 @@ function PreviewModal({
       .replace(/\{email\}/g, "jane@example.com")
       .replace(/\{subject\}/g, subject || "Support Request")
       .replace(/\{date\}/g, new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }))
-      .replace(/\{agent\}/g, "Alex (Support)");
+      .replace(/\{agent\}/g, "Alex (Support)")
+      .replace(/\{message\}/g, body ? body.replace(/\n/g, "<br/>") : "Your custom edit text from Slack will go here.");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -234,9 +236,10 @@ function BodyEditor({
               placeholder={`Hi {name},\n\nThank you for reaching out about "{subject}".\n\n...\n\nBest regards,\n{agent}`}
               className={inputClass}
             />
-            <p className="text-xs font-schibsted text-neutral-400 mt-1">
-              Plain text sent via Slack → email. Variables auto-replaced on send.
-            </p>
+            <div className="mt-2 text-xs font-schibsted text-neutral-600 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800/50 px-3 py-2.5 rounded-lg border border-neutral-200 dark:border-neutral-700/50">
+              <strong className="text-neutral-900 dark:text-neutral-100 block mb-0.5 flex items-center gap-1.5"><IconAlignLeft size={14} /> Plain Text Usage:</strong>
+              This text is what your team reads and edits inside the Slack reply modal. When they click Send, this text gets injected into your HTML design exactly where the <code className="font-mono bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-1 rounded text-[10px] text-sky-600 dark:text-sky-400">{"{message}"}</code> tag is placed.
+            </div>
           </motion.div>
         ) : (
           <motion.div
@@ -251,13 +254,13 @@ function BodyEditor({
               onChange={(e) => onHtmlChange(e.target.value)}
               disabled={disabled}
               rows={10}
-              placeholder={`<!DOCTYPE html>\n<html>\n<body style="font-family:sans-serif;...">\n  <p>Hi {name},</p>\n  ...\n</body>\n</html>`}
+              placeholder={`<!DOCTYPE html>\n<html>\n<body style="font-family:sans-serif;...">\n  <p>Hi {name},</p>\n  <p>{message}</p>\n</body>\n</html>`}
               className={inputClass}
             />
-            <p className="text-xs font-schibsted text-neutral-400 mt-1">
-              Full HTML/CSS wrapper. This is what the customer receives via email.
-              Variables like <code className="bg-neutral-100 dark:bg-neutral-800 px-1 rounded">{"{name}"}</code> are replaced before sending.
-            </p>
+            <div className="mt-2 text-xs font-schibsted text-sky-800 dark:text-sky-200 bg-sky-50 dark:bg-sky-900/20 px-3 py-2.5 rounded-lg border border-sky-100 dark:border-sky-800">
+              <strong className="block mb-0.5 flex items-center gap-1.5"><IconCode size={14} /> Crucial Rule for HTML:</strong>
+              You MUST map your Plain Text (from the other tab) into this design by placing the <code className="font-mono bg-white/60 dark:bg-sky-900/50 border border-sky-200 dark:border-sky-700 px-1 rounded text-[10px]">{"{message}"}</code> tag between your paragraph tags, like <code className="font-mono bg-white/60 dark:bg-sky-900/50 border border-sky-200 dark:border-sky-700 px-1 rounded text-[10px]">{"<p>{message}</p>"}</code>. 
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
