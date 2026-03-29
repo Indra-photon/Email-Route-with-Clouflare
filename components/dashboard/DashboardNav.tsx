@@ -222,7 +222,7 @@ import { useState, useEffect } from "react";
 import { motion, LayoutGroup, AnimatePresence } from "motion/react";
 import { Menu, X, CreditCard, User, Palette } from "lucide-react";
 import { IconDashboard, IconMail, IconGlobe, IconAtSign, IconZap } from "@/constants/icons";
-import { IconMessageCircle, IconMessages } from "@tabler/icons-react";
+import { IconMessageCircle, IconMessages, IconTemplate } from "@tabler/icons-react";
 import { useUserStore } from "@/lib/store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DashboardBreadcrumb } from "@/components/dashboard/DashboardBreadcrumb";
@@ -300,6 +300,13 @@ const navGroups = [
         label: "Customize App",
         icon: null,
         tablerIcon: Palette,
+        exact: false,
+      },
+      {
+        href: "/dashboard/email-templates",
+        label: "Email Templates",
+        icon: null,
+        tablerIcon: IconTemplate,
         exact: false,
       },
     ],

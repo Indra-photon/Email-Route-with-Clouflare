@@ -64,10 +64,26 @@ import { Resend } from "resend";
 import dbConnect from "@/lib/dbConnect";
 import { EmailThread } from "@/app/api/models/EmailThreadModel";
 import { CannedResponse } from "@/app/api/models/CannedResponseModel";
+import { EmailTemplate } from "@/app/api/models/EmailTemplateModel";
 import { Integration } from "@/app/api/models/IntegrationModel";
 import { Alias } from "@/app/api/models/AliasModel";
 import { Domain } from "@/app/api/models/DomainModel";
 import { Subscription } from "@/app/api/models/SubscriptionModel";
+
+// ── Helper: substitute {name}, {email}, {subject}, {date}, {agent} in a string
+function substituteVars(
+  text: string,
+  thread: { from: string; fromName?: string; subject: string; to: string },
+  agentName: string
+): string {
+  const name = thread.fromName?.trim() || thread.from.replace(/<[^>]+>/, "").trim() || thread.from;
+  return text
+    .replace(/\{name\}/g, name)
+    .replace(/\{email\}/g, thread.from)
+    .replace(/\{subject\}/g, thread.subject)
+    .replace(/\{date\}/g, new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }))
+    .replace(/\{agent\}/g, agentName || "Support Team");
+}
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -193,6 +209,83 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
+    // ── New: template button ─────────────────────────────────────────────
+    if (actionId === "template_button") {
+      const threadId = action.value;
+      const triggerId = payload.trigger_id;
+
+      await dbConnect();
+
+      const thread = await EmailThread.findById(threadId).lean();
+      if (!thread) return NextResponse.json({ ok: true });
+
+      const integration = await Integration.findOne({
+        slackChannelId: thread.slackChannelId,
+        authMethod: "oauth",
+      }).lean();
+
+      if (!integration?.slackAccessToken) return NextResponse.json({ ok: true });
+
+      // Fetch workspace-level templates
+      const templates = await EmailTemplate.find({ workspaceId: thread.workspaceId })
+        .sort({ createdAt: -1 })
+        .lean();
+
+      const options = templates.length > 0
+        ? templates.map((t) => ({
+            text: { type: "plain_text", text: t.name.slice(0, 75) },
+            value: t._id.toString(),
+          }))
+        : null;
+
+      await fetch("https://slack.com/api/views.open", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${integration.slackAccessToken}`,
+        },
+        body: JSON.stringify({
+          trigger_id: triggerId,
+          view: {
+            type: "modal",
+            callback_id: "template_picker",
+            private_metadata: threadId,
+            title: { type: "plain_text", text: "📋 Email Templates" },
+            ...(options ? { submit: { type: "plain_text", text: "Use Template" } } : {}),
+            close: { type: "plain_text", text: "Cancel" },
+            blocks: [
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text: options
+                    ? `*Choose a template* to pre-fill your reply.\nVariables like \`{name}\`, \`{email}\` will be auto-filled from the email.`
+                    : "No templates found. Create some from the *Email Templates* section in your dashboard.",
+                },
+              },
+              ...(options
+                ? [
+                    {
+                      type: "input",
+                      block_id: "template_select_block",
+                      label: { type: "plain_text", text: "Select template" },
+                      element: {
+                        type: "static_select",
+                        action_id: "selected_template",
+                        placeholder: { type: "plain_text", text: "Choose a template..." },
+                        options,
+                      },
+                    },
+                  ]
+                : []),
+            ],
+          },
+        }),
+      });
+
+      return NextResponse.json({ ok: true });
+    }
+
     return NextResponse.json({ ok: true });
   }
 
@@ -248,6 +341,221 @@ export async function POST(request: Request) {
           ],
         },
       });
+    }
+
+    // ── Template picker submitted ────────────────────────────────────────
+    if (callbackId === "template_picker") {
+      const threadId = payload.view.private_metadata;
+      const selectedId =
+        payload.view.state.values?.template_select_block?.selected_template?.selected_option?.value;
+
+      if (!selectedId) return NextResponse.json({ response_action: "clear" });
+
+      await dbConnect();
+
+      const [thread, template] = await Promise.all([
+        EmailThread.findById(threadId).lean(),
+        EmailTemplate.findById(selectedId).lean(),
+      ]);
+
+      if (!thread || !template) return NextResponse.json({ response_action: "clear" });
+
+      const agentName = payload.user?.name || payload.user?.real_name || "Support Team";
+
+      // Auto-fill all variables in both subject and body
+      const filledBody = substituteVars(template.body, thread, agentName);
+      const filledSubject = substituteVars(
+        template.subject || `Re: ${thread.subject}`,
+        thread,
+        agentName
+      );
+
+      // Push reply modal pre-filled with template — agent can still edit
+      return NextResponse.json({
+        response_action: "push",
+        view: {
+          type: "modal",
+          callback_id: "template_reply_modal",
+          // pass threadId + filledSubject in metadata (JSON string)
+          private_metadata: JSON.stringify({ threadId, subject: filledSubject }),
+          title: { type: "plain_text", text: "📋 Send Template Reply" },
+          submit: { type: "plain_text", text: "✉️ Send Email" },
+          close: { type: "plain_text", text: "Cancel" },
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `*Template:* ${template.name}\n*To:* ${thread.from}\n*Subject:* ${filledSubject}`,
+              },
+            },
+            { type: "divider" },
+            {
+              type: "input",
+              block_id: "template_reply_body",
+              label: { type: "plain_text", text: "Message (editable)" },
+              hint: {
+                type: "plain_text",
+                text: "Variables have been auto-filled. You can still edit freely before sending.",
+              },
+              element: {
+                type: "plain_text_input",
+                action_id: "template_reply_input",
+                multiline: true,
+                initial_value: filledBody,
+              },
+            },
+          ],
+        },
+      });
+    }
+
+    // ── Template reply modal submitted ────────────────────────────────
+    if (callbackId === "template_reply_modal") {
+      let threadId: string;
+      let subjectOverride: string | null = null;
+      try {
+        const meta = JSON.parse(payload.view.private_metadata);
+        threadId = meta.threadId;
+        subjectOverride = meta.subject || null;
+      } catch {
+        threadId = payload.view.private_metadata;
+      }
+
+      const replyText = (
+        payload.view.state.values?.template_reply_body?.template_reply_input?.value || ""
+      ).trim();
+
+      if (!replyText) return NextResponse.json({ response_action: "clear" });
+
+      await dbConnect();
+
+      const thread = await EmailThread.findById(threadId);
+      if (!thread) return NextResponse.json({ response_action: "clear" });
+
+      const alias = await Alias.findById(thread.aliasId).lean();
+      const domain = alias
+        ? await Domain.findOne({ _id: alias.domainId, workspaceId: thread.workspaceId }).lean()
+        : null;
+
+      const fallbackEmail = process.env.REPLY_FROM_EMAIL || "onboarding@resend.dev";
+      const fallbackName = process.env.REPLY_FROM_NAME || "Email Router";
+      const fromAddress = domain?.verifiedForSending
+        ? (thread.to as string)
+        : fallbackName ? `${fallbackName} <${fallbackEmail}>` : fallbackEmail;
+
+      // Use template subject if provided, else default Re:
+      const replySubject =
+        subjectOverride ||
+        (thread.subject.startsWith("Re:") ? thread.subject : `Re: ${thread.subject}`);
+
+      const references = [thread.messageId, ...(thread.references || [])].filter(Boolean);
+      const referencesHeader = references.join(" ");
+
+      // Build minimal HTML wrapper around the plain text
+      const htmlBody = `<!DOCTYPE html>
+<html><body style="font-family:sans-serif;font-size:14px;line-height:1.6;color:#1a1a1a;max-width:600px;margin:0 auto;padding:24px">
+${replyText.replace(/\n/g, "<br/>")}
+</body></html>`;
+
+      const { data: sentEmail, error: sendError } = await resend.emails.send({
+        from: fromAddress,
+        to: thread.from,
+        subject: replySubject,
+        text: replyText,
+        html: htmlBody,
+        headers: {
+          "In-Reply-To": thread.messageId,
+          ...(referencesHeader ? { References: referencesHeader } : {}),
+        },
+      });
+
+      if (sendError || !sentEmail) {
+        console.error("❌ Resend error in template_reply_modal:", sendError);
+        return NextResponse.json({ response_action: "clear" });
+      }
+
+      console.log("✅ Template reply sent, emailId:", sentEmail.id);
+
+      const storedFrom = fromAddress.includes("<")
+        ? fromAddress.slice(fromAddress.indexOf("<") + 1, fromAddress.indexOf(">")).trim()
+        : fromAddress;
+
+      // Find root Slack thread ts
+      let slackThreadTs: string | null = thread.slackMessageTs || null;
+      let slackChannelId: string | null = thread.slackChannelId || null;
+
+      if (thread.inReplyTo && thread.slackMessageTs) {
+        const refsToCheck = [thread.inReplyTo, ...(thread.references || [])].filter(Boolean);
+        const rootThread = await EmailThread.findOne({
+          messageId: { $in: refsToCheck },
+          slackMessageTs: { $exists: true, $ne: null },
+          workspaceId: thread.workspaceId,
+        }).sort({ createdAt: 1 }).lean();
+        if (rootThread?.slackMessageTs) {
+          slackThreadTs = rootThread.slackMessageTs as string;
+          slackChannelId = (rootThread.slackChannelId as string) || slackChannelId;
+        }
+      }
+
+      // Post confirmation to Slack thread
+      let outboundSlackTs: string | null = null;
+      if (slackChannelId && slackThreadTs) {
+        const integration = await Integration.findOne({
+          slackChannelId,
+          authMethod: "oauth",
+        }).lean();
+
+        if (integration?.slackAccessToken) {
+          const slackRes = await fetch("https://slack.com/api/chat.postMessage", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${integration.slackAccessToken}`,
+            },
+            body: JSON.stringify({
+              channel: slackChannelId,
+              thread_ts: slackThreadTs,
+              text: `📤 *Template reply sent* to ${thread.from}\n> ${replyText.replace(/\n/g, "\n> ")}`,
+            }),
+          });
+          const slackData = await slackRes.json();
+          if (slackData.ok) outboundSlackTs = slackData.ts as string;
+        }
+      }
+
+      await EmailThread.create({
+        workspaceId: thread.workspaceId,
+        aliasId: thread.aliasId,
+        originalEmailId: sentEmail.id,
+        messageId: `<${sentEmail.id}@resend.app>`,
+        inReplyTo: thread.messageId,
+        references,
+        from: storedFrom,
+        to: thread.from,
+        subject: replySubject,
+        textBody: replyText,
+        htmlBody,
+        direction: "outbound",
+        status: "waiting",
+        statusUpdatedAt: new Date(),
+        receivedAt: new Date(),
+        repliedAt: new Date(),
+        slackMessageTs: outboundSlackTs,
+        slackChannelId: slackChannelId,
+      });
+
+      await Subscription.updateOne(
+        { workspaceId: thread.workspaceId },
+        { $inc: { ticketCountOutbound: 1 } }
+      );
+
+      thread.status = "open";
+      thread.statusUpdatedAt = new Date();
+      thread.repliedAt = new Date();
+      await thread.save();
+
+      return NextResponse.json({ response_action: "clear" });
     }
 
     // ── Reply modal submitted ──────────────────────────────────────────

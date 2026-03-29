@@ -86,6 +86,7 @@ import {
   IconUser,
   IconChevronRight,
   IconRefresh,
+  IconTemplate,
   type Icon as TablerIcon,
 } from "@tabler/icons-react";
 import { useRefreshStore } from "@/components/dashboard/right-panel/useRefresh";
@@ -98,15 +99,16 @@ type RouteConfig = {
 };
 
 const ROUTE_MAP: RouteConfig[] = [
-  { href: "/dashboard",              label: "Dashboard",    group: "OVERVIEW",  icon: IconLayoutDashboard },
-  { href: "/dashboard/tickets/mine", label: "My Tickets",   group: "MANAGE",    icon: IconMail },
-  { href: "/dashboard/live-chats",   label: "Live Chats",   group: "MANAGE",    icon: IconMessages },
-  { href: "/dashboard/domains",      label: "Domains",      group: "CONFIGURE", icon: IconGlobe },
-  { href: "/dashboard/integrations", label: "Integrations", group: "CONFIGURE", icon: IconAiGateway },
-  { href: "/dashboard/aliases",      label: "Aliases",      group: "CONFIGURE", icon: IconAt },
-  { href: "/dashboard/chat-widgets", label: "Chat Widgets", group: "CONFIGURE", icon: IconMessageCircle },
-  { href: "/dashboard/billing",      label: "Billing",      group: "ACCOUNT",   icon: IconCreditCard },
-  { href: "/profile",                label: "Profile",      group: "ACCOUNT",   icon: IconUser },
+  { href: "/dashboard",                   label: "Dashboard",       group: "OVERVIEW",  icon: IconLayoutDashboard },
+  { href: "/dashboard/tickets/mine",      label: "My Tickets",      group: "MANAGE",    icon: IconMail },
+  { href: "/dashboard/live-chats",        label: "Live Chats",      group: "MANAGE",    icon: IconMessages },
+  { href: "/dashboard/domains",           label: "Domains",         group: "CONFIGURE", icon: IconGlobe },
+  { href: "/dashboard/integrations",      label: "Integrations",    group: "CONFIGURE", icon: IconAiGateway },
+  { href: "/dashboard/aliases",           label: "Aliases",         group: "CONFIGURE", icon: IconAt },
+  { href: "/dashboard/chat-widgets",      label: "Chat Widgets",    group: "CONFIGURE", icon: IconMessageCircle },
+  { href: "/dashboard/email-templates",   label: "Email Templates", group: "CONFIGURE", icon: IconTemplate },
+  { href: "/dashboard/billing",           label: "Billing",         group: "ACCOUNT",   icon: IconCreditCard },
+  { href: "/profile",                     label: "Profile",         group: "ACCOUNT",   icon: IconUser },
 ];
 
 export function DashboardBreadcrumb() {
