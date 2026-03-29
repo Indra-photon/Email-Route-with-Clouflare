@@ -14,29 +14,53 @@ const GRADIENTS = [
   "from-cyan-500 to-sky-300",
 ];
 
+// Deterministic seeded random (mulberry32) — same output on server & client
+function seededRandom(seed: number): number {
+  let t = (seed + 0x6d2b79f5) | 0;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+
 interface AvatarData {
   id: number;
   image: string;
   gradient: string;
 }
 
+// Build the initial 4 avatars with a fixed seed — same result every time
+function createInitialAvatars(): AvatarData[] {
+  const avatars: AvatarData[] = [];
+  const usedImages: string[] = [];
+  let seed = 42;
+
+  for (let i = 0; i < 4; i++) {
+    const available = AVATAR_POOL.filter((img) => !usedImages.includes(img));
+    const pool = available.length > 0 ? available : AVATAR_POOL;
+    seed++;
+    const image = pool[Math.floor(seededRandom(seed) * pool.length)];
+    seed++;
+    const gradient = GRADIENTS[Math.floor(seededRandom(seed) * GRADIENTS.length)];
+    const avatar: AvatarData = { id: i + 1, image, gradient };
+    avatars.push(avatar);
+    usedImages.push(image);
+  }
+
+  return avatars;
+}
+
+// The initial stable avatars — computed once at module level (same on server & client)
+const INITIAL_AVATARS = createInitialAvatars();
+
+let _nextId = INITIAL_AVATARS.length + 1;
+function nextId() { return ++_nextId; }
+
 function getRandomAvatar(usedImages: string[]): AvatarData {
   const available = AVATAR_POOL.filter((img) => !usedImages.includes(img));
   const pool = available.length > 0 ? available : AVATAR_POOL;
   const image = pool[Math.floor(Math.random() * pool.length)];
   const gradient = GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)];
-  return { id: Date.now() + Math.random(), image, gradient };
-}
-
-function createInitialAvatars(): AvatarData[] {
-  const avatars: AvatarData[] = [];
-  const usedImages: string[] = [];
-  for (let i = 0; i < 4; i++) {
-    const avatar = getRandomAvatar(usedImages);
-    avatars.push(avatar);
-    usedImages.push(avatar.image);
-  }
-  return avatars;
+  return { id: nextId(), image, gradient };
 }
 
 function Avatar({ avatar, isNew }: { avatar: AvatarData; isNew: boolean }) {
@@ -52,7 +76,7 @@ function Avatar({ avatar, isNew }: { avatar: AvatarData; isNew: boolean }) {
       exit={{ opacity: 0, x: 20, scale: 0.8 }}
       transition={
         isNew
-          ? { duration: 0.5, ease: [0.34, 1.56, 0.64, 1] } // slow spring entrance
+          ? { duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }
           : { duration: 0.25, ease: [0.4, 0, 0.2, 1] }
       }
     >
@@ -69,8 +93,6 @@ function Avatar({ avatar, isNew }: { avatar: AvatarData; isNew: boolean }) {
     </motion.div>
   );
 }
-
-
 
 function CountUp({ value }: { value: number }) {
   return (
@@ -98,7 +120,8 @@ export function LiveTeamJoin({
   initialCount?: number;
   intervalMs?: number;
 }) {
-  const [avatars, setAvatars] = useState<AvatarData[]>(createInitialAvatars);
+  // Start with stable data on SSR; hydration is safe because both sides use INITIAL_AVATARS
+  const [avatars, setAvatars] = useState<AvatarData[]>(INITIAL_AVATARS);
   const [count, setCount] = useState(initialCount);
   const [newId, setNewId] = useState<number | null>(null);
 
@@ -124,22 +147,21 @@ export function LiveTeamJoin({
         className="flex -space-x-3 w-40"
         style={{ clipPath: "inset(-6px -6px -6px 0px)" }}
       >
-        
         <AnimatePresence mode="popLayout" initial={false}>
           {avatars.map((avatar, index) => (
             <motion.div
-                key={avatar.id}
-                animate={{ x: [0, -3, 1, 0] }}         // nudge left then settle
-                transition={{ duration: 0.4, delay: index * 0.04, ease: "easeOut" }}
-              >
-            <Avatar key={avatar.id} avatar={avatar} isNew={avatar.id === newId} />
-          </motion.div>
-        ))}
-      </AnimatePresence>
-    </div>
+              key={avatar.id}
+              animate={{ x: [0, -3, 1, 0] }}
+              transition={{ duration: 0.4, delay: index * 0.04, ease: "easeOut" }}
+            >
+              <Avatar key={avatar.id} avatar={avatar} isNew={avatar.id === newId} />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
 
       <span className="text-lg font-schibsted font-medium text-neutral-900 flex items-center justify-center gap-1">
-         <CountUp value={count} /> teams already using...
+        <CountUp value={count} /> teams already using...
       </span>
     </div>
   );

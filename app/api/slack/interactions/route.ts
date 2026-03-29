@@ -370,14 +370,19 @@ export async function POST(request: Request) {
         agentName
       );
 
+      // Also fill variables in htmlBody if present
+      const filledHtmlBody = template.htmlBody
+        ? substituteVars(template.htmlBody, thread, agentName)
+        : "";
+
       // Push reply modal pre-filled with template — agent can still edit
       return NextResponse.json({
         response_action: "push",
         view: {
           type: "modal",
           callback_id: "template_reply_modal",
-          // pass threadId + filledSubject in metadata (JSON string)
-          private_metadata: JSON.stringify({ threadId, subject: filledSubject }),
+          // pass threadId + filledSubject + htmlBody in metadata
+          private_metadata: JSON.stringify({ threadId, subject: filledSubject, htmlBody: filledHtmlBody }),
           title: { type: "plain_text", text: "📋 Send Template Reply" },
           submit: { type: "plain_text", text: "✉️ Send Email" },
           close: { type: "plain_text", text: "Cancel" },
@@ -414,10 +419,12 @@ export async function POST(request: Request) {
     if (callbackId === "template_reply_modal") {
       let threadId: string;
       let subjectOverride: string | null = null;
+      let templateHtmlBody: string = "";
       try {
         const meta = JSON.parse(payload.view.private_metadata);
         threadId = meta.threadId;
         subjectOverride = meta.subject || null;
+        templateHtmlBody = meta.htmlBody || "";
       } catch {
         threadId = payload.view.private_metadata;
       }
@@ -452,8 +459,9 @@ export async function POST(request: Request) {
       const references = [thread.messageId, ...(thread.references || [])].filter(Boolean);
       const referencesHeader = references.join(" ");
 
-      // Build minimal HTML wrapper around the plain text
-      const htmlBody = `<!DOCTYPE html>
+      // Use template htmlBody if available, else build a minimal wrapper
+      const htmlBody = templateHtmlBody ||
+        `<!DOCTYPE html>
 <html><body style="font-family:sans-serif;font-size:14px;line-height:1.6;color:#1a1a1a;max-width:600px;margin:0 auto;padding:24px">
 ${replyText.replace(/\n/g, "<br/>")}
 </body></html>`;

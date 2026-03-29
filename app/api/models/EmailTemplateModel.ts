@@ -2,12 +2,12 @@ import mongoose, { Schema, type Document, type Model, Types } from "mongoose";
 
 export interface IEmailTemplate extends Document {
   workspaceId: Types.ObjectId;
-  name: string;           // Template display name
-  subject: string;        // Email subject (supports variables)
-  body: string;           // Plain text body (supports variables like {name}, {email}, etc.)
-  htmlWrapper: string;    // Optional HTML wrapper — injected around plain text before sending
-  variables: string[];    // List of supported variable names (e.g. ["name", "email", "subject"])
-  createdBy: string;      // Clerk user ID
+  name: string;       // Template display name
+  subject: string;    // Email subject (supports variables)
+  body: string;       // Plain text body (shown and editable in Slack modal)
+  htmlBody?: string;  // Optional full HTML/CSS version (sent as email HTML)
+  variables: string[];
+  createdBy: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,28 +28,30 @@ const EmailTemplateSchema = new Schema<IEmailTemplate>(
     },
     subject: {
       type: String,
-      required: true,
       trim: true,
       maxlength: 200,
       default: "",
     },
     body: {
       type: String,
-      required: true,
+      required: false,
+      default: "",
       trim: true,
-      maxlength: 10000,
+      maxlength: 20000,
     },
-    htmlWrapper: {
+    htmlBody: {
       type: String,
-      default: "",   // If empty, body is sent as plain text inside a minimal HTML wrapper
+      default: "",
+      // Full HTML/CSS email — if provided, used as the html param to Resend.
+      // If empty, a minimal wrapper is built around `body` at send time.
     },
     variables: {
       type: [String],
-      default: ["name", "email", "subject", "date"],
+      default: ["name", "email", "subject", "date", "agent"],
     },
     createdBy: {
       type: String,
-      required: true,
+      default: "",
     },
   },
   {

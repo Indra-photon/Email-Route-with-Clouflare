@@ -32,11 +32,11 @@ export async function POST(req: NextRequest) {
     const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { name, subject, body, htmlWrapper } = await req.json();
+    const { name, subject, body, htmlBody } = await req.json();
 
-    if (!name || !body) {
+    if (!name || (!body && !htmlBody)) {
       return NextResponse.json(
-        { error: "name and body are required" },
+        { error: "name and at least a plain text body or HTML body are required" },
         { status: 400 }
       );
     }
@@ -50,8 +50,8 @@ export async function POST(req: NextRequest) {
       workspaceId: workspace._id,
       name: name.trim(),
       subject: (subject || "").trim(),
-      body: body.trim(),
-      htmlWrapper: (htmlWrapper || "").trim(),
+      body: (body || "").trim(),
+      htmlBody: (htmlBody || "").trim(),
       createdBy: userId,
     });
 
