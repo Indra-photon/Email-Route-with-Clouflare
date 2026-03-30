@@ -7,22 +7,21 @@ import { useRefreshStore } from "./useRefresh";
 
 const SECTION_KEY = "team-activity";
 
-const MOCK_ACTIVITY = [
-  { id: "1", agent: "Jessica M.",  initials: "JM", action: "claimed",  target: "Invoice not received",      time: "3m ago"  },
-  { id: "2", agent: "Mike R.",     initials: "MR", action: "replied to", target: "Login keeps failing",     time: "11m ago" },
-  { id: "3", agent: "Sarah T.",    initials: "ST", action: "resolved",  target: "Bulk export request",       time: "34m ago" },
-  { id: "4", agent: "Jessica M.",  initials: "JM", action: "replied to", target: "API rate limit exceeded", time: "1h ago"  },
-  { id: "5", agent: "Mike R.",     initials: "MR", action: "claimed",  target: "Upgrade plan question",      time: "2h ago"  },
-  { id: "6", agent: "Sarah T.",    initials: "ST", action: "resolved",  target: "Password reset issue",      time: "3h ago"  },
-];
+interface ActivityItem {
+  id:       string;
+  agent:    string;
+  initials: string;
+  action:   string;
+  target:   string;
+  time:     string;
+}
 
 const ACTION_COLOUR: Record<string, string> = {
-  claimed:     "text-sky-700",
+  claimed:      "text-sky-700",
   "replied to": "text-amber-600",
-  resolved:    "text-emerald-600",
+  resolved:     "text-emerald-600",
 };
 
-// Deterministic avatar colours from initials
 const AVATAR_COLOURS = [
   "bg-sky-800 text-white",
   "bg-sky-600 text-white",
@@ -35,16 +34,19 @@ function avatarColour(initials: string) {
   return AVATAR_COLOURS[i];
 }
 
-async function fetchActivity() {
-  // TODO: replace with real API call
-  // const res = await fetch("/api/activity?limit=6");
-  // return res.json();
-  await new Promise((r) => setTimeout(r, 1000));
-  return MOCK_ACTIVITY;
+
+async function fetchActivity(): Promise<ActivityItem[]> {
+  try {
+    const res = await fetch("/api/dashboard/activity");
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
 }
 
 export function TeamActivity() {
-  const [activity, setActivity] = useState<typeof MOCK_ACTIVITY>([]);
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { refreshCount, setLoading } = useRefreshStore();
 

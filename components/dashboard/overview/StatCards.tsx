@@ -25,41 +25,56 @@ interface StatCardData {
   accent:      "light" | "dark";
 }
 
-// ── Mock fetch ────────────────────────────────────────────────────────────────
+// ── Real API fetch ─────────────────────────────────────────────────────────────
 
-async function fetchStats(_filters: FilterState): Promise<StatCardData[]> {
-  await new Promise((r) => setTimeout(r, 700));
+async function fetchStats(filters: FilterState): Promise<StatCardData[]> {
+  const params = new URLSearchParams({
+    domainId: filters.domainId,
+    aliasId:  filters.aliasId,
+    range:    filters.range,
+  });
+
+  const res = await fetch(`/api/dashboard/stats?${params.toString()}`);
+  if (!res.ok) throw new Error("Failed to fetch stats");
+
+  const data = await res.json();
+
+  const avgMinValue = data.avgResponseMin.value;
+  const avgDisplay  = avgMinValue >= 60
+    ? `${Math.floor(avgMinValue / 60)}h ${avgMinValue % 60}m`
+    : `${avgMinValue} min`;
+
   return [
     {
       label:      "Open Tickets",
-      value:      "24",
-      delta:      -3,
-      deltaLabel: "vs yesterday",
+      value:      String(data.openTickets.value),
+      delta:      data.openTickets.delta,
+      deltaLabel: data.openTickets.deltaLabel,
       icon:       IconMailFast,
       accent:     "dark",
     },
     {
       label:       "Avg First Response",
-      value:       "14 min",
-      delta:       -6,
-      deltaLabel:  "vs last period",
+      value:       avgDisplay,
+      delta:       data.avgResponseMin.delta,
+      deltaLabel:  data.avgResponseMin.deltaLabel,
       icon:        IconHourglass,
       invertDelta: true,
       accent:      "dark",
     },
     {
       label:      "Resolved Today",
-      value:      "18",
-      delta:      5,
-      deltaLabel: "vs yesterday",
+      value:      String(data.resolvedToday.value),
+      delta:      data.resolvedToday.delta,
+      deltaLabel: data.resolvedToday.deltaLabel,
       icon:       IconRosetteDiscountCheck,
       accent:     "dark",
     },
     {
       label:      "Active Live Chats",
-      value:      "3",
-      delta:      0,
-      deltaLabel: "right now",
+      value:      String(data.activeLiveChats.value),
+      delta:      data.activeLiveChats.delta,
+      deltaLabel: data.activeLiveChats.deltaLabel,
       icon:       IconMessage,
       accent:     "dark",
     },
@@ -83,7 +98,6 @@ function StatCardSkeleton({ index }: { index: number }) {
 
 function StatCard({ data, index }: { data: StatCardData; index: number }) {
   const Icon = data.icon;
-  const isDark = data.accent === "dark";
 
   const isNeutral = data.delta === 0;
   const isGood    = data.invertDelta ? data.delta < 0 : data.delta > 0;
@@ -94,9 +108,8 @@ function StatCard({ data, index }: { data: StatCardData; index: number }) {
     ? data.deltaLabel
     : `${isGood ? "+" : ""}${data.delta} ${data.deltaLabel}`;
 
-  // Delta pill colours — green up, red down, always
   const deltaPill = isNeutral
-    ? isDark ? "text-sky-200" : "text-neutral-400"
+    ? "text-sky-200"
     : isGood
     ? "text-emerald-400"
     : "text-red-400";
@@ -111,7 +124,7 @@ function StatCard({ data, index }: { data: StatCardData; index: number }) {
         bg-gradient-to-br from-sky-800 to-cyan-600 shadow-lg shadow-sky-900/30
       `}
     >
-      {/* Background watermark icon — deep in corner, intentionally clipped */}
+      {/* Background watermark icon */}
       <div className="absolute -bottom-7 -right-2 pointer-events-none select-none blur-xs">
         <Icon
           size={90}
@@ -128,8 +141,7 @@ function StatCard({ data, index }: { data: StatCardData; index: number }) {
 
       {/* Value */}
       <div className="relative z-10">
-        <p className={`font-schibsted font-bold leading-none tabular-nums text-white text-3xl`}
-        >
+        <p className={`font-schibsted font-bold leading-none tabular-nums text-white text-3xl`}>
           {data.value}
         </p>
       </div>
@@ -157,12 +169,17 @@ export function StatCards({ filters }: StatCardsProps) {
     let cancelled = false;
     setLoading(true);
 
-    fetchStats(filters).then((data) => {
-      if (!cancelled) {
-        setStats(data);
-        setLoading(false);
-      }
-    });
+    fetchStats(filters)
+      .then((data) => {
+        if (!cancelled) {
+          setStats(data);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("StatCards fetch error:", err);
+        if (!cancelled) setLoading(false);
+      });
 
     return () => { cancelled = true; };
   }, [filters.domainId, filters.aliasId, filters.range]);

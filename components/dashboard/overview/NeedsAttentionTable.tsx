@@ -68,78 +68,19 @@ const STATUS_CONFIG = {
   waiting:     { label: "Waiting",     classes: "bg-neutral-100 text-neutral-600 border border-neutral-200" },
 };
 
-// ── Mock data ─────────────────────────────────────────────────────────────────
+// ── Real API fetch ────────────────────────────────────────────────────────────
 
 async function fetchAttentionTickets(
-  _filters: FilterState
+  filters: FilterState
 ): Promise<AttentionTicket[]> {
-  // TODO: replace with real API
-  // const res = await fetch(`/api/analytics/needs-attention?domainId=${_filters.domainId}&aliasId=${_filters.aliasId}&range=${_filters.range}`);
-  // return res.json();
-  await new Promise((r) => setTimeout(r, 850));
-
-  return [
-    {
-      id:         "t1",
-      fromName:   "John Doe",
-      fromEmail:  "john@acme.com",
-      subject:    "Invoice not received for March billing cycle",
-      alias:      "billing@",
-      status:     "open",
-      assignedTo: null,
-      reason:     "no_response",
-      stuckFor:   "4h 12m",
-      receivedAt: "Today, 9:14 AM",
-    },
-    {
-      id:         "t2",
-      fromName:   "Sarah K.",
-      fromEmail:  "sarah@startup.io",
-      subject:    "Login keeps failing on mobile app",
-      alias:      "support@",
-      status:     "in_progress",
-      assignedTo: "Mike R.",
-      reason:     "agent_inactive",
-      stuckFor:   "26h",
-      receivedAt: "Yesterday, 11:30 AM",
-    },
-    {
-      id:         "t3",
-      fromName:   "Dev Team",
-      fromEmail:  "dev@techfirm.dev",
-      subject:    "API rate limit exceeded on production",
-      alias:      "support@",
-      status:     "waiting",
-      assignedTo: "Jessica M.",
-      reason:     "waiting_too_long",
-      stuckFor:   "4 days",
-      receivedAt: "Mar 21, 2:05 PM",
-    },
-    {
-      id:         "t4",
-      fromName:   "Anna B.",
-      fromEmail:  "anna@designco.com",
-      subject:    "Can't upgrade to Pro plan — payment failing",
-      alias:      "sales@",
-      status:     "open",
-      assignedTo: null,
-      reason:     "no_response",
-      stuckFor:   "2h 45m",
-      receivedAt: "Today, 11:02 AM",
-    },
-    {
-      id:         "t5",
-      fromName:   "Marcus T.",
-      fromEmail:  "m.t@enterprise.com",
-      subject:    "Webhook not firing for new email events",
-      alias:      "support@",
-      status:     "in_progress",
-      assignedTo: "Mike R.",
-      reason:     "agent_inactive",
-      stuckFor:   "31h",
-      receivedAt: "Yesterday, 8:20 AM",
-    },
-  ];
+  const params = new URLSearchParams({
+    domainId: filters.domainId,
+    aliasId:  filters.aliasId,
+    range:    filters.range,
+  });
+  const res = await fetch(`/api/dashboard/needs-attention?${params.toString()}`);
+  if (!res.ok) throw new Error("Failed to fetch attention tickets");
+  return res.json();
 }
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
@@ -238,13 +179,18 @@ export function NeedsAttentionTable({ filters }: NeedsAttentionTableProps) {
     let cancelled = false;
     setLoading(true);
 
-    fetchAttentionTickets(filters).then((data) => {
-      if (!cancelled) {
-        setTickets(data);
-        setTableKey((k) => k + 1);
-        setLoading(false);
-      }
-    });
+    fetchAttentionTickets(filters)
+      .then((data) => {
+        if (!cancelled) {
+          setTickets(data);
+          setTableKey((k) => k + 1);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("NeedsAttentionTable fetch error:", err);
+        if (!cancelled) setLoading(false);
+      });
 
     return () => { cancelled = true; };
   }, [filters.domainId, filters.aliasId, filters.range]);

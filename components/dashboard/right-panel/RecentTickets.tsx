@@ -9,58 +9,21 @@ import { useRefreshStore } from "./useRefresh";
 
 const SECTION_KEY = "recent-tickets";
 
-const MOCK_TICKETS = [
-  {
-    id: "1",
-    from: "john.doe@acme.com",
-    subject: "Invoice not received for March",
-    alias: "billing@",
-    status: "open" as const,
-    time: "2m ago",
-    preview: "Hi, I've been waiting for my March invoice for over a week now. Could you please resend it to the same email? My account ID is #ACM-4821.",
-  },
-  {
-    id: "2",
-    from: "sarah@startup.io",
-    subject: "Login keeps failing on mobile",
-    alias: "support@",
-    status: "in_progress" as const,
-    time: "14m ago",
-    preview: "Every time I try to log in on my iPhone the app just spins and crashes. I've tried reinstalling twice. This started happening after the last update.",
-  },
-  {
-    id: "3",
-    from: "mike.torres@company.com",
-    subject: "Feature request: bulk export",
-    alias: "support@",
-    status: "waiting" as const,
-    time: "1h ago",
-    preview: "It would be really helpful to have a bulk export option for all tickets in a date range. We run weekly reports and doing it one by one is very time consuming.",
-  },
-  {
-    id: "4",
-    from: "anna@designco.com",
-    subject: "Upgrade plan question",
-    alias: "sales@",
-    status: "open" as const,
-    time: "2h ago",
-    preview: "We're a team of 8 and I wanted to know if the Pro plan covers all of us or if it's per-seat. Also curious about the annual discount.",
-  },
-  {
-    id: "5",
-    from: "dev@techfirm.dev",
-    subject: "API rate limit exceeded",
-    alias: "support@",
-    status: "open" as const,
-    time: "3h ago",
-    preview: "We're hitting 429s consistently on the /emails endpoint around 9am UTC. Our usage should be within the allowed limits per the docs. Can you check our account?",
-  },
-];
+interface RecentTicket {
+  id:      string;
+  from:    string;
+  subject: string;
+  alias:   string;
+  status:  "open" | "in_progress" | "waiting" | "resolved";
+  time:    string;
+  preview: string;
+}
 
-const STATUS_CONFIG = {
-  open:        { label: "Open",        dot: "bg-sky-400",     text: "text-sky-600" },
-  in_progress: { label: "In Progress", dot: "bg-amber-400",   text: "text-amber-600" },
-  waiting:     { label: "Waiting",     dot: "bg-amber-900",   text: "text-amber-900" },
+const STATUS_CONFIG: Record<"open" | "in_progress" | "waiting" | "resolved", { label: string; dot: string; text: string }> = {
+  open:        { label: "Open",        dot: "bg-sky-400",   text: "text-sky-600" },
+  in_progress: { label: "In Progress", dot: "bg-amber-400", text: "text-amber-600" },
+  waiting:     { label: "Waiting",     dot: "bg-amber-900", text: "text-amber-900" },
+  resolved:    { label: "Resolved",    dot: "bg-green-400", text: "text-green-600" },
 };
 
 function TicketsCTAButton() {
@@ -95,13 +58,14 @@ function TicketsCTAButton() {
   );
 }
 
-async function fetchTickets() {
-  await new Promise((r) => setTimeout(r, 800));
-  return MOCK_TICKETS;
+async function fetchTickets(): Promise<RecentTicket[]> {
+  const res = await fetch("/api/dashboard/recent-tickets");
+  if (!res.ok) throw new Error("Failed to fetch recent tickets");
+  return res.json();
 }
 
 export function RecentTickets() {
-  const [tickets, setTickets] = useState<typeof MOCK_TICKETS>([]);
+  const [tickets, setTickets] = useState<RecentTicket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -112,13 +76,21 @@ export function RecentTickets() {
     setIsLoading(true);
     setLoading(SECTION_KEY, true);
 
-    fetchTickets().then((data) => {
-      if (!cancelled) {
-        setTickets(data);
-        setIsLoading(false);
-        setLoading(SECTION_KEY, false);
-      }
-    });
+    fetchTickets()
+      .then((data) => {
+        if (!cancelled) {
+          setTickets(data);
+          setIsLoading(false);
+          setLoading(SECTION_KEY, false);
+        }
+      })
+      .catch((err) => {
+        console.error("RecentTickets fetch error:", err);
+        if (!cancelled) {
+          setIsLoading(false);
+          setLoading(SECTION_KEY, false);
+        }
+      });
 
     return () => { cancelled = true; };
   }, [refreshCount]);

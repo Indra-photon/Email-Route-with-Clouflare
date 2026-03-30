@@ -24,19 +24,16 @@ interface LocalFilters {
   aliasId:  string;
 }
 
-// ── Mock fetch ────────────────────────────────────────────────────────────────
+// ── Real API fetch ────────────────────────────────────────────────────────────
 
-async function fetchStatusData(_filters: LocalFilters): Promise<StatusSlice[]> {
-  // TODO: replace with real API
-  // const res = await fetch(`/api/analytics/status?domainId=${_filters.domainId}&aliasId=${_filters.aliasId}`);
-  // return res.json();
-  await new Promise((r) => setTimeout(r, 750));
-  return [
-    { label: "Open",        value: 24, colour: "#075985", bg: "bg-sky-800"      },
-    { label: "In Progress", value: 11, colour: "#FCD34D", bg: "bg-amber-300"    },
-    { label: "Waiting",     value:  8, colour: "#E5E7EB", bg: "bg-gray-200"  },
-    { label: "Resolved",    value: 41, colour: "#10B981", bg: "bg-emerald-500"  },
-  ];
+async function fetchStatusData(filters: LocalFilters): Promise<StatusSlice[]> {
+  const params = new URLSearchParams({
+    domainId: filters.domainId,
+    aliasId:  filters.aliasId,
+  });
+  const res = await fetch(`/api/dashboard/status?${params.toString()}`);
+  if (!res.ok) throw new Error("Failed to fetch status data");
+  return res.json();
 }
 
 // ── Custom Tooltip ────────────────────────────────────────────────────────────
@@ -106,13 +103,18 @@ export function StatusBreakdownChart({ domains, aliases }: StatusBreakdownChartP
     let cancelled = false;
     setLoading(true);
 
-    fetchStatusData(filters).then((d) => {
-      if (!cancelled) {
-        setData(d);
-        setChartKey((k) => k + 1);
-        setLoading(false);
-      }
-    });
+    fetchStatusData(filters)
+      .then((d) => {
+        if (!cancelled) {
+          setData(d);
+          setChartKey((k) => k + 1);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("StatusBreakdownChart fetch error:", err);
+        if (!cancelled) setLoading(false);
+      });
 
     return () => { cancelled = true; };
   }, [filters.domainId, filters.aliasId]);

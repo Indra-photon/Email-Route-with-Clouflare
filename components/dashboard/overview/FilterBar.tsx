@@ -23,19 +23,6 @@ export interface AliasOption {
   domainId: string;
 }
 
-// ── Mock data (replace with real API fetch later) ─────────────────────────────
-
-export const MOCK_DOMAINS: DomainOption[] = [
-  { id: "d1", label: "galearen.resend.app" },
-  { id: "d2", label: "support.acme.com" },
-];
-
-export const MOCK_ALIASES: AliasOption[] = [
-  { id: "a1", label: "support@galearen.resend.app", domainId: "d1" },
-  { id: "a2", label: "billing@galearen.resend.app", domainId: "d1" },
-  { id: "a3", label: "sales@galearen.resend.app",   domainId: "d1" },
-  { id: "a4", label: "support@support.acme.com",    domainId: "d2" },
-];
 
 // ── FilterBar ─────────────────────────────────────────────────────────────────
 

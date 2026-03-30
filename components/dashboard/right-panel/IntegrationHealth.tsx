@@ -41,18 +41,19 @@ function PanelCTAButton({ label }: { label: string }) {
 
 const SECTION_KEY = "integration-health";
 
-const MOCK_DOMAINS = [
-  { id: "1", domain: "galearen.resend.app", verified: true,  lastActivity: "8m ago" },
-  { id: "2", domain: "support.acme.com",    verified: false, lastActivity: "Pending DNS" },
-  { id: "3", domain: "billing.acme.com",    verified: true,  lastActivity: "2h ago" },
-];
+interface DomainHealth {
+  id:           string;
+  domain:       string;
+  verified:     boolean;
+  lastActivity: string;
+}
 
-const MOCK_ALIASES = [
-  { id: "1", alias: "support@galearen.resend.app",  domain: "galearen.resend.app", active: true  },
-  { id: "2", alias: "billing@galearen.resend.app",  domain: "galearen.resend.app", active: true  },
-  { id: "3", alias: "sales@support.acme.com",       domain: "support.acme.com",    active: false },
-  { id: "4", alias: "hello@billing.acme.com",       domain: "billing.acme.com",    active: true  },
-];
+interface AliasHealth {
+  id:     string;
+  alias:  string;
+  domain: string;
+  active: boolean;
+}
 
 type Tab = "domains" | "aliases";
 
@@ -61,9 +62,30 @@ const TABS: { id: Tab; label: string; icon: typeof IconGlobe }[] = [
   { id: "aliases", label: "Aliases", icon: IconAt },
 ];
 
-async function fetchHealth() {
-  await new Promise((r) => setTimeout(r, 700));
-  return { domains: MOCK_DOMAINS, aliases: MOCK_ALIASES };
+async function fetchHealth(): Promise<{ domains: DomainHealth[]; aliases: AliasHealth[] }> {
+  const [domainsRes, aliasesRes] = await Promise.all([
+    fetch("/api/domains"),
+    fetch("/api/aliases"),
+  ]);
+
+  const domainsRaw = domainsRes.ok ? await domainsRes.json() : [];
+  const aliasesRaw = aliasesRes.ok ? await aliasesRes.json() : [];
+
+  const domains: DomainHealth[] = domainsRaw.map((d: any) => ({
+    id:           d.id,
+    domain:       d.domain,
+    verified:     d.verifiedForSending === true || d.status === "active",
+    lastActivity: d.updatedAt ? new Date(d.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—",
+  }));
+
+  const aliases: AliasHealth[] = aliasesRaw.map((a: any) => ({
+    id:     a.id,
+    alias:  a.email,
+    domain: a.domain,
+    active: a.status === "active",
+  }));
+
+  return { domains, aliases };
 }
 
 const slideVariants = {
@@ -83,8 +105,8 @@ const slideVariants = {
 
 export function IntegrationHealth() {
   const [data, setData] = useState<{
-    domains: typeof MOCK_DOMAINS;
-    aliases: typeof MOCK_ALIASES;
+    domains: DomainHealth[];
+    aliases: AliasHealth[];
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("domains");
@@ -96,13 +118,21 @@ export function IntegrationHealth() {
     setIsLoading(true);
     setLoading(SECTION_KEY, true);
 
-    fetchHealth().then((d) => {
-      if (!cancelled) {
-        setData(d);
-        setIsLoading(false);
-        setLoading(SECTION_KEY, false);
-      }
-    });
+    fetchHealth()
+      .then((d) => {
+        if (!cancelled) {
+          setData(d);
+          setIsLoading(false);
+          setLoading(SECTION_KEY, false);
+        }
+      })
+      .catch((err) => {
+        console.error("IntegrationHealth fetch error:", err);
+        if (!cancelled) {
+          setIsLoading(false);
+          setLoading(SECTION_KEY, false);
+        }
+      });
 
     return () => { cancelled = true; };
   }, [refreshCount]);
