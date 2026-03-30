@@ -41,54 +41,29 @@ function PanelCTAButton({ label }: { label: string }) {
 
 const SECTION_KEY = "live-chats";
 
-const MOCK_CHATS = [
-  {
-    id: "1",
-    visitor: "Visitor #4821",
-    widget: "Homepage Widget",
-    message: "Hi, I need help with my subscription. It says my payment failed but I was charged on my card already.",
-    status: "active" as const,
-    time: "just now",
-  },
-  {
-    id: "2",
-    visitor: "Emma Wilson",
-    widget: "Pricing Widget",
-    message: "What's included in the Pro plan? I'm specifically looking for team seats and API access.",
-    status: "active" as const,
-    time: "5m ago",
-  },
-  {
-    id: "3",
-    visitor: "Visitor #3190",
-    widget: "Homepage Widget",
-    message: "Can I export my data in CSV? I want to move everything before my trial ends.",
-    status: "missed" as const,
-    time: "22m ago",
-  },
-  {
-    id: "4",
-    visitor: "James K.",
-    widget: "Docs Widget",
-    message: "The webhook docs seem outdated — the endpoint shown returns 404 now.",
-    status: "resolved" as const,
-    time: "1h ago",
-  },
-];
+interface LiveChat {
+  id:      string;
+  visitor: string;
+  widget:  string;
+  message: string;
+  status:  "active" | "missed" | "resolved";
+  time:    string;
+}
 
-const STATUS_CONFIG = {
-  active:   { label: "Active",   dot: "bg-sky-400", text: "text-sky-600", pulse: true },
+const STATUS_CONFIG: Record<"active" | "missed" | "resolved", { label: string; dot: string; text: string; pulse: boolean }> = {
+  active:   { label: "Active",   dot: "bg-sky-400",     text: "text-sky-600",     pulse: true  },
   missed:   { label: "Missed",   dot: "bg-red-400",     text: "text-red-500",     pulse: false },
   resolved: { label: "Resolved", dot: "bg-neutral-300", text: "text-neutral-400", pulse: false },
 };
 
-async function fetchChats() {
-  await new Promise((r) => setTimeout(r, 600));
-  return MOCK_CHATS;
+async function fetchChats(): Promise<LiveChat[]> {
+  const res = await fetch("/api/dashboard/live-chats");
+  if (!res.ok) throw new Error("Failed to fetch live chats");
+  return res.json();
 }
 
 export function LiveChatNotifications() {
-  const [chats, setChats] = useState<typeof MOCK_CHATS>([]);
+  const [chats, setChats] = useState<LiveChat[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { refreshCount, setLoading } = useRefreshStore();
@@ -98,13 +73,21 @@ export function LiveChatNotifications() {
     setIsLoading(true);
     setLoading(SECTION_KEY, true);
 
-    fetchChats().then((data) => {
-      if (!cancelled) {
-        setChats(data);
-        setIsLoading(false);
-        setLoading(SECTION_KEY, false);
-      }
-    });
+    fetchChats()
+      .then((data) => {
+        if (!cancelled) {
+          setChats(data);
+          setIsLoading(false);
+          setLoading(SECTION_KEY, false);
+        }
+      })
+      .catch((err) => {
+        console.error("LiveChatNotifications fetch error:", err);
+        if (!cancelled) {
+          setIsLoading(false);
+          setLoading(SECTION_KEY, false);
+        }
+      });
 
     return () => { cancelled = true; };
   }, [refreshCount]);

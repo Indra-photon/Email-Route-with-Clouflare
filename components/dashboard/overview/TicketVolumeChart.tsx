@@ -33,30 +33,17 @@ interface LocalFilters {
   range:    "7d" | "14d" | "30d";
 }
 
-// ── Mock data generator ───────────────────────────────────────────────────────
-
-function generateMockData(range: "7d" | "14d" | "30d"): ChartDataPoint[] {
-  const days = range === "7d" ? 7 : range === "14d" ? 14 : 30;
-  const result: ChartDataPoint[] = [];
-  const now = new Date();
-
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const label = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-    const incoming = Math.floor(Math.random() * 20) + 8;
-    const resolved = Math.floor(incoming * (0.6 + Math.random() * 0.35));
-    result.push({ date: label, incoming, resolved });
-  }
-  return result;
-}
+// ── Real API fetch ────────────────────────────────────────────────────────────
 
 async function fetchChartData(filters: LocalFilters): Promise<ChartDataPoint[]> {
-  // TODO: replace with real API
-  // const res = await fetch(`/api/analytics/volume?domainId=${filters.domainId}&aliasId=${filters.aliasId}&range=${filters.range}`);
-  // return res.json();
-  await new Promise((r) => setTimeout(r, 800));
-  return generateMockData(filters.range);
+  const params = new URLSearchParams({
+    domainId: filters.domainId,
+    aliasId:  filters.aliasId,
+    range:    filters.range,
+  });
+  const res = await fetch(`/api/dashboard/volume?${params.toString()}`);
+  if (!res.ok) throw new Error("Failed to fetch volume data");
+  return res.json();
 }
 
 // ── Custom Tooltip ────────────────────────────────────────────────────────────
@@ -135,13 +122,18 @@ export function TicketVolumeChart({ domains, aliases }: TicketVolumeChartProps) 
     let cancelled = false;
     setLoading(true);
 
-    fetchChartData(filters).then((d) => {
-      if (!cancelled) {
-        setData(d);
-        setChartKey((k) => k + 1);
-        setLoading(false);
-      }
-    });
+    fetchChartData(filters)
+      .then((d) => {
+        if (!cancelled) {
+          setData(d);
+          setChartKey((k) => k + 1);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("TicketVolumeChart fetch error:", err);
+        if (!cancelled) setLoading(false);
+      });
 
     return () => { cancelled = true; };
   }, [filters.domainId, filters.aliasId, filters.range]);
