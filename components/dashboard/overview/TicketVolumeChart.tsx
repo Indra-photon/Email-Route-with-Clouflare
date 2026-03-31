@@ -165,16 +165,16 @@ export function TicketVolumeChart({ domains, aliases }: TicketVolumeChartProps) 
   }
 
   return (
-    <div className="bg-white rounded-xl border border-neutral-200 p-5 flex flex-col gap-4">
+    <div className="bg-white rounded-4xl border border-neutral-200 p-5 flex flex-col gap-4">
 
       {/* Header row */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <Heading variant="muted" className="text-base font-schibsted font-bold text-neutral-600">
+          <h3 className="font-schibsted text-[18.5px] font-semibold uppercase tracking-[0.07em] text-neutral-700">
             Ticket Volume
-          </Heading>
-          <p className="text-xs font-schibsted text-neutral-400 mt-0.5">
-            Incoming vs Resolved
+          </h3>
+          <p className="text-xs font-schibsted text-neutral-700 tracking-tighter mt-0.5">
+            Check the pulse of your support with incoming vs resolved ticket trends.
           </p>
         </div>
 
@@ -208,11 +208,11 @@ export function TicketVolumeChart({ domains, aliases }: TicketVolumeChartProps) 
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1.5">
           <span className="size-2.5 rounded-full bg-sky-600" />
-          <span className="text-xs font-schibsted text-neutral-500">Incoming</span>
+          <span className="text-xs font-schibsted text-neutral-700 tracking-tighter">Incoming</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="size-2.5 rounded-full bg-sky-300" />
-          <span className="text-xs font-schibsted text-neutral-500">Resolved</span>
+          <span className="text-xs font-schibsted text-neutral-700 tracking-tighter">Resolved</span>
         </div>
       </div>
 
