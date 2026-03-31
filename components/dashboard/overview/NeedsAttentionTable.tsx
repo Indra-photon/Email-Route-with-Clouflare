@@ -12,6 +12,8 @@ import {
 } from "@tabler/icons-react";
 import Link from "next/link";
 import type { FilterState } from "./FilterBar";
+import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
+import type { DomainOption, AliasOption } from "./FilterBar";
 
 // ── Easing ────────────────────────────────────────────────────────────────────
 
@@ -166,14 +168,33 @@ function SummaryPills({ tickets }: { tickets: AttentionTicket[] }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-interface NeedsAttentionTableProps {
-  filters: FilterState;
-}
-
-export function NeedsAttentionTable({ filters }: NeedsAttentionTableProps) {
+export function NeedsAttentionTable() {
+  const [filters, setFilters] = useState<FilterState>({
+    domainId: "all",
+    aliasId:  "all",
+    range:    "7d",
+  });
+  const [domains, setDomains] = useState<DomainOption[]>([]);
+  const [aliases, setAliases] = useState<AliasOption[]>([]);
   const [tickets, setTickets]   = useState<AttentionTicket[]>([]);
   const [isLoading, setLoading] = useState(true);
   const [tableKey, setTableKey] = useState(0);
+
+  // fetch domains + aliases once
+  useEffect(() => {
+    Promise.all([fetch("/api/domains"), fetch("/api/aliases")])
+      .then(async ([dr, ar]) => {
+        if (dr.ok) {
+          const d = await dr.json();
+          setDomains(d.map((x: any) => ({ id: x.id, label: x.domain })));
+        }
+        if (ar.ok) {
+          const a = await ar.json();
+          setAliases(a.map((x: any) => ({ id: x.id, label: x.email, domainId: x.domainId ?? "unknown" })));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -196,8 +217,9 @@ export function NeedsAttentionTable({ filters }: NeedsAttentionTableProps) {
   }, [filters.domainId, filters.aliasId, filters.range]);
 
   return (
-    <div className="bg-white rounded-xl border border-neutral-200 flex flex-col">
+    <div className="bg-white rounded-4xl border border-neutral-200 flex flex-col">
 
+      {/* Header */}
       {/* Header */}
       <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-neutral-100 flex-wrap">
         <div className="flex items-center gap-2.5">
@@ -205,19 +227,44 @@ export function NeedsAttentionTable({ filters }: NeedsAttentionTableProps) {
             <IconAlertTriangle size={16} className="text-red-500" strokeWidth={2} />
           </div>
           <div>
-            <h3 className="text-base font-schibsted font-bold text-neutral-800">
+            <h3 className="font-schibsted text-[18.5px] font-semibold uppercase tracking-[0.07em] text-neutral-700">
               Needs Attention
             </h3>
-            <p className="text-xs font-schibsted text-neutral-400 mt-0.5">
+            <p className="text-xs font-schibsted text-neutral-700 tracking-tighter mt-0.5">
               Tickets that are stuck or overdue
             </p>
           </div>
         </div>
 
-        {/* Summary pills — only when loaded */}
-        {!isLoading && tickets.length > 0 && (
-          <SummaryPills tickets={tickets} />
-        )}
+        {/* Right side — pills + filters */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {!isLoading && tickets.length > 0 && (
+            <SummaryPills tickets={tickets} />
+          )}
+          <div className="flex items-center gap-2">
+            <AnimatedDropdown
+              options={[{ value: "all", label: "All Domains" }, ...domains.map((d) => ({ value: d.id, label: d.label }))]}
+              value={filters.domainId}
+              onChange={(domainId) => setFilters((f) => ({ ...f, domainId, aliasId: "all" }))}
+              placeholder="All Domains"
+              width="w-36"
+            />
+            <AnimatedDropdown
+              options={[{ value: "all", label: "All Aliases" }, ...(filters.domainId === "all" ? aliases : aliases.filter((a) => a.domainId === filters.domainId)).map((a) => ({ value: a.id, label: a.label }))]}
+              value={filters.aliasId}
+              onChange={(aliasId) => setFilters((f) => ({ ...f, aliasId }))}
+              placeholder="All Aliases"
+              width="w-40"
+            />
+            <AnimatedDropdown
+              options={[{ value: "7d", label: "Last 7 days" }, { value: "14d", label: "Last 14 days" }, { value: "30d", label: "Last 30 days" }]}
+              value={filters.range}
+              onChange={(range) => setFilters((f) => ({ ...f, range: range as FilterState["range"] }))}
+              placeholder="Last 7 days"
+              width="w-32"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Table */}

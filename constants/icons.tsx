@@ -861,7 +861,6 @@ export function IconDashboard({
             width="2" 
             height="2.5" 
             rx="0.5"
-            fill="rgba(255,255,255,0.9)"
           />
         </motion.g>
         
@@ -898,7 +897,6 @@ export function IconDashboard({
             width="2" 
             height="5.5" 
             rx="0.5"
-            fill="rgba(255,255,255,0.9)"
           />
         </motion.g>
         
@@ -935,7 +933,6 @@ export function IconDashboard({
             width="2" 
             height="8.5" 
             rx="0.5"
-            fill="rgba(255,255,255,0.9)"
           />
         </motion.g>
 
@@ -945,7 +942,6 @@ export function IconDashboard({
           y1="16.5" 
           x2="17.5" 
           y2="16.5" 
-          stroke="rgba(255,255,255,0.3)" 
           strokeWidth="0.5"
         />
       </g>
