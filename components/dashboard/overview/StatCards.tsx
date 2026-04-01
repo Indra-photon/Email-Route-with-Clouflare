@@ -219,6 +219,7 @@ import {
   IconTrendingDown,
   IconArrowRight,
 } from "@tabler/icons-react";
+import { useAuth } from "@clerk/nextjs";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
 import type { DomainOption, AliasOption } from "./FilterBar";
 import type { FilterState } from "./FilterBar";
@@ -535,13 +536,15 @@ function MetricGrid({ stats, loading }: { stats: StatData | null; loading: boole
 function RecentActivityBox() {
   const [tickets, setTickets]   = useState<RecentTicket[]>([]);
   const [loading, setLoading]   = useState(true);
+  const { isLoaded, isSignedIn } = useAuth();
 
   useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
     fetchRecentTickets()
       .then(setTickets)
       .catch(() => setTickets([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [isLoaded, isSignedIn]);
 
   return (
     <div className="bg-white rounded-4xl border border-neutral-200 p-3 flex flex-col h-full shadow-sm">
@@ -622,8 +625,10 @@ export function StatCards() {
   });
   const [stats,   setStats]   = useState<StatData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { isLoaded, isSignedIn } = useAuth();
 
   useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
     let cancelled = false;
     setLoading(true);
 
@@ -632,12 +637,13 @@ export function StatCards() {
       .catch((err) => { console.error("StatCards fetch error:", err); if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-  }, [filters.domainId, filters.aliasId, filters.range]);
+  }, [isLoaded, isSignedIn, filters.domainId, filters.aliasId, filters.range]);
 
   const [domains, setDomains] = useState<DomainOption[]>([]);
   const [aliases, setAliases] = useState<AliasOption[]>([]);
 
   useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
     Promise.all([fetch("/api/domains"), fetch("/api/aliases")])
       .then(async ([dr, ar]) => {
         if (dr.ok) {
@@ -650,7 +656,7 @@ export function StatCards() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [isLoaded, isSignedIn]);
 
   const visibleAliases = filters.domainId === "all"
     ? aliases
