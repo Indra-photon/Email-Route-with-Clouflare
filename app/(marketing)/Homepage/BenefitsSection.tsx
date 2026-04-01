@@ -537,10 +537,10 @@ export function BenefitsSection() {
                 transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
               >
                 <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
-                  Real results. Real teams. Real fast.{" "}
+                  What changes the week you switch.{" "}
                 </Heading>
                 <Heading as="span" className="text-neutral-400 leading-tight font-semibold">
-                  From startups to scale-ups, teams see dramatic improvements — without adding headcount.
+                  Teams running support from Slack see — faster responses, fewer missed tickets, less time wasted.
                 </Heading>
               </motion.div>
 

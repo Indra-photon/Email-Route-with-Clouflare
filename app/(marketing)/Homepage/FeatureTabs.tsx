@@ -273,26 +273,26 @@ const tabs: {
 }[] = [
   {
     id: "email",
-    label: "Automatic Email Routing",
-    description: "Route support@, billing@, sales@ to dedicated Slack channels",
+    label: "Email to Slack Routing",
+    description: "Every support email lands in the right channel instantly",
     icon: <IconMailForward size={18} stroke={1.75} />,
   },
   {
     id: "chat",
-    label: "Live Chat & Reply from Slack",
-    description: "Respond to website visitors without leaving Slack",
+    label: "Real-time Chat",
+    description: "Live chat that your team handles without a new tool",
     icon: <IconMessageChatbot size={18} stroke={1.75} />,
   },
   {
     id: "status",
-    label: "Ticket Status & Assignment",
-    description: "Claim tickets, track Open → In Progress → Resolved",
+    label: "Ticket Management",
+    description: "Every ticket owned, tracked, and resolved from Slack",
     icon: <IconCircleCheck size={18} stroke={1.75} />,
   },
   {
     id: "canned",
-    label: "Canned Responses",
-    description: "Save and reuse replies for your most common questions",
+    label: "Quick Replies & Templates",
+    description: "Reusable replies and email templates — consistent every time",
     icon: <IconTemplate size={18} stroke={1.75} />,
   },
 ];
@@ -308,9 +308,9 @@ const tabContent: Record<
   }
 > = {
   email: {
-    heading: "Route every email, automatically",
+    heading: "The right email. The right channel. Every time.",
     paragraph:
-      "Connect your support@, billing@, and sales@ inboxes and let our system forward each one to the right Slack channel. No more digging through a shared inbox — the right person sees the right message instantly.",
+      "One setup. Permanent routing. Connect support@, billing@, and sales@ and every email that arrives goes straight to its dedicated Slack channel — no rules to maintain, no forwarding to configure, no inbox to monitor. Just Slack threads your team already knows how to use.",
     bullets: [
       {
         icon: <IconMailForward size={16} stroke={1.75} />,
@@ -327,9 +327,9 @@ const tabContent: Record<
     ],
   },
   chat: {
-    heading: "Reply to live chat without leaving Slack",
+    heading: "Live chat that your team handles without a new tool",
     paragraph:
-      "Your website visitors get a live chat widget. Your team gets a Slack message. Reply directly from the thread — no new tool to learn, no tab switching, no dropped conversations.",
+      "Embed the chat widget on your website in minutes. When a visitor starts a conversation, it appears instantly as a Slack thread — your team replies there, the visitor sees the response on your site in real time. No new dashboard, no separate inbox, no tab switching.",
     bullets: [
       {
         icon: <IconMessageChatbot size={16} stroke={1.75} />,
@@ -346,9 +346,9 @@ const tabContent: Record<
     ],
   },
   status: {
-    heading: "Always know where every ticket stands",
+    heading: "One click to claim. One thread to resolve. Zero chaos.",
     paragraph:
-      "Claim tickets, update status from Open to In Progress to Resolved — all from Slack buttons. No duplicate replies, no dropped threads, no manager asking 'who's handling this?'",
+      "When an email or chat arrives in Slack, any team member can claim it in one click — making them the owner. Status updates from Open to In Progress to Resolved, visible to everyone. No duplicate replies, no dropped threads, no manager asking who's handling this.",
     bullets: [
       {
         icon: <IconCircleCheck size={16} stroke={1.75} />,
@@ -365,9 +365,9 @@ const tabContent: Record<
     ],
   },
   canned: {
-    heading: "Answer common questions in one click",
+    heading: "Stop rewriting the same answers. Build them once, send forever.",
     paragraph:
-      "Build a library of your best replies for billing questions, password resets, feature requests. Insert any template from Slack in seconds — consistent, fast, on-brand every time.",
+      "Build a library of your best replies — billing questions, password resets, shipping updates, feature request responses. One click in Slack loads the template, you edit if needed, and send. Your customer receives a properly formatted, branded email. Consistent, fast, and professional every time — regardless of who on the team replies.",
     bullets: [
       {
         icon: <IconTemplate size={16} stroke={1.75} />,
@@ -536,7 +536,7 @@ export function FeatureTabs() {
                   >
                     <span
                       className={[
-                        "text-base font-schibsted font-semibold mb-1",
+                        "flex items-center gap-2 text-base font-schibsted font-semibold mb-1",
                         "transition-colors duration-150",
                         isActive ? "text-sky-800" : "text-neutral-900",
                       ].join(" ")}
@@ -544,9 +544,9 @@ export function FeatureTabs() {
                       {tab.icon}
                       {tab.label}
                     </span>
-                    {/* <span className="text-sm font-schibsted font-normal text-neutral-900 leading-snug">
+                    <span className={`text-sm font-schibsted font-normal leading-snug ${isActive ? "text-sky-800" : "text-neutral-900"}`}>
                       {tab.description}
-                    </span> */}
+                    </span>
                   </button>
                 );
               })}
@@ -565,7 +565,7 @@ export function FeatureTabs() {
                 {/* Left — text ──────────────────────────────────────── */}
                 <div className="lg:w-[42%] shrink-0 flex flex-col gap-6 p-10">
                   <Heading
-                    variant="default"
+                    variant="muted"
                     className="font-schibsted text-2xl lg:text-3xl font-bold text-neutral-900 leading-tight"
                   >
                     {tabContent[activeTab].heading}

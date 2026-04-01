@@ -8,6 +8,7 @@ import { navlinks } from "@/constants/navlinks"
 import { useUserStore } from "@/lib/store"
 import { useClerk } from "@clerk/nextjs"
 import { LogOut, User as UserIcon } from "lucide-react"
+import { Logo } from "@/constants/Logo"
 
 // ─── Custom easing from globals.css ──────────────────────────────────────────
 const EASE_OUT_QUART: [number, number, number, number] = [0.165, 0.84, 0.44, 1]
@@ -240,14 +241,7 @@ function DocsDropdown() {
 function LogoMark() {
   return (
     <Link href="/" className="flex items-center gap-2 group">
-      <div className="size-8 rounded-lg bg-sky-100 flex items-center justify-center transition-colors duration-200 group-hover:bg-sky-200">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-sky-800">
-          <path d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z" />
-        </svg>
-      </div>
-      <span className="font-schibsted font-semibold text-base text-neutral-900 tracking-tight">
-        Email Router
-      </span>
+      <Logo />
     </Link>
   )
 }
