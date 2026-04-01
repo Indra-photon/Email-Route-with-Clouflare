@@ -286,25 +286,16 @@ interface LocalFilters {
   aliasId:  string;
 }
 
-// ── Mock / Real fetch ─────────────────────────────────────────────────────────
+// ── Real API fetch ────────────────────────────────────────────────────────────
 
-async function fetchStatusData(_filters: LocalFilters): Promise<StatusSlice[]> {
-  // MOCK DATA — remove this block and uncomment the real fetch below when ready
-  return [
-    { label: "Open",        value: 24, colour: "#0284c7", bg: "bg-sky-600"   },
-    { label: "In Progress", value: 18, colour: "#7dd3fc", bg: "bg-sky-300"   },
-    { label: "Waiting",     value: 9,  colour: "#cbd5e1", bg: "bg-slate-300" },
-    { label: "Resolved",    value: 41, colour: "#e2e8f0", bg: "bg-slate-200" },
-  ];
-
-  // ── Real fetch (uncomment when ready) ──
-  // const params = new URLSearchParams({
-  //   domainId: _filters.domainId,
-  //   aliasId:  _filters.aliasId,
-  // });
-  // const res = await fetch(`/api/dashboard/status?${params.toString()}`);
-  // if (!res.ok) throw new Error("Failed to fetch status data");
-  // return res.json();
+async function fetchStatusData(filters: LocalFilters): Promise<StatusSlice[]> {
+  const params = new URLSearchParams({
+    domainId: filters.domainId,
+    aliasId:  filters.aliasId,
+  });
+  const res = await fetch(`/api/dashboard/status?${params.toString()}`);
+  if (!res.ok) throw new Error("Failed to fetch status data");
+  return res.json();
 }
 
 // ── Custom Tooltip ────────────────────────────────────────────────────────────

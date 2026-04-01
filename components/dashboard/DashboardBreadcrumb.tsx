@@ -337,7 +337,7 @@ function UserPill() {
 
   return (
     <Link
-      href="/profile"
+      href="/dashboard/profile"
       className="flex items-center gap-2.5 h-9 pl-1.5 pr-3 rounded-xl border border-neutral-200 bg-neutral-50 hover:bg-white hover:border-neutral-300 hover:shadow-sm transition-all duration-150"
     >
       <Avatar className="size-6 shrink-0">
@@ -449,6 +449,6 @@ function getPageTitle(pathname: string): string {
   if (pathname.startsWith("/dashboard/customize-app")) return "Customize App";
   if (pathname.startsWith("/dashboard/email-templates")) return "Email Templates";
   if (pathname.startsWith("/dashboard/billing")) return "Billing";
-  if (pathname.startsWith("/profile")) return "Profile";
+  if (pathname.startsWith("/dashboard/profile")) return "Profile";
   return "Dashboard";
 }

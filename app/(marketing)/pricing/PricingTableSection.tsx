@@ -6,7 +6,6 @@ import { useUser } from "@clerk/nextjs";
 import { Heading } from "@/components/Heading";
 import { Paragraph } from "@/components/Paragraph";
 import { useSubscription } from "@/hooks/useSubscription";
-import { UpgradeModal } from "@/components/billing/UpgradeModal";
 import { DowngradeModal } from "@/components/billing/DowngradeModal";
 
 // ─── Types from DB (mirrors IPricingPlan but snake_case id) ───────────────────
@@ -205,10 +204,29 @@ function PricingCard({
   isLoggedIn: boolean;
   currentPeriodEnd: string | null;
 }) {
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [downgradeOpen, setDowngradeOpen] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const isHighlight = plan.highlight;
   const action = getCtaAction(plan.id, currentPlanId, isExpired, isLoggedIn);
+
+  const handleDirectCheckout = async () => {
+    setCheckoutLoading(true);
+    setCheckoutError(null);
+    try {
+      const res = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId: plan.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Checkout failed");
+      window.location.href = data.checkoutUrl;
+    } catch (err) {
+      setCheckoutError(err instanceof Error ? err.message : "Something went wrong");
+      setCheckoutLoading(false);
+    }
+  };
 
   const lostFeatures: string[] = [];
   if (action === "downgrade" && currentPlanId) {
@@ -230,17 +248,19 @@ function PricingCard({
         );
 
       case "no-plan":
-        // Logged in but never purchased — same as a fresh signup CTA
+        // Logged in but never purchased — go straight to payment
         return (
           <>
-            <button onClick={() => setUpgradeOpen(true)} className={baseClass + highlightVariant}>
-              {plan.ctaLabel}
+            <button
+              onClick={handleDirectCheckout}
+              disabled={checkoutLoading}
+              className={baseClass + highlightVariant + "disabled:opacity-60 disabled:cursor-not-allowed"}
+            >
+              {checkoutLoading ? "Redirecting…" : plan.ctaLabel}
             </button>
-            <UpgradeModal
-              isOpen={upgradeOpen}
-              onClose={() => setUpgradeOpen(false)}
-              targetPlanId={plan.id}
-            />
+            {checkoutError && (
+              <p className="font-schibsted text-xs text-red-500 mt-2 text-center">{checkoutError}</p>
+            )}
           </>
         );
 
@@ -255,14 +275,16 @@ function PricingCard({
       case "renew":
         return (
           <>
-            <button onClick={() => setUpgradeOpen(true)} className={baseClass + highlightVariant}>
-              {action === "renew" ? `Renew with ${plan.name}` : `Upgrade to ${plan.name}`}
+            <button
+              onClick={handleDirectCheckout}
+              disabled={checkoutLoading}
+              className={baseClass + highlightVariant + "disabled:opacity-60 disabled:cursor-not-allowed"}
+            >
+              {checkoutLoading ? "Redirecting…" : action === "renew" ? `Renew with ${plan.name}` : `Upgrade to ${plan.name}`}
             </button>
-            <UpgradeModal
-              isOpen={upgradeOpen}
-              onClose={() => setUpgradeOpen(false)}
-              targetPlanId={plan.id}
-            />
+            {checkoutError && (
+              <p className="font-schibsted text-xs text-red-500 mt-2 text-center">{checkoutError}</p>
+            )}
           </>
         );
 

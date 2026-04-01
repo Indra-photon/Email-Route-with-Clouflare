@@ -372,7 +372,28 @@ function UsageBar({
     );
   }
 
-  const pct     = max === 0 ? 0 : Math.min((current / max) * 100, 100);
+  // No plan active — show an empty greyed bar
+  if (max === 0) {
+    return (
+      <div className="flex flex-col gap-1.5">
+        <span className="text-xs font-schibsted text-neutral-700 tracking-tighter">{label}</span>
+        <div
+          className="relative h-5 w-full rounded-xl overflow-hidden"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(0,0,0,0.06) 5px, rgba(0,0,0,0.06) 10px)",
+            backgroundColor: "#e5e7eb",
+          }}
+        >
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-[10px] font-schibsted font-medium text-neutral-400">—</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const pct     = Math.min((current / max) * 100, 100);
   const remain  = Math.max(100 - pct, 0);
 
   // bar fill colour based on threshold
