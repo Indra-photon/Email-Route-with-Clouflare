@@ -10,6 +10,8 @@ import { FAQSection } from "@/components/FAQSection";
 import { Footer } from "@/components/Footer";
 import { HowItWorksSection } from "./Homepage/HowItWorksSection";
 import { WhySlackDeskSection } from "./Homepage/WhySlackDeskSection";
+import { DashboardShowcaseSection } from "./Homepage/DashboardShowcaseSection";
+import { OnboardingStepsSection } from "./Homepage/OnboardingStepsSection";
 
 export default function Home() {
   return (
@@ -17,8 +19,10 @@ export default function Home() {
       <section className="flex flex-col gap-24">
         <HeroSection />
         <BenefitsSection />
-        <FeaturesSection />
+        {/* <FeaturesSection /> */}
+        <DashboardShowcaseSection />
         <WhySlackDeskSection />
+        <OnboardingStepsSection />
         <TestimonialsSection />
         <FAQSection />
         <Footer />

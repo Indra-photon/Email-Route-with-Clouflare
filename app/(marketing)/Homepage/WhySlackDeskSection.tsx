@@ -604,7 +604,7 @@ const cards: CardData[] = [
     number: "01",
     Icon: SlackIcon,
     title: "No new tools to learn.",
-    description: "SlackDesk lives inside Slack. Your team replies from where they already work — no logins, no tabs, no onboarding.",
+    description: "Every other support tool is a destination. SyncSupport is where your team already is. Tickets arrive as threads, replies go out as emails, and nothing requires anyone to open a new tab",
     Visual: LaptopNotificationVisual,
     featured: false,
   },
@@ -612,8 +612,8 @@ const cards: CardData[] = [
     id: 2,
     number: "02",
     Icon: ChannelsIcon,
-    title: "Every channel. One place.",
-    description: "Email, live chat, Discord — routed into dedicated Slack channels automatically. Nothing falls through.",
+    title: "The setup that fits in a lunch break.",
+    description: "SyncSupport needs a DNS record and a Slack webhook. Five minutes of setup, zero days of onboarding.",
     Visual: ChannelsVisual,
     featured: true,
   },
@@ -630,8 +630,8 @@ const cards: CardData[] = [
     id: 4,
     number: "04",
     Icon: PricingIcon,
-    title: "One price. Unlimited seats.",
-    description: "Add your whole team — founders, contractors, agents. No per-seat fees. Ever.",
+    title: "The pricing model that doesn't punish growth.",
+    description: "SyncSupport charges a flat rate — unlimited team members, one predictable price, no surprises when you scale.",
     Visual: PricingVisual,
     featured: false,
   },
@@ -642,7 +642,7 @@ const cards: CardData[] = [
 const SmallCard = ({ card, delay = 0 }: { card: CardData; delay?: number }) => (
   <motion.div
     className="relative flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white"
-    style={{ height: 460 }}
+    style={{ height: 520 }}
     initial={{ opacity: 0, y: 16 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
@@ -663,9 +663,9 @@ const SmallCard = ({ card, delay = 0 }: { card: CardData; delay?: number }) => (
     )}
 
     {/* Bottom text — always pinned to bottom */}
-    <div className="mt-auto px-5 pb-5">
+    <div className="mt-auto px-5 pb-25">
       <div className="flex items-center gap-2 mb-1.5">
-        <Heading as="h3" variant="small" className="text-sky-800 font-normal leading-snug">
+        <Heading as="h3" variant="small" className="text-sky-800 font-normal leading-tight mt-5">
           {card.title}
         </Heading>
       </div>
@@ -681,7 +681,7 @@ const SmallCard = ({ card, delay = 0 }: { card: CardData; delay?: number }) => (
 const FeaturedCard = ({ card, delay = 0 }: { card: CardData; delay?: number }) => (
   <motion.div
     className="relative flex flex-col overflow-hidden rounded-2xl border border-neutral-300 bg-white shadow-2xl"
-    style={{ height: 460 }}
+    style={{ height: 550 }}
     initial={{ opacity: 0, y: 16 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
@@ -753,10 +753,10 @@ export function WhySlackDeskSection() {
           transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
         >
           <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
-            Why teams switch to SlackDesk.{" "}
+            Why teams switch to SyncSupport.{" "}
           </Heading>
           <Heading as="span" className="text-neutral-400 leading-tight font-semibold">
-            We stripped away the bloat. What's left works the way your team actually works.
+            Not because it's cheaper — because it's the only support system that actually lives in Slack.
           </Heading>
         </motion.div>
 

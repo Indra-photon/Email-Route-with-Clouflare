@@ -376,21 +376,19 @@ export function HeroSection() {
 
           {/* Heading — 3/5 width on desktop */}
           <div className="lg:w-3/5">
-            <Heading
-              as="h1"
-              className="text-neutral-900 leading-tight"
-            >
-              Streamline your customer tickets from{" "}
-              <span className="text-sky-800">One Workspace.</span>
+            <Heading as="h1" className="text-neutral-900 leading-tight">
+              <span>Stop switching tabs.</span>
+              <span className="block text-sky-800">
+                Support your customers from Slack.
+              </span>
             </Heading>
           </div>
 
           {/* Subheading + CTAs + Social proof — 2/5 width on desktop */}
           <div className="lg:w-2/5 mt-6 lg:mt-0 flex flex-col justify-center">
             <Paragraph variant="home-par" className="mb-8">
-              Manage tickets, respond to inquiries, and collaborate with your
-              team without leaving your workspace. No time waste, no missing
-              emails, no cluttered inbox — instant support with a small team.
+              Everything your support team needs — email routing, live chat, ticket tracking, canned responses, and email templates — all operating from inside Slack. 
+              Customers reach you through any channel. Your team never leaves the one tool they already live in. Five minutes to set up.
             </Paragraph>
 
             {/* CTA Buttons */}
