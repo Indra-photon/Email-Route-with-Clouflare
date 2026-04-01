@@ -86,9 +86,9 @@ export function DashboardShowcaseSection() {
           <motion.div
             className="mb-10 p-4"
             initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
-                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
+            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
           >
             <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
               A Detailed Dashboard.{" "}
@@ -116,7 +116,7 @@ export function DashboardShowcaseSection() {
               {/* Screenshot — responsive, fills the frame */}
               <div className="relative w-full overflow-hidden rounded-2xl border border-neutral-200">
                 <Image
-                  src="/dashboard-screenshot.png"
+                  src="/dashboard-screenshot2.png"
                   alt="5MinutesSupport dashboard — ticket management, response times, and team performance at a glance"
                   width={1400}
                   height={900}
