@@ -78,13 +78,16 @@ import { TicketVolumeChart } from "./TicketVolumeChart";
 import { StatusBreakdownChart } from "./StatusBreakdownChart";
 import { NeedsAttentionTable } from "./NeedsAttentionTable";
 import { AliasesPanel } from "./AliasesPanel";
+import { useAuth } from "@clerk/nextjs";
 
 export function DashboardClient() {
   const [domains, setDomains] = useState<DomainOption[]>([]);
   const [aliases, setAliases] = useState<AliasOption[]>([]);
+  const { isLoaded, isSignedIn } = useAuth();
 
   // domains + aliases still needed by TicketVolumeChart + StatusBreakdownChart
   useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
     async function load() {
       try {
         const [domainsRes, aliasesRes] = await Promise.all([
@@ -110,7 +113,7 @@ export function DashboardClient() {
       }
     }
     load();
-  }, []);
+  }, [isLoaded, isSignedIn]);
 
   return (
     <div className="flex flex-col gap-4">

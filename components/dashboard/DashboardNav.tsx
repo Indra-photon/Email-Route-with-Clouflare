@@ -1020,7 +1020,7 @@ const navGroups = [
         exact: false,
       },
       {
-        href: "/profile",
+        href: "/dashboard/profile",
         label: "Profile",
         icon: null,
         tablerIcon: User,

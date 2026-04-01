@@ -304,7 +304,7 @@ import {
 
 const PLAN_ORDER = ["starter", "growth", "scale"] as const;
 type PlanId = typeof PLAN_ORDER[number];
-type PageTab = "overview" | "usage" | "plans";
+type PageTab = "overview" | "plans";
 
 const PLAN_META: Record<PlanId, {
   name: string;
@@ -348,9 +348,8 @@ const STATUS_META: Record<string, {
 };
 
 const PAGE_TABS: { id: PageTab; label: string; icon: React.ReactNode }[] = [
-  { id: "overview", label: "Overview",   icon: <IconCreditCard size={15} /> },
-  { id: "usage",    label: "Usage",      icon: <IconChartBar size={15} /> },
-  { id: "plans",    label: "Plans",      icon: <IconLayoutGrid size={15} /> },
+  { id: "overview", label: "Overview & Usage", icon: <IconCreditCard size={15} /> },
+  { id: "plans",    label: "Plans",            icon: <IconLayoutGrid size={15} /> },
 ];
 
 const easeOutQuint = [0.23, 1, 0.32, 1] as const;
@@ -532,8 +531,17 @@ export default function BillingPageContent() {
     setPortalLoading(true);
     const res = await fetch("/api/billing/portal", { method: "POST" });
     const json = await res.json();
-    if (res.ok) window.open(json.portalUrl, "_blank");
-    else alert(json.error ?? "Failed to open portal");
+    if (res.ok) {
+      window.open(json.portalUrl, "_blank");
+    } else {
+      const msg = json.error ?? "Failed to open billing portal";
+      // Provide a helpful message for the most common case
+      if (msg.includes("No billing account")) {
+        alert("⚠️ No billing account found.\n\nThis happens if your subscription was created via a test route and has no real Dodo customer record. Please subscribe through the normal checkout flow first.");
+      } else {
+        alert(`❌ ${msg}`);
+      }
+    }
     setPortalLoading(false);
   };
 
@@ -631,7 +639,7 @@ export default function BillingPageContent() {
               {activePageTab === tab.id && (
                 <motion.span
                   layoutId="billing-tab-bg"
-                  className="absolute inset-0 bg-gradient-to-r from-sky-800 to-cyan-700 rounded-lg z-0 shadow-sm"
+                  className="absolute inset-0 bg-linear-to-r from-sky-800 to-cyan-700 rounded-lg z-0 shadow-sm"
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
@@ -655,7 +663,7 @@ export default function BillingPageContent() {
               >
                 <div className="flex flex-col sm:flex-row sm:items-start gap-6">
 
-                  {/* Plan info */}
+                  {/* Left: Plan info + Usage bars */}
                   <div className="flex-1 min-w-0 space-y-3">
                     <div className="flex items-center gap-3 flex-wrap">
                       <h2 className="font-schibsted text-xl font-bold text-neutral-900 dark:text-neutral-100">
@@ -698,7 +706,7 @@ export default function BillingPageContent() {
 
                     {/* Plan highlights */}
                     {currentMeta && (
-                      <ul className="space-y-1.5 pt-1">
+                      <ul className="space-y-1.5 pt-1 pb-1">
                         {currentMeta.highlights.map((h) => (
                           <li key={h} className="flex items-center gap-2 text-xs font-schibsted text-neutral-600 dark:text-neutral-400">
                             <span className="w-1.5 h-1.5 rounded-full bg-cyan-600 shrink-0" />
@@ -707,12 +715,32 @@ export default function BillingPageContent() {
                         ))}
                       </ul>
                     )}
+
+                    {/* Usage bars — directly under plan info */}
+                    <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="font-schibsted text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
+                          <IconChartBar size={12} className="text-cyan-600" />
+                          Usage this period
+                        </p>
+                        {startDateShort && endDateShort && (
+                          <p className="font-schibsted text-xs text-neutral-400 flex items-center gap-1">
+                            <IconCalendar size={11} />
+                            {startDateShort} – {endDateShort}
+                          </p>
+                        )}
+                      </div>
+                      <div className="space-y-3">
+                        <UsageBar label="Inbound tickets"  current={data.usage.ticketCountInbound}  max={data.limits?.ticketsPerMonth ?? -1} />
+                        <UsageBar label="Outbound replies" current={data.usage.ticketCountOutbound} max={0} />
+                        <UsageBar label="Domains"          current={data.usage.domainCount ?? 0} max={data.limits?.domains ?? -1} />
+                        <UsageBar label="Aliases / domain" current={data.usage.aliasCount ?? 0} max={data.limits?.aliasesPerDomain ?? -1} />
+                        <UsageBar label="Chat widgets"     current={data.usage.chatWidgetCount ?? 0} max={data.limits?.chatWidgets ?? -1} />
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Divider */}
-                  <div className="hidden sm:block w-px bg-neutral-100 dark:bg-neutral-800 self-stretch" />
-
-                  {/* Actions */}
+                  {/* Right: Actions */}
                   <div className="flex flex-col gap-2 sm:min-w-[190px]">
                     <p className="font-schibsted text-xs font-semibold text-neutral-400 uppercase tracking-widest mb-1">Actions</p>
                     <ActionButton
@@ -754,28 +782,6 @@ export default function BillingPageContent() {
                       />
                     )}
                   </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ── Usage tab ── */}
-            {activePageTab === "usage" && (
-              <motion.div key="usage"
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.18, ease: easeOutQuint }}
-              >
-                {startDateShort && endDateShort && (
-                  <p className="font-schibsted text-xs text-neutral-400 mb-5 flex items-center gap-1.5">
-                    <IconCalendar size={12} />
-                    Billing period: {startDateShort} – {endDateShort}
-                  </p>
-                )}
-                <div className="space-y-4 max-w-xl">
-                  <UsageBar label="Inbound tickets"  current={data.usage.ticketCountInbound}  max={data.limits?.ticketsPerMonth ?? -1} />
-                  <UsageBar label="Outbound replies" current={data.usage.ticketCountOutbound} max={0} />
-                  <UsageBar label="Domains"          current={data.usage.domainCount ?? 0} max={data.limits?.domains ?? -1} />
-                  <UsageBar label="Aliases / domain" current={data.usage.aliasCount ?? 0} max={data.limits?.aliasesPerDomain ?? -1} />
-                  <UsageBar label="Chat widgets"     current={data.usage.chatWidgetCount ?? 0} max={data.limits?.chatWidgets ?? -1} />
                 </div>
               </motion.div>
             )}

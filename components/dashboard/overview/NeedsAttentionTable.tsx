@@ -14,6 +14,7 @@ import Link from "next/link";
 import type { FilterState } from "./FilterBar";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
 import type { DomainOption, AliasOption } from "./FilterBar";
+import { useAuth } from "@clerk/nextjs";
 
 // ── Easing ────────────────────────────────────────────────────────────────────
 
@@ -179,9 +180,11 @@ export function NeedsAttentionTable() {
   const [tickets, setTickets]   = useState<AttentionTicket[]>([]);
   const [isLoading, setLoading] = useState(true);
   const [tableKey, setTableKey] = useState(0);
+  const { isLoaded, isSignedIn } = useAuth();
 
-  // fetch domains + aliases once
+  // fetch domains + aliases once (after Clerk is ready)
   useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
     Promise.all([fetch("/api/domains"), fetch("/api/aliases")])
       .then(async ([dr, ar]) => {
         if (dr.ok) {
@@ -194,9 +197,10 @@ export function NeedsAttentionTable() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [isLoaded, isSignedIn]);
 
   useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
     let cancelled = false;
     setLoading(true);
 
@@ -214,7 +218,7 @@ export function NeedsAttentionTable() {
       });
 
     return () => { cancelled = true; };
-  }, [filters.domainId, filters.aliasId, filters.range]);
+  }, [isLoaded, isSignedIn, filters.domainId, filters.aliasId, filters.range]);
 
   return (
     <div className="bg-white rounded-4xl border border-neutral-200 flex flex-col">

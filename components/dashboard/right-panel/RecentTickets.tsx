@@ -6,6 +6,7 @@ import { IconMail, IconArrowRight, IconChevronDown, IconExternalLink } from "@ta
 import { motion, AnimatePresence } from "framer-motion";
 import { SectionSkeleton } from "./SectionSkeleton";
 import { useRefreshStore } from "./useRefresh";
+import { useAuth } from "@clerk/nextjs";
 
 const SECTION_KEY = "recent-tickets";
 
@@ -70,8 +71,12 @@ export function RecentTickets() {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { refreshCount, setLoading } = useRefreshStore();
+  const { isLoaded, isSignedIn } = useAuth();
 
   useEffect(() => {
+    // Wait for Clerk to finish hydrating before fetching
+    if (!isLoaded || !isSignedIn) return;
+
     let cancelled = false;
     setIsLoading(true);
     setLoading(SECTION_KEY, true);
@@ -93,7 +98,7 @@ export function RecentTickets() {
       });
 
     return () => { cancelled = true; };
-  }, [refreshCount]);
+  }, [isLoaded, isSignedIn, refreshCount]);
 
   function toggleExpand(id: string) {
     setExpandedId((prev) => (prev === id ? null : id));

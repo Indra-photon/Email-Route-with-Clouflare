@@ -6,6 +6,7 @@ import { IconMessageCircle, IconArrowRight, IconChevronDown, IconVideo } from "@
 import { motion, AnimatePresence } from "framer-motion";
 import { SectionSkeleton } from "./SectionSkeleton";
 import { useRefreshStore } from "./useRefresh";
+import { useAuth } from "@clerk/nextjs";
 
 function PanelCTAButton({ label }: { label: string }) {
   const [hovered, setHovered] = useState(false);
@@ -67,8 +68,12 @@ export function LiveChatNotifications() {
   const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { refreshCount, setLoading } = useRefreshStore();
+  const { isLoaded, isSignedIn } = useAuth();
 
   useEffect(() => {
+    // Wait for Clerk to finish hydrating before fetching
+    if (!isLoaded || !isSignedIn) return;
+
     let cancelled = false;
     setIsLoading(true);
     setLoading(SECTION_KEY, true);
@@ -90,7 +95,7 @@ export function LiveChatNotifications() {
       });
 
     return () => { cancelled = true; };
-  }, [refreshCount]);
+  }, [isLoaded, isSignedIn, refreshCount]);
 
   function toggleExpand(id: string) {
     setExpandedId((prev) => (prev === id ? null : id));

@@ -219,6 +219,7 @@ import {
   IconTrendingDown,
   IconArrowRight,
 } from "@tabler/icons-react";
+import { useAuth } from "@clerk/nextjs";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
 import type { DomainOption, AliasOption } from "./FilterBar";
 import type { FilterState } from "./FilterBar";
@@ -226,19 +227,19 @@ import type { FilterState } from "./FilterBar";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface StatData {
-  openTickets:    { value: number; delta: number; deltaLabel: string };
+  openTickets: { value: number; delta: number; deltaLabel: string };
   avgResponseMin: { value: number; delta: number; deltaLabel: string };
-  resolvedToday:  { value: number; delta: number; deltaLabel: string };
-  activeLiveChats:{ value: number; delta: number; deltaLabel: string };
-  totalTickets:   { value: number; delta: number; deltaLabel: string };
-  totalChats:     { value: number; delta: number; deltaLabel: string };
+  resolvedToday: { value: number; delta: number; deltaLabel: string };
+  activeLiveChats: { value: number; delta: number; deltaLabel: string };
+  totalTickets: { value: number; delta: number; deltaLabel: string };
+  totalChats: { value: number; delta: number; deltaLabel: string };
 }
 
 interface RecentTicket {
-  id:        string;
-  from:      string;
-  subject:   string;
-  status:    string;
+  id: string;
+  from: string;
+  subject: string;
+  status: string;
   createdAt: string;
 }
 
@@ -247,21 +248,21 @@ interface RecentTicket {
 async function fetchStats(filters: FilterState): Promise<StatData> {
   const params = new URLSearchParams({
     domainId: filters.domainId,
-    aliasId:  filters.aliasId,
-    range:    filters.range,
+    aliasId: filters.aliasId,
+    range: filters.range,
   });
   const res = await fetch(`/api/dashboard/stats?${params.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch stats");
   const data = await res.json();
 
   return {
-    openTickets:     data.openTickets,
-    avgResponseMin:  data.avgResponseMin,
-    resolvedToday:   data.resolvedToday,
+    openTickets: data.openTickets,
+    avgResponseMin: data.avgResponseMin,
+    resolvedToday: data.resolvedToday,
     activeLiveChats: data.activeLiveChats,
     // derive totals from existing fields — fallback gracefully
-    totalTickets:  data.totalTickets  ?? data.openTickets,
-    totalChats:    data.totalChats    ?? data.activeLiveChats,
+    totalTickets: data.totalTickets ?? data.openTickets,
+    totalChats: data.totalChats ?? data.activeLiveChats,
   };
 }
 
@@ -272,10 +273,10 @@ async function fetchRecentTickets(): Promise<RecentTicket[]> {
   // handle both { tickets: [] } and plain array
   const list = Array.isArray(data) ? data : (data.tickets ?? data.threads ?? []);
   return list.slice(0, 5).map((t: any) => ({
-    id:        t.id ?? t._id,
-    from:      t.from ?? t.fromEmail ?? "—",
-    subject:   t.subject ?? "(no subject)",
-    status:    t.status ?? "open",
+    id: t.id ?? t._id,
+    from: t.from ?? t.fromEmail ?? "—",
+    subject: t.subject ?? "(no subject)",
+    status: t.status ?? "open",
     createdAt: t.createdAt ?? t.receivedAt ?? "",
   }));
 }
@@ -291,20 +292,20 @@ function timeAgo(iso: string): string {
   if (!iso) return "";
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1)  return "just now";
+  if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24)  return `${hrs}h ago`;
+  if (hrs < 24) return `${hrs}h ago`;
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; dot: string }> = {
-  open:        { bg: "bg-amber-50",   text: "text-amber-700",  dot: "bg-amber-400"  },
-  in_progress: { bg: "bg-sky-50",     text: "text-sky-700",    dot: "bg-sky-400"    },
-  waiting:     { bg: "bg-purple-50",  text: "text-purple-700", dot: "bg-purple-400" },
-  resolved:    { bg: "bg-emerald-50", text: "text-emerald-700",dot: "bg-emerald-400"},
-  pending:     { bg: "bg-orange-50",  text: "text-orange-700", dot: "bg-orange-400" },
-  completed:   { bg: "bg-emerald-50", text: "text-emerald-700",dot: "bg-emerald-400"},
+  open: { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-400" },
+  in_progress: { bg: "bg-sky-50", text: "text-sky-700", dot: "bg-sky-400" },
+  waiting: { bg: "bg-purple-50", text: "text-purple-700", dot: "bg-purple-400" },
+  resolved: { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-400" },
+  pending: { bg: "bg-orange-50", text: "text-orange-700", dot: "bg-orange-400" },
+  completed: { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-400" },
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -336,13 +337,13 @@ function DeltaPill({
     ? isZero
       ? " text-white/60"
       : isGood
-      ? " text-white"
-      : " text-white"
+        ? " text-white"
+        : " text-white"
     : isZero
-    ? " text-neutral-500"
-    : isGood
-    ? " text-emerald-700"
-    : " text-red-600";
+      ? " text-neutral-500"
+      : isGood
+        ? " text-emerald-700"
+        : " text-red-600";
 
   const Icon = isZero ? null : isGood ? IconTrendingUp : IconTrendingDown;
   const sign = delta > 0 ? "+" : "";
@@ -383,24 +384,24 @@ function TotalHeroCard({ stats, loading }: { stats: StatData | null; loading: bo
       </div>
 
       {/* Tab switcher — right side of header */}
-        <div className="inline-flex items-center w-fit bg-neutral-100 rounded-lg p-0.5 gap-0.5">
-          {(["tickets", "chats"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`
+      <div className="inline-flex items-center w-fit bg-neutral-100 rounded-lg p-0.5 gap-0.5">
+        {(["tickets", "chats"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`
                 px-2.5 py-1 rounded-md text-[11px] font-schibsted font-semibold
                 transition-all duration-150
                 ${tab === t
-                  ? "bg-white text-sky-800 shadow-sm"
-                  : "text-neutral-400 hover:text-neutral-600"
-                }
+                ? "bg-white text-sky-800 shadow-sm"
+                : "text-neutral-400 hover:text-neutral-600"
+              }
               `}
-            >
-              {t.charAt(0).toUpperCase() + t.slice(1)}
-            </button>
-          ))}
-        </div>
+          >
+            {t.charAt(0).toUpperCase() + t.slice(1)}
+          </button>
+        ))}
+      </div>
 
       {/* Big number */}
       <div className="flex-1 flex items-center">
@@ -412,7 +413,7 @@ function TotalHeroCard({ stats, loading }: { stats: StatData | null; loading: bo
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="text-8xl font-schibsted font-bold text-neutral-900 tabular-nums leading-none"
+            className="text-5xl xl:text-6xl font-schibsted font-bold text-neutral-900 tabular-nums leading-none tracking-tighter truncate w-full"
           >
             {value}
           </motion.p>
@@ -433,14 +434,14 @@ function TotalHeroCard({ stats, loading }: { stats: StatData | null; loading: bo
 // ─── Box 2 — 2×2 metric cards ─────────────────────────────────────────────────
 
 interface MetricCardProps {
-  label:     string;
-  value:     string;
-  delta:     number;
-  deltaLabel:string;
-  icon:      React.ElementType;
-  accent?:   boolean;
-  invert?:   boolean;
-  loading:   boolean;
+  label: string;
+  value: string;
+  delta: number;
+  deltaLabel: string;
+  icon: React.ElementType;
+  accent?: boolean;
+  invert?: boolean;
+  loading: boolean;
 }
 
 function MetricCard({ label, value, delta, deltaLabel, icon: Icon, accent, invert, loading }: MetricCardProps) {
@@ -486,37 +487,37 @@ function MetricGrid({ stats, loading }: { stats: StatData | null; loading: boole
 
   const cards: MetricCardProps[] = [
     {
-      label:      "Resolved Today",
-      value:      String(stats?.resolvedToday.value ?? 0),
-      delta:      stats?.resolvedToday.delta ?? 0,
+      label: "Resolved Today",
+      value: String(stats?.resolvedToday.value ?? 0),
+      delta: stats?.resolvedToday.delta ?? 0,
       deltaLabel: stats?.resolvedToday.deltaLabel ?? "this month",
-      icon:       IconRosetteDiscountCheck,
-      accent:     true,
+      icon: IconRosetteDiscountCheck,
+      accent: true,
       loading,
     },
     {
-      label:      "Avg Response",
-      value:      avg,
-      delta:      stats?.avgResponseMin.delta ?? 0,
+      label: "Avg Response",
+      value: avg,
+      delta: stats?.avgResponseMin.delta ?? 0,
       deltaLabel: stats?.avgResponseMin.deltaLabel ?? "this month",
-      icon:       IconHourglass,
-      invert:     true,
+      icon: IconHourglass,
+      invert: true,
       loading,
     },
     {
-      label:      "In Progress",
-      value:      String(stats?.openTickets.value ?? 0),
-      delta:      stats?.openTickets.delta ?? 0,
+      label: "In Progress",
+      value: String(stats?.openTickets.value ?? 0),
+      delta: stats?.openTickets.delta ?? 0,
       deltaLabel: stats?.openTickets.deltaLabel ?? "this month",
-      icon:       IconMailFast,
+      icon: IconMailFast,
       loading,
     },
     {
-      label:      "Live Chats",
-      value:      String(stats?.activeLiveChats.value ?? 0),
-      delta:      stats?.activeLiveChats.delta ?? 0,
+      label: "Live Chats",
+      value: String(stats?.activeLiveChats.value ?? 0),
+      delta: stats?.activeLiveChats.delta ?? 0,
       deltaLabel: stats?.activeLiveChats.deltaLabel ?? "this month",
-      icon:       IconMessage,
+      icon: IconMessage,
       loading,
     },
   ];
@@ -533,15 +534,17 @@ function MetricGrid({ stats, loading }: { stats: StatData | null; loading: boole
 // ─── Box 3 — Recent Activity table ───────────────────────────────────────────
 
 function RecentActivityBox() {
-  const [tickets, setTickets]   = useState<RecentTicket[]>([]);
-  const [loading, setLoading]   = useState(true);
+  const [tickets, setTickets] = useState<RecentTicket[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { isLoaded, isSignedIn } = useAuth();
 
   useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
     fetchRecentTickets()
       .then(setTickets)
       .catch(() => setTickets([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [isLoaded, isSignedIn]);
 
   return (
     <div className="bg-white rounded-4xl border border-neutral-200 p-3 flex flex-col h-full shadow-sm">
@@ -609,7 +612,7 @@ function RecentActivityBox() {
 // ─── Filter options (fetched once on mount) ───────────────────────────────────
 
 const rangeOptions = [
-  { value: "7d",  label: "Last 7 days"  },
+  { value: "7d", label: "Last 7 days" },
   { value: "14d", label: "Last 14 days" },
   { value: "30d", label: "Last 30 days" },
 ];
@@ -617,13 +620,15 @@ const rangeOptions = [
 export function StatCards() {
   const [filters, setFilters] = useState<FilterState>({
     domainId: "all",
-    aliasId:  "all",
-    range:    "7d",
+    aliasId: "all",
+    range: "7d",
   });
-  const [stats,   setStats]   = useState<StatData | null>(null);
+  const [stats, setStats] = useState<StatData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { isLoaded, isSignedIn } = useAuth();
 
   useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
     let cancelled = false;
     setLoading(true);
 
@@ -632,12 +637,13 @@ export function StatCards() {
       .catch((err) => { console.error("StatCards fetch error:", err); if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-  }, [filters.domainId, filters.aliasId, filters.range]);
+  }, [isLoaded, isSignedIn, filters.domainId, filters.aliasId, filters.range]);
 
   const [domains, setDomains] = useState<DomainOption[]>([]);
   const [aliases, setAliases] = useState<AliasOption[]>([]);
 
   useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
     Promise.all([fetch("/api/domains"), fetch("/api/aliases")])
       .then(async ([dr, ar]) => {
         if (dr.ok) {
@@ -649,8 +655,8 @@ export function StatCards() {
           setAliases(a.map((x: any) => ({ id: x.id, label: x.email, domainId: x.domainId ?? "unknown" })));
         }
       })
-      .catch(() => {});
-  }, []);
+      .catch(() => { });
+  }, [isLoaded, isSignedIn]);
 
   const visibleAliases = filters.domainId === "all"
     ? aliases

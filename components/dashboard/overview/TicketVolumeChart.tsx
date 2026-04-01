@@ -14,6 +14,7 @@ import {
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
 import type { DomainOption, AliasOption } from "./FilterBar";
 import { Heading } from "@/components/Heading";
+import { useAuth } from "@clerk/nextjs";
 
 // ── Easing ────────────────────────────────────────────────────────────────────
 
@@ -117,8 +118,10 @@ export function TicketVolumeChart({ domains, aliases }: TicketVolumeChartProps) 
   const [data, setData]         = useState<ChartDataPoint[]>([]);
   const [isLoading, setLoading] = useState(true);
   const [chartKey, setChartKey] = useState(0); // forces AnimatePresence remount
+  const { isLoaded, isSignedIn } = useAuth();
 
   useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
     let cancelled = false;
     setLoading(true);
 
@@ -136,7 +139,7 @@ export function TicketVolumeChart({ domains, aliases }: TicketVolumeChartProps) 
       });
 
     return () => { cancelled = true; };
-  }, [filters.domainId, filters.aliasId, filters.range]);
+  }, [isLoaded, isSignedIn, filters.domainId, filters.aliasId, filters.range]);
 
   // Cascading aliases
   const visibleAliases =
