@@ -102,7 +102,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -115,6 +115,51 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUserStore } from "@/lib/store";
 import { useRefreshStore } from "@/components/dashboard/right-panel/useRefresh";
+import { useAuth } from "@clerk/nextjs";
+
+// ─── Live notification data (polls every 45s + on manual refresh) ─────────────
+const POLL_INTERVAL_MS = 45_000;
+
+interface NotifItem {
+  id: string;
+  from: string;
+  subject: string;
+  time: string;
+}
+
+function useNotifications() {
+  const [count, setCount] = useState<number | null>(null);
+  const [items, setItems] = useState<NotifItem[]>([]);
+  const { isLoaded, isSignedIn } = useAuth();
+  const refreshCount = useRefreshStore((s) => s.refreshCount);
+
+  const fetchData = useCallback(async () => {
+    if (!isLoaded || !isSignedIn) return;
+    try {
+      const res = await fetch("/api/notifications/count");
+      if (!res.ok) return;
+      const data = await res.json();
+      setCount(data.count ?? 0);
+      setItems(data.items ?? []);
+    } catch {
+      // silently ignore — keeps last known state
+    }
+  }, [isLoaded, isSignedIn]);
+
+  // Re-fetch on auth ready or manual refresh trigger
+  useEffect(() => {
+    fetchData();
+  }, [fetchData, refreshCount]);
+
+  // Auto-poll every 45 seconds
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+    const id = setInterval(fetchData, POLL_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [isLoaded, isSignedIn, fetchData]);
+
+  return { count, items };
+}
 
 // ─── Greeting helper ──────────────────────────────────────────────────────────
 function getGreeting(): string {
@@ -156,23 +201,123 @@ function SearchBar() {
   );
 }
 
-// ─── Icon button ──────────────────────────────────────────────────────────────
-function IconBtn({
-  children,
-  badge,
-}: {
-  children: React.ReactNode;
-  badge?: number;
-}) {
+// ─── Generic icon button (for non-notification actions) ───────────────────────
+function IconBtn({ children }: { children: React.ReactNode }) {
   return (
     <button className="relative flex items-center justify-center size-9 rounded-xl border border-neutral-200 bg-neutral-50 hover:bg-white hover:border-neutral-300 hover:shadow-sm transition-all duration-150">
       {children}
-      {badge != null && badge > 0 && (
-        <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[16px] h-4 px-0.5 rounded-full bg-red-500 text-white text-[9px] font-schibsted font-bold leading-none">
-          {badge > 99 ? "99+" : badge}
-        </span>
-      )}
     </button>
+  );
+}
+
+// ─── Notification bell with dropdown ────────────────────────────────────────
+function NotificationBell({
+  count,
+  items,
+}: {
+  count: number | null;
+  items: NotifItem[];
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      {/* Bell trigger button */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="relative flex items-center justify-center size-9 rounded-xl border border-neutral-200 bg-neutral-50 hover:bg-white hover:border-neutral-300 hover:shadow-sm transition-all duration-150"
+      >
+        <IconBell size={16} className={open ? "text-sky-600" : "text-neutral-500"} />
+        {count != null && count > 0 && (
+          <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[16px] h-4 px-0.5 rounded-full bg-red-500 text-white text-[9px] font-schibsted font-bold leading-none">
+            {count > 99 ? "99+" : count}
+          </span>
+        )}
+      </button>
+
+      {/* Dropdown panel */}
+      {open && (
+        <div className="absolute right-0 top-[calc(100%+8px)] w-80 rounded-2xl border border-neutral-200 bg-white shadow-xl shadow-neutral-200/60 z-50 overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100">
+            <span className="font-schibsted text-[11px] font-semibold tracking-widest uppercase text-neutral-400">
+              Notifications
+            </span>
+            {count != null && count > 0 && (
+              <span className="font-schibsted text-[10px] font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-full">
+                {count} new
+              </span>
+            )}
+          </div>
+
+          {/* Items */}
+          {items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 gap-2">
+              <IconBell size={22} className="text-neutral-200" strokeWidth={1.5} />
+              <p className="font-schibsted text-[12px] text-neutral-400">
+                No new tickets in the last 24h
+              </p>
+            </div>
+          ) : (
+            <ul>
+              {items.map((item, i) => (
+                <li
+                  key={item.id}
+                  className={`px-4 py-3 hover:bg-neutral-50 transition-colors duration-100 ${
+                    i !== 0 ? "border-t border-neutral-50" : ""
+                  }`}
+                >
+                  <Link
+                    href="/dashboard/tickets/mine"
+                    onClick={() => setOpen(false)}
+                    className="flex items-start gap-3"
+                  >
+                    {/* Dot */}
+                    <span className="mt-1.5 size-1.5 rounded-full bg-sky-500 shrink-0" />
+                    {/* Content */}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-schibsted text-[12px] font-semibold text-neutral-800 truncate leading-snug">
+                        {item.subject}
+                      </p>
+                      <p className="font-schibsted text-[11px] text-neutral-400 truncate mt-0.5">
+                        {item.from}
+                      </p>
+                    </div>
+                    {/* Time */}
+                    <span className="font-schibsted text-[10px] text-neutral-400 shrink-0 pt-0.5">
+                      {item.time}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* Footer */}
+          <div className="border-t border-neutral-100 px-4 py-2.5">
+            <Link
+              href="/dashboard/tickets/mine"
+              onClick={() => setOpen(false)}
+              className="font-schibsted text-[11px] font-semibold text-sky-600 hover:text-sky-800 transition-colors"
+            >
+              View all tickets →
+            </Link>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -242,6 +387,7 @@ function RefreshBtn() {
 export function DashboardBreadcrumb() {
   const pathname = usePathname();
   const user = useUserStore((s) => s.user);
+  const { count: notifCount, items: notifItems } = useNotifications();
 
   const isDashboardHome = pathname === "/dashboard";
 
@@ -274,9 +420,7 @@ export function DashboardBreadcrumb() {
       <div className="flex items-center gap-2 shrink-0 ml-4">
         <SearchBar />
 
-        <IconBtn badge={3}>
-          <IconBell size={16} className="text-neutral-500" />
-        </IconBtn>
+        <NotificationBell count={notifCount} items={notifItems} />
 
         <IconBtn>
           <IconInfoCircle size={16} className="text-neutral-500" />
@@ -292,6 +436,7 @@ export function DashboardBreadcrumb() {
     </div>
   );
 }
+
 
 // ─── Page title helper ────────────────────────────────────────────────────────
 function getPageTitle(pathname: string): string {
