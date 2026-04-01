@@ -323,7 +323,7 @@ export default async function RootLayout({
           <UserSync />
           <JsonLd />
           {children}
-          <GoogleTagManager gtmId="Your GTM ID" />
+          <GoogleTagManager gtmId="GTM-KDWNBW63" />
           <Script src="https://cloud.umami.is/script.js" data-website-id="3ec71afb-dca0-4a4c-808f-34fd434c9999" />
           <Toaster position="top-right" />
         </body>
