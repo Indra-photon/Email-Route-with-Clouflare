@@ -377,9 +377,9 @@ export function HeroSection() {
           {/* Heading — 3/5 width on desktop */}
           <div className="lg:w-3/5">
             <Heading as="h1" className="text-neutral-900 leading-tight">
-              <span>Stop switching tabs.</span>
+              <span>Stop Switiching Tabs</span>
               <span className="block text-sky-800">
-                Support your customers from Slack.
+                No dropped tickets. No cluttered inbox. Instant support
               </span>
             </Heading>
           </div>

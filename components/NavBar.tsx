@@ -9,6 +9,7 @@ import { useUserStore } from "@/lib/store"
 import { useClerk } from "@clerk/nextjs"
 import { LogOut, User as UserIcon } from "lucide-react"
 import { Logo } from "@/constants/Logo"
+import { Container } from "./Container"
 
 // ─── Custom easing from globals.css ──────────────────────────────────────────
 const EASE_OUT_QUART: [number, number, number, number] = [0.165, 0.84, 0.44, 1]
@@ -290,7 +291,7 @@ function NavLink({ item, index, hoveredIndex, onHover, onLeave }: {
 
 // ─── Sign In Button ───────────────────────────────────────────────────────────
 function SignInButton() {
-  const [hovered, setHovered] = useState(false)
+  const [hovered, setHovered] = useState(false);
 
   return (
     <Link href="/sign-in">
@@ -298,41 +299,31 @@ function SignInButton() {
         onHoverStart={() => setHovered(true)}
         onHoverEnd={() => setHovered(false)}
         whileTap={{ scale: 0.97 }}
-        className="relative flex items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-b from-sky-900 to-cyan-700 px-5 py-2 cursor-pointer"
-        style={{
-          boxShadow: hovered
-            ? "0 8px 24px rgba(8,145,178,0.35)"
-            : "0 2px 8px rgba(8,145,178,0.18)",
-          transition: "box-shadow 0.35s ease",
-        }}
+        className="relative flex items-center justify-between gap-0 overflow-hidden rounded-full bg-gradient-to-b from-sky-900 to-cyan-700 shadow-lg cursor-pointer"
       >
-        {/* Subtle inner shine */}
+        {/* Shimmer sweep on hover */}
         <motion.div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "linear-gradient(180deg, rgba(255,255,255,0.10) 0%, transparent 60%)",
+            background:
+              "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.12) 50%, transparent 70%)",
+            backgroundSize: "200% 100%",
           }}
-          animate={{ opacity: hovered ? 0.6 : 1 }}
-          transition={{ duration: 0.25 }}
+          animate={
+            hovered
+              ? { backgroundPositionX: ["200%", "-200%"] }
+              : { backgroundPositionX: "200%" }
+          }
+          transition={{ duration: 0.7, ease: "easeInOut" }}
         />
-        <span className="relative font-schibsted font-semibold text-sm text-white select-none">
+
+        {/* Text */}
+        <span className="relative z-10 font-schibsted font-semibold text-white text-sm uppercase tracking-wide select-none flex items-center justify-center flex-1 px-6 py-2.5">
           Sign In
         </span>
-        {/* Tiny arrow nudge */}
-        <motion.svg
-          width="12"
-          height="12"
-          viewBox="0 0 12 12"
-          fill="none"
-          className="relative text-white/80"
-          animate={{ x: hovered ? 2 : 0 }}
-          transition={{ duration: 0.2, ease: EASE_OUT_CUBIC }}
-        >
-          <path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </motion.svg>
       </motion.button>
     </Link>
-  )
+  );
 }
 
 // ─── User Dropdown ────────────────────────────────────────────────────────────
@@ -424,7 +415,7 @@ export function NavBar({
   }
 
   return (
-    <>
+    <div className="">
       <motion.nav
         initial={{ y: -16, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -589,6 +580,6 @@ export function NavBar({
           </>
         )}
       </AnimatePresence>
-    </>
+    </div>
   )
 }

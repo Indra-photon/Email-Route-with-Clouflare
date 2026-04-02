@@ -2,12 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "motion/react";
 import { Heading } from "@/components/Heading";
 import { Paragraph } from "@/components/Paragraph";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { ImageUploadField } from "@/components/dashboard/ImageUploadField";
-import { Loader2, Palette } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { AnimatedButton } from "@/components/dashboard/DomainsTable";
+import { Palette } from "lucide-react";
+import { IconCheck, IconX } from "@tabler/icons-react";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type Domain = {
   id: string;
@@ -17,88 +21,104 @@ type Domain = {
   botDescription?: string | null;
 };
 
-type FormStatus = "idle" | "loading" | "success";
+type SaveState = "idle" | "loading" | "success" | "error";
+
+// ─── Easing ───────────────────────────────────────────────────────────────────
+
+const easeOutQuint = [0.23, 1, 0.32, 1] as const;
+const easeOutCubic = [0.215, 0.61, 0.355, 1] as const;
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+
+function PageSkeleton() {
+  return (
+    <div className="space-y-3 animate-pulse">
+      <div className="h-10 w-48 rounded-lg bg-neutral-100 dark:bg-neutral-800" />
+      <div className="h-10 w-72 rounded-lg bg-neutral-100 dark:bg-neutral-800" />
+      <div className="h-32 rounded-lg bg-neutral-100 dark:bg-neutral-800" />
+    </div>
+  );
+}
+
+// ─── Empty State (no domains) ─────────────────────────────────────────────────
+
+function NoDomains() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.15, ease: easeOutCubic }}
+      className="flex flex-col items-center justify-center py-12 px-6 gap-3"
+    >
+      <div className="w-10 h-10 rounded-full bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center opacity-40">
+        <Palette className="size-4 text-white" />
+      </div>
+      <Paragraph variant="muted" className="text-center max-w-sm">
+        No domains found. Add a domain first before customising the app.{" "}
+        <a
+          href="/dashboard/domains"
+          className="text-sky-800 underline font-schibsted font-bold hover:text-sky-900 transition-colors"
+        >
+          Go to Domains
+        </a>
+      </Paragraph>
+    </motion.div>
+  );
+}
+
+// ─── Input class (shared) ─────────────────────────────────────────────────────
+
+const inputClass =
+  "w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-schibsted text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 transition-colors focus:border-sky-600 outline-none disabled:opacity-50 disabled:cursor-not-allowed";
+
+// ─── Root Export ──────────────────────────────────────────────────────────────
 
 export default function CustomizeAppPage() {
   const [domains, setDomains] = useState<Domain[]>([]);
   const [selectedDomainId, setSelectedDomainId] = useState<string>("");
-  const [isLoadingDomains, setIsLoadingDomains] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [formStatus, setFormStatus] = useState<FormStatus>("idle");
+  const [loading, setLoading] = useState(true);
+  const [saveState, setSaveState] = useState<SaveState>("idle");
 
   // Form fields
   const [botName, setBotName] = useState("");
   const [botAvatar, setBotAvatar] = useState<string | null>(null);
   const [botDescription, setBotDescription] = useState("");
 
-  // Load domains on mount
+  const isBusy = saveState === "loading";
+
+  // Load domains
   useEffect(() => {
-    loadDomains();
+    fetch("/api/domains")
+      .then((r) => r.json())
+      .then((data) => {
+        setDomains(data);
+        if (data.length > 0) setSelectedDomainId(data[0].id);
+      })
+      .catch(() => toast.error("Failed to load domains"))
+      .finally(() => setLoading(false));
   }, []);
 
-  // Load customization when domain is selected
+  // Load customisation when domain changes
   useEffect(() => {
-    if (selectedDomainId) {
-      loadCustomization(selectedDomainId);
-    } else {
-      // Reset form
-      setBotName("");
-      setBotAvatar(null);
-      setBotDescription("");
-    }
-  }, [selectedDomainId]);
-
-  const loadDomains = async () => {
-    try {
-      const response = await fetch("/api/domains");
-      if (!response.ok) throw new Error("Failed to fetch domains");
-      
-      const data = await response.json();
-      setDomains(data);
-      
-      // Auto-select first domain if available
-      if (data.length > 0) {
-        setSelectedDomainId(data[0].id);
-      }
-    } catch (error) {
-      console.error("Error loading domains:", error);
-      toast.error("Failed to load domains");
-    } finally {
-      setIsLoadingDomains(false);
-    }
-  };
-
-  const loadCustomization = async (domainId: string) => {
-    try {
-      const response = await fetch(`/api/domains/update-customization?domainId=${domainId}`);
-      if (!response.ok) {
-        // Domain exists but no customization yet
-        setBotName("");
-        setBotAvatar(null);
-        setBotDescription("");
-        return;
-      }
-
-      const data = await response.json();
-      setBotName(data.domain?.botName || "");
-      setBotAvatar(data.domain?.botAvatar || null);
-      setBotDescription(data.domain?.botDescription || "");
-    } catch (error) {
-      console.error("Error loading customization:", error);
-    }
-  };
-
-  const handleSave = async () => {
     if (!selectedDomainId) {
-      toast.error("Please select a domain");
+      setBotName(""); setBotAvatar(null); setBotDescription("");
       return;
     }
+    fetch(`/api/domains/update-customization?domainId=${selectedDomainId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        setBotName(data?.domain?.botName || "");
+        setBotAvatar(data?.domain?.botAvatar || null);
+        setBotDescription(data?.domain?.botDescription || "");
+      })
+      .catch(() => {});
+  }, [selectedDomainId]);
 
-    setIsSaving(true);
-    setFormStatus("loading");
-
+  const handleSave = async () => {
+    if (!selectedDomainId) { toast.error("Please select a domain"); return; }
+    setSaveState("loading");
     try {
-      const response = await fetch("/api/domains/update-customization", {
+      const res = await fetch("/api/domains/update-customization", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -108,241 +128,191 @@ export default function CustomizeAppPage() {
           botDescription: botDescription.trim() || null,
         }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to save customization");
-      }
-
-      setFormStatus("success");
-      toast.success("Customization saved successfully!");
-      
-      // Reset to idle after 2 seconds
-      setTimeout(() => setFormStatus("idle"), 2000);
-    } catch (error) {
-      console.error("Error saving customization:", error);
-      toast.error("Failed to save customization");
-      setFormStatus("idle");
-    } finally {
-      setIsSaving(false);
+      if (!res.ok) throw new Error("Failed");
+      setSaveState("success");
+      toast.success("Customisation saved!");
+      setTimeout(() => setSaveState("idle"), 2000);
+    } catch {
+      toast.error("Failed to save customisation");
+      setSaveState("error");
+      setTimeout(() => setSaveState("idle"), 2000);
     }
   };
 
   const selectedDomain = domains.find((d) => d.id === selectedDomainId);
-
-  if (isLoadingDomains) {
-    return (
-      <div className="border border-neutral-400 rounded-lg p-4 min-h-screen flex items-center justify-center">
-        <Loader2 className="size-8 animate-spin text-neutral-400" />
-      </div>
-    );
-  }
-
-  if (domains.length === 0) {
-    return (
-      <div className="border border-neutral-400 rounded-lg p-4 min-h-screen">
-        <div className="mb-6">
-          <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
-            Customize App
-          </Heading>
-          <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400">
-            Customize how your Slack bot appears when posting email notifications.
-          </Paragraph>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>No Domains Found</CardTitle>
-            <CardDescription>
-              You need to add a domain first before customizing the app.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <a
-              href="/dashboard/domains"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-schibsted text-sm font-medium transition-colors duration-150"
-            >
-              Add Domain
-            </a>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const hasValues = !!(botName || botAvatar || botDescription);
 
   return (
-    <div className="border border-neutral-400 rounded-lg p-4 min-h-screen">
-      <div className="mb-6">
-        <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
-          <Palette className="size-5" />
+    <div className="space-y-6 border border-neutral-400 rounded-lg p-4 min-h-screen">
+
+      {/* Page Heading */}
+      <div>
+        <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
           Customize App
         </Heading>
-        <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400">
-          Customize how your Slack bot appears when posting email notifications.
+        <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+          Customize how your Slack bot appears when posting email notifications to your channels.
         </Paragraph>
       </div>
 
-      <div className="max-w-3xl">
-        {/* Domain Selector */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Select Domain</CardTitle>
-            <CardDescription>
-              Choose which domain's bot appearance you want to customize.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {domains.map((domain) => (
-                <button
-                  key={domain.id}
-                  onClick={() => setSelectedDomainId(domain.id)}
-                  disabled={isSaving}
-                  className={`px-4 py-2 rounded-lg border font-schibsted text-sm font-medium transition-all duration-150 ${
-                    selectedDomainId === domain.id
-                      ? "border-sky-600 bg-sky-50 text-sky-700 dark:bg-sky-900/20 dark:text-sky-400"
-                      : "border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:border-neutral-400"
-                  } ${isSaving ? "opacity-50 cursor-not-allowed" : ""}`}
-                >
-                  {domain.domain}
-                </button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Main Card */}
+      <Card className="min-h-[300px] overflow-hidden">
 
-        {/* Customization Form */}
-        {selectedDomain && (
-          <motion.div
-            key={selectedDomainId}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>Bot Appearance for {selectedDomain.domain}</CardTitle>
-                <CardDescription>
-                  All fields are optional. If not set, default values will be used.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
+        {/* Domain selector tab bar */}
+        {!loading && domains.length > 0 && (
+          <div className="flex items-center gap-1.5 pb-4 border-b border-neutral-100 dark:border-neutral-800 flex-wrap">
+            {domains.map((domain) => (
+              <button
+                key={domain.id}
+                type="button"
+                onClick={() => setSelectedDomainId(domain.id)}
+                disabled={isBusy}
+                className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-schibsted font-semibold transition-all duration-150 focus:outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                  selectedDomainId === domain.id
+                    ? "text-white"
+                    : "text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                }`}
+              >
+                {selectedDomainId === domain.id && (
+                  <motion.span
+                    layoutId="domain-tab-bg"
+                    className="absolute inset-0 bg-gradient-to-r from-sky-800 to-cyan-700 rounded-lg z-0 shadow-sm"
+                    transition={{ type: "spring", stiffness: 280, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10">{domain.domain}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="pt-4">
+          <AnimatePresence mode="wait" initial={false}>
+
+            {/* Loading */}
+            {loading && (
+              <motion.div key="loading"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+              >
+                <PageSkeleton />
+              </motion.div>
+            )}
+
+            {/* No domains */}
+            {!loading && domains.length === 0 && (
+              <motion.div key="empty"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+              >
+                <NoDomains />
+              </motion.div>
+            )}
+
+            {/* Form */}
+            {!loading && selectedDomain && (
+              <motion.div
+                key={selectedDomainId}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.18, ease: easeOutQuint }}
+                className="max-w-2xl space-y-6"
+              >
+
                 {/* Bot Name */}
-                <div className="flex flex-col space-y-2">
-                  <label className="text-lg font-schibsted text-neutral-700 dark:text-neutral-300">
+                <div className="flex flex-col space-y-1">
+                  <label className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400">
                     Bot Name
                   </label>
                   <input
                     type="text"
                     value={botName}
                     onChange={(e) => setBotName(e.target.value)}
-                    disabled={isSaving}
-                    placeholder="e.g., Customer Support Bot"
-                    className="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-schibsted text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 transition-colors duration-100 focus:border-sky-600 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isBusy}
+                    placeholder="e.g. Customer Support Bot"
+                    className={inputClass}
                   />
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                    The name that will appear when the bot posts messages to Slack.
+                  <p className="text-xs font-schibsted text-neutral-400 dark:text-neutral-500">
+                    The name shown when the bot posts messages to Slack.
                   </p>
                 </div>
 
                 {/* Bot Avatar */}
-                <div className="flex flex-col space-y-2">
-                  <label className="text-lg font-schibsted text-neutral-700 dark:text-neutral-300">
+                <div className="flex flex-col space-y-1">
+                  <label className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400">
                     Bot Avatar
                   </label>
                   <ImageUploadField
                     value={botAvatar}
                     onChange={setBotAvatar}
-                    disabled={isSaving}
+                    disabled={isBusy}
                   />
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                    The avatar image that will appear when the bot posts messages to Slack.
+                  <p className="text-xs font-schibsted text-neutral-400 dark:text-neutral-500">
+                    The avatar image shown when the bot posts messages to Slack.
                   </p>
                 </div>
 
                 {/* Bot Description */}
-                <div className="flex flex-col space-y-2">
-                  <label className="text-lg font-schibsted text-neutral-700 dark:text-neutral-300">
+                <div className="flex flex-col space-y-1">
+                  <label className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400">
                     Description
                   </label>
                   <textarea
                     value={botDescription}
                     onChange={(e) => setBotDescription(e.target.value)}
-                    disabled={isSaving}
-                    placeholder="e.g., Handles customer support emails for acme.com"
+                    disabled={isBusy}
+                    placeholder="e.g. Handles customer support emails for acme.com"
                     rows={3}
-                    className="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-schibsted text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 transition-colors duration-100 focus:border-sky-600 outline-none disabled:opacity-50 disabled:cursor-not-allowed resize-none"
+                    className={`${inputClass} resize-none`}
                   />
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                    Optional description for your reference (not shown in Slack).
+                  <p className="text-xs font-schibsted text-neutral-400 dark:text-neutral-500">
+                    Optional — for your reference only, not shown in Slack.
                   </p>
                 </div>
 
-                {/* Save Button */}
-                <div className="flex items-center gap-3 pt-4">
-                  <button
+                {/* Actions */}
+                <div className="flex items-center gap-2 pt-2">
+                  <AnimatedButton
+                    idleLabel="Save Changes"
+                    loadingLabel="Saving..."
+                    successLabel="Saved!"
+                    errorLabel="Failed"
+                    idleIcon={<IconCheck size={13} />}
+                    state={saveState}
                     onClick={handleSave}
-                    disabled={isSaving || formStatus !== "idle"}
-                    className={`relative inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-schibsted text-sm font-medium transition-all duration-200 overflow-hidden ${
-                      formStatus === "success"
-                        ? "bg-green-600 text-white"
-                        : "bg-sky-600 hover:bg-sky-700 text-white"
-                    } disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]`}
-                  >
-                    <AnimatePresence mode="wait">
-                      {formStatus === "loading" && (
-                        <motion.span
-                          key="loading"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="flex items-center gap-2"
-                        >
-                          <Loader2 className="size-4 animate-spin" />
-                          Saving...
-                        </motion.span>
-                      )}
-                      {formStatus === "success" && (
-                        <motion.span
-                          key="success"
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0 }}
-                        >
-                          ✓ Saved!
-                        </motion.span>
-                      )}
-                      {formStatus === "idle" && (
-                        <motion.span
-                          key="idle"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                        >
-                          Save Changes
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </button>
+                    idleWidth={120}
+                    loadingWidth={100}
+                    successWidth={90}
+                    errorWidth={80}
+                    className="px-4 py-2 rounded-md text-xs font-schibsted text-white bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center gap-1.5 overflow-hidden border-0 focus:outline-none cursor-pointer disabled:opacity-60"
+                  />
 
-                  {(botName || botAvatar || botDescription) && (
-                    <button
-                      onClick={() => {
-                        setBotName("");
-                        setBotAvatar(null);
-                        setBotDescription("");
-                      }}
-                      disabled={isSaving}
-                      className="px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 font-schibsted text-sm font-medium transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Clear All
-                    </button>
-                  )}
+                  <AnimatePresence>
+                    {hasValues && (
+                      <motion.button
+                        type="button"
+                        initial={{ opacity: 0, x: -6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -6 }}
+                        transition={{ duration: 0.15, ease: easeOutCubic }}
+                        disabled={isBusy}
+                        onClick={() => { setBotName(""); setBotAvatar(null); setBotDescription(""); }}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-schibsted text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 transition-colors cursor-pointer focus:outline-none disabled:opacity-50"
+                      >
+                        <IconX size={12} /> Clear All
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-      </div>
+
+              </motion.div>
+            )}
+
+          </AnimatePresence>
+        </div>
+      </Card>
     </div>
   );
 }

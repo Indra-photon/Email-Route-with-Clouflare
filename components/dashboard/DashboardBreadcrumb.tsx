@@ -249,7 +249,7 @@ export function DashboardBreadcrumb() {
   const greeting = getGreeting();
 
   return (
-    <div className="flex items-center justify-between px-6 h-16 shrink-0 border-b border-neutral-200 bg-white">
+    <div className="flex items-center justify-between px-10 h-14 shrink-0 border-b border-neutral-200 bg-white">
 
       {/* ── Left: greeting (dashboard home) or page title (other pages) ── */}
       <div className="flex flex-col justify-center min-w-0">

@@ -513,7 +513,7 @@ export function FeatureTabs() {
         <Container className="py-16">
 
           {/* ── Section label ─────────────────────────────────────────── */}
-          <p className="font-schibsted text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4 p-1">
+          <p className="font-schibsted text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4 p-4">
             Everything in one place
           </p>
 

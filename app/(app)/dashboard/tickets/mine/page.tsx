@@ -394,7 +394,7 @@ export default function MyTicketsPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-full overflow-hidden bg-white border border-neutral-400 rounded-lg max-h-screen">
+    <div className="flex h-full overflow-hidden bg-white border border-neutral-400 rounded-lg min-h-dvh">
 
       {/* ── Left Panel: Ticket List ────────────────────────────────────── */}
       <div

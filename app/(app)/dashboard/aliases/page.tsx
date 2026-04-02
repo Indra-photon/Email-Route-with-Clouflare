@@ -2023,13 +2023,13 @@ export default function AliasesPage() {
   };
 
   return (
-    <div className="space-y-6 border border-neutral-400 rounded-lg p-4 max-h-screen">
+    <div className="space-y-6 border border-neutral-400 rounded-lg p-4 min-h-screen">
       {/* Page heading */}
       <div>
         <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
           Create Email Aliases for Your Domains
         </Heading>
-        <Paragraph variant="small" className="text-neutral-600 dark:text-neutral-400 mt-1">
+        <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
           Set up email addresses like support@yourdomain.com and route them to your Slack or Discord channels.
         </Paragraph>
       </div>
