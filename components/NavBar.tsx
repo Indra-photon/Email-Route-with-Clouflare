@@ -243,6 +243,7 @@ function LogoMark() {
   return (
     <Link href="/" className="flex items-center gap-2 group">
       <Logo />
+      <span className="font-schibsted text-lg font-semibold text-neutral-900 group-hover:text-neutral-700 transition-colors duration-150">SyncSupport</span>
     </Link>
   )
 }
