@@ -1201,7 +1201,7 @@ export default function ChatWidgetsDashboard() {
   };
 
   return (
-    <div className="space-y-6 border border-neutral-400 rounded-lg p-4 max-h-screen">
+    <div className="space-y-6 border border-neutral-400 rounded-lg p-4 min-h-screen">
       {/* Page heading */}
       <div>
         <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">

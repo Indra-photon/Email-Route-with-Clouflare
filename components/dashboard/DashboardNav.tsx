@@ -912,8 +912,8 @@ import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { CreditCard, User, Palette, Menu, ChevronLeft } from "lucide-react";
 import { Tooltip } from "radix-ui";
-import { IconDashboard, IconMail, IconGlobe, IconAtSign, IconZap } from "@/constants/icons";
-import { IconMessageCircle, IconMessages, IconTemplate } from "@tabler/icons-react";
+// import { IconDashboard, IconMail, IconGlobe, IconAtSign, IconZap } from "@/constants/icons";
+import { IconMessageCircle, IconMessages, IconApiApp, IconTemplate, IconMessage2, IconTag, IconHome, IconFileDotsFilled, IconWriting, IconLayoutDashboard, IconWorldDownload, IconMail, IconMailbox, IconAdjustmentsHorizontal } from "@tabler/icons-react";
 import { useUserStore } from "@/lib/store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DashboardBreadcrumb } from "@/components/dashboard/DashboardBreadcrumb";
@@ -942,22 +942,22 @@ const navGroups = [
       {
         href: "/dashboard",
         label: "Dashboard",
-        icon: IconDashboard,
-        tablerIcon: null,
+        icon: null,
+        tablerIcon: IconLayoutDashboard,
         exact: true,
       },
       {
         href: "/dashboard/tickets/mine",
         label: "My Tickets",
-        icon: IconMail,
-        tablerIcon: null,
+        icon: null,
+        tablerIcon: IconMail,
         exact: false,
       },
       {
         href: "/dashboard/live-chats",
         label: "Live Chats",
         icon: null,
-        tablerIcon: IconMessages,
+        tablerIcon: IconMessage2,
         exact: false,
       },
     ],
@@ -968,22 +968,22 @@ const navGroups = [
       {
         href: "/dashboard/domains",
         label: "Domains",
-        icon: IconGlobe,
-        tablerIcon: null,
+        icon: null,
+        tablerIcon: IconWorldDownload,
         exact: false,
       },
       {
         href: "/dashboard/integrations",
         label: "Integrations",
-        icon: IconZap,
-        tablerIcon: null,
+        icon: null,
+        tablerIcon: IconApiApp,
         exact: false,
       },
       {
         href: "/dashboard/aliases",
         label: "Aliases",
-        icon: IconAtSign,
-        tablerIcon: null,
+        icon: null,
+        tablerIcon: IconMailbox,
         exact: false,
       },
       {
@@ -997,7 +997,7 @@ const navGroups = [
         href: "/dashboard/customize-app",
         label: "Customize App",
         icon: null,
-        tablerIcon: Palette,
+        tablerIcon: IconAdjustmentsHorizontal,
         exact: false,
       },
       {
@@ -1028,6 +1028,39 @@ const navGroups = [
       },
     ],
   },
+  {
+    label: "Home",
+    items: [
+      {
+        href: "/",
+        label: "Homepage",
+        icon: null,
+        tablerIcon: IconHome,
+        exact: false,
+      },
+      {
+        href: "/docs",
+        label: "Documentation",
+        icon: null,
+        tablerIcon: IconFileDotsFilled,
+        exact: false,
+      },
+      {
+        href: "/pricing",
+        label: "Pricing",
+        icon: null,
+        tablerIcon: IconTag,
+        exact: false,
+      },
+      {
+        href: "/contact",
+        label: "Contact Us",
+        icon: null,
+        tablerIcon: IconWriting,
+        exact: false,
+      }
+    ],
+  }
 ];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1053,7 +1086,7 @@ function NavIcon({
   if (item.tablerIcon) {
     return (
       <item.tablerIcon
-        size={size}
+        size={20}
         className={`shrink-0 transition-colors duration-150 ${colorClass} hover:text-neutral-50`}
       />
     );
