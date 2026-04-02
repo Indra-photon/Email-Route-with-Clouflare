@@ -319,17 +319,15 @@ export function OnboardingStepsSection() {
                   loggedInText="Dashboard"
                   loggedOutText="Get Started Free"
                 >
-                  {({ text, isLoggedIn }) => (
-                    <Link href={isLoggedIn ? "/dashboard" : "/sign-up"}>
-                      <motion.span
-                        whileTap={{ scale: 0.97 }}
-                        className="inline-flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-b from-sky-900 to-cyan-700 shadow-lg cursor-pointer"
-                      >
-                        <span className="relative z-10 font-schibsted font-semibold text-white text-sm uppercase tracking-wide select-none px-6 py-2.5">
-                          {text}
-                        </span>
-                      </motion.span>
-                    </Link>
+                  {({ text }) => (
+                    <motion.span
+                      whileTap={{ scale: 0.97 }}
+                      className="inline-flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-b from-sky-900 to-cyan-700 shadow-lg cursor-pointer"
+                    >
+                      <span className="relative z-10 font-schibsted font-semibold text-white text-sm uppercase tracking-wide select-none px-6 py-2.5">
+                        {text}
+                      </span>
+                    </motion.span>
                   )}
                 </CTAWrapper>
 
