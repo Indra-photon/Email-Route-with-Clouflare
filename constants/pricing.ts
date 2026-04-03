@@ -29,7 +29,9 @@ export interface PricingPlan {
   description: string;
   highlight: boolean;         // true = "recommended" card
   ctaLabel: string;
-  dodoPriceId: string;        // Dodo Payments product price ID (from env)
+  dodoPriceId: string;        // Dodo Payments product price ID (legacy — now set at checkout by DODO_ENV)
+  dodoPriceIdTest: string;    // Dodo TEST-mode product ID
+  dodoPriceIdLive: string;    // Dodo LIVE-mode product ID
   limits: PricingPlanLimits;
   features: PricingFeature[];
   sortOrder: number;
@@ -48,7 +50,9 @@ export const PRICING_PLANS_SEED: PricingPlan[] = [
     description: "Perfect for solo founders and tiny teams just getting started.",
     highlight: false,
     ctaLabel: "Start free trial",
-    dodoPriceId: process.env.DODO_PRICE_ID_STARTER ?? "",
+    dodoPriceId:     "",  // managed via admin panel in MongoDB
+    dodoPriceIdTest: "",
+    dodoPriceIdLive: "",
     sortOrder: 0,
     isVisible: true,
     limits: {
@@ -82,7 +86,9 @@ export const PRICING_PLANS_SEED: PricingPlan[] = [
     description: "For growing teams handling real support volume across multiple products.",
     highlight: true,
     ctaLabel: "Start free trial",
-    dodoPriceId: process.env.DODO_PRICE_ID_GROWTH ?? "",
+    dodoPriceId:     "",  // managed via admin panel in MongoDB
+    dodoPriceIdTest: "",
+    dodoPriceIdLive: "",
     sortOrder: 1,
     isVisible: true,
     limits: {
@@ -115,7 +121,9 @@ export const PRICING_PLANS_SEED: PricingPlan[] = [
     description: "Unlimited everything for teams that have outgrown the basics.",
     highlight: false,
     ctaLabel: "Book a demo",
-    dodoPriceId: process.env.DODO_PRICE_ID_SCALE ?? "",
+    dodoPriceId:     "",  // managed via admin panel in MongoDB
+    dodoPriceIdTest: "",
+    dodoPriceIdLive: "",
     sortOrder: 2,
     isVisible: true,
     limits: {

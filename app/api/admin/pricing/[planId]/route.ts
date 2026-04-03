@@ -28,14 +28,21 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid planId" }, { status: 400 });
   }
 
+  // ── Parse body safely ────────────────────────────────────────────────────────
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid or empty request body" }, { status: 400 });
+  }
+
   await dbConnect();
 
-  const body = await request.json();
-
-  // Whitelist allowed fields to prevent schema injection
+  // ── Whitelist allowed fields to prevent schema injection ─────────────────────
   const allowedFields = [
     "name", "price", "description", "highlight", "ctaLabel",
-    "dodoPriceId", "limits", "features", "sortOrder", "isVisible",
+    "dodoPriceId", "dodoPriceIdTest", "dodoPriceIdLive",
+    "limits", "features", "sortOrder", "isVisible",
   ];
   const update: Record<string, unknown> = {};
   for (const key of allowedFields) {
@@ -45,17 +52,24 @@ export async function PATCH(
   const updated = await PricingPlan.findOneAndUpdate(
     { id: planId },
     { $set: update },
-    { new: true, runValidators: true }
+    { returnDocument: "after", runValidators: true }
   );
 
   if (!updated) {
     return NextResponse.json({ error: "Plan not found" }, { status: 404 });
   }
 
-  // Revalidate ISR caches so changes show up within seconds
-  revalidatePath("/pricing");
-  revalidatePath("/");
-  revalidatePath("/api/public/pricing");
+  // ── Revalidate ISR caches (fire-and-forget to avoid blocking the response) ───
+  // Do NOT await — revalidatePath in dev is very slow (can take 30+ seconds)
+  Promise.resolve().then(() => {
+    try {
+      revalidatePath("/pricing");
+      revalidatePath("/");
+      revalidatePath("/api/public/pricing");
+    } catch (e) {
+      console.warn("⚠️ revalidatePath failed (non-fatal):", e);
+    }
+  });
 
   console.log(`✅ Admin: pricing plan "${planId}" updated by ${userId}`);
   return NextResponse.json(updated);
