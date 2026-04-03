@@ -31,6 +31,14 @@ export async function POST(request: Request) {
 
     console.log("✅ Dodo subscription fetched:", JSON.stringify(dodoSub, null, 2));
 
+    // Accept both active and trialing — both mean the user has a valid subscription
+    const dodoStatus = (dodoSub.status as string) ?? "";
+    const isValidSubscription = dodoStatus === "active" || dodoStatus === "trialing";
+    if (!isValidSubscription) {
+      console.log(`⚠️ Subscription status is "${dodoStatus}" — not activating yet`);
+      return NextResponse.json({ success: false, status: dodoStatus });
+    }
+
     // Extract metadata set during checkout creation
     const { workspaceId, planId } = (dodoSub.metadata ?? {}) as {
       workspaceId?: string;
@@ -58,13 +66,16 @@ export async function POST(request: Request) {
       ? new Date(dodoSub.current_period_end)
       : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
+    // Determine DB status — map Dodo's status to our enum
+    const dbStatus: "active" | "trialing" = dodoStatus === "trialing" ? "trialing" : "active";
+
     // Upsert subscription record
     await Subscription.findOneAndUpdate(
       { workspaceId: workspace._id },
       {
         $set: {
           planId,
-          status: "active",
+          status: dbStatus,
           dodoCustomerId: dodoSub.customer_id ?? null,
           dodoSubscriptionId: subscriptionId,
           currentPeriodStart: periodStart,
@@ -76,7 +87,7 @@ export async function POST(request: Request) {
       { upsert: true, new: true }
     );
 
-    // Update workspace plan
+    // Update workspace plan (give full plan access even during trial)
     workspace.planId = planId as "starter" | "growth" | "scale";
     await workspace.save();
 
@@ -87,9 +98,9 @@ export async function POST(request: Request) {
     );
     console.log(`✅ Reactivated ${aliasResult.modifiedCount} aliases for workspace ${workspaceId}`);
 
-    console.log(`✅ Subscription activated: workspace=${workspaceId}, plan=${planId}`);
+    console.log(`✅ Subscription ${dbStatus}: workspace=${workspaceId}, plan=${planId}`);
 
-    return NextResponse.json({ success: true, planId, status: "active" });
+    return NextResponse.json({ success: true, planId, status: dbStatus });
   } catch (error) {
     console.error("❌ Billing activate error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

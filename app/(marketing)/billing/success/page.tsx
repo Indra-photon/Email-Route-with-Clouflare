@@ -25,7 +25,7 @@ function BillingSuccessContent() {
           body: JSON.stringify({ subscriptionId }),
         });
         const data = await res.json();
-        if (data.success && data.status === "active") {
+        if (data.success && (data.status === "active" || data.status === "trialing")) {
           setPlanName(
             data.planId.charAt(0).toUpperCase() + data.planId.slice(1)
           );

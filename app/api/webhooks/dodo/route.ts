@@ -33,7 +33,9 @@ export async function POST(request: Request) {
 
   try {
     switch (type) {
-      // ── Subscription activated (new purchase OR upgrade) ─────────────────
+      // ── Subscription activated (new purchase OR upgrade OR trial converted) ──
+      // Dodo may send either "subscription.active" or "subscription.activated"
+      case "subscription.active":
       case "subscription.activated": {
         if (!workspaceId) break;
 
@@ -74,7 +76,7 @@ export async function POST(request: Request) {
           { $set: { status: "active" } }
         );
 
-        console.log(`✅ Webhook: subscription activated — workspace ${workspaceId} → ${planId}`);
+        console.log(`✅ Webhook: ${type} — workspace ${workspaceId} → ${planId}`);
         break;
       }
 
@@ -102,13 +104,15 @@ export async function POST(request: Request) {
       }
 
       // ── Subscription past due ─────────────────────────────────────────────
-      case "subscription.past_due": {
+      case "subscription.past_due":
+      // ── Subscription on_hold (payment failed after trial, or billing issue) ─
+      case "subscription.on_hold": {
         const subId = data.id as string;
         await Subscription.findOneAndUpdate(
           { dodoSubscriptionId: subId },
           { status: "past_due" }
         );
-        console.log(`⚠️ Webhook: subscription past_due — ${subId}`);
+        console.log(`⚠️ Webhook: ${type} → past_due for sub ${subId}`);
         break;
       }
 

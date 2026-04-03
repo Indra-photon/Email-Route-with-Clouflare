@@ -26,11 +26,47 @@ interface PricingPlanDoc {
   highlight: boolean;
   ctaLabel: string;
   dodoPriceId: string;
+  dodoPriceIdTest: string;
+  dodoPriceIdLive: string;
   limits: PlanLimits;
   features: PricingFeature[];
   sortOrder: number;
   isVisible: boolean;
 }
+
+// ─── Env Badge ────────────────────────────────────────────────────────────────
+
+function EnvToggleBadge({ env }: { env: "test" | "live" }) {
+  const isLive = env === "live";
+  return (
+    <div className="inline-flex items-center rounded-xl overflow-hidden border border-neutral-200 shadow-sm bg-neutral-100 select-none">
+      {/* Test side */}
+      <div
+        className={`px-4 py-2 text-xs font-schibsted font-semibold transition-all duration-200 ${
+          !isLive
+            ? "bg-amber-500 text-white shadow-inner"
+            : "text-neutral-400 bg-neutral-100"
+        }`}
+      >
+        Test Mode
+      </div>
+      {/* Divider */}
+      <div className="w-px h-5 bg-neutral-200" />
+      {/* Live side */}
+      <div
+        className={`px-4 py-2 text-xs font-schibsted font-semibold transition-all duration-200 ${
+          isLive
+            ? "bg-sky-800 text-white shadow-inner"
+            : "text-neutral-400 bg-neutral-100"
+        }`}
+      >
+        Live Mode
+      </div>
+    </div>
+  );
+}
+
+// ─── Unlimited toggle ─────────────────────────────────────────────────────────
 
 function UnlimitedToggle({
   value,
@@ -67,16 +103,31 @@ function UnlimitedToggle({
   );
 }
 
+// ─── Plan Editor ──────────────────────────────────────────────────────────────
+
 function PlanEditor({
   plan,
+  activeEnv,
   onSave,
   saving,
 }: {
   plan: PricingPlanDoc;
+  activeEnv: "test" | "live";
   onSave: (updated: PricingPlanDoc) => Promise<void>;
   saving: boolean;
 }) {
-  const [draft, setDraft] = useState<PricingPlanDoc>(plan);
+  // Normalize undefined → "" so inputs are always controlled from the start
+  const normalizePlan = (p: PricingPlanDoc): PricingPlanDoc => ({
+    ...p,
+    dodoPriceId:     p.dodoPriceId     ?? "",
+    dodoPriceIdTest: p.dodoPriceIdTest ?? "",
+    dodoPriceIdLive: p.dodoPriceIdLive ?? "",
+  });
+
+  const [draft, setDraft] = useState<PricingPlanDoc>(() => normalizePlan(plan));
+
+  // Keep draft fresh if parent plan changes (e.g. after save)
+  useEffect(() => { setDraft(normalizePlan(plan)); }, [plan]);
 
   const setField = <K extends keyof PricingPlanDoc>(k: K, v: PricingPlanDoc[K]) =>
     setDraft((d) => ({ ...d, [k]: v }));
@@ -165,14 +216,50 @@ function PlanEditor({
               className="w-full border border-neutral-200 rounded-lg px-3 py-2 font-schibsted text-sm focus:outline-none focus:border-sky-400"
             />
           </div>
-          <div>
-            <label className="font-schibsted text-xs text-neutral-500 block mb-1">Dodo Price ID</label>
-            <input
-              value={draft.dodoPriceId}
-              onChange={(e) => setField("dodoPriceId", e.target.value)}
-              className="w-full border border-neutral-200 rounded-lg px-3 py-2 font-schibsted text-sm font-mono focus:outline-none focus:border-sky-400"
-              placeholder="price_xxx"
-            />
+
+          {/* ── Dodo Product IDs (test + live) ────────────────────────────── */}
+          <div className="rounded-xl border border-neutral-200 overflow-hidden">
+            {/* Test ID row */}
+            <div className={`px-3 py-3 ${activeEnv === "test" ? "bg-amber-50 border-b border-amber-100" : "bg-neutral-50 border-b border-neutral-100"}`}>
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold font-schibsted ${activeEnv === "test" ? "bg-amber-500 text-white" : "bg-neutral-200 text-neutral-500"}`}>
+                  {activeEnv === "test" && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-white/80 animate-pulse inline-block" />
+                  )}
+                  TEST
+                </span>
+                <label className="font-schibsted text-xs text-neutral-500">
+                  Test Product ID {activeEnv === "test" && <span className="text-amber-600 font-semibold">(active)</span>}
+                </label>
+              </div>
+              <input
+                value={draft.dodoPriceIdTest}
+                onChange={(e) => setField("dodoPriceIdTest", e.target.value)}
+                className={`w-full border rounded-lg px-3 py-2 font-schibsted text-xs font-mono focus:outline-none ${activeEnv === "test" ? "border-amber-300 focus:border-amber-500 bg-white" : "border-neutral-200 focus:border-sky-400 bg-white"}`}
+                placeholder="pdt_test_xxxxxxxxxxxxxxx"
+              />
+            </div>
+
+            {/* Live ID row */}
+            <div className={`px-3 py-3 ${activeEnv === "live" ? "bg-sky-50" : "bg-white"}`}>
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold font-schibsted ${activeEnv === "live" ? "bg-sky-800 text-white" : "bg-neutral-200 text-neutral-500"}`}>
+                  {activeEnv === "live" && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-white/80 animate-pulse inline-block" />
+                  )}
+                  LIVE
+                </span>
+                <label className="font-schibsted text-xs text-neutral-500">
+                  Live Product ID {activeEnv === "live" && <span className="text-sky-700 font-semibold">(active)</span>}
+                </label>
+              </div>
+              <input
+                value={draft.dodoPriceIdLive}
+                onChange={(e) => setField("dodoPriceIdLive", e.target.value)}
+                className={`w-full border rounded-lg px-3 py-2 font-schibsted text-xs font-mono focus:outline-none ${activeEnv === "live" ? "border-sky-300 focus:border-sky-600 bg-white" : "border-neutral-200 focus:border-sky-400 bg-white"}`}
+                placeholder="pdt_live_xxxxxxxxxxxxxxx"
+              />
+            </div>
           </div>
         </div>
 
@@ -245,8 +332,11 @@ function PlanEditor({
   );
 }
 
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function AdminPricingPage() {
   const [plans, setPlans] = useState<PricingPlanDoc[]>([]);
+  const [dodoEnv, setDodoEnv] = useState<"test" | "live">("test");
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [successId, setSuccessId] = useState<string | null>(null);
@@ -255,7 +345,15 @@ export default function AdminPricingPage() {
   useEffect(() => {
     fetch("/api/admin/pricing")
       .then((r) => r.json())
-      .then(setPlans)
+      .then((data) => {
+        // Handle both old array response and new { dodoEnv, plans } shape
+        if (Array.isArray(data)) {
+          setPlans(data);
+        } else {
+          setDodoEnv(data.dodoEnv === "live" ? "live" : "test");
+          setPlans(data.plans ?? []);
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -282,23 +380,37 @@ export default function AdminPricingPage() {
 
   return (
     <div className="max-w-6xl mx-auto py-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
         <div>
           <h1 className="font-schibsted text-2xl font-semibold text-neutral-900">Pricing Plans</h1>
           <p className="font-schibsted text-sm text-neutral-500 mt-0.5">
             Changes are saved to MongoDB and reflected on the pricing page within 60 seconds — no code deploy needed.
           </p>
         </div>
-        {successId && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="bg-green-100 border border-green-300 text-green-700 font-schibsted text-sm px-4 py-2 rounded-xl"
-          >
-            ✓ Saved — pricing page updated
-          </motion.div>
-        )}
+
+        <div className="flex flex-col items-end gap-2">
+          {/* Test/Live mode toggle (read-only — reflects DODO_ENV) */}
+          <div className="flex flex-col items-end gap-1">
+            <EnvToggleBadge env={dodoEnv} />
+            <p className="font-schibsted text-[10px] text-neutral-400 text-right max-w-[240px]">
+              Read from <code className="bg-neutral-100 px-1 rounded text-[9px]">DODO_ENV</code> env var.{" "}
+              {dodoEnv === "test"
+                ? "Test product IDs are active. Webhook not needed — polling handles activation."
+                : "Live product IDs are active. Webhook required for subscription events."}
+            </p>
+          </div>
+
+          {successId && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="bg-green-100 border border-green-300 text-green-700 font-schibsted text-sm px-4 py-2 rounded-xl"
+            >
+              ✓ Saved — pricing page updated
+            </motion.div>
+          )}
+        </div>
       </div>
 
       {error && (
@@ -317,6 +429,7 @@ export default function AdminPricingPage() {
             <PlanEditor
               key={plan.id}
               plan={plan}
+              activeEnv={dodoEnv}
               onSave={handleSave}
               saving={savingId === plan.id}
             />

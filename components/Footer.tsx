@@ -47,9 +47,9 @@ const footerSections: FooterSection[] = [
   {
     title: "Support",
     links: [
-      { label: "Help Center", href: "/help" },
+      { label: "Help Center", href: "/support" },
       { label: "FAQ", href: "#faq" },
-      { label: "Contact Support", href: "mailto:support@galearen.resend.app" },
+      { label: "Contact Support", href: "mailto:help@syncsupport.app" },
       { label: "Report Bug", href: "/report-bug" },
       { label: "Feature Request", href: "/feature-request" }
     ]
