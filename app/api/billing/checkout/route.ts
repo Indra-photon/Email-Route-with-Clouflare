@@ -44,10 +44,19 @@ export async function POST(request: Request) {
 
     console.log(`✅ Plan found: id=${plan.id}, name=${plan.name}, dodoPriceId="${plan.dodoPriceId}"`);
 
-    if (!plan.dodoPriceId) {
-      console.log(`❌ dodoPriceId is empty for plan "${planId}"`);
+    // Pick correct product ID based on environment
+    const isLive = process.env.DODO_ENV === "live";
+    const activePriceId = isLive
+      ? (plan.dodoPriceIdLive || plan.dodoPriceId)
+      : (plan.dodoPriceIdTest || plan.dodoPriceId);
+
+    console.log(`🔑 DODO_ENV=${isLive ? "live" : "test"} — using priceId="${activePriceId}" for plan "${planId}"`);
+
+    if (!activePriceId) {
+      const missingField = isLive ? "dodoPriceIdLive" : "dodoPriceIdTest";
+      console.log(`❌ ${missingField} is empty for plan "${planId}"`);
       return NextResponse.json(
-        { error: "Plan is not yet configured for payments. Contact support." },
+        { error: `Plan is not yet configured for ${isLive ? "live" : "test"} payments. Set the ${isLive ? "live" : "test"} Product ID in the admin panel.` },
         { status: 503 }
       );
     }
@@ -85,7 +94,7 @@ export async function POST(request: Request) {
 
     // ── Create new Dodo checkout session ─────────────────────────────────────
     const session = await createCheckoutSession({
-      priceId: plan.dodoPriceId,
+      priceId: activePriceId,
       successUrl: `${appUrl}/billing/success`,
       cancelUrl: `${appUrl}/billing/cancelled`,
       metadata: {

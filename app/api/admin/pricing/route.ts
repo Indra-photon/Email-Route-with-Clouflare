@@ -25,5 +25,8 @@ export async function GET() {
   await seedPricingPlans();
 
   const plans = await PricingPlan.find().sort({ sortOrder: 1 }).lean();
-  return NextResponse.json(plans);
+  return NextResponse.json({
+    dodoEnv: process.env.DODO_ENV ?? "test",
+    plans,
+  });
 }

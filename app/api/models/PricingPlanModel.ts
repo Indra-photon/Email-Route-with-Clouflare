@@ -29,7 +29,9 @@ export interface IPricingPlan extends Document {
   description: string;               // Tagline under plan name
   highlight: boolean;                // true = "recommended" card styling
   ctaLabel: string;                  // Button text e.g. "Start free trial"
-  dodoPriceId: string;               // Dodo Payments product price ID
+  dodoPriceId: string;               // Dodo Payments product price ID (legacy / computed at checkout)
+  dodoPriceIdTest: string;           // Dodo TEST-mode product ID
+  dodoPriceIdLive: string;           // Dodo LIVE-mode product ID
   limits: IPlanLimits;
   features: IPricingFeature[];
   sortOrder: number;                 // Display order (0 = first)
@@ -68,9 +70,11 @@ const PricingPlanSchema = new Schema<IPricingPlan>(
     price:        { type: Number, required: true, min: 0 },
     description:  { type: String, default: "" },
     highlight:    { type: Boolean, default: false },
-    ctaLabel:     { type: String, default: "Get started" },
-    dodoPriceId:  { type: String, default: "" },
-    limits:       { type: PlanLimitsSchema, required: true },
+    ctaLabel:       { type: String, default: "Get started" },
+    dodoPriceId:    { type: String, default: "" },
+    dodoPriceIdTest:{ type: String, default: "" },
+    dodoPriceIdLive:{ type: String, default: "" },
+    limits:         { type: PlanLimitsSchema, required: true },
     features:     { type: [PricingFeatureSchema], default: [] },
     sortOrder:    { type: Number, default: 0 },
     isVisible:    { type: Boolean, default: true },
