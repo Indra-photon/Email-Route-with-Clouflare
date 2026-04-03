@@ -117,7 +117,7 @@ export function DashboardShowcaseSection() {
               <div className="relative w-full overflow-hidden rounded-2xl border border-neutral-200">
                 <Image
                   src="/dashboard-screenshot2.png"
-                  alt="5MinutesSupport dashboard — ticket management, response times, and team performance at a glance"
+                  alt="syncsupport dashboard — ticket management, response times, and team performance at a glance"
                   width={1400}
                   height={900}
                   className="w-full h-auto object-cover object-top"

@@ -34,41 +34,6 @@ export default function robots(): MetadataRoute.Robots {
           "/*/error",        // Next.js error UI segments
         ],
       },
-
-      // ── Block AI training crawlers ─────────────────────────────────────────
-      // These do not contribute to SEO and scrape content for model training.
-    //   {
-    //     userAgent: "GPTBot",
-    //     disallow: "/",
-    //   },
-    //   {
-    //     userAgent: "ChatGPT-User",
-    //     disallow: "/",
-    //   },
-    //   {
-    //     userAgent: "Google-Extended",
-    //     disallow: "/",
-    //   },
-    //   {
-    //     userAgent: "CCBot",
-    //     disallow: "/",
-    //   },
-    //   {
-    //     userAgent: "anthropic-ai",
-    //     disallow: "/",
-    //   },
-    //   {
-    //     userAgent: "Claude-Web",
-    //     disallow: "/",
-    //   },
-    //   {
-    //     userAgent: "Omgilibot",
-    //     disallow: "/",
-    //   },
-    //   {
-    //     userAgent: "FacebookBot",
-    //     disallow: "/",
-    //   },
     ],
 
     // ── Sitemap ───────────────────────────────────────────────────────────────

@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms and Conditions | 5MinutesSupport",
+  title: "Terms and Conditions | syncsupport",
   description:
-    "Read the Terms and Conditions for 5MinutesSupport — understand the rules, responsibilities, and agreements that apply when using our email-to-Slack support routing platform.",
+    "Read the Terms and Conditions for syncsupport — understand the rules, responsibilities, and agreements that apply when using our email-to-Slack support routing platform.",
   alternates: {
-    canonical: "https://5minutessupport.com/terms-and-conditions",
+    canonical: "https://syncsupport.app/terms-and-conditions",
   },
   openGraph: {
-    title: "Terms and Conditions | 5MinutesSupport",
+    title: "Terms and Conditions | syncsupport",
     description:
-      "Read the Terms and Conditions for 5MinutesSupport — the Slack-native email support routing platform.",
-    url: "https://5minutessupport.com/terms-and-conditions",
-    siteName: "5MinutesSupport",
+      "Read the Terms and Conditions for syncsupport — the Slack-native email support routing platform.",
+    url: "https://syncsupport.app/terms-and-conditions",
+    siteName: "syncsupport",
     type: "website",
   },
   robots: {

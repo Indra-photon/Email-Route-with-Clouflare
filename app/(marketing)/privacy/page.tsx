@@ -32,14 +32,14 @@ export default function PrivacyPage() {
           {/* Intro */}
           <div className="space-y-4">
             <Paragraph className="text-neutral-700 leading-relaxed">
-              5MinutesSupport (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) is committed to protecting
+              syncsupport (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) is committed to protecting
               your privacy. This Privacy Policy explains how we collect, use, disclose,
               and safeguard your information when you use our platform — a Slack-native
               support ticket management system that routes incoming support emails
               directly to Slack.
             </Paragraph>
             <Paragraph className="text-neutral-700 leading-relaxed">
-              By accessing or using 5MinutesSupport, you agree to the practices
+              By accessing or using syncsupport, you agree to the practices
               described in this policy. If you do not agree, please discontinue use of
               the service.
             </Paragraph>
@@ -88,7 +88,7 @@ export default function PrivacyPage() {
           <Section number="2" title="How We Use Your Information">
             <ul className="space-y-3 text-neutral-700 font-schibsted text-base">
               {[
-                "To provide, operate, and maintain the 5MinutesSupport platform",
+                "To provide, operate, and maintain the syncsupport platform",
                 "To process and route inbound emails to your connected Slack or Discord workspace",
                 "To authenticate your identity and manage your account via Clerk",
                 "To send transactional emails related to your account (e.g. billing, security alerts)",
@@ -124,7 +124,7 @@ export default function PrivacyPage() {
             <Paragraph className="text-neutral-700 leading-relaxed">
               We may disclose your information if required by law, court order, or
               governmental authority, or if we believe disclosure is necessary to
-              protect the rights, property, or safety of 5MinutesSupport, our users,
+              protect the rights, property, or safety of syncsupport, our users,
               or the public.
             </Paragraph>
 
@@ -148,10 +148,10 @@ export default function PrivacyPage() {
             <Paragraph className="text-neutral-700 leading-relaxed">
               You may request deletion of your data at any time by contacting us at{" "}
               <a
-                href="mailto:privacy@5minutessupport.com"
+                href="mailto:privacy@syncsupport.com"
                 className="text-sky-600 hover:text-sky-700 transition-colors"
               >
-                privacy@5minutessupport.com
+                privacy@syncsupport.com
               </a>
               . Deletion requests are processed within 30 days.
             </Paragraph>
@@ -195,10 +195,10 @@ export default function PrivacyPage() {
             <Paragraph className="text-neutral-700 leading-relaxed mt-4">
               To exercise any of these rights, contact us at{" "}
               <a
-                href="mailto:privacy@5minutessupport.com"
+                href="mailto:privacy@syncsupport.com"
                 className="text-sky-600 hover:text-sky-700 transition-colors"
               >
-                privacy@5minutessupport.com
+                privacy@syncsupport.com
               </a>
               .
             </Paragraph>
@@ -221,7 +221,7 @@ export default function PrivacyPage() {
           {/* Section 8 */}
           <Section number="8" title="Children's Privacy">
             <Paragraph className="text-neutral-700 leading-relaxed">
-              5MinutesSupport is not directed at children under the age of 16. We do
+              syncsupport is not directed at children under the age of 16. We do
               not knowingly collect personal information from children. If you believe
               a child has provided us with personal data, please contact us and we will
               delete it promptly.
@@ -250,15 +250,15 @@ export default function PrivacyPage() {
             </Paragraph>
             <div className="mt-4 rounded-xl border border-neutral-200 bg-neutral-50 p-6 space-y-2">
               <Paragraph className="text-neutral-900 font-medium">
-                5MinutesSupport
+                syncsupport
               </Paragraph>
               <Paragraph className="text-neutral-700">
                 Email:{" "}
                 <a
-                  href="mailto:privacy@5minutessupport.com"
+                  href="mailto:privacy@syncsupport.com"
                   className="text-sky-600 hover:text-sky-700 transition-colors"
                 >
-                  privacy@5minutessupport.com
+                  privacy@syncsupport.com
                 </a>
               </Paragraph>
             </div>

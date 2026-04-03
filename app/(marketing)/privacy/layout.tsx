@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | 5MinutesSupport",
+  title: "Privacy Policy | syncsupport",
   description:
-    "Learn how 5MinutesSupport collects, uses, and protects your personal data when you use our email-to-Slack support routing platform.",
+    "Learn how syncsupport collects, uses, and protects your personal data when you use our email-to-Slack support routing platform.",
   alternates: {
-    canonical: "https://5minutessupport.com/privacy",
+    canonical: "https://syncsupport.app/privacy",
   },
   openGraph: {
-    title: "Privacy Policy | 5MinutesSupport",
+    title: "Privacy Policy | syncsupport",
     description:
-      "Learn how 5MinutesSupport collects, uses, and protects your personal data.",
-    url: "https://5minutessupport.com/privacy",
-    siteName: "5MinutesSupport",
+      "Learn how syncsupport collects, uses, and protects your personal data.",
+    url: "https://syncsupport.app/privacy",
+    siteName: "syncsupport",
     type: "website",
   },
   robots: {

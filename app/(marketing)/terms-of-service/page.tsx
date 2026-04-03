@@ -31,12 +31,12 @@ export default function TermsOfServicePage() {
           <div className="space-y-4">
             <Paragraph className="text-neutral-700 leading-relaxed">
               These Terms of Service (&quot;Terms&quot;) govern your access to and use of
-              5MinutesSupport (&quot;we&quot;, &quot;our&quot;, &quot;us&quot;), a Slack-native support ticket
+              syncsupport (&quot;we&quot;, &quot;our&quot;, &quot;us&quot;), a Slack-native support ticket
               management platform. By creating an account or using the service, you
               agree to be bound by these Terms.
             </Paragraph>
             <Paragraph className="text-neutral-700 leading-relaxed">
-              If you are using 5MinutesSupport on behalf of an organisation, you
+              If you are using syncsupport on behalf of an organisation, you
               represent that you have authority to bind that organisation to these
               Terms.
             </Paragraph>
@@ -47,7 +47,7 @@ export default function TermsOfServicePage() {
           {/* Section 1 */}
           <Section number="1" title="Acceptance of Terms">
             <Paragraph className="text-neutral-700 leading-relaxed">
-              By accessing or using 5MinutesSupport, you confirm that you are at least
+              By accessing or using syncsupport, you confirm that you are at least
               16 years of age, have read and understood these Terms, and agree to be
               legally bound by them. If you do not agree, you must not use the service.
             </Paragraph>
@@ -64,7 +64,7 @@ export default function TermsOfServicePage() {
           {/* Section 2 */}
           <Section number="2" title="Description of Service">
             <Paragraph className="text-neutral-700 leading-relaxed">
-              5MinutesSupport is a platform that routes inbound support emails to your
+              syncsupport is a platform that routes inbound support emails to your
               connected Slack or Discord workspace, enabling your team to claim,
               track, and respond to customer tickets without leaving Slack.
             </Paragraph>
@@ -80,7 +80,7 @@ export default function TermsOfServicePage() {
           {/* Section 3 */}
           <Section number="3" title="Account Registration">
             <Paragraph className="text-neutral-700 leading-relaxed">
-              You must register for an account to use 5MinutesSupport. You agree to
+              You must register for an account to use syncsupport. You agree to
               provide accurate, current, and complete information during registration
               and to keep your account information up to date.
             </Paragraph>
@@ -89,10 +89,10 @@ export default function TermsOfServicePage() {
               credentials and for all activity that occurs under your account. Notify
               us immediately at{" "}
               <a
-                href="mailto:support@5minutessupport.com"
+                href="mailto:support@syncsupport.com"
                 className="text-sky-600 hover:text-sky-700 transition-colors"
               >
-                support@5minutessupport.com
+                support@syncsupport.com
               </a>{" "}
               if you suspect any unauthorised access.
             </Paragraph>
@@ -107,7 +107,7 @@ export default function TermsOfServicePage() {
           {/* Section 4 */}
           <Section number="4" title="Acceptable Use">
             <Paragraph className="text-neutral-700 leading-relaxed">
-              You agree to use 5MinutesSupport only for lawful purposes and in
+              You agree to use syncsupport only for lawful purposes and in
               accordance with these Terms. You must not:
             </Paragraph>
             <ul className="space-y-3 text-neutral-700 font-schibsted text-base">
@@ -138,7 +138,7 @@ export default function TermsOfServicePage() {
           <Section number="5" title="Billing & Payment">
             <SubHeading>Free Plan</SubHeading>
             <Paragraph className="text-neutral-700 leading-relaxed">
-              5MinutesSupport offers a free tier with usage limits. You may use the
+              syncsupport offers a free tier with usage limits. You may use the
               free plan indefinitely subject to those limits. We reserve the right to
               modify free plan limits with reasonable notice.
             </Paragraph>
@@ -171,8 +171,8 @@ export default function TermsOfServicePage() {
           {/* Section 6 */}
           <Section number="6" title="Intellectual Property">
             <Paragraph className="text-neutral-700 leading-relaxed">
-              5MinutesSupport and all related software, designs, trademarks, and
-              content are the exclusive property of 5MinutesSupport and its licensors.
+              syncsupport and all related software, designs, trademarks, and
+              content are the exclusive property of syncsupport and its licensors.
               Nothing in these Terms transfers any intellectual property rights to you.
             </Paragraph>
             <Paragraph className="text-neutral-700 leading-relaxed">
@@ -188,7 +188,7 @@ export default function TermsOfServicePage() {
           {/* Section 7 */}
           <Section number="7" title="Third-Party Services">
             <Paragraph className="text-neutral-700 leading-relaxed">
-              5MinutesSupport integrates with third-party services including Slack,
+              syncsupport integrates with third-party services including Slack,
               Discord, Resend, Clerk, MongoDB Atlas, and Vercel. Your use of those
               services is governed by their respective terms and privacy policies. We
               are not responsible for the practices or content of any third-party
@@ -201,7 +201,7 @@ export default function TermsOfServicePage() {
           {/* Section 8 */}
           <Section number="8" title="Disclaimers">
             <Paragraph className="text-neutral-700 leading-relaxed">
-              5MinutesSupport is provided &quot;as is&quot; and &quot;as available&quot; without
+              syncsupport is provided &quot;as is&quot; and &quot;as available&quot; without
               warranties of any kind, either express or implied, including but not
               limited to warranties of merchantability, fitness for a particular
               purpose, or non-infringement.
@@ -217,7 +217,7 @@ export default function TermsOfServicePage() {
           {/* Section 9 */}
           <Section number="9" title="Limitation of Liability">
             <Paragraph className="text-neutral-700 leading-relaxed">
-              To the fullest extent permitted by applicable law, 5MinutesSupport
+              To the fullest extent permitted by applicable law, syncsupport
               shall not be liable for any indirect, incidental, special, consequential,
               or punitive damages, including loss of profits, data, or goodwill,
               arising out of or in connection with your use of the service.
@@ -272,15 +272,15 @@ export default function TermsOfServicePage() {
             </Paragraph>
             <div className="mt-4 rounded-xl border border-neutral-200 bg-neutral-50 p-6 space-y-2">
               <Paragraph className="text-neutral-900 font-medium">
-                5MinutesSupport
+                syncsupport
               </Paragraph>
               <Paragraph className="text-neutral-700">
                 Email:{" "}
                 <a
-                  href="mailto:legal@5minutessupport.com"
+                  href="mailto:legal@syncsupport.com"
                   className="text-sky-600 hover:text-sky-700 transition-colors"
                 >
-                  legal@5minutessupport.com
+                  legal@syncsupport.com
                 </a>
               </Paragraph>
               <Paragraph className="text-neutral-700">

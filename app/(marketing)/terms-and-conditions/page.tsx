@@ -31,7 +31,7 @@ export default function TermsAndConditionsPage() {
             <Paragraph className="text-neutral-700 leading-relaxed">
               These Terms and Conditions (&quot;Agreement&quot;) set out the specific rules,
               responsibilities, and obligations that apply to your use of
-              5MinutesSupport. This Agreement works alongside our{" "}
+              syncsupport. This Agreement works alongside our{" "}
               <Link
                 href="/terms-of-service"
                 className="text-sky-600 hover:text-sky-700 transition-colors"
@@ -48,7 +48,7 @@ export default function TermsAndConditionsPage() {
               , which are incorporated herein by reference.
             </Paragraph>
             <Paragraph className="text-neutral-700 leading-relaxed">
-              By using 5MinutesSupport you confirm that you have read, understood,
+              By using syncsupport you confirm that you have read, understood,
               and agree to be bound by this Agreement in full.
             </Paragraph>
           </div>
@@ -61,7 +61,7 @@ export default function TermsAndConditionsPage() {
               {[
                 {
                   term: "Platform",
-                  def: "The 5MinutesSupport web application, APIs, and related services.",
+                  def: "The syncsupport web application, APIs, and related services.",
                 },
                 {
                   term: "User",
@@ -161,7 +161,7 @@ export default function TermsAndConditionsPage() {
           <Section number="4" title="Content & Data">
             <Paragraph className="text-neutral-700 leading-relaxed">
               You retain full ownership of all Content you process through the
-              Platform. You grant 5MinutesSupport a limited, non-exclusive,
+              Platform. You grant syncsupport a limited, non-exclusive,
               royalty-free licence to store, process, and transmit your Content
               solely as required to deliver the service.
             </Paragraph>
@@ -244,7 +244,7 @@ export default function TermsAndConditionsPage() {
           {/* Section 8 */}
           <Section number="8" title="Indemnification">
             <Paragraph className="text-neutral-700 leading-relaxed">
-              You agree to indemnify, defend, and hold harmless 5MinutesSupport and
+              You agree to indemnify, defend, and hold harmless syncsupport and
               its officers, directors, employees, and agents from and against any
               claims, liabilities, damages, losses, and expenses (including reasonable
               legal fees) arising out of or in connection with:
@@ -325,7 +325,7 @@ export default function TermsAndConditionsPage() {
               >
                 Privacy Policy
               </Link>
-              , constitutes the entire agreement between you and 5MinutesSupport
+              , constitutes the entire agreement between you and syncsupport
               with respect to your use of the Platform and supersedes all prior
               agreements, representations, and understandings.
             </Paragraph>
@@ -345,15 +345,15 @@ export default function TermsAndConditionsPage() {
             </Paragraph>
             <div className="mt-4 rounded-xl border border-neutral-200 bg-neutral-50 p-6 space-y-2">
               <Paragraph className="text-neutral-900 font-medium">
-                5MinutesSupport
+                syncsupport
               </Paragraph>
               <Paragraph className="text-neutral-700">
                 Email:{" "}
                 <a
-                  href="mailto:legal@5minutessupport.com"
+                  href="mailto:legal@syncsupport.com"
                   className="text-sky-600 hover:text-sky-700 transition-colors"
                 >
-                  legal@5minutessupport.com
+                  legal@syncsupport.com
                 </a>
               </Paragraph>
               <Paragraph className="text-neutral-700">
