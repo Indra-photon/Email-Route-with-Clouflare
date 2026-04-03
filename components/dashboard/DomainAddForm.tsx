@@ -328,7 +328,7 @@ export default function DomainAddForm({
             loadingWidth={140}
             successWidth={210}
             disabled={isBusy}
-            className="font-schibsted w-32 px-4 py-2 rounded-md bg-gradient-to-t from-sky-900 to-cyan-600 text-white border-0 shadow-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 cursor-pointer flex items-center justify-center gap-2 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
+            className="font-schibsted w-32 px-4 py-2 rounded-md bg-gradient-to-b from-sky-900 to-cyan-700 text-white border-0 shadow-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 cursor-pointer flex items-center justify-center gap-2 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
         />
 
         <div className="flex items-center">

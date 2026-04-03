@@ -30,7 +30,6 @@ export default function robots(): MetadataRoute.Robots {
           "/_next/",         // Next.js internals
           "/static/",        // Static assets
           "/*.json$",        // JSON files
-          "/*.xml$",         // XML files except sitemap (handled separately)
           "/*/loading",      // Next.js loading UI segments
           "/*/error",        // Next.js error UI segments
         ],

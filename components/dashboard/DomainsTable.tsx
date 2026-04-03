@@ -738,7 +738,7 @@ export default function DomainsTable({ initialDomains }: { initialDomains: Domai
             {activePageTab === tab.id && (
               <motion.span
                 layoutId="domains-tab-bg"
-                className="absolute inset-0 bg-gradient-to-r from-sky-800 to-cyan-700 rounded-lg z-0 shadow-sm"
+                className="absolute inset-0 bg-gradient-to-b from-sky-900 to-cyan-700 rounded-lg z-0 shadow-sm"
                 transition={{ type: "spring", stiffness: 280, damping: 30, duration: 0.3 }}
               />
             )}
