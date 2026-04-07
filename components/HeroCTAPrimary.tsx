@@ -33,7 +33,8 @@ export default function HeroCTAPrimary({ text = "Get Started" }: { text?: string
         onHoverStart={() => setHovered(true)}
         onHoverEnd={() => setHovered(false)}
         whileTap={{ scale: 0.97 }}
-        className="relative flex items-center justify-between gap-0 overflow-hidden rounded-full bg-gradient-to-b from-sky-900 to-cyan-700 shadow-lg cursor-pointer"
+        className=" relative flex items-center justify-between gap-0 overflow-hidden rounded-full bg-gradient-to-b from-sky-900 to-cyan-700  shadow-xs cursor-pointer"
+        
       >
         {/* Shimmer sweep on hover */}
         <motion.div
@@ -53,85 +54,62 @@ export default function HeroCTAPrimary({ text = "Get Started" }: { text?: string
 
         {/* Text */}
         <span
-          className="relative z-10 font-schibsted font-semibold text-white text-sm uppercase tracking-wide select-none flex items-center justify-center flex-1 px-6 py-2.5"
+          className="relative text-shadow-2xl z-10 font-schibsted font-semibold text-white text-sm uppercase tracking-wide select-none flex items-center justify-center flex-1 px-6 py-2.5"
         >
           {text}
         </span>
-
-        {/* White box with dot → arrow animation */}
-        {/* <div
-          className="relative z-10 flex items-center justify-center rounded-xl m-2"
-          style={{
-            width: 45,
-            height: 45,
-            background: "rgba(255,255,255,0.95)",
-            backdropFilter: "blur(4px)",
-            flexShrink: 0,
-          }}
-        >
-          <svg
-            width="48"
-            height="48"
-            viewBox="0 0 48 48"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            {DOT_POSITIONS.map((dot, i) => {
-              const target = ARROW_POSITIONS[i];
-              const shouldFade = i === 7 || i === 8;
-
-              return (
-                <motion.circle
-                  key={i}
-                  r={2.5}
-                  fill={hovered ? "#0891b2" : "#94a3b8"}
-                  animate={{
-                    cx: hovered ? target.x : dot.x,
-                    cy: hovered ? target.y : dot.y,
-                    r: shouldFade ? (hovered ? 0 : 2.5) : hovered ? 2.8 : 2.5,
-                    opacity: shouldFade ? (hovered ? 0 : 1) : hovered ? 0 : 1,
-                    fill: hovered ? "#0891b2" : "#94a3b8",
-                  }}
-                  transition={{
-                    duration: 0.25,
-                    delay: hovered ? i * 0.03 : (8 - i) * 0.02,
-                    ease: [0.34, 1.56, 0.64, 1], // spring-like overshoot
-                  }}
-                />
-              );
-            })}
-
-            <motion.path
-            d="M8 38 L38 10"
-            stroke="#000000"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-            strokeDasharray="2 4"
-            animate={{ opacity: hovered ? 1 : 0, pathLength: hovered ? 1 : 0 }}
-            transition={{ duration: 0.35, delay: hovered ? 0.18 : 0 }}
-            />
-            <motion.path
-            d="M28 8 L38 10"
-            stroke="#000000"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-            animate={{ opacity: hovered ? 1 : 0, pathLength: hovered ? 1 : 0 }}
-            transition={{ duration: 0.2, delay: hovered ? 0.38 : 0 }}
-            />
-            <motion.path
-            d="M38 10 L40 22"
-            stroke="#000000"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-            animate={{ opacity: hovered ? 1 : 0, pathLength: hovered ? 1 : 0 }}
-            transition={{ duration: 0.2, delay: hovered ? 0.38 : 0 }}
-            />
-          </svg>
-        </div> */}
       </motion.button>
     </div>
   );
 }
+
+// export default function HeroCTAPrimary({ text = "Get Started" }: { text?: string }) {
+//   const [hovered, setHovered] = useState(false);
+
+//   return (
+//     <div>
+//       <motion.button
+//         onHoverStart={() => setHovered(true)}
+//         onHoverEnd={() => setHovered(false)}
+//         whileTap={{ scale: 0.97 }}
+//         className="relative flex items-center justify-center overflow-hidden rounded-full cursor-pointer"
+//         style={{
+//           background: "linear-gradient(180deg, #1e6fa8 0%, #0e7490 55%, #0a5f73 100%)",
+//           boxShadow: `
+//             inset 0 1px 0 rgba(255,255,255,0.18),
+//             inset 0 -1px 0 rgba(0,0,0,0.35),
+//             0 2px 8px rgba(0,0,0,0.30),
+//             0 1px 2px rgba(0,0,0,0.20)
+//           `,
+//         }}
+//       >
+//         {/* Shimmer sweep on hover */}
+//         <motion.div
+//           className="absolute inset-0 pointer-events-none"
+//           style={{
+//             background:
+//               "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.10) 50%, transparent 70%)",
+//             backgroundSize: "200% 100%",
+//           }}
+//           animate={
+//             hovered
+//               ? { backgroundPositionX: ["200%", "-200%"] }
+//               : { backgroundPositionX: "200%" }
+//           }
+//           transition={{ duration: 0.65, ease: "easeInOut" }}
+//         />
+
+//         {/* Text */}
+//         <span
+//           className="relative z-10 font-schibsted font-semibold text-white text-sm uppercase tracking-wide select-none px-7 py-3"
+//           style={{ textShadow: "0 1px 2px rgba(0,20,40,0.5)" }}
+//         >
+//           {text}
+//         </span>
+//       </motion.button>
+//     </div>
+//   );
+// }
 
 
 export function HeroCTASecondary() {

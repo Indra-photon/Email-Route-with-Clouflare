@@ -32,9 +32,9 @@ export const navlinks = [
     label: "Docs",
     icon: IconArticle,
   },
-  {
-    url: "/support",
-    label: "Support",
-    icon: IconMessage2,
-  },
+  // {
+  //   url: "/support",
+  //   label: "Support",
+  //   icon: IconMessage2,
+  // },
 ];

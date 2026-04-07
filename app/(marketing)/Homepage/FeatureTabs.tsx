@@ -544,7 +544,7 @@ export function FeatureTabs() {
                       {tab.icon}
                       {tab.label}
                     </span>
-                    <span className={`text-sm font-schibsted font-normal leading-snug ${isActive ? "text-sky-800" : "text-neutral-900"}`}>
+                    <span className={`text-sm font-schibsted font-normal leading-snug ${isActive ? "" : "text-neutral-900"}`}>
                       {tab.description}
                     </span>
                   </button>
@@ -566,7 +566,7 @@ export function FeatureTabs() {
                 <div className="lg:w-[42%] shrink-0 flex flex-col gap-6 p-10">
                   <Heading
                     variant="muted"
-                    className="font-schibsted text-2xl lg:text-3xl font-bold text-neutral-900 leading-tight"
+                    className="font-schibsted text-2xl lg:text-3xl text-sky-800 leading-tight"
                   >
                     {tabContent[activeTab].heading}
                   </Heading>

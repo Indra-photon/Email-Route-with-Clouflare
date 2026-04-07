@@ -231,8 +231,8 @@ export function OnboardingStepsSection() {
             <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
               Setup in minutes.{" "}
             </Heading>
-            <Heading as="span" className="text-neutral-400 leading-tight font-semibold">
-              Connect your domain. Link Slack. Go live.
+            <Heading as="span" className="text-sky-800 leading-tight font-semibold">
+              No complex tools, routing rules, or training required
             </Heading>
           </motion.div>
 
@@ -247,10 +247,10 @@ export function OnboardingStepsSection() {
             {steps.slice(0, 3).map((step, index) => (
               <motion.div
                 key={step.id}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94], delay: index * 0.1 }}
+                // initial={{ opacity: 0, y: 24 }}
+                // whileInView={{ opacity: 1, y: 0 }}
+                // viewport={{ once: true }}
+                // transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94], delay: index * 0.1 }}
                 className={[
                   "flex flex-col gap-5 p-8 bg-white",
                   "border-b border-neutral-200",
@@ -274,10 +274,10 @@ export function OnboardingStepsSection() {
 
             {/* ── Row 2 col 1: Step 04 ──────────────────────────────────── */}
             <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.3 }}
+              // initial={{ opacity: 0, y: 24 }}
+              // whileInView={{ opacity: 1, y: 0 }}
+              // viewport={{ once: true }}
+              // transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.3 }}
               className="flex flex-col gap-5 p-8 bg-white border-b md:border-b-0 md:border-r border-neutral-200"
             >
               <span className="font-mono text-xs font-normal tracking-widest text-sky-900 uppercase">
@@ -296,10 +296,10 @@ export function OnboardingStepsSection() {
 
             {/* ── Row 2 cols 2–3: Punchline CTA box ────────────────────── */}
             <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.4 }}
+              // initial={{ opacity: 0, y: 24 }}
+              // whileInView={{ opacity: 1, y: 0 }}
+              // viewport={{ once: true }}
+              // transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.4 }}
               className="col-span-1 md:col-span-2 flex flex-col justify-between gap-8 p-8 bg-neutral-50"
             >
               <div className="flex flex-col gap-4">

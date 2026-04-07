@@ -75,7 +75,7 @@ export function DashboardShowcaseSection() {
 
       {/* ── Content cell ─────────────────────────────────────────────────── */}
       <div className="col-start-3 row-start-3 w-full">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 xl:px-0 py-16 md:py-20 lg:py-24">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 xl:px-0 py-16 md:py-20 lg:py-6">
 
           {/* ── Eyebrow ────────────────────────────────────────────────── */}
           <p className="font-schibsted text-xs font-semibold uppercase tracking-widest text-sky-800 mb-1 p-4">
@@ -93,28 +93,28 @@ export function DashboardShowcaseSection() {
             <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
               A Detailed Dashboard.{" "}
             </Heading>
-            <Heading as="span" className="text-neutral-400 leading-tight font-semibold">
+            <Heading as="span" className="text-sky-800 leading-tight font-semibold">
               Every ticket, every status, every agent — visible in one dashboard without a single standup.
             </Heading>
           </motion.div>
 
           {/* ── Dashboard screenshot ────────────────────────────────────── */}
           <motion.div
-            className="relative w-full p-4"
+            className="relative w-full"
           >
             {/* Outer frame — browser chrome feel */}
-            <div className="rounded-4xl border border-neutral-200 bg-neutral-50 p-2">
+            <div className=" bg-neutral-100 p-2">
 
               {/* Fake browser bar */}
-              <div className="flex items-center gap-1.5 px-3 py-2 mb-2">
+              {/* <div className="flex items-center gap-1.5 px-3 py-2 mb-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-neutral-200" />
                 <span className="h-2.5 w-2.5 rounded-full bg-neutral-200" />
                 <span className="h-2.5 w-2.5 rounded-full bg-neutral-200" />
                 <div className="ml-3 h-5 flex-1 max-w-xs rounded-md bg-neutral-100 border border-neutral-200" />
-              </div>
+              </div> */}
 
               {/* Screenshot — responsive, fills the frame */}
-              <div className="relative w-full overflow-hidden rounded-2xl border border-neutral-200">
+              <div className="relative w-full overflow-hidden border border-neutral-200">
                 <Image
                   src="/dashboard-screenshot2.png"
                   alt="syncsupport dashboard — ticket management, response times, and team performance at a glance"
