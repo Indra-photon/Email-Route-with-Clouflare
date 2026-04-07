@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 
-const AVATAR_POOL = Array.from({ length: 30 }, (_, i) => `https://i.pravatar.cc/150?img=${i + 1}`);
+const AVATAR_POOL = Array.from({ length: 30 }, (_, i) => `https://picsum.photos/150/150?random=${i + 1}`);
 
 const GRADIENTS = [
   "from-cyan-400 to-cyan-500",

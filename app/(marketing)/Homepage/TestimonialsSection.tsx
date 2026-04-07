@@ -14,7 +14,7 @@ const testimonials = [
     author: {
       name: "Sarah Chen",
       role: "Head of Customer Success",
-      avatar: null, // Add avatar path
+      avatar: "https://picsum.photos/150/150?random=1",
     },
   },
   {
@@ -25,7 +25,7 @@ const testimonials = [
     author: {
       name: "Mike Rodriguez",
       role: "VP of Operations",
-      avatar: null,
+      avatar: "https://picsum.photos/150/150?random=2",
     },
   },
   {
@@ -36,7 +36,7 @@ const testimonials = [
     author: {
       name: "Emma Thompson",
       role: "Support Lead",
-      avatar: null,
+      avatar: "https://picsum.photos/150/150?random=3",
     },
   },
   {
@@ -47,7 +47,7 @@ const testimonials = [
     author: {
       name: "David Park",
       role: "CTO",
-      avatar: null,
+      avatar: "https://picsum.photos/150/150?random=4",
     },
   },
   {
@@ -58,7 +58,7 @@ const testimonials = [
     author: {
       name: "Lisa Nguyen",
       role: "Head of Growth",
-      avatar: null,
+      avatar: "https://picsum.photos/150/150?random=5",
     },
   },
   {
@@ -69,7 +69,7 @@ const testimonials = [
     author: {
       name: "James Mitchell",
       role: "Sales Director",
-      avatar: null,
+      avatar: "https://picsum.photos/150/150?random=6",
     },
   },
 ];
@@ -87,7 +87,7 @@ const featuredTestimonial = {
   author: {
     name: "Sarah",
     role: "TechFlow",
-    avatar: null,
+    avatar: "https://picsum.photos/150/150?random=1",
   },
   video: {
     thumbnail: null, // Add video thumbnail
@@ -135,7 +135,7 @@ export function TestimonialsSection() {
           <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
             Trusted by teams that value fast support.{" "}
           </Heading>
-          <Heading as="span" className="text-neutral-400 leading-tight font-semibold">
+          <Heading as="span" className="text-sky-800 leading-tight font-semibold">
             From startups to scale-ups — faster responses, without adding headcount.
           </Heading>
         </motion.div>

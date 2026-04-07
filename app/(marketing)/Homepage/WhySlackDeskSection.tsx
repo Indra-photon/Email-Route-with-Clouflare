@@ -755,8 +755,8 @@ export function WhySlackDeskSection() {
           <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
             Why teams switch to SyncSupport.{" "}
           </Heading>
-          <Heading as="span" className="text-neutral-400 leading-tight font-semibold">
-            Not because it's cheaper — because it's the only support system that actually lives in Slack.
+          <Heading as="span" className="text-sky-800 leading-tight font-semibold">
+            - a full customer support system for your business built on top of Slack.
           </Heading>
         </motion.div>
 

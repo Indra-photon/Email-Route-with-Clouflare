@@ -539,8 +539,8 @@ export function BenefitsSection() {
                 <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
                   What changes the week you switch.{" "}
                 </Heading>
-                <Heading as="span" className="text-neutral-400 leading-tight font-semibold">
-                  Teams running support from Slack see — faster responses, fewer missed tickets, less time wasted.
+                <Heading as="span" className="text-sky-800 leading-tight font-semibold">
+                   — faster responses, fewer missed tickets, less time wasted.
                 </Heading>
               </motion.div>
 
