@@ -1,3 +1,6 @@
+/* Declare fumadocs layer first so it has lowest priority — prevents bleed into app styles */
+@layer fumadocs;
+
 @import "tailwindcss";
 @import "tw-animate-css";
 

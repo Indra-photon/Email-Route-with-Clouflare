@@ -7,10 +7,12 @@ import { Callout } from "@/components/docs/Callout";
 import { DocsNavigation } from "@/components/docs/DocsNavigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { DocsPage, DocsBody } from "fumadocs-ui/page";
 
 export default function AdvancedPage() {
   return (
-    <article className="prose prose-neutral max-w-none">
+    <DocsPage toc={[]}>
+    <DocsBody className="prose prose-neutral max-w-none">
       <div className="mb-8">
         <Badge className="mb-4 bg-sky-100 text-sky-800 font-schibsted font-medium">
           Advanced
@@ -320,6 +322,7 @@ Payload:
         prev={{ title: "API Reference", href: "/docs/api" }}
         next={{ title: "Troubleshooting", href: "/docs/troubleshooting" }}
       />
-    </article>
+    </DocsBody>
+    </DocsPage>
   );
 }

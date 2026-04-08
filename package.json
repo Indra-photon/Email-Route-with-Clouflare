@@ -24,6 +24,8 @@
     "clsx": "^2.1.1",
     "dodopayments": "^2.23.2",
     "framer-motion": "^12.23.27",
+    "fumadocs-core": "^16.7.10",
+    "fumadocs-ui": "^16.7.10",
     "geist": "^1.7.0",
     "lucide-react": "^0.562.0",
     "mongoose": "^9.2.1",

@@ -1,0 +1,76 @@
+/* ─── Fumadocs theme overrides — SyncSupport sky/neutral palette ─────────── */
+
+.docs-layout {
+  /* Background → white */
+  --color-fd-background: hsl(0, 0%, 100%);
+  --color-fd-foreground: hsl(222, 47%, 11%);
+
+  /* Primary → sky-800 */
+  --color-fd-primary: hsl(199, 89%, 28%);
+  --color-fd-primary-foreground: hsl(0, 0%, 100%);
+
+  /* Muted → neutral-100 */
+  --color-fd-muted: hsl(210, 20%, 96%);
+  --color-fd-muted-foreground: hsl(220, 9%, 46%);
+
+  /* Sidebar */
+  --color-fd-secondary: hsl(210, 20%, 98%);
+  --color-fd-secondary-foreground: hsl(222, 47%, 11%);
+
+  /* Card */
+  --color-fd-card: hsl(0, 0%, 100%);
+  --color-fd-card-foreground: hsl(222, 47%, 11%);
+
+  /* Accent → sky-50 */
+  --color-fd-accent: hsl(204, 100%, 97%);
+  --color-fd-accent-foreground: hsl(199, 89%, 28%);
+
+  /* Border → neutral-200 */
+  --color-fd-border: hsla(220, 13%, 91%, 100%);
+
+  /* Ring → sky-300 */
+  --color-fd-ring: hsl(199, 89%, 68%);
+
+  /* Popover */
+  --color-fd-popover: hsl(0, 0%, 100%);
+  --color-fd-popover-foreground: hsl(222, 47%, 11%);
+}
+
+/* Force light — prevent dark class from overriding */
+.docs-layout.dark,
+.docs-layout {
+  --color-fd-background: hsl(0, 0%, 100%);
+  --color-fd-foreground: hsl(222, 47%, 11%);
+  --color-fd-primary: hsl(199, 89%, 28%);
+  --color-fd-primary-foreground: hsl(0, 0%, 100%);
+  --color-fd-muted: hsl(210, 20%, 96%);
+  --color-fd-muted-foreground: hsl(220, 9%, 46%);
+  --color-fd-secondary: hsl(210, 20%, 98%);
+  --color-fd-secondary-foreground: hsl(222, 47%, 11%);
+  --color-fd-card: hsl(0, 0%, 100%);
+  --color-fd-card-foreground: hsl(222, 47%, 11%);
+  --color-fd-accent: hsl(204, 100%, 97%);
+  --color-fd-accent-foreground: hsl(199, 89%, 28%);
+  --color-fd-border: hsla(220, 13%, 91%, 100%);
+  --color-fd-ring: hsl(199, 89%, 68%);
+  --color-fd-popover: hsl(0, 0%, 100%);
+  --color-fd-popover-foreground: hsl(222, 47%, 11%);
+}
+
+.docs-layout .dark #nd-sidebar,
+.docs-layout #nd-sidebar {
+  --color-fd-muted: hsl(210, 20%, 96%);
+  --color-fd-secondary: hsl(210, 20%, 98%);
+  --color-fd-muted-foreground: hsl(220, 9%, 46%);
+}
+
+.docs-layout .scroll-m-4 {
+  padding-inline-start: 0.5rem;
+}
+
+.docs-layout .border-s {
+  padding-top: 0.75rem;
+}
+.docs-layout #nd-toc {                                                                                                                                                                                                       
+    padding-top: 1.5rem;                                   
+  }

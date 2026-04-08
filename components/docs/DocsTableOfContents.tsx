@@ -319,8 +319,8 @@ export function DocsTableOfContents() {
   return (
     <aside className="hidden xl:block sticky top-24 w-64 h-[calc(100vh-6rem)] overflow-y-auto pl-8">
       <div className="mb-4">
-        <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-          On This Page
+        <h3 className="text-sm font-semibold text-sky-900 dark:text-neutral-100">
+          On This
         </h3>
       </div>
 

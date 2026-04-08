@@ -5,10 +5,12 @@ import { CodeBlock } from "@/components/docs/CodeBlock";
 import { Callout } from "@/components/docs/Callout";
 import { DocsNavigation } from "@/components/docs/DocsNavigation";
 import { Badge } from "@/components/ui/badge";
+import { DocsPage, DocsBody } from "fumadocs-ui/page";
 
 export default function APIPage() {
   return (
-    <article className="prose prose-neutral max-w-none">
+    <DocsPage toc={[]}>
+    <DocsBody className="prose prose-neutral max-w-none">
       <div className="mb-8">
         <Badge className="mb-4 bg-sky-100 text-sky-800 font-schibsted font-medium">
           API Reference
@@ -383,6 +385,7 @@ Error Response:
         prev={{ title: "Chatbot Widget", href: "/docs/chatbot" }}
         next={{ title: "Advanced", href: "/docs/advanced" }}
       />
-    </article>
+    </DocsBody>
+    </DocsPage>
   );
 }

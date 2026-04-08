@@ -5,6 +5,7 @@ type HeadingProps<T extends React.ElementType = "h1"> = {
   className?: string;
   children: React.ReactNode;
   as?: T;
+  id?: string;
   variant?: "default" | "muted" | "small";
 };
 
@@ -12,6 +13,7 @@ export const Heading = <T extends React.ElementType = "h1">({
   className,
   children,
   as,
+  id,
   variant = "default",
 }: HeadingProps<T>) => {
   const Tag = as || "h1";
@@ -25,6 +27,7 @@ export const Heading = <T extends React.ElementType = "h1">({
   return (
     
     <Tag
+      id={id}
       className={twMerge(
         "font-schibsted",
         variants[variant],
