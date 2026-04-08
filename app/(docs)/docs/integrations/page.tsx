@@ -8,9 +8,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { IconSlack, IconDiscord } from "@/constants/icons";
 import { Icon } from "lucide-react";
 
+import { DocsPage, DocsBody } from "fumadocs-ui/page";
+
 export default function IntegrationsPage() {
   return (
-    <article className="prose prose-neutral max-w-none">
+    <DocsPage toc={[]}>
+    <DocsBody className="prose prose-neutral max-w-none">
       <div className="mb-8">
         <Badge className="mb-4 bg-sky-100 text-sky-800 font-schibsted font-medium">
           Integrations
@@ -76,6 +79,7 @@ export default function IntegrationsPage() {
           href: "/docs/integrations/slack",
         }}
       />
-    </article>
+    </DocsBody>
+    </DocsPage>
   );
 }

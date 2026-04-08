@@ -7,10 +7,12 @@ import { Callout } from "@/components/docs/Callout";
 import { DocsNavigation } from "@/components/docs/DocsNavigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail, Zap, Users, BarChart3 } from "lucide-react";
+import { DocsPage, DocsBody } from "fumadocs-ui/page";
 
-export default function DocsPage() {
+export default function GettingStartedPage() {
   return (
-    <article className="prose prose-neutral max-w-none">
+    <DocsPage toc={[]}>
+    <DocsBody className="prose prose-neutral max-w-none">
       {/* Hero Section */}
       <div className="mb-12">
         <Heading as="h1" className="text-neutral-900 mb-4">
@@ -230,6 +232,7 @@ export default function DocsPage() {
           href: "/docs/getting-started",
         }}
       />
-    </article>
+    </DocsBody>
+    </DocsPage>
   );
 }

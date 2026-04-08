@@ -1,0 +1,2 @@
+/* Wrap all fumadocs styles in a low-priority layer so they never bleed into app styles */
+@import "fumadocs-ui/style.css" layer(fumadocs);
