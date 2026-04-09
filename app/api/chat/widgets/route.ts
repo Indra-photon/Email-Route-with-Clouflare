@@ -8,6 +8,7 @@ import { Domain } from "@/app/api/models/DomainModel";
 import crypto from "crypto";
 import { checkWidgetLimit } from "@/lib/checkPlanLimits";
 import { getSubscriptionGuard } from "@/lib/checkSubscriptionStatus";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function GET(request: Request) {
     try {
@@ -125,6 +126,18 @@ export async function POST(request: Request) {
             integrationId,
             welcomeMessage: welcomeMessage?.trim() || "Hi! How can we help you today?",
             accentColor: accentColor?.trim() || "#0ea5e9",
+        });
+
+        const posthog = getPostHogClient();
+        posthog.capture({
+            distinctId: userId,
+            event: "chat_widget_created",
+            properties: {
+                widget_id: widget._id.toString(),
+                domain: widget.domain,
+                integration_type: integrationDoc.type,
+                workspace_id: workspace._id.toString(),
+            },
         });
 
         const protocol = request.headers.get("x-forwarded-proto") || "http";

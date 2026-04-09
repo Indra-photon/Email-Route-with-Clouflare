@@ -182,6 +182,7 @@ import { Integration } from "@/app/api/models/IntegrationModel";
 import { getOrCreateWorkspaceForCurrentUser } from "@/app/api/workspace/helpers";
 import { checkAliasLimit } from "@/lib/checkPlanLimits";
 import { getSubscriptionGuard } from "@/lib/checkSubscriptionStatus";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function GET() {
   try {
@@ -316,6 +317,18 @@ export async function POST(request: Request) {
 
     console.log("💾 Alias created in DB:", email);
 
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: userId,
+      event: "alias_created",
+      properties: {
+        alias_email: email,
+        domain: domain.domain,
+        has_integration: !!integrationDoc,
+        integration_type: integrationDoc?.type ?? null,
+        workspace_id: workspace._id.toString(),
+      },
+    });
 
     return NextResponse.json(
       {

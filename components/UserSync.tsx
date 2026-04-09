@@ -4,6 +4,7 @@
 import { useUser } from '@clerk/nextjs';
 import { useUserStore } from '@/lib/store';
 import { useEffect } from 'react';
+import posthog from 'posthog-js';
 
 export function UserSync() {
     const { isSignedIn, user, isLoaded } = useUser();
@@ -19,8 +20,13 @@ export function UserSync() {
                     avatar: user.imageUrl,
                     worksStatus: 'web developer',
                 });
+                posthog.identify(user.id, {
+                    email: user.primaryEmailAddress?.emailAddress,
+                    name: user.fullName ?? undefined,
+                });
             } else {
                 setUser(null);
+                posthog.reset();
             }
         }
     }, [isSignedIn, user, isLoaded, setUser]);

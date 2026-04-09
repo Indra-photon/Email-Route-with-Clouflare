@@ -4,6 +4,7 @@ import { Workspace } from "@/app/api/models/WorkspaceModel";
 import { Subscription } from "@/app/api/models/SubscriptionModel";
 import { Alias } from "@/app/api/models/AliasModel";
 import { verifyDodoSignature } from "@/lib/dodo";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function POST(request: Request) {
   const rawBody = await request.text();
@@ -75,6 +76,20 @@ export async function POST(request: Request) {
           { workspaceId },
           { $set: { status: "active" } }
         );
+
+        const userId = metadata.userId;
+        if (userId) {
+          const posthog = getPostHogClient();
+          posthog.capture({
+            distinctId: userId,
+            event: "subscription_activated",
+            properties: {
+              plan_id: planId,
+              workspace_id: workspaceId,
+              webhook_type: type,
+            },
+          });
+        }
 
         console.log(`✅ Webhook: ${type} — workspace ${workspaceId} → ${planId}`);
         break;
@@ -149,6 +164,19 @@ export async function POST(request: Request) {
           );
         }
 
+        if (updatedSub?.workspaceId) {
+          const posthog = getPostHogClient();
+          posthog.capture({
+            distinctId: updatedSub.workspaceId.toString(),
+            event: "payment_succeeded",
+            properties: {
+              plan_id: updatedSub.planId,
+              workspace_id: updatedSub.workspaceId.toString(),
+              subscription_id: subId,
+            },
+          });
+        }
+
         console.log(`✅ Webhook: payment.succeeded — counters reset for sub ${subId}`);
         break;
       }
@@ -158,10 +186,25 @@ export async function POST(request: Request) {
         const subId = (data.subscription_id ?? data.id) as string | undefined;
         if (!subId) break;
 
-        await Subscription.findOneAndUpdate(
+        const failedSub = await Subscription.findOneAndUpdate(
           { dodoSubscriptionId: subId },
-          { status: "past_due" }
+          { status: "past_due" },
+          { new: true }
         );
+
+        if (failedSub?.workspaceId) {
+          const posthog = getPostHogClient();
+          posthog.capture({
+            distinctId: failedSub.workspaceId.toString(),
+            event: "payment_failed",
+            properties: {
+              plan_id: failedSub.planId,
+              workspace_id: failedSub.workspaceId.toString(),
+              subscription_id: subId,
+            },
+          });
+        }
+
         console.log(`❌ Webhook: payment.failed → past_due for sub ${subId}`);
         break;
       }

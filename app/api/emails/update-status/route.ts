@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import dbConnect from "@/lib/dbConnect";
 import { EmailThread } from "@/app/api/models/EmailThreadModel";
 import { Workspace } from "@/app/api/models/WorkspaceModel";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 const VALID_STATUSES = ['open', 'in_progress', 'waiting', 'resolved'];
 
@@ -62,6 +63,17 @@ export async function POST(request: NextRequest) {
     }
 
     await thread.save();
+
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: userId,
+      event: "ticket_status_updated",
+      properties: {
+        thread_id: threadId,
+        new_status: status,
+        workspace_id: workspace._id.toString(),
+      },
+    });
 
     return NextResponse.json({
       success: true,

@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import posthog from "posthog-js";
 import { useUser } from "@clerk/nextjs";
 import { Heading } from "@/components/Heading";
 import { Paragraph } from "@/components/Paragraph";
@@ -210,6 +211,14 @@ function PricingCard({
   const isHighlight = plan.highlight;
   const action = getCtaAction(plan.id, currentPlanId, isExpired, isLoggedIn);
 
+  const captureCtaClick = (label: string) => {
+    posthog.capture("pricing_cta_clicked", {
+      plan: plan.id,
+      plan_price: plan.price,
+      action: label,
+    });
+  };
+
   const handleDirectCheckout = async () => {
     setCheckoutLoading(true);
     setCheckoutError(null);
@@ -242,7 +251,7 @@ function PricingCard({
     switch (action) {
       case "not-logged-in":
         return (
-          <a href="/sign-up" className={baseClass + highlightVariant}>
+          <a href="/sign-up" className={baseClass + highlightVariant} onClick={() => captureCtaClick("sign_up")}>
             {plan.ctaLabel}
           </a>
         );
@@ -252,7 +261,7 @@ function PricingCard({
         return (
           <>
             <button
-              onClick={handleDirectCheckout}
+              onClick={() => { captureCtaClick("checkout"); handleDirectCheckout(); }}
               disabled={checkoutLoading}
               className={baseClass + highlightVariant + "disabled:opacity-60 disabled:cursor-not-allowed"}
             >
@@ -276,7 +285,7 @@ function PricingCard({
         return (
           <>
             <button
-              onClick={handleDirectCheckout}
+              onClick={() => { captureCtaClick(action); handleDirectCheckout(); }}
               disabled={checkoutLoading}
               className={baseClass + highlightVariant + "disabled:opacity-60 disabled:cursor-not-allowed"}
             >
@@ -291,7 +300,7 @@ function PricingCard({
       case "downgrade":
         return (
           <>
-            <button onClick={() => setDowngradeOpen(true)} className={baseClass + "bg-white text-neutral-500 border border-neutral-200 hover:bg-neutral-50 "}>
+            <button onClick={() => { captureCtaClick("downgrade"); setDowngradeOpen(true); }} className={baseClass + "bg-white text-neutral-500 border border-neutral-200 hover:bg-neutral-50 "}>
               Downgrade to {plan.name}
             </button>
             <DowngradeModal
@@ -309,7 +318,7 @@ function PricingCard({
 
       case "contact":
         return (
-          <a href="/contact" className={baseClass + highlightVariant}>
+          <a href="/contact" className={baseClass + highlightVariant} onClick={() => captureCtaClick("contact")}>
             Book a demo
           </a>
         );
@@ -370,6 +379,7 @@ function PricingCard({
 export function PricingTableSection() {
   const [plans, setPlans] = useState<DbPricingPlan[]>([]);
   const [loading, setLoading] = useState(true);
+  const sectionRef = useRef<HTMLElement>(null);
   const { isSignedIn } = useUser();
 
   // Auth-aware subscription data (only fetched if signed in)
@@ -377,6 +387,22 @@ export function PricingTableSection() {
 
   const currentPlanId = isSignedIn ? (subData?.planId ?? null) : null;
   const isExpired     = isSignedIn ? (subData?.isExpired ?? false) : false;
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          posthog.capture("pricing_section_viewed");
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     fetch("/api/public/pricing")
@@ -389,7 +415,7 @@ export function PricingTableSection() {
   }, []);
 
   return (
-    <section className="w-full bg-white py-16 md:py-20 lg:py-28" id="pricing">
+    <section ref={sectionRef} className="w-full bg-white py-16 md:py-20 lg:py-28" id="pricing">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 xl:px-0">
 
         <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, ease: EASE_OUT_QUAD }} className="mb-12">
