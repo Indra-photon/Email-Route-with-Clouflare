@@ -4,6 +4,7 @@ import dbConnect from "@/lib/dbConnect";
 import { Workspace } from "@/app/api/models/WorkspaceModel";
 import { Subscription } from "@/app/api/models/SubscriptionModel";
 import { cancelSubscriptionAtPeriodEnd, DodoError } from "@/lib/dodo";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function POST() {
   try {
@@ -28,6 +29,17 @@ export async function POST() {
 
     sub.cancelAtPeriodEnd = true;
     await sub.save();
+
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: userId,
+      event: "subscription_cancelled",
+      properties: {
+        plan_id: sub.planId,
+        workspace_id: workspace._id.toString(),
+        current_period_end: sub.currentPeriodEnd,
+      },
+    });
 
     const endDate = sub.currentPeriodEnd
       ? new Date(sub.currentPeriodEnd).toLocaleDateString("en-US", {

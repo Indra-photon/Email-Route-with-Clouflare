@@ -6,6 +6,7 @@ import ReceivingRequest from "@/app/api/models/ReceivingRequestModel";
 import { getOrCreateWorkspaceForCurrentUser } from "@/app/api/workspace/helpers";
 import { currentUser } from "@clerk/nextjs/server";
 import { Resend } from "resend";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -180,6 +181,17 @@ export async function POST(request: NextRequest) {
       console.error("Failed to send admin notification email:", emailError);
       // Don't fail the request if email fails
     }
+
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: userId,
+      event: "receiving_request_submitted",
+      properties: {
+        domain: domain.domain,
+        workspace_id: workspace._id.toString(),
+        request_id: receivingRequest._id.toString(),
+      },
+    });
 
     // Return success response
     return NextResponse.json(

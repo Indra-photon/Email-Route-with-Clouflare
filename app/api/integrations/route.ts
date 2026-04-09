@@ -3,6 +3,7 @@ import dbConnect from "@/lib/dbConnect";
 import { auth } from "@clerk/nextjs/server";
 import { getOrCreateWorkspaceForCurrentUser } from "@/app/api/workspace/helpers";
 import { Integration } from "@/app/api/models/IntegrationModel";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function GET() {
   try {
@@ -96,6 +97,17 @@ export async function POST(request: Request) {
       type,
       name: name.trim(),
       webhookUrl: trimmedUrl,
+    });
+
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: userId,
+      event: "integration_created",
+      properties: {
+        integration_type: doc.type,
+        integration_name: doc.name,
+        workspace_id: workspace._id.toString(),
+      },
     });
 
     return NextResponse.json(

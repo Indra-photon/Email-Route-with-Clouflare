@@ -5,6 +5,7 @@ import { Domain } from "@/app/api/models/DomainModel";
 import { getOrCreateWorkspaceForCurrentUser } from "@/app/api/workspace/helpers";
 import { checkDomainLimit } from "@/lib/checkPlanLimits";
 import { getSubscriptionGuard } from "@/lib/checkSubscriptionStatus";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function GET() {
   try {
@@ -87,6 +88,16 @@ export async function POST(request: Request) {
       workspaceId: workspace._id,
       domain: domain.toLowerCase().trim(),
       status: "pending_verification",
+    });
+
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: userId,
+      event: "domain_created",
+      properties: {
+        domain: doc.domain,
+        workspace_id: workspace._id.toString(),
+      },
     });
 
     return NextResponse.json(

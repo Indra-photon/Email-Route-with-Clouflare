@@ -7,6 +7,7 @@ import { ChatMessage } from "@/app/api/models/ChatMessageModel";
 import { ChatWidget } from "@/app/api/models/ChatWidgetModel";
 import { Integration } from "@/app/api/models/IntegrationModel";
 import { postAgentReplyToSlack } from "@/lib/slackLiveChat";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function POST(
     request: Request,
@@ -107,6 +108,18 @@ export async function POST(
         } catch (pushErr) {
             console.error("Failed to push agent reply to chat server:", pushErr);
         }
+
+        const posthog = getPostHogClient();
+        posthog.capture({
+            distinctId: userId,
+            event: "chat_reply_sent",
+            properties: {
+                conversation_id: id,
+                message_type: type || "text",
+                has_media: !!mediaUrl,
+                workspace_id: workspace._id.toString(),
+            },
+        });
 
         return NextResponse.json({
             success: true,

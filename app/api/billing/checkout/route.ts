@@ -10,6 +10,7 @@ import {
   DodoError,
 } from "@/lib/dodo";
 import { seedPricingPlans } from "@/lib/seedPricingPlans";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function POST(request: Request) {
   try {
@@ -72,6 +73,18 @@ export async function POST(request: Request) {
       existingSub.pendingPlanId = planId as "starter" | "growth" | "scale";
       await existingSub.save();
 
+      const posthog = getPostHogClient();
+      posthog.capture({
+        distinctId: userId,
+        event: "checkout_initiated",
+        properties: {
+          plan_id: planId,
+          plan_name: plan.name,
+          is_downgrade: true,
+          workspace_id: workspace._id.toString(),
+        },
+      });
+
       return NextResponse.json({
         scheduled: true,
         message: `Your plan will switch to ${plan.name} at the end of your current billing period.`,
@@ -105,6 +118,18 @@ export async function POST(request: Request) {
       ...(existingSub?.dodoCustomerId
         ? { customerId: existingSub.dodoCustomerId }
         : {}),
+    });
+
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: userId,
+      event: "checkout_initiated",
+      properties: {
+        plan_id: planId,
+        plan_name: plan.name,
+        is_downgrade: false,
+        workspace_id: workspace._id.toString(),
+      },
     });
 
     return NextResponse.json({ checkoutUrl: session.url });

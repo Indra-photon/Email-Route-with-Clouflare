@@ -7,6 +7,7 @@ import { Alias } from "@/app/api/models/AliasModel";
 import { Domain } from "@/app/api/models/DomainModel";
 import { Subscription } from "@/app/api/models/SubscriptionModel";
 import { Resend } from "resend";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -177,6 +178,17 @@ export async function POST(request: Request) {
     thread.statusUpdatedAt = new Date();
     thread.repliedAt = new Date();
     await thread.save();
+
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: userId,
+      event: "email_reply_sent",
+      properties: {
+        thread_id: threadId,
+        workspace_id: workspace._id.toString(),
+        using_custom_domain: domain?.verifiedForSending ?? false,
+      },
+    });
 
     return NextResponse.json({
       success: true,

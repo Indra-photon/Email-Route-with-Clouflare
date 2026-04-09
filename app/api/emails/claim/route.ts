@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import dbConnect from "@/lib/dbConnect";
 import { EmailThread } from "@/app/api/models/EmailThreadModel";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -74,6 +75,16 @@ export async function POST(request: NextRequest) {
     thread.statusUpdatedAt = new Date();
 
     await thread.save();
+
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: userId,
+      event: "ticket_claimed",
+      properties: {
+        thread_id: threadId,
+        workspace_id: thread.workspaceId.toString(),
+      },
+    });
 
     return NextResponse.json(
       {
