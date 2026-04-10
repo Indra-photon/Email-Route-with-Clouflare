@@ -310,23 +310,39 @@ export async function POST(request: Request) {
     }
 
     // ── New: reply from SyncSupport button ─────────────────────────────────
-    // IMPORTANT: Slack trigger_id expires in 3 seconds. We must call views.open ASAP.
-    // To minimize latency, we look up the integration via payload.channel.id (already in payload)
-    // and skip the thread lookup here — thread data is fetched on modal submit instead.
     if (actionId === "reply_from_syncsupport") {
       const threadId = action.value as string;
       const triggerId = payload.trigger_id as string;
-      const channelId = (payload.channel?.id as string) || "";
+
+      console.log("🔵 reply_from_syncsupport clicked, threadId:", threadId, "triggerId:", triggerId);
 
       await dbConnect();
 
-      // Single DB query — no thread lookup needed at this stage
+      // Step 1: get thread (need slackChannelId for integration lookup)
+      const thread = await EmailThread.findById(threadId).lean();
+      if (!thread) {
+        console.error("❌ reply_from_syncsupport: thread not found for id:", threadId);
+        return NextResponse.json({ ok: true });
+      }
+
+      console.log("🔵 thread found, slackChannelId:", (thread as any).slackChannelId);
+
+      // Step 2: get integration by the same channel ID used when posting (reliable)
       const integration = await Integration.findOne({
-        slackChannelId: channelId,
+        slackChannelId: (thread as any).slackChannelId,
         authMethod: "oauth",
       }).lean();
 
-      if (!integration?.slackAccessToken) return NextResponse.json({ ok: true });
+      if (!integration) {
+        console.error("❌ reply_from_syncsupport: no integration found for channel:", (thread as any).slackChannelId);
+        return NextResponse.json({ ok: true });
+      }
+      if (!integration.slackAccessToken) {
+        console.error("❌ reply_from_syncsupport: integration has no slackAccessToken");
+        return NextResponse.json({ ok: true });
+      }
+
+      console.log("🔵 integration found, calling views.open...");
 
       const viewRes = await fetch("https://slack.com/api/views.open", {
         method: "POST",
@@ -361,8 +377,10 @@ export async function POST(request: Request) {
       });
 
       const viewData = await viewRes.json();
-      if (!viewData.ok) {
-        console.error("❌ views.open failed:", viewData.error);
+      if (viewData.ok) {
+        console.log("✅ views.open succeeded");
+      } else {
+        console.error("❌ views.open failed. Error:", viewData.error, "| Full response:", JSON.stringify(viewData));
       }
 
       return NextResponse.json({ ok: true });
