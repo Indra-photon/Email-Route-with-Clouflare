@@ -231,7 +231,7 @@ export function OnboardingStepsSection() {
             <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
               Setup in minutes.{" "}
             </Heading>
-            <Heading as="span" className="text-sky-800 leading-tight font-semibold">
+            <Heading as="span" className="text-sky-800 leading-tight font-extralight">
               No complex tools, routing rules, or training required
             </Heading>
           </motion.div>

@@ -80,7 +80,7 @@ export function FAQSection() {
               className="lg:sticky lg:top-24"
             >
               <Heading as="h2" className="text-neutral-900 mb-4">
-                Questions? <span className="text-sky-800">We've got answers.</span>
+                Questions? <span className="text-sky-800 font-extralight">We've got answers.</span>
               </Heading>
               
               <Paragraph variant="home-par" className="mb-8">

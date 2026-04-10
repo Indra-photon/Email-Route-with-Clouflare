@@ -52,15 +52,20 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
+import { IconRefresh } from "@tabler/icons-react";
 import { RecentTickets } from "./RecentTickets";
 import { LiveChatNotifications } from "./LiveChatNotifications";
 import { IntegrationHealth } from "./IntegrationHealth";
 import { Heading } from "@/components/Heading";
+import { useRefreshStore } from "./useRefresh";
 
 const EASE_OUT_QUART: [number, number, number, number] = [0.165, 0.84, 0.44, 1];
 
 export function RightPanel() {
   const [collapsed, setCollapsed] = useState(false);
+  const triggerRefresh = useRefreshStore((s) => s.triggerRefresh);
+  const isAnyLoading = useRefreshStore((s) => s.isAnyLoading);
+  const spinning = isAnyLoading();
 
   return (
     // Outer wrapper is relative so the edge trigger can anchor to the left edge of this panel
@@ -103,14 +108,29 @@ export function RightPanel() {
             Live Overview
           </Heading>
 
-          {/* Toggle button right beside the heading */}
-          <button
-            onClick={() => setCollapsed(true)}
-            aria-label="Collapse panel"
-            className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-neutral-200 transition-colors duration-150 shrink-0 ml-3"
-          >
-            <PanelRightClose size={15} className="text-neutral-500" />
-          </button>
+          {/* Right controls */}
+          <div className="flex items-center gap-1 shrink-0 ml-3">
+            <button
+              onClick={triggerRefresh}
+              disabled={spinning}
+              aria-label="Refresh panel"
+              className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-neutral-200 transition-colors duration-150 disabled:opacity-40"
+            >
+              <IconRefresh
+                size={14}
+                strokeWidth={2.2}
+                className={`transition-colors duration-150 ${spinning ? "animate-spin text-sky-500" : "text-neutral-500"}`}
+              />
+            </button>
+
+            <button
+              onClick={() => setCollapsed(true)}
+              aria-label="Collapse panel"
+              className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-neutral-200 transition-colors duration-150 shrink-0"
+            >
+              <PanelRightClose size={15} className="text-neutral-500" />
+            </button>
+          </div>
         </div>
 
         {/* ── Content — fixed width so it doesn't reflow during animation ── */}

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "motion/react";
 import { Heading } from "@/components/Heading";
 import { Paragraph } from "@/components/Paragraph";
@@ -72,9 +72,9 @@ const PricingVisual = () => (
   </div>
 );
 
-// const ChannelsVisual = () => {
-//   const pathD = "M 20 20 C 20 20 20 40 80 40 C 140 40 140 40 140 40";
 
+
+// const ChannelsVisual = () => {
 //   return (
 //     <div className="w-full relative" style={{ height: 110 }}>
 //       <svg
@@ -84,54 +84,42 @@ const PricingVisual = () => (
 //         xmlns="http://www.w3.org/2000/svg"
 //       >
 //         <defs>
-//           {/* Animated gradient for each path */}
-//           {["email", "chat", "discord"].map((id) => (
-//             <linearGradient
-//               key={id}
-//               id={`pulse-${id}`}
-//               gradientUnits="userSpaceOnUse"
-//               x1="0" x2="140"
-//               y1="0" y2="0"
-//             >
-//               <stop stopColor="#38bdf8" stopOpacity="0" />
-//               <stop offset="0.4" stopColor="#38bdf8" />
-//               <stop offset="0.6" stopColor="#06b6d4" />
-//               <stop offset="1" stopColor="#6366f1" stopOpacity="0" />
-//             </linearGradient>
-//           ))}
+//           <linearGradient id="pulse-email" gradientUnits="userSpaceOnUse" x1="0" x2="140" y1="0" y2="0">
+//             <stop stopColor="#38bdf8" stopOpacity="0" />
+//             <stop offset="0.4" stopColor="#38bdf8" />
+//             <stop offset="0.6" stopColor="#06b6d4" />
+//             <stop offset="1" stopColor="#6366f1" stopOpacity="0" />
+//           </linearGradient>
+
+//           <linearGradient id="pulse-chat" gradientUnits="userSpaceOnUse" x1="0" x2="140" y1="0" y2="0">
+//             <stop stopColor="#38bdf8" stopOpacity="0" />
+//             <stop offset="0.4" stopColor="#38bdf8" />
+//             <stop offset="0.6" stopColor="#06b6d4" />
+//             <stop offset="1" stopColor="#6366f1" stopOpacity="0" />
+//           </linearGradient>
+
+//           <linearGradient id="pulse-forms" gradientUnits="userSpaceOnUse" x1="0" x2="140" y1="0" y2="0">
+//             <stop stopColor="#38bdf8" stopOpacity="0" />
+//             <stop offset="0.4" stopColor="#38bdf8" />
+//             <stop offset="0.6" stopColor="#06b6d4" />
+//             <stop offset="1" stopColor="#6366f1" stopOpacity="0" />
+//           </linearGradient>
+
+//           <linearGradient id="pulse-outgoing" gradientUnits="userSpaceOnUse" x1="130" x2="250" y1="0" y2="0">
+//             <stop stopColor="#38bdf8" stopOpacity="0" />
+//             <stop offset="0.3" stopColor="#0ea5e9" />
+//             <stop offset="0.7" stopColor="#7c3aed" />
+//             <stop offset="1" stopColor="#7c3aed" stopOpacity="0" />
+//           </linearGradient>
 //         </defs>
 
 //         {/* ── Base grey paths (always visible) ── */}
-//         {/* Email → center */}
-//         <path
-//           d="M 30 18 C 60 18 80 50 130 50"
-//           stroke="rgba(0,0,0,0.1)"
-//           strokeWidth="1.5"
-//           fill="none"
-//         />
-//         {/* Live Chat → center */}
-//         <path
-//           d="M 30 50 C 60 50 80 50 130 50"
-//           stroke="rgba(0,0,0,0.1)"
-//           strokeWidth="1.5"
-//           fill="none"
-//         />
-//         {/* Discord → center */}
-//         <path
-//           d="M 30 82 C 60 82 80 50 130 50"
-//           stroke="rgba(0,0,0,0.1)"
-//           strokeWidth="1.5"
-//           fill="none"
-//         />
-//         {/* center → Slack */}
-//         <path
-//           d="M 130 50 C 170 50 200 50 250 50"
-//           stroke="rgba(0,0,0,0.1)"
-//           strokeWidth="1.5"
-//           fill="none"
-//         />
+//         <path d="M 30 18 C 60 18 80 50 130 50" stroke="rgba(0,0,0,0.1)" strokeWidth="1.5" fill="none" />
+//         <path d="M 30 50 C 60 50 80 50 130 50" stroke="rgba(0,0,0,0.1)" strokeWidth="1.5" fill="none" />
+//         <path d="M 30 82 C 60 82 80 50 130 50" stroke="rgba(0,0,0,0.1)" strokeWidth="1.5" fill="none" />
+//         <path d="M 130 50 C 170 50 200 50 250 50" stroke="rgba(0,0,0,0.1)" strokeWidth="1.5" fill="none" />
 
-//         {/* ── Animated gradient traces ── */}
+//         {/* ── Animated gradient traces — looping ── */}
 //         <motion.path
 //           d="M 30 18 C 60 18 80 50 130 50"
 //           stroke="url(#pulse-email)"
@@ -140,8 +128,12 @@ const PricingVisual = () => (
 //           fill="none"
 //           initial={{ pathLength: 0, opacity: 0 }}
 //           whileInView={{ pathLength: 1, opacity: 1 }}
-//           viewport={{ once: true }}
-//           transition={{ duration: 1.2, delay: 0, ease: [0.19, 1, 0.22, 1] }}
+//           viewport={{ once: false }}
+//           transition={{
+//             duration: 1.4,
+//             delay: 0,
+//             ease: [0.19, 1, 0.22, 1],
+//           }}
 //         />
 //         <motion.path
 //           d="M 30 50 C 60 50 80 50 130 50"
@@ -151,30 +143,43 @@ const PricingVisual = () => (
 //           fill="none"
 //           initial={{ pathLength: 0, opacity: 0 }}
 //           whileInView={{ pathLength: 1, opacity: 1 }}
-//           viewport={{ once: true }}
-//           transition={{ duration: 1.2, delay: 0.2, ease: [0.19, 1, 0.22, 1] }}
+//           viewport={{ once: false }}
+//           transition={{
+//             duration: 1.4,
+//             delay: 0.25,
+//             ease: [0.19, 1, 0.22, 1],
+//           }}
 //         />
 //         <motion.path
 //           d="M 30 82 C 60 82 80 50 130 50"
-//           stroke="url(#pulse-discord)"
+//           stroke="url(#pulse-forms)"
 //           strokeWidth="2"
 //           strokeLinecap="round"
 //           fill="none"
 //           initial={{ pathLength: 0, opacity: 0 }}
 //           whileInView={{ pathLength: 1, opacity: 1 }}
-//           viewport={{ once: true }}
-//           transition={{ duration: 1.2, delay: 0.4, ease: [0.19, 1, 0.22, 1] }}
+//           viewport={{ once: false }}
+//           transition={{
+//             duration: 1.4,
+//             delay: 0.5,
+//             ease: [0.19, 1, 0.22, 1],
+//           }}
 //         />
+//         {/* ── Outgoing path — sky → violet ── */}
 //         <motion.path
 //           d="M 130 50 C 170 50 200 50 250 50"
-//           stroke="url(#pulse-email)"
+//           stroke="url(#pulse-outgoing)"
 //           strokeWidth="2"
 //           strokeLinecap="round"
 //           fill="none"
 //           initial={{ pathLength: 0, opacity: 0 }}
 //           whileInView={{ pathLength: 1, opacity: 1 }}
-//           viewport={{ once: true }}
-//           transition={{ duration: 0.8, delay: 0.9, ease: [0.19, 1, 0.22, 1] }}
+//           viewport={{ once: false }}
+//           transition={{
+//             duration: 1.0,
+//             delay: 1.1,
+//             ease: [0.19, 1, 0.22, 1],
+//           }}
 //         />
 
 //         {/* ── Source labels (left) ── */}
@@ -185,7 +190,8 @@ const PricingVisual = () => (
 //         ].map((item) => (
 //           <g key={item.label}>
 //             <rect
-//               x="0" y={item.y - 9}
+//               x="0"
+//               y={item.y - 9}
 //               width={item.label === "Live Chat" ? 48 : 38}
 //               height="18"
 //               rx="5"
@@ -207,7 +213,9 @@ const PricingVisual = () => (
 
 //         {/* ── Merge node (center dot) ── */}
 //         <motion.circle
-//           cx="130" cy="50" r="4"
+//           cx="130"
+//           cy="50"
+//           r="4"
 //           fill="#38bdf8"
 //           initial={{ scale: 0, opacity: 0 }}
 //           whileInView={{ scale: 1, opacity: 1 }}
@@ -224,7 +232,8 @@ const PricingVisual = () => (
 //         >
 //           <rect x="220" y="38" width="50" height="24" rx="6" fill="#4a154b" />
 //           <text
-//             x="245" y="54"
+//             x="245"
+//             y="54"
 //             textAnchor="middle"
 //             fontSize="9"
 //             fontFamily="sans-serif"
@@ -239,182 +248,132 @@ const PricingVisual = () => (
 //   );
 // };
 
+// r=70 → endpoints x=70..210 (fully inside 280px viewBox)
+// r=130 → endpoints x=10..270 (fully inside)
+// r=190 → endpoints x=-50..330 (outside) — visible window 24%→76%
+const ARCS = [
+  {
+    r: 70,
+    label: "# billing",
+    bg: "#e0f2fe", text: "#0369a1", shadow: "#7dd3fc",
+    startPct: "8%", endPct: "88%",
+    duration: 4, delay: 0,
+    pillW: 44,
+  },
+  {
+    r: 130,
+    label: "# support",
+    bg: "#ede9fe", text: "#6d28d9", shadow: "#c4b5fd",
+    startPct: "88%", endPct: "8%",
+    duration: 5.5, delay: 0.4,
+    pillW: 48,
+  },
+  {
+    r: 190,
+    label: "# sales",
+    bg: "#dcfce7", text: "#15803d", shadow: "#86efac",
+    startPct: "26%", endPct: "74%",
+    duration: 7, delay: 0.9,
+    pillW: 44,
+  },
+];
 
+const ChannelsVisual = ({ isHovered = false }: { isHovered?: boolean }) => {
+  const cx = 140;
+  const cy = 212;
 
-const ChannelsVisual = () => {
   return (
-    <div className="w-full relative" style={{ height: 110 }}>
-      <svg
-        viewBox="0 0 280 110"
-        fill="none"
-        className="w-full h-full"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          <linearGradient id="pulse-email" gradientUnits="userSpaceOnUse" x1="0" x2="140" y1="0" y2="0">
-            <stop stopColor="#38bdf8" stopOpacity="0" />
-            <stop offset="0.4" stopColor="#38bdf8" />
-            <stop offset="0.6" stopColor="#06b6d4" />
-            <stop offset="1" stopColor="#6366f1" stopOpacity="0" />
-          </linearGradient>
+    <div className="w-full relative" style={{ height: 205 }}>
+      <svg viewBox="0 0 280 205" fill="none" className="w-full h-full" style={{ overflow: "hidden" }} xmlns="http://www.w3.org/2000/svg">
 
-          <linearGradient id="pulse-chat" gradientUnits="userSpaceOnUse" x1="0" x2="140" y1="0" y2="0">
-            <stop stopColor="#38bdf8" stopOpacity="0" />
-            <stop offset="0.4" stopColor="#38bdf8" />
-            <stop offset="0.6" stopColor="#06b6d4" />
-            <stop offset="1" stopColor="#6366f1" stopOpacity="0" />
-          </linearGradient>
+        {/* Center anchor dot */}
+        <circle cx={cx} cy={205} r="3" fill="rgba(255,255,255,0.25)" />
+        <circle cx={cx} cy={205} r="1.5" fill="rgba(255,255,255,0.6)" />
 
-          <linearGradient id="pulse-forms" gradientUnits="userSpaceOnUse" x1="0" x2="140" y1="0" y2="0">
-            <stop stopColor="#38bdf8" stopOpacity="0" />
-            <stop offset="0.4" stopColor="#38bdf8" />
-            <stop offset="0.6" stopColor="#06b6d4" />
-            <stop offset="1" stopColor="#6366f1" stopOpacity="0" />
-          </linearGradient>
+        {ARCS.map((arc, i) => {
+          const x1 = cx - arc.r;
+          const x2 = cx + arc.r;
+          const pathD = `M ${x1} ${cy} A ${arc.r} ${arc.r} 0 0 1 ${x2} ${cy}`;
+          const hw = arc.pillW / 2;
+          const resolved = isHovered;
 
-          <linearGradient id="pulse-outgoing" gradientUnits="userSpaceOnUse" x1="130" x2="250" y1="0" y2="0">
-            <stop stopColor="#38bdf8" stopOpacity="0" />
-            <stop offset="0.3" stopColor="#0ea5e9" />
-            <stop offset="0.7" stopColor="#7c3aed" />
-            <stop offset="1" stopColor="#7c3aed" stopOpacity="0" />
-          </linearGradient>
-        </defs>
+          return (
+            <g key={arc.label}>
+              {/* Rail — brightens on hover */}
+              <motion.path
+                d={pathD}
+                stroke="rgba(255,255,255,0.3)"
+                strokeWidth="1"
+                fill="none"
+                animate={{ stroke: resolved ? "rgba(52,211,153,0.45)" : "rgba(255,255,255,0.3)" }}
+                transition={{ duration: 0.4, delay: i * 0.12 }}
+              />
 
-        {/* ── Base grey paths (always visible) ── */}
-        <path d="M 30 18 C 60 18 80 50 130 50" stroke="rgba(0,0,0,0.1)" strokeWidth="1.5" fill="none" />
-        <path d="M 30 50 C 60 50 80 50 130 50" stroke="rgba(0,0,0,0.1)" strokeWidth="1.5" fill="none" />
-        <path d="M 30 82 C 60 82 80 50 130 50" stroke="rgba(0,0,0,0.1)" strokeWidth="1.5" fill="none" />
-        <path d="M 130 50 C 170 50 200 50 250 50" stroke="rgba(0,0,0,0.1)" strokeWidth="1.5" fill="none" />
-
-        {/* ── Animated gradient traces — looping ── */}
-        <motion.path
-          d="M 30 18 C 60 18 80 50 130 50"
-          stroke="url(#pulse-email)"
-          strokeWidth="2"
-          strokeLinecap="round"
-          fill="none"
-          initial={{ pathLength: 0, opacity: 0 }}
-          whileInView={{ pathLength: 1, opacity: 1 }}
-          viewport={{ once: false }}
-          transition={{
-            duration: 1.4,
-            delay: 0,
-            ease: [0.19, 1, 0.22, 1],
-          }}
-        />
-        <motion.path
-          d="M 30 50 C 60 50 80 50 130 50"
-          stroke="url(#pulse-chat)"
-          strokeWidth="2"
-          strokeLinecap="round"
-          fill="none"
-          initial={{ pathLength: 0, opacity: 0 }}
-          whileInView={{ pathLength: 1, opacity: 1 }}
-          viewport={{ once: false }}
-          transition={{
-            duration: 1.4,
-            delay: 0.25,
-            ease: [0.19, 1, 0.22, 1],
-          }}
-        />
-        <motion.path
-          d="M 30 82 C 60 82 80 50 130 50"
-          stroke="url(#pulse-forms)"
-          strokeWidth="2"
-          strokeLinecap="round"
-          fill="none"
-          initial={{ pathLength: 0, opacity: 0 }}
-          whileInView={{ pathLength: 1, opacity: 1 }}
-          viewport={{ once: false }}
-          transition={{
-            duration: 1.4,
-            delay: 0.5,
-            ease: [0.19, 1, 0.22, 1],
-          }}
-        />
-        {/* ── Outgoing path — sky → violet ── */}
-        <motion.path
-          d="M 130 50 C 170 50 200 50 250 50"
-          stroke="url(#pulse-outgoing)"
-          strokeWidth="2"
-          strokeLinecap="round"
-          fill="none"
-          initial={{ pathLength: 0, opacity: 0 }}
-          whileInView={{ pathLength: 1, opacity: 1 }}
-          viewport={{ once: false }}
-          transition={{
-            duration: 1.0,
-            delay: 1.1,
-            ease: [0.19, 1, 0.22, 1],
-          }}
-        />
-
-        {/* ── Source labels (left) ── */}
-        {[
-          { y: 18, label: "Email", bg: "#e0f2fe", text: "#0369a1" },
-          { y: 50, label: "Live Chat", bg: "#cffafe", text: "#0e7490" },
-          { y: 82, label: "Forms", bg: "#f0fdf4", text: "#15803d" },
-        ].map((item) => (
-          <g key={item.label}>
-            <rect
-              x="0"
-              y={item.y - 9}
-              width={item.label === "Live Chat" ? 48 : 38}
-              height="18"
-              rx="5"
-              fill={item.bg}
-            />
-            <text
-              x={item.label === "Live Chat" ? 24 : 19}
-              y={item.y + 4.5}
-              textAnchor="middle"
-              fontSize="9"
-              fontFamily="sans-serif"
-              fontWeight="600"
-              fill={item.text}
-            >
-              {item.label}
-            </text>
-          </g>
-        ))}
-
-        {/* ── Merge node (center dot) ── */}
-        <motion.circle
-          cx="130"
-          cy="50"
-          r="4"
-          fill="#38bdf8"
-          initial={{ scale: 0, opacity: 0 }}
-          whileInView={{ scale: 1, opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.7, duration: 0.4, ease: [0.175, 0.885, 0.32, 1.275] }}
-        />
-
-        {/* ── Slack label (right) ── */}
-        <motion.g
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 1.1, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-        >
-          <rect x="220" y="38" width="50" height="24" rx="6" fill="#4a154b" />
-          <text
-            x="245"
-            y="54"
-            textAnchor="middle"
-            fontSize="9"
-            fontFamily="sans-serif"
-            fontWeight="700"
-            fill="white"
-          >
-            # slack
-          </text>
-        </motion.g>
+              {/* Moving pill */}
+              <motion.g
+                style={{
+                  offsetPath: `path('${pathD}')`,
+                  offsetRotate: "0deg",
+                } as React.CSSProperties}
+                initial={{ offsetDistance: arc.startPct, scale: 0, opacity: 0 } as any}
+                animate={resolved ? {
+                  offsetDistance: "50%",
+                  scale: 1,
+                  opacity: 1,
+                } as any : {
+                  offsetDistance: [arc.startPct, arc.endPct, arc.endPct],
+                  scale:   [0, 1, 1, 0, 0],
+                  opacity: [0, 1, 1, 0, 0],
+                } as any}
+                transition={resolved ? {
+                  offsetDistance: { duration: 0.5, delay: i * 0.12, ease: [0.23, 1, 0.32, 1] },
+                  scale:   { duration: 0.3, delay: i * 0.12 },
+                  opacity: { duration: 0.3, delay: i * 0.12 },
+                } : {
+                  offsetDistance: { duration: arc.duration, delay: arc.delay, repeat: Infinity, ease: "easeInOut", times: [0, 0.82, 1] },
+                  scale:   { duration: arc.duration, delay: arc.delay, repeat: Infinity, times: [0, 0.1, 0.75, 0.88, 1], ease: "easeInOut" },
+                  opacity: { duration: arc.duration, delay: arc.delay, repeat: Infinity, times: [0, 0.1, 0.75, 0.88, 1], ease: "easeInOut" },
+                }}
+              >
+                {/* Shadow face */}
+                <motion.rect
+                  x={-hw} y="-5" width={arc.pillW} height="13" rx="4"
+                  fill={resolved ? "#86efac" : arc.shadow}
+                  opacity={0.65}
+                  animate={{ fill: resolved ? "#86efac" : arc.shadow }}
+                  transition={{ duration: 0.35, delay: i * 0.12 }}
+                />
+                {/* Main face */}
+                <motion.rect
+                  x={-hw} y="-7" width={arc.pillW} height="13" rx="4"
+                  animate={{ fill: resolved ? "#dcfce7" : arc.bg }}
+                  transition={{ duration: 0.35, delay: i * 0.12 }}
+                />
+                {/* Top highlight */}
+                <rect x={-hw + 1} y="-6.5" width={arc.pillW - 2} height="3" rx="2" fill="rgba(255,255,255,0.55)" />
+                {/* Label swaps to ✓ Resolved */}
+                <motion.text
+                  x="0" y="0.5"
+                  textAnchor="middle"
+                  fontSize="7"
+                  fontFamily="sans-serif"
+                  fontWeight="700"
+                  animate={{
+                    fill: resolved ? "#15803d" : arc.text,
+                    opacity: 1,
+                  }}
+                  transition={{ duration: 0.3, delay: i * 0.12 }}
+                >
+                  {resolved ? "✓ Resolved" : arc.label}
+                </motion.text>
+              </motion.g>
+            </g>
+          );
+        })}
       </svg>
     </div>
   );
 };
-
 
 const AnalyticsVisual = () => {
   const items = [
@@ -594,7 +553,7 @@ type CardData = {
   Icon: React.FC;
   title: string;
   description: string;
-  Visual: React.FC | null;
+  Visual: React.FC<any> | null;
   featured: boolean;
 };
 
@@ -604,7 +563,7 @@ const cards: CardData[] = [
     number: "01",
     Icon: SlackIcon,
     title: "No new tools to learn.",
-    description: "Every other support tool is a destination. SyncSupport is where your team already is. Tickets arrive as threads, replies go out as emails, and nothing requires anyone to open a new tab",
+    description: "SyncSupport is where your team already is. Tickets arrive as threads, replies go out as emails, and nothing requires anyone to open a new tab",
     Visual: LaptopNotificationVisual,
     featured: false,
   },
@@ -639,46 +598,57 @@ const cards: CardData[] = [
 
 // ─── Small Card ───────────────────────────────────────────────────────────────
 
-const SmallCard = ({ card, delay = 0 }: { card: CardData; delay?: number }) => (
-  <motion.div
-    className="relative flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white"
-    style={{ height: 520 }}
-    initial={{ opacity: 0, y: 16 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94], delay }}
-  >
-    {/* Watermark number */}
-    <div className="absolute top-3 left-4 select-none pointer-events-none">
-      <span className="font-schibsted text-6xl font-bold leading-none text-neutral-100">
-        {card.number}
-      </span>
-    </div>
+const SmallCard = ({ card, delay = 0 }: { card: CardData; delay?: number }) => {
+  const [isHovered, setIsHovered] = useState(false);
 
-    {/* Visual zone */}
-    {card.Visual && (
-      <div className={`${card.id === 3 ? 'mt-18' : card.id === 1 ? 'mt-15' : 'mt-32'} px-5`}>
-        <card.Visual />
+  return (
+    <motion.div
+      className="relative flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white"
+      style={{ height: 520 }}
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94], delay }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Watermark number */}
+      <div className="absolute top-3 left-4 select-none pointer-events-none">
+        <span className="font-schibsted text-6xl font-bold leading-none text-neutral-100">
+          {card.number}
+        </span>
       </div>
-    )}
 
-    {/* Bottom text — always pinned to bottom */}
-    <div className="mt-auto px-5 pb-25">
-      <div className="flex items-center gap-2 mb-1.5">
-        <Heading as="h3" variant="small" className="text-sky-800 font-normal leading-tight mt-5">
-          {card.title}
-        </Heading>
+      {/* Visual zone */}
+      {card.Visual && (
+        <div className={`${card.id === 3 ? 'mt-18' : card.id === 1 ? 'mt-24' : 'mt-32'} ${card.id === 1 ? 'px-0' : 'px-5'}`}>
+          {card.id === 1
+            ? <div style={{ width: "95%", margin: "0 auto", transform: "scaleY(0.95)", transformOrigin: "top center" }}><LaptopNotificationVisual isHovered={isHovered} /></div>
+            : <card.Visual />
+          }
+        </div>
+      )}
+
+      {/* Bottom text — always pinned to bottom */}
+      <div className="mt-auto px-5 pb-25">
+        <div className="flex items-center gap-2 mb-1.5">
+          <Heading as="h3" variant="small" className="text-sky-800 font-normal leading-tight mt-5">
+            {card.title}
+          </Heading>
+        </div>
+        <Paragraph variant="home-par" className="">
+          {card.description}
+        </Paragraph>
       </div>
-      <Paragraph variant="home-par" className="">
-        {card.description}
-      </Paragraph>
-    </div>
-  </motion.div>
-);
+    </motion.div>
+  );
+};
 
 // ─── Featured Card (Card 02) ──────────────────────────────────────────────────
 
-const FeaturedCard = ({ card, delay = 0 }: { card: CardData; delay?: number }) => (
+const FeaturedCard = ({ card, delay = 0 }: { card: CardData; delay?: number }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  return (
   <motion.div
     className="relative flex flex-col overflow-hidden rounded-2xl border border-neutral-300 bg-white shadow-2xl"
     style={{ height: 550 }}
@@ -686,11 +656,13 @@ const FeaturedCard = ({ card, delay = 0 }: { card: CardData; delay?: number }) =
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
     transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94], delay }}
+    onMouseEnter={() => setIsHovered(true)}
+    onMouseLeave={() => setIsHovered(false)}
   >
     {/* ── Top zone: dark illustration, ~58% of total height ── */}
     <div className="relative flex-none overflow-hidden bg-neutral-950" style={{ height: "58%" }}>
         <div className="absolute inset-0 flex items-center justify-center px-4 mt-20">
-            <ChannelsVisual />
+            <ChannelsVisual isHovered={isHovered} />
         </div>
 
       {/* Dark shader from top — cinematic vignette */}
@@ -727,7 +699,8 @@ const FeaturedCard = ({ card, delay = 0 }: { card: CardData; delay?: number }) =
       </Paragraph>
     </div>
   </motion.div>
-);
+  );
+};
 
 // ─── Section ──────────────────────────────────────────────────────────────────
 
@@ -755,7 +728,7 @@ export function WhySlackDeskSection() {
           <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
             Why teams switch to SyncSupport.{" "}
           </Heading>
-          <Heading as="span" className="text-sky-800 leading-tight font-semibold">
+          <Heading as="span" className="text-sky-800 leading-tight font-extralight">
             - a full customer support system for your business built on top of Slack.
           </Heading>
         </motion.div>

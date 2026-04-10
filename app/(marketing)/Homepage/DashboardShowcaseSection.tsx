@@ -93,7 +93,7 @@ export function DashboardShowcaseSection() {
             <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
               A Detailed Dashboard.{" "}
             </Heading>
-            <Heading as="span" className="text-sky-800 leading-tight font-semibold">
+            <Heading as="span" className="text-sky-800 leading-tight font-extralight">
               Every ticket, every status, every agent — visible in one dashboard without a single standup.
             </Heading>
           </motion.div>

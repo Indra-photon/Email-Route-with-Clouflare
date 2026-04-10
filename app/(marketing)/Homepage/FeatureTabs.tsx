@@ -434,8 +434,25 @@ const illustrations: Partial<Record<TabId, React.ReactNode>> = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+const TAB_DURATION = 7; // seconds each tab stays active
+
 export function FeatureTabs() {
   const [activeTab, setActiveTab] = useState<TabId>("email");
+  // Bump this key whenever the active tab changes to remount the SVG trail
+  const [trailKey, setTrailKey] = useState(0);
+
+  const handleTabClick = (tabId: TabId) => {
+    setActiveTab(tabId);
+    setTrailKey((k) => k + 1);
+  };
+
+  const handleAdvanceTab = () => {
+    setActiveTab((current) => {
+      const idx = tabs.findIndex((t) => t.id === current);
+      return tabs[(idx + 1) % tabs.length].id;
+    });
+    setTrailKey((k) => k + 1);
+  };
 
   return (
     /*
@@ -527,10 +544,10 @@ export function FeatureTabs() {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => handleTabClick(tab.id)}
                     className={[
                       "relative flex-1 flex flex-col items-start gap-1.5 px-6 py-5 text-left",
-                      "transition-colors duration-150",
+                      "transition-colors duration-150 overflow-hidden",
                       isActive ? "bg-white" : "bg-neutral-50 hover:bg-white",
                     ].join(" ")}
                   >
@@ -547,6 +564,29 @@ export function FeatureTabs() {
                     <span className={`text-sm font-schibsted font-normal leading-snug ${isActive ? "" : "text-neutral-900"}`}>
                       {tab.description}
                     </span>
+
+                    {/* ── Progress trail ──────────────────────────────── */}
+                    {isActive && (
+                      <div
+                        key={trailKey}
+                        className="absolute bottom-0 left-0 w-full h-5 overflow-hidden"
+                        aria-hidden="true"
+                      >
+                        {/* dim track */}
+                        <div className="absolute bottom-0 left-0 right-0 h-px bg-sky-100" />
+
+                        {/* growing trail line behind the bolt */}
+                        <motion.div
+                          className="absolute bottom-0 left-0 h-px bg-sky-500 origin-left"
+                          style={{ width: "100%" }}
+                          initial={{ scaleX: 0 }}
+                          animate={{ scaleX: 1 }}
+                          transition={{ duration: TAB_DURATION, ease: "linear" }}
+                          onAnimationComplete={handleAdvanceTab}
+                        />
+
+                      </div>
+                    )}
                   </button>
                 );
               })}
