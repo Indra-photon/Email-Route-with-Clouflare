@@ -545,28 +545,18 @@ export async function POST(request: Request) {
             type: "actions",
             elements: [
               {
-                type: "button",
-                text: { type: "plain_text", text: "Reply to Email →", emoji: true },
-                url: replyUrl,
-                style: "primary",
-              },
-              {
-                type: "button",
-                text: { type: "plain_text", text: "🆕 Open", emoji: true },
-                action_id: "set_status_open",
-                value: `open__${emailThread._id.toString()}`,
-              },
-              {
-                type: "button",
-                text: { type: "plain_text", text: "🔄 In Progress", emoji: true },
-                action_id: "set_status_in_progress",
-                value: `in_progress__${emailThread._id.toString()}`,
-              },
-              {
-                type: "button",
-                text: { type: "plain_text", text: "✅ Resolved", emoji: true },
-                action_id: "set_status_resolved",
-                value: `resolved__${emailThread._id.toString()}`,
+                type: "static_select",
+                action_id: "set_status_dropdown",
+                placeholder: { type: "plain_text", text: "🔖 Set Status", emoji: true },
+                initial_option: {
+                  text: { type: "plain_text", text: `${statusEmoji} ${statusLabel}`, emoji: true },
+                  value: `${currentStatus}__${emailThread._id.toString()}`,
+                },
+                options: [
+                  { text: { type: "plain_text", text: "🆕 Open", emoji: true }, value: `open__${emailThread._id.toString()}` },
+                  { text: { type: "plain_text", text: "🔄 In Progress", emoji: true }, value: `in_progress__${emailThread._id.toString()}` },
+                  { text: { type: "plain_text", text: "✅ Resolved", emoji: true }, value: `resolved__${emailThread._id.toString()}` },
+                ],
               },
               {
                 type: "button",
@@ -579,6 +569,13 @@ export async function POST(request: Request) {
                 text: { type: "plain_text", text: "📋 Templates", emoji: true },
                 action_id: "template_button",
                 value: emailThread._id.toString(),
+              },
+              {
+                type: "button",
+                text: { type: "plain_text", text: "✉️ Reply from SyncSupport", emoji: true },
+                action_id: "reply_from_syncsupport",
+                value: emailThread._id.toString(),
+                style: "primary",
               },
             ],
           });
