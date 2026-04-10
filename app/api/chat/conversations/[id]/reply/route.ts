@@ -26,17 +26,31 @@ export async function POST(
         }
 
         await dbConnect();
-        const workspace = await getOrCreateWorkspaceForCurrentUser();
+        let workspace;
+        try {
+            workspace = await getOrCreateWorkspaceForCurrentUser();
+        } catch (wsErr) {
+            console.error("❌ [reply] getOrCreateWorkspace failed:", wsErr);
+            return NextResponse.json({ error: "Workspace error" }, { status: 500 });
+        }
 
         // Verify conversation belongs to this workspace
-        const conversation = await ChatConversation.findOne({
-            _id: id,
-            workspaceId: workspace._id,
-        });
+        let conversation;
+        try {
+            conversation = await ChatConversation.findOne({
+                _id: id,
+                workspaceId: workspace._id,
+            });
+        } catch (convErr) {
+            console.error("❌ [reply] ChatConversation.findOne failed:", convErr, "id:", id);
+            return NextResponse.json({ error: "Conversation lookup error" }, { status: 500 });
+        }
 
         if (!conversation) {
+            console.warn("⚠️ [reply] Conversation not found. id:", id, "workspaceId:", workspace._id);
             return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
         }
+
 
         // Save agent message to DB
         const chatMessage = await ChatMessage.create({
