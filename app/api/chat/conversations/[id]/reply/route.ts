@@ -26,17 +26,31 @@ export async function POST(
         }
 
         await dbConnect();
-        const workspace = await getOrCreateWorkspaceForCurrentUser();
+        let workspace;
+        try {
+            workspace = await getOrCreateWorkspaceForCurrentUser();
+        } catch (wsErr) {
+            console.error("❌ [reply] getOrCreateWorkspace failed:", wsErr);
+            return NextResponse.json({ error: "Workspace error" }, { status: 500 });
+        }
 
         // Verify conversation belongs to this workspace
-        const conversation = await ChatConversation.findOne({
-            _id: id,
-            workspaceId: workspace._id,
-        });
+        let conversation;
+        try {
+            conversation = await ChatConversation.findOne({
+                _id: id,
+                workspaceId: workspace._id,
+            });
+        } catch (convErr) {
+            console.error("❌ [reply] ChatConversation.findOne failed:", convErr, "id:", id);
+            return NextResponse.json({ error: "Conversation lookup error" }, { status: 500 });
+        }
 
         if (!conversation) {
+            console.warn("⚠️ [reply] Conversation not found. id:", id, "workspaceId:", workspace._id);
             return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
         }
+
 
         // Save agent message to DB
         const chatMessage = await ChatMessage.create({
@@ -84,7 +98,9 @@ export async function POST(
         try {
             const pushSecret = process.env.RENDER_PUSH_SECRET;
             const renderUrl = process.env.NEXT_PUBLIC_RENDER_CHAT_SERVER_URL;
-            if (renderUrl && pushSecret) {
+            if (renderUrl && pushSecret && !renderUrl.includes("YOUR_RENDER") && !pushSecret.includes("YOUR_PUSH")) {
+                const ctrl = new AbortController();
+                const timer = setTimeout(() => ctrl.abort(), 5000);
                 await fetch(`${renderUrl}/push`, {
                     method: "POST",
                     headers: {
@@ -103,23 +119,29 @@ export async function POST(
                         },
                         excludeSocketId: socketId,
                     }),
-                });
+                    signal: ctrl.signal,
+                }).finally(() => clearTimeout(timer));
             }
         } catch (pushErr) {
             console.error("Failed to push agent reply to chat server:", pushErr);
         }
 
-        const posthog = getPostHogClient();
-        posthog.capture({
-            distinctId: userId,
-            event: "chat_reply_sent",
-            properties: {
-                conversation_id: id,
-                message_type: type || "text",
-                has_media: !!mediaUrl,
-                workspace_id: workspace._id.toString(),
-            },
-        });
+        try {
+            const posthog = getPostHogClient();
+            posthog.capture({
+                distinctId: userId,
+                event: "chat_reply_sent",
+                properties: {
+                    conversation_id: id,
+                    message_type: type || "text",
+                    has_media: !!mediaUrl,
+                    workspace_id: workspace._id.toString(),
+                },
+            });
+        } catch (phErr) {
+            console.warn("⚠️ PostHog capture failed (non-fatal):", phErr);
+        }
+
 
         return NextResponse.json({
             success: true,

@@ -345,7 +345,7 @@ export async function POST(request: Request) {
               try {
                 const parsed = JSON.parse(raw);
                 if (Array.isArray(parsed)) return parsed as string[];
-              } catch {}
+              } catch { }
             }
             // Fallback: standard RFC 2822 space-separated format
             return raw.split(/\s+/).filter(Boolean);
@@ -501,90 +501,87 @@ export async function POST(request: Request) {
 
     const messagePayload = integration.type === "slack"
       ? (() => {
-          const isReply = !!parentThread?.slackMessageTs;
-          const headerText = isReply
-            ? `↩️ *Reply from ${fromEmail}*`
-            : `📧 *New email to \`${emailLower}\`*`;
-          const fallbackText = isReply
-            ? `↩️ Reply from ${fromEmail} — ${subject}`
-            : `📧 New email to \`${emailLower}\` — From: ${fromEmail} | Subject: ${subject}`;
+        const isReply = !!parentThread?.slackMessageTs;
+        const headerText = isReply
+          ? `↩️ *Reply from ${fromEmail}*`
+          : `📧 *New email to \`${emailLower}\`*`;
+        const fallbackText = isReply
+          ? `↩️ Reply from ${fromEmail} — ${subject}`
+          : `📧 New email to \`${emailLower}\` — From: ${fromEmail} | Subject: ${subject}`;
 
-          const blocks: any[] = [
-            {
-              type: "section",
-              text: { type: "mrkdwn", text: headerText },
-            },
-          ];
+        const blocks: any[] = [
+          {
+            type: "section",
+            text: { type: "mrkdwn", text: headerText },
+          },
+        ];
 
-          if (!isReply) {
-            blocks.push({
-              type: "section",
-              fields: [
-                { type: "mrkdwn", text: `*From:*\n${fromEmail}` },
-                { type: "mrkdwn", text: `*Subject:*\n${subject}` },
-                { type: "mrkdwn", text: `*Status:*\n${statusEmoji} ${statusLabel}` },
-                ...(claimField ? [claimField] : []),
-              ],
-            });
-          }
-
-          if (snippet) {
-            blocks.push({
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                text: `>${snippet.replace(/\n/g, "\n>")}${attachmentNote}`,
-              },
-            });
-          } else if (attachmentNote) {
-            blocks.push({ type: "section", text: { type: "mrkdwn", text: attachmentNote } });
-          }
-
-          blocks.push({ type: "divider" });
+        if (!isReply) {
           blocks.push({
-            type: "actions",
-            elements: [
-              {
-                type: "button",
-                text: { type: "plain_text", text: "Reply to Email →", emoji: true },
-                url: replyUrl,
-                style: "primary",
-              },
-              {
-                type: "button",
-                text: { type: "plain_text", text: "🆕 Open", emoji: true },
-                action_id: "set_status_open",
-                value: `open__${emailThread._id.toString()}`,
-              },
-              {
-                type: "button",
-                text: { type: "plain_text", text: "🔄 In Progress", emoji: true },
-                action_id: "set_status_in_progress",
-                value: `in_progress__${emailThread._id.toString()}`,
-              },
-              {
-                type: "button",
-                text: { type: "plain_text", text: "✅ Resolved", emoji: true },
-                action_id: "set_status_resolved",
-                value: `resolved__${emailThread._id.toString()}`,
-              },
-              {
-                type: "button",
-                text: { type: "plain_text", text: "💬 Canned Responses", emoji: true },
-                action_id: "canned_response_button",
-                value: emailThread._id.toString(),
-              },
-              {
-                type: "button",
-                text: { type: "plain_text", text: "📋 Templates", emoji: true },
-                action_id: "template_button",
-                value: emailThread._id.toString(),
-              },
+            type: "section",
+            fields: [
+              { type: "mrkdwn", text: `*From:*\n${fromEmail}` },
+              { type: "mrkdwn", text: `*Subject:*\n${subject}` },
+              { type: "mrkdwn", text: `*Status:*\n${statusEmoji} ${statusLabel}` },
+              ...(claimField ? [claimField] : []),
             ],
           });
+        }
 
-          return { text: fallbackText, blocks, ...(isReply ? { thread_ts: parentThread.slackMessageTs } : {}) };
-        })()
+        if (snippet) {
+          blocks.push({
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `>${snippet.replace(/\n/g, "\n>")}${attachmentNote}`,
+            },
+          });
+        } else if (attachmentNote) {
+          blocks.push({ type: "section", text: { type: "mrkdwn", text: attachmentNote } });
+        }
+
+        blocks.push({ type: "divider" });
+        blocks.push({
+          type: "actions",
+          elements: [
+            {
+              type: "static_select",
+              action_id: "set_status_dropdown",
+              placeholder: { type: "plain_text", text: "🔖 Set Status", emoji: true },
+              initial_option: {
+                text: { type: "plain_text", text: `${statusEmoji} ${statusLabel}`, emoji: true },
+                value: `${currentStatus}__${emailThread._id.toString()}`,
+              },
+              options: [
+                { text: { type: "plain_text", text: "🆕 Open", emoji: true }, value: `open__${emailThread._id.toString()}` },
+                { text: { type: "plain_text", text: "🔄 In Progress", emoji: true }, value: `in_progress__${emailThread._id.toString()}` },
+                { text: { type: "plain_text", text: "✅ Resolved", emoji: true }, value: `resolved__${emailThread._id.toString()}` },
+              ],
+            },
+            {
+              type: "button",
+              text: { type: "plain_text", text: "💬 Canned Responses", emoji: true },
+              action_id: "canned_response_button",
+              value: emailThread._id.toString(),
+            },
+            {
+              type: "button",
+              text: { type: "plain_text", text: "📋 Templates", emoji: true },
+              action_id: "template_button",
+              value: emailThread._id.toString(),
+            },
+            {
+              type: "button",
+              text: { type: "plain_text", text: "✉️ Reply from SyncSupport", emoji: true },
+              action_id: "reply_from_syncsupport",
+              url: `${process.env.NEXT_PUBLIC_BASE_URL || "https://app.syncsupport.app"}/reply/${emailThread._id.toString()}`,
+              style: "primary",
+            },
+          ],
+        });
+
+        return { text: fallbackText, blocks, ...(isReply ? { thread_ts: parentThread.slackMessageTs } : {}) };
+      })()
       : {
         content: `📧 **New email to ${emailLower}**
 ${claimStatus}${statusLine}**From:** ${fromEmail}
@@ -608,16 +605,16 @@ ${snippet}
       // ── Fetch domain customization settings ──
       let customBotName: string | null = null;
       let customBotAvatar: string | null = null;
-      
+
       try {
         const domain = await Domain.findById(alias.domainId).lean().exec();
         if (domain) {
           customBotName = domain.botName || null;
           customBotAvatar = domain.botAvatar || null;
-          console.log("🎨 Domain customization:", { 
-            domain: domain.domain, 
-            botName: customBotName, 
-            botAvatar: customBotAvatar 
+          console.log("🎨 Domain customization:", {
+            domain: domain.domain,
+            botName: customBotName,
+            botAvatar: customBotAvatar
           });
         }
       } catch (err) {
@@ -629,7 +626,7 @@ ${snippet}
         channel: integration.slackChannelId,
         ...messagePayload,
       };
-      
+
       // Add custom bot name and avatar if set
       if (customBotName) {
         postMessageBody.username = customBotName;

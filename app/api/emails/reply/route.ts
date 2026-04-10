@@ -105,21 +105,24 @@ export async function POST(request: Request) {
 
     // Resolve "from" address: use customer domain if verified for sending, else fallback
     const alias = await Alias.findById(thread.aliasId).lean();
+    // Query by _id only — workspaceId check is already done on thread above
     const domain = alias
-      ? await Domain.findOne({ _id: alias.domainId, workspaceId: workspace._id }).lean()
+      ? await Domain.findById(alias.domainId).lean()
       : null;
 
     const fallbackEmail = process.env.REPLY_FROM_EMAIL || "onboarding@resend.dev";
-    const fallbackName = process.env.REPLY_FROM_NAME || "Email Router";
+
+    // Use custom bot name from Customize App if admin set it; otherwise bare email (default)
+    const botName = (domain as any)?.botName || null;
+    console.log("🎨 reply route — domain:", (domain as any)?.domain, "botName:", botName);
 
     let fromAddress: string;
     if (domain?.verifiedForSending) {
-      fromAddress = thread.to; // reply from the alias (e.g. support@git-cv.com)
+      const rawEmail = thread.to as string;
+      fromAddress = botName ? `${botName} <${rawEmail}>` : rawEmail;
       console.log("Using customer domain for reply:", fromAddress);
     } else {
-      fromAddress = fallbackName
-        ? `${fallbackName} <${fallbackEmail}>`
-        : fallbackEmail;
+      fromAddress = botName ? `${botName} <${fallbackEmail}>` : fallbackEmail;
       console.log("Using fallback sender for reply:", fromAddress);
     }
 
