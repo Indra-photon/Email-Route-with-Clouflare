@@ -133,9 +133,15 @@ export async function POST(request: Request) {
 
     const actionId = action.action_id as string;
 
-    // ── Existing: status buttons ─────────────────────────────────────────
-    if (actionId.startsWith("set_status")) {
-      const [status, threadId] = action.value.split("__");
+    // ── Status: dropdown (static_select) or legacy buttons ─────────────────
+    if (actionId === "set_status_dropdown" || actionId.startsWith("set_status")) {
+      // static_select sends selected_option.value; buttons send action.value
+      const rawValue =
+        actionId === "set_status_dropdown"
+          ? (action.selected_option?.value as string | undefined)
+          : (action.value as string | undefined);
+
+      const [status, threadId] = (rawValue || "").split("__");
       if (!status || !threadId) return NextResponse.json({ error: "Invalid value" }, { status: 400 });
 
       const validStatuses = ["open", "in_progress", "resolved"];
@@ -295,6 +301,68 @@ export async function POST(request: Request) {
                     },
                   ]
                 : []),
+            ],
+          },
+        }),
+      });
+
+      return NextResponse.json({ ok: true });
+    }
+
+    // ── New: reply from SyncSupport button ─────────────────────────────────
+    if (actionId === "reply_from_syncsupport") {
+      const threadId = action.value as string;
+      const triggerId = payload.trigger_id as string;
+
+      await dbConnect();
+
+      const thread = await EmailThread.findById(threadId).lean();
+      if (!thread) return NextResponse.json({ ok: true });
+
+      const integration = await Integration.findOne({
+        slackChannelId: thread.slackChannelId,
+        authMethod: "oauth",
+      }).lean();
+
+      if (!integration?.slackAccessToken) return NextResponse.json({ ok: true });
+
+      const replySubject = thread.subject.startsWith("Re:") ? thread.subject : `Re: ${thread.subject}`;
+
+      await fetch("https://slack.com/api/views.open", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${integration.slackAccessToken}`,
+        },
+        body: JSON.stringify({
+          trigger_id: triggerId,
+          view: {
+            type: "modal",
+            callback_id: "reply_from_syncsupport_modal",
+            private_metadata: threadId,
+            title: { type: "plain_text", text: "✉️ Reply from SyncSupport" },
+            submit: { type: "plain_text", text: "Send Reply" },
+            close: { type: "plain_text", text: "Cancel" },
+            blocks: [
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text: `*To:* ${thread.from}\n*Subject:* ${replySubject}`,
+                },
+              },
+              { type: "divider" },
+              {
+                type: "input",
+                block_id: "syncsupport_reply_block",
+                label: { type: "plain_text", text: "Your Reply" },
+                element: {
+                  type: "plain_text_input",
+                  action_id: "syncsupport_reply_input",
+                  multiline: true,
+                  placeholder: { type: "plain_text", text: "Type your reply here..." },
+                },
+              },
             ],
           },
         }),
@@ -492,10 +560,10 @@ export async function POST(request: Request) {
         : null;
 
       const fallbackEmail = process.env.REPLY_FROM_EMAIL || "onboarding@resend.dev";
-      const fallbackName = process.env.REPLY_FROM_NAME || "Email Router";
-      const fromAddress = domain?.verifiedForSending
-        ? (thread.to as string)
-        : fallbackName ? `${fallbackName} <${fallbackEmail}>` : fallbackEmail;
+      // Only use custom bot name if admin set it in Customize App; otherwise bare email (default behavior)
+      const botName = (domain as any)?.botName || null;
+      const rawEmail = domain?.verifiedForSending ? (thread.to as string) : fallbackEmail;
+      const fromAddress = botName ? `${botName} <${rawEmail}>` : rawEmail;
 
       // Use template subject if provided, else default Re:
       const replySubject =
@@ -572,6 +640,8 @@ ${finalPlainText.replace(/\n/g, "<br/>")}
               channel: slackChannelId,
               thread_ts: slackThreadTs,
               text: `📤 *Template reply sent* to ${thread.from}\n> ${replyText.replace(/\n/g, "\n> ")}`,
+              ...((domain as any)?.botName ? { username: (domain as any).botName } : {}),
+              ...((domain as any)?.botAvatar ? { icon_url: (domain as any).botAvatar } : {}),
             }),
           });
           const slackData = await slackRes.json();
@@ -613,7 +683,138 @@ ${finalPlainText.replace(/\n/g, "<br/>")}
       return NextResponse.json({ response_action: "clear" });
     }
 
-    // ── Reply modal submitted ──────────────────────────────────────────
+    // ── Reply from SyncSupport modal submitted ──────────────────────────
+    if (callbackId === "reply_from_syncsupport_modal") {
+      const threadId = payload.view.private_metadata as string;
+      const replyText = (
+        payload.view.state.values?.syncsupport_reply_block?.syncsupport_reply_input?.value || ""
+      ).trim();
+
+      if (!replyText) return NextResponse.json({ response_action: "clear" });
+
+      await dbConnect();
+
+      const thread = await EmailThread.findById(threadId);
+      if (!thread) return NextResponse.json({ response_action: "clear" });
+
+      const alias = await Alias.findById(thread.aliasId).lean();
+      const domain = alias
+        ? await Domain.findOne({ _id: alias.domainId, workspaceId: thread.workspaceId }).lean()
+        : null;
+
+      const fallbackEmail = process.env.REPLY_FROM_EMAIL || "onboarding@resend.dev";
+      // Only use custom bot name if admin set it in Customize App; otherwise bare email (default behavior)
+      const botName = (domain as any)?.botName || null;
+      const rawEmail = domain?.verifiedForSending ? (thread.to as string) : fallbackEmail;
+      const fromAddress = botName ? `${botName} <${rawEmail}>` : rawEmail;
+
+      const replySubject = thread.subject.startsWith("Re:") ? thread.subject : `Re: ${thread.subject}`;
+      const references = [thread.messageId, ...(thread.references || [])].filter(Boolean);
+      const referencesHeader = references.join(" ");
+
+      const { data: sentEmail, error: sendError } = await resend.emails.send({
+        from: fromAddress,
+        to: thread.from,
+        subject: replySubject,
+        text: replyText,
+        headers: {
+          "In-Reply-To": thread.messageId,
+          ...(referencesHeader ? { References: referencesHeader } : {}),
+        },
+      });
+
+      if (sendError || !sentEmail) {
+        console.error("❌ Resend error in reply_from_syncsupport_modal:", sendError);
+        return NextResponse.json({ response_action: "clear" });
+      }
+
+      console.log("✅ SyncSupport reply sent, emailId:", sentEmail.id);
+
+      const storedFrom = fromAddress.includes("<")
+        ? fromAddress.slice(fromAddress.indexOf("<") + 1, fromAddress.indexOf(">")).trim()
+        : fromAddress;
+
+      // ── Find the root Slack thread ts ──────────────────────────────────
+      let slackThreadTs: string | null = thread.slackMessageTs || null;
+      let slackChannelId: string | null = thread.slackChannelId || null;
+
+      if (thread.inReplyTo && thread.slackMessageTs) {
+        const refsToCheck = [thread.inReplyTo, ...(thread.references || [])].filter(Boolean);
+        const rootThread = await EmailThread.findOne({
+          messageId: { $in: refsToCheck },
+          slackMessageTs: { $exists: true, $ne: null },
+          workspaceId: thread.workspaceId,
+        }).sort({ createdAt: 1 }).lean();
+        if (rootThread?.slackMessageTs) {
+          slackThreadTs = rootThread.slackMessageTs as string;
+          slackChannelId = (rootThread.slackChannelId as string) || slackChannelId;
+        }
+      }
+
+      // ── Post confirmation to Slack thread ──────────────────────────────
+      let outboundSlackTs: string | null = null;
+      if (slackChannelId && slackThreadTs) {
+        const integration = await Integration.findOne({
+          slackChannelId,
+          authMethod: "oauth",
+        }).lean();
+
+        if (integration?.slackAccessToken) {
+          const agentName = payload.user?.name || payload.user?.real_name || "Agent";
+          const slackRes = await fetch("https://slack.com/api/chat.postMessage", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${integration.slackAccessToken}`,
+            },
+            body: JSON.stringify({
+              channel: slackChannelId,
+              thread_ts: slackThreadTs,
+              text: `✉️ *Reply sent* by ${agentName} → ${thread.from}\n> ${replyText.replace(/\n/g, "\n> ")}`,
+              ...((domain as any)?.botName ? { username: (domain as any).botName } : {}),
+              ...((domain as any)?.botAvatar ? { icon_url: (domain as any).botAvatar } : {}),
+            }),
+          });
+          const slackData = await slackRes.json();
+          if (slackData.ok) outboundSlackTs = slackData.ts as string;
+        }
+      }
+
+      await EmailThread.create({
+        workspaceId: thread.workspaceId,
+        aliasId: thread.aliasId,
+        originalEmailId: sentEmail.id,
+        messageId: `<${sentEmail.id}@resend.app>`,
+        inReplyTo: thread.messageId,
+        references,
+        from: storedFrom,
+        to: thread.from,
+        subject: replySubject,
+        textBody: replyText,
+        htmlBody: "",
+        direction: "outbound",
+        status: "waiting",
+        statusUpdatedAt: new Date(),
+        receivedAt: new Date(),
+        repliedAt: new Date(),
+        slackMessageTs: outboundSlackTs,
+        slackChannelId: slackChannelId,
+      });
+
+      await Subscription.updateOne(
+        { workspaceId: thread.workspaceId },
+        { $inc: { ticketCountOutbound: 1 } }
+      );
+
+      thread.status = "open";
+      thread.statusUpdatedAt = new Date();
+      thread.repliedAt = new Date();
+      await thread.save();
+
+      return NextResponse.json({ response_action: "clear" });
+    }
+
+    // ── Reply modal submitted (via Canned Responses) ───────────────────
     if (callbackId === "reply_modal") {
       const threadId = payload.view.private_metadata;
       const replyText = (payload.view.state.values?.reply_text?.reply_input?.value || "").trim();
@@ -635,10 +836,10 @@ ${finalPlainText.replace(/\n/g, "<br/>")}
         : null;
 
       const fallbackEmail = process.env.REPLY_FROM_EMAIL || "onboarding@resend.dev";
-      const fallbackName = process.env.REPLY_FROM_NAME || "Email Router";
-      const fromAddress = domain?.verifiedForSending
-        ? (thread.to as string)
-        : fallbackName ? `${fallbackName} <${fallbackEmail}>` : fallbackEmail;
+      // Only use custom bot name if admin set it in Customize App; otherwise bare email (default behavior)
+      const botName = (domain as any)?.botName || null;
+      const rawEmail = domain?.verifiedForSending ? (thread.to as string) : fallbackEmail;
+      const fromAddress = botName ? `${botName} <${rawEmail}>` : rawEmail;
 
       const replySubject = thread.subject.startsWith("Re:") ? thread.subject : `Re: ${thread.subject}`;
       const references = [thread.messageId, ...(thread.references || [])].filter(Boolean);
@@ -704,6 +905,8 @@ ${finalPlainText.replace(/\n/g, "<br/>")}
               channel: slackChannelId,
               thread_ts: slackThreadTs,
               text: `📤 *Reply sent* to ${thread.from}\n>${replyText.replace(/\n/g, "\n>")}`,
+              ...((domain as any)?.botName ? { username: (domain as any).botName } : {}),
+              ...((domain as any)?.botAvatar ? { icon_url: (domain as any).botAvatar } : {}),
             }),
           });
           const slackData = await slackRes.json();

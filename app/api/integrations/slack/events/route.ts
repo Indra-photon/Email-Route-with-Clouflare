@@ -97,14 +97,10 @@ async function handleEmailThreadReply(
     const domain = alias ? await Domain.findOne({ _id: alias.domainId }).lean() : null;
 
     const fallbackEmail = process.env.REPLY_FROM_EMAIL || "onboarding@resend.dev";
-    const fallbackName = process.env.REPLY_FROM_NAME || "Email Router";
-
-    let fromAddress: string;
-    if (domain?.verifiedForSending) {
-      fromAddress = emailThread.to;
-    } else {
-      fromAddress = fallbackName ? `${fallbackName} <${fallbackEmail}>` : fallbackEmail;
-    }
+    // Only use custom bot name if admin set it in Customize App; otherwise bare email (default Gmail behavior)
+    const botName = (domain as any)?.botName || null;
+    const rawEmail = domain?.verifiedForSending ? (emailThread.to as string) : fallbackEmail;
+    const fromAddress = botName ? `${botName} <${rawEmail}>` : rawEmail;
 
     // ── Download Slack files ───────────────────────────────────────────────
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
