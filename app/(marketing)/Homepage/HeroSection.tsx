@@ -355,13 +355,6 @@ const tabs: {
   },
 ];
 
-// ─── Illustration map ─────────────────────────────────────────────────────────
-
-const illustrations: Record<TabId, React.ReactNode> = {
-  email: <EmailSlackIllustration />,
-  chat: <WebsiteChatIllustration />,
-};
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function HeroSection() {
@@ -377,8 +370,8 @@ export function HeroSection() {
           {/* Heading — 3/5 width on desktop */}
           <div className="lg:w-3/5">
             <Heading as="h1" className="text-neutral-900 leading-tight">
-              <span>Stop Switiching Tabs</span>
-              <span className="block text-sky-800">
+              <span>Stop Switching Tabs</span>
+              <span className="block text-sky-800 font-schibsted font-extralight">
                 No dropped tickets. No cluttered inbox. Instant support
               </span>
             </Heading>
@@ -405,9 +398,9 @@ export function HeroSection() {
             </div>
 
             {/* Social proof */}
-            <div className="py-8">
+            {/* <div className="py-8">
               <LiveTeamJoin initialCount={500} intervalMs={5000} />
-            </div>
+            </div> */}
           </div>
 
         </div>
