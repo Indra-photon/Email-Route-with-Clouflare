@@ -110,16 +110,17 @@ export async function POST(request: Request) {
       : null;
 
     const fallbackEmail = process.env.REPLY_FROM_EMAIL || "onboarding@resend.dev";
-    const fallbackName = process.env.REPLY_FROM_NAME || "Email Router";
+
+    // Use custom bot name from Customize App if admin set it; otherwise bare email (default)
+    const botName = (domain as any)?.botName || null;
 
     let fromAddress: string;
     if (domain?.verifiedForSending) {
-      fromAddress = thread.to; // reply from the alias (e.g. support@git-cv.com)
+      const rawEmail = thread.to as string;
+      fromAddress = botName ? `${botName} <${rawEmail}>` : rawEmail;
       console.log("Using customer domain for reply:", fromAddress);
     } else {
-      fromAddress = fallbackName
-        ? `${fallbackName} <${fallbackEmail}>`
-        : fallbackEmail;
+      fromAddress = botName ? `${botName} <${fallbackEmail}>` : fallbackEmail;
       console.log("Using fallback sender for reply:", fromAddress);
     }
 
