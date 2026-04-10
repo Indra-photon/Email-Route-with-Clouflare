@@ -75,6 +75,7 @@ function CannedResponseModal({
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
   const [editState, setEditState] = useState<CannedFormState>("idle");
+  const [feedbackMsg, setFeedbackMsg] = useState<"success" | "error" | null>(null);
   const [elementRef, bounds] = useMeasure();
 
   useEffect(() => {
@@ -95,6 +96,7 @@ function CannedResponseModal({
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !body.trim()) return;
+    setFeedbackMsg(null);
     setFormState("loading");
     try {
       const res = await fetch("/api/canned-responses", {
@@ -108,10 +110,17 @@ function CannedResponseModal({
       setTitle("");
       setBody("");
       setFormState("success");
-      setTimeout(() => setFormState("idle"), 2000);
+      setFeedbackMsg("success");
+      setTimeout(() => {
+        setView("saved");
+        setActiveTab("edit");
+        setFeedbackMsg(null);
+        setFormState("idle");
+      }, 1000);
     } catch {
-      toast.error("Failed to add canned response");
       setFormState("idle");
+      setFeedbackMsg("error");
+      setTimeout(() => setFeedbackMsg(null), 2500);
     }
   };
 
@@ -235,11 +244,29 @@ function CannedResponseModal({
                   >
                     <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title (e.g. Password Reset)"
                       className="w-full text-xs font-schibsted bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md px-3 py-2 focus:outline-none focus:border-sky-400" />
-                    <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Response body... Use {customer_name}, {agent_name}" rows={4}
+                    <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Write the response body..." rows={4}
                       className="w-full text-xs font-schibsted bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md px-3 py-2 focus:outline-none focus:border-sky-400 resize-none" />
-                    <AnimatedSubmitButton idleLabel="Add Response" loadingLabel="Adding..." successLabel="Added!" idleIcon={<IconPlus size={12} />}
-                      state={formState} idleWidth={110} loadingWidth={90} successWidth={76}
-                      className="px-3 py-1.5 rounded-md text-xs font-schibsted text-white bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center gap-1.5 overflow-hidden border-0 focus:outline-none cursor-pointer disabled:opacity-60" />
+                    <div className="flex items-center gap-3">
+                      <AnimatedSubmitButton idleLabel="Add Response" loadingLabel="Adding..." successLabel="Added!" idleIcon={<IconPlus size={12} />}
+                        state={formState} idleWidth={110} loadingWidth={90} successWidth={76}
+                        className="px-3 py-1.5 rounded-md text-xs font-schibsted text-white bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center gap-1.5 overflow-hidden border-0 focus:outline-none cursor-pointer disabled:opacity-60" />
+                      <AnimatePresence>
+                        {feedbackMsg && (
+                          <motion.span
+                            key={feedbackMsg}
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 12 }}
+                            transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+                            className={`text-[11px] font-schibsted font-medium ${
+                              feedbackMsg === "success" ? "text-green-600" : "text-red-500"
+                            }`}
+                          >
+                            {feedbackMsg === "success" ? "Response saved" : "There is some error. Try again"}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </motion.form>
                 )}
 

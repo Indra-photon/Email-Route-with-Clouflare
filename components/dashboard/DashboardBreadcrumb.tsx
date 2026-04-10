@@ -111,11 +111,16 @@ import {
   IconInfoCircle,
   IconChevronDown,
   IconRefresh,
+  IconUser,
+  IconCreditCard,
+  IconLogout,
 } from "@tabler/icons-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUserStore } from "@/lib/store";
 import { useRefreshStore } from "@/components/dashboard/right-panel/useRefresh";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useClerk } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "motion/react";
 
 // ─── Live notification data (polls every 45s + on manual refresh) ─────────────
 const POLL_INTERVAL_MS = 45_000;
@@ -321,41 +326,119 @@ function NotificationBell({
   );
 }
 
-// ─── User pill ────────────────────────────────────────────────────────────────
-function UserPill() {
+// ─── Easing ───────────────────────────────────────────────────────────────────
+const easeOutQuint = [0.23, 1, 0.32, 1] as const;
+
+// ─── User menu dropdown ───────────────────────────────────────────────────────
+function UserMenuDropdown() {
   const user = useUserStore((s) => s.user);
+  const { signOut } = useClerk();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
   const getInitials = (name?: string) => {
     if (!name) return "U";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
+    return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  };
+
+  // Close on outside click + Escape
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [open]);
+
+  const handleNav = (href: string) => {
+    setOpen(false);
+    router.push(href);
   };
 
   return (
-    <Link
-      href="/dashboard/profile"
-      className="flex items-center gap-2.5 h-9 pl-1.5 pr-3 rounded-xl border border-neutral-200 bg-neutral-50 hover:bg-white hover:border-neutral-300 hover:shadow-sm transition-all duration-150"
-    >
-      <Avatar className="size-6 shrink-0">
-        <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
-        <AvatarFallback className="bg-sky-700 text-white text-[10px] font-schibsted font-semibold">
-          {getInitials(user?.name)}
-        </AvatarFallback>
-      </Avatar>
-      <div className="flex flex-col min-w-0">
-        <span className="text-xs font-schibsted font-semibold text-neutral-800 truncate max-w-[110px] leading-tight">
-          {user?.name || "User"}
-        </span>
-        <span className="text-[10px] font-schibsted text-neutral-400 truncate max-w-[110px] leading-tight">
-          {user?.email || ""}
-        </span>
-      </div>
-      <IconChevronDown size={12} className="text-neutral-400 shrink-0" />
-    </Link>
+    <div className="relative" ref={ref}>
+      {/* Trigger pill */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-2.5 h-9 pl-1.5 pr-3 rounded-xl border border-neutral-200 bg-neutral-50 hover:bg-white hover:border-neutral-300 hover:shadow-sm transition-all duration-150"
+      >
+        <Avatar className="size-6 shrink-0">
+          <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
+          <AvatarFallback className="bg-sky-700 text-white text-[10px] font-schibsted font-semibold">
+            {getInitials(user?.name)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex flex-col min-w-0">
+          <span className="text-xs font-schibsted font-semibold text-neutral-800 truncate max-w-[110px] leading-tight">
+            {user?.name || "User"}
+          </span>
+          <span className="text-[10px] font-schibsted text-neutral-400 truncate max-w-[110px] leading-tight">
+            {user?.email || ""}
+          </span>
+        </div>
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          className="flex items-center justify-center shrink-0"
+        >
+          <IconChevronDown size={12} className="text-neutral-400" />
+        </motion.span>
+      </button>
+
+      {/* Dropdown */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scaleY: 0.95, scaleX: 0.98 }}
+            animate={{ opacity: 1, y: 4, scaleY: 1, scaleX: 1 }}
+            exit={{ opacity: 0, y: -4, scaleY: 0.95, scaleX: 0.98 }}
+            transition={{ duration: 0.2, ease: easeOutQuint }}
+            style={{ transformOrigin: "top right" }}
+            className="absolute right-0 top-full z-50 w-44 rounded-xl border border-neutral-200 bg-white shadow-lg shadow-neutral-200/50 overflow-hidden"
+          >
+            <div className="py-1">
+              {/* Profile */}
+              <button
+                onClick={() => handleNav("/dashboard/profile")}
+                className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm font-schibsted font-medium text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-colors duration-100"
+              >
+                <IconUser size={14} className="text-neutral-400 shrink-0" />
+                Profile
+              </button>
+
+              {/* Billing */}
+              <button
+                onClick={() => handleNav("/dashboard/billing")}
+                className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm font-schibsted font-medium text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-colors duration-100"
+              >
+                <IconCreditCard size={14} className="text-neutral-400 shrink-0" />
+                Billing
+              </button>
+
+              <div className="h-px bg-neutral-100 mx-2 my-1" />
+
+              {/* Logout */}
+              <button
+                onClick={() => { signOut(); setOpen(false); }}
+                className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm font-schibsted font-medium text-red-500 hover:bg-red-50 transition-colors duration-100"
+              >
+                <IconLogout size={14} className="shrink-0" />
+                Logout
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -430,7 +513,7 @@ export function DashboardBreadcrumb() {
 
         <div className="w-px h-5 bg-neutral-200 mx-1" />
 
-        <UserPill />
+        <UserMenuDropdown />
       </div>
 
     </div>

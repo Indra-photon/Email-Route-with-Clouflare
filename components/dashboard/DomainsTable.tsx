@@ -74,8 +74,8 @@ type PageTab = "domains" | "add" | "delete";
 type BtnState = "idle" | "loading" | "success" | "error";
 
 const PAGE_TABS: { id: PageTab; label: string }[] = [
-  { id: "domains", label: "Domains" },
   { id: "add",     label: "Add Domain" },
+  { id: "domains", label: "Domains" },
   { id: "delete",  label: "Delete" },
 ];
 
@@ -711,7 +711,7 @@ function EmptyState() {
 
 export default function DomainsTable({ initialDomains }: { initialDomains: DomainRow[] }) {
   const [domains, setDomains] = useState<DomainRow[]>(initialDomains);
-  const [activePageTab, setActivePageTab] = useState<PageTab>("domains");
+  const [activePageTab, setActivePageTab] = useState<PageTab>("add");
 
   const handleDelete = (id: string) => setDomains((prev) => prev.filter((d) => d.id !== id));
   const handleDomainAdded = (domain: DomainRow) => setDomains((prev) => [domain, ...prev]);
@@ -787,7 +787,7 @@ export default function DomainsTable({ initialDomains }: { initialDomains: Domai
               initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18, ease: outQuint }}
             >
-              <DomainAddForm onDomainAdded={handleDomainAdded} />
+              <DomainAddForm onDomainAdded={handleDomainAdded} onSuccess={() => setActivePageTab("domains")} />
             </motion.div>
           )}
 

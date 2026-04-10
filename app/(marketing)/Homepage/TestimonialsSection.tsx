@@ -135,7 +135,7 @@ export function TestimonialsSection() {
           <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
             Trusted by teams that value fast support.{" "}
           </Heading>
-          <Heading as="span" className="text-sky-800 leading-tight font-semibold">
+          <Heading as="span" className="text-sky-800 leading-tight font-extralight">
             From startups to scale-ups — faster responses, without adding headcount.
           </Heading>
         </motion.div>

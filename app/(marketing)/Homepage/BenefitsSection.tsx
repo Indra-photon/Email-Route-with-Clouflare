@@ -536,10 +536,10 @@ export function BenefitsSection() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
               >
-                <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
+                <Heading as="span" className="text-neutral-900 font-schibsted leading-tight">
                   What changes the week you switch.{" "}
                 </Heading>
-                <Heading as="span" className="text-sky-800 leading-tight font-semibold">
+                <Heading as="span" className="text-sky-800 leading-tight font-extralight">
                    — faster responses, fewer missed tickets, less time wasted.
                 </Heading>
               </motion.div>
