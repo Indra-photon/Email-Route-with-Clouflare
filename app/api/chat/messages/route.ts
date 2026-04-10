@@ -170,13 +170,15 @@ export async function POST(request: Request) {
             console.error("Webhook forward error:", webhookErr);
         }
 
-        // 5. Push to Render Chat Server to ensure agent dashboard receives it 
-        // We include excludeSocketId (if provided) so the render server doesn't broadcast back to the sender
+        // 5. Push to Render Chat Server
         const { socketId } = body;
         try {
             const pushSecret = process.env.RENDER_PUSH_SECRET;
             const renderUrl = process.env.NEXT_PUBLIC_RENDER_CHAT_SERVER_URL;
-            if (renderUrl && pushSecret) {
+            // Skip if placeholder values are still set
+            if (renderUrl && pushSecret && !renderUrl.includes("YOUR_RENDER") && !pushSecret.includes("YOUR_PUSH")) {
+                const ctrl = new AbortController();
+                const timer = setTimeout(() => ctrl.abort(), 5000);
                 await fetch(`${renderUrl}/push`, {
                     method: "POST",
                     headers: {
@@ -193,13 +195,15 @@ export async function POST(request: Request) {
                             mediaUrl: chatMessage.mediaUrl,
                             createdAt: chatMessage.createdAt,
                         },
-                        excludeSocketId: socketId, // Exclude the sender's socket from receiving the broadcast loop
+                        excludeSocketId: socketId,
                     }),
-                });
+                    signal: ctrl.signal,
+                }).finally(() => clearTimeout(timer));
             }
         } catch (pushErr) {
             console.error("Failed to push message to chat server:", pushErr);
         }
+
 
         return NextResponse.json({
             success: true,

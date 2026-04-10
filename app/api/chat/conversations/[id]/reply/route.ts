@@ -84,7 +84,9 @@ export async function POST(
         try {
             const pushSecret = process.env.RENDER_PUSH_SECRET;
             const renderUrl = process.env.NEXT_PUBLIC_RENDER_CHAT_SERVER_URL;
-            if (renderUrl && pushSecret) {
+            if (renderUrl && pushSecret && !renderUrl.includes("YOUR_RENDER") && !pushSecret.includes("YOUR_PUSH")) {
+                const ctrl = new AbortController();
+                const timer = setTimeout(() => ctrl.abort(), 5000);
                 await fetch(`${renderUrl}/push`, {
                     method: "POST",
                     headers: {
@@ -103,23 +105,29 @@ export async function POST(
                         },
                         excludeSocketId: socketId,
                     }),
-                });
+                    signal: ctrl.signal,
+                }).finally(() => clearTimeout(timer));
             }
         } catch (pushErr) {
             console.error("Failed to push agent reply to chat server:", pushErr);
         }
 
-        const posthog = getPostHogClient();
-        posthog.capture({
-            distinctId: userId,
-            event: "chat_reply_sent",
-            properties: {
-                conversation_id: id,
-                message_type: type || "text",
-                has_media: !!mediaUrl,
-                workspace_id: workspace._id.toString(),
-            },
-        });
+        try {
+            const posthog = getPostHogClient();
+            posthog.capture({
+                distinctId: userId,
+                event: "chat_reply_sent",
+                properties: {
+                    conversation_id: id,
+                    message_type: type || "text",
+                    has_media: !!mediaUrl,
+                    workspace_id: workspace._id.toString(),
+                },
+            });
+        } catch (phErr) {
+            console.warn("⚠️ PostHog capture failed (non-fatal):", phErr);
+        }
+
 
         return NextResponse.json({
             success: true,
