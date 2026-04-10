@@ -51,6 +51,7 @@ export const metadata: Metadata = {
   keywords: [
     // ── Core product ──
     "SyncSupport",
+    "external support slack integration",
     "Slack helpdesk",
     "Slack-native ticketing",
     "email to Slack",
