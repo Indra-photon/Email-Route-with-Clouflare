@@ -386,7 +386,7 @@ function EditModal({
 }) {
   const [name, setName] = useState(template.name);
   const [subject, setSubject] = useState(template.subject);
-  const [body, setBody] = useState(template.htmlBody ?? template.body);
+  const [body, setBody] = useState(template.htmlBody || template.body);
   const [status, setStatus] = useState<FormStatus>("idle");
   const [previewing, setPreviewing] = useState(false);
 
@@ -822,7 +822,7 @@ export default function EmailTemplatesPage() {
           <PreviewModal
             name={previewTarget.name}
             subject={previewTarget.subject}
-            body={previewTarget.htmlBody ?? previewTarget.body}
+            body={previewTarget.htmlBody || previewTarget.body}
             onClose={() => setPreviewTarget(null)}
           />
         )}

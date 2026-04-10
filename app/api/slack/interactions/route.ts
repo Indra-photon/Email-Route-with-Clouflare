@@ -310,25 +310,25 @@ export async function POST(request: Request) {
     }
 
     // ── New: reply from SyncSupport button ─────────────────────────────────
+    // IMPORTANT: Slack trigger_id expires in 3 seconds. We must call views.open ASAP.
+    // To minimize latency, we look up the integration via payload.channel.id (already in payload)
+    // and skip the thread lookup here — thread data is fetched on modal submit instead.
     if (actionId === "reply_from_syncsupport") {
       const threadId = action.value as string;
       const triggerId = payload.trigger_id as string;
+      const channelId = (payload.channel?.id as string) || "";
 
       await dbConnect();
 
-      const thread = await EmailThread.findById(threadId).lean();
-      if (!thread) return NextResponse.json({ ok: true });
-
+      // Single DB query — no thread lookup needed at this stage
       const integration = await Integration.findOne({
-        slackChannelId: thread.slackChannelId,
+        slackChannelId: channelId,
         authMethod: "oauth",
       }).lean();
 
       if (!integration?.slackAccessToken) return NextResponse.json({ ok: true });
 
-      const replySubject = thread.subject.startsWith("Re:") ? thread.subject : `Re: ${thread.subject}`;
-
-      await fetch("https://slack.com/api/views.open", {
+      const viewRes = await fetch("https://slack.com/api/views.open", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -345,14 +345,6 @@ export async function POST(request: Request) {
             close: { type: "plain_text", text: "Cancel" },
             blocks: [
               {
-                type: "section",
-                text: {
-                  type: "mrkdwn",
-                  text: `*To:* ${thread.from}\n*Subject:* ${replySubject}`,
-                },
-              },
-              { type: "divider" },
-              {
                 type: "input",
                 block_id: "syncsupport_reply_block",
                 label: { type: "plain_text", text: "Your Reply" },
@@ -367,6 +359,11 @@ export async function POST(request: Request) {
           },
         }),
       });
+
+      const viewData = await viewRes.json();
+      if (!viewData.ok) {
+        console.error("❌ views.open failed:", viewData.error);
+      }
 
       return NextResponse.json({ ok: true });
     }
