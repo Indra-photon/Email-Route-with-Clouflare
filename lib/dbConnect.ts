@@ -66,6 +66,10 @@ async function connectWithRetry(retries = 3, delay = 2000): Promise<void> {
 
             connection.isConnected = db.connections[0].readyState;
             console.log(`Database connection established (attempt ${attempt})`);
+
+            // Run index migration
+            await runIndexMigration();
+
             return;
 
         } catch (error) {
@@ -80,6 +84,21 @@ async function connectWithRetry(retries = 3, delay = 2000): Promise<void> {
             console.log(`Retrying in ${delay}ms...`);
             await new Promise(resolve => setTimeout(resolve, delay));
         }
+    }
+}
+
+async function runIndexMigration(): Promise<void> {
+    try {
+        const collection = mongoose.connection.collection('chatmessages');
+        const indexes = await collection.getIndexes();
+
+        if (indexes.hasOwnProperty('slackEventId_1')) {
+            console.log('🔄 [Migration] Dropping old slackEventId_1 index...');
+            await collection.dropIndex('slackEventId_1');
+            console.log('✅ [Migration] Old index dropped. New partial index will be created.');
+        }
+    } catch (err) {
+        console.warn('⚠️ [Migration] Index check failed:', err);
     }
 }
 
