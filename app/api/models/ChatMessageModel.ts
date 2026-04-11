@@ -62,7 +62,8 @@ const ChatMessageSchema = new Schema<IChatMessage>(
 
 ChatMessageSchema.index({ conversationId: 1, createdAt: 1 });
 // Prevent duplicate agent messages for the same Slack event (race condition guard)
-ChatMessageSchema.index({ slackEventId: 1 }, { unique: true, sparse: true });
+// Use partialFilterExpression instead of sparse to properly handle null values
+ChatMessageSchema.index({ slackEventId: 1 }, { unique: true, partialFilterExpression: { slackEventId: { $exists: true, $ne: null } } });
 
 export const ChatMessage: Model<IChatMessage> =
     (mongoose.models.ChatMessage as Model<IChatMessage>) ||
