@@ -1,0 +1,41 @@
+# SyncSupport
+
+> SyncSupport is an AI-powered email routing and support platform that routes inbound emails to Slack, Discord, and other integrations — with built-in ticketing, alias management, and an embeddable AI chatbot for customer support teams.
+
+SyncSupport helps teams manage customer support emails without leaving their existing tools. Emails received at your custom domain are intelligently routed to channels in Slack or Discord, converted into trackable support tickets, and can be answered directly from those chat tools. It also provides an embeddable AI chatbot widget for websites.
+
+## Key Features
+
+- **Email Routing**: Route inbound emails from your own domain to Slack or Discord channels in real time.
+- **Custom Domains**: Connect your own domain (e.g. support@yourcompany.com) via Cloudflare Email Routing.
+- **Alias Management**: Create multiple email aliases per workspace for different teams or topics.
+- **Ticketing System**: Every routed email becomes a trackable support ticket with status management.
+- **Slack Integration**: Reply to customer emails directly from Slack threads.
+- **Discord Integration**: Route emails to Discord channels and reply from there.
+- **AI Chatbot**: Embed a fully configurable AI-powered chat widget on your website.
+- **Multi-workspace**: Supports multiple isolated workspaces per account.
+
+## Documentation
+
+- [Getting Started](https://www.syncsupport.app/docs): Overview and quick-start guide.
+- [Custom Domains](https://www.syncsupport.app/docs/domains): How to connect your domain via Cloudflare Email Routing.
+- [Integrations Overview](https://www.syncsupport.app/docs/integrations): Supported integration platforms.
+- [Slack Integration](https://www.syncsupport.app/docs/integrations/slack): Step-by-step Slack setup and usage.
+- [Discord Integration](https://www.syncsupport.app/docs/integrations/discord): Step-by-step Discord setup and usage.
+- [Email Aliases](https://www.syncsupport.app/docs/aliases): Creating and managing email aliases.
+- [Tickets](https://www.syncsupport.app/docs/tickets): Managing support tickets and their lifecycle.
+- [AI Chatbot](https://www.syncsupport.app/docs/chatbot): Embedding and configuring the AI chat widget.
+
+## Pages
+
+- [Home](https://www.syncsupport.app/): Product overview and value proposition.
+- [Pricing](https://www.syncsupport.app/pricing): Plan details and pricing tiers.
+- [Sign Up](https://www.syncsupport.app/sign-up): Create a free account.
+- [Sign In](https://www.syncsupport.app/sign-in): Log in to your workspace.
+- [Privacy Policy](https://www.syncsupport.app/privacy): Data handling and privacy information.
+- [Terms of Service](https://www.syncsupport.app/terms-of-service): Service terms and conditions.
+
+## Optional
+
+- [Changelog](https://www.syncsupport.app/changelog): Product updates and release history.
+- [Roadmap](https://www.syncsupport.app/roadmap): Upcoming features and planned improvements.

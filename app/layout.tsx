@@ -202,6 +202,14 @@ export const metadata: Metadata = {
 
   // ── Manifest ──────────────────────────────────────────────────────────────
   manifest: "/site.webmanifest",
+
+  // ── AI / LLM discoverability ──────────────────────────────────────────────
+  // Points AI crawlers (ChatGPT, Claude, Perplexity, etc.) to the llms.txt
+  // file that describes this product in a structured, LLM-friendly format.
+  // Standard: https://llmstxt.org
+  other: {
+    "llms-txt": "/llms.txt",
+  },
 };
 
 
