@@ -4,8 +4,6 @@
 
 const GQL_ENDPOINT = "https://gql.hashnode.com";
 
-// ⚠️ Replace with your actual Hashnode publication host
-// e.g. "syncsupport.hashnode.dev"
 const PUBLICATION_HOST =
   process.env.NEXT_PUBLIC_HASHNODE_PUBLICATION_HOST ||
   "syncsupport.hashnode.dev";
@@ -13,25 +11,35 @@ const PUBLICATION_HOST =
 async function fetchHashnode<T>(
   query: string,
   variables: Record<string, unknown> = {}
-): Promise<T> {
-  const res = await fetch(GQL_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query, variables }),
-    next: { revalidate: 3600 }, // ISR — revalidate every hour
-  });
+): Promise<T | null> {
+  try {
+    const res = await fetch(GQL_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, variables }),
+      next: { revalidate: 3600 },
+    });
 
-  if (!res.ok) throw new Error(`Hashnode API error: ${res.status}`);
-  const { data, errors } = await res.json();
-  if (errors) throw new Error(errors[0]?.message ?? "GraphQL error");
-  return data;
+    if (!res.ok) {
+      console.error(`Hashnode API error: ${res.status}`);
+      return null;
+    }
+
+    const json = await res.json();
+
+    if (json.errors) {
+      console.error("Hashnode GraphQL errors:", json.errors);
+      return null;
+    }
+
+    return json.data as T;
+  } catch (err) {
+    console.error("Hashnode fetch failed:", err);
+    return null;
+  }
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-export type PostEdge = {
-  node: Post;
-};
 
 export type Post = {
   id: string;
@@ -70,20 +78,23 @@ const POST_LIST_FIELDS = `
 // Get all posts (for listing page)
 export async function getAllPosts(first = 20): Promise<Post[]> {
   const data = await fetchHashnode<{
-    publication: { posts: { edges: PostEdge[] } };
+    publication: { posts: { edges: { node: Post }[] } };
   }>(
     `query GetPosts($host: String!, $first: Int!) {
       publication(host: $host) {
         posts(first: $first) {
           edges {
-            node { ${POST_LIST_FIELDS} }
+            node {
+              ${POST_LIST_FIELDS}
+            }
           }
         }
       }
     }`,
     { host: PUBLICATION_HOST, first }
   );
-  return data.publication.posts.edges.map((e) => e.node);
+
+  return data?.publication?.posts?.edges?.map((e) => e.node) ?? [];
 }
 
 // Get single post by slug
@@ -102,11 +113,17 @@ export async function getPostBySlug(slug: string): Promise<PostFull | null> {
     }`,
     { host: PUBLICATION_HOST, slug }
   );
-  return data.publication.post ?? null;
+
+  return data?.publication?.post ?? null;
 }
 
 // Get all slugs (for generateStaticParams)
+// Returns empty array safely if API fails — build won't break
 export async function getAllSlugs(): Promise<string[]> {
-  const posts = await getAllPosts(100);
-  return posts.map((p) => p.slug);
+  try {
+    const posts = await getAllPosts(100);
+    return posts.map((p) => p.slug);
+  } catch {
+    return [];
+  }
 }
