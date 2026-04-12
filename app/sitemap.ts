@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
 import dbConnect from "@/lib/dbConnect";
 import { Workspace } from "@/app/api/models/WorkspaceModel";
+import { getAllPosts } from "@/lib/blog/hashnode";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -41,7 +42,7 @@ const MARKETING_PAGES: SitemapEntry[] = [
   // url("/contact",   { priority: 0.6, changeFreq: "monthly" }),
   // url("/changelog", { priority: 0.7, changeFreq: "weekly" }),
   // url("/roadmap",   { priority: 0.7, changeFreq: "weekly" }),
-  // url("/blog",      { priority: 0.8, changeFreq: "weekly" }),
+  url("/blog",      { priority: 0.8, changeFreq: "weekly" }),
 
   // ── Legal ──
   url("/privacy",               { priority: 0.4, changeFreq: "yearly" }),
@@ -97,16 +98,34 @@ async function getWorkspacePages(): Promise<SitemapEntry[]> {
   }
 }
 
+async function getBlogPages(): Promise<SitemapEntry[]> {
+  try {
+    const posts = await getAllPosts(100);
+    return posts.map((post) =>
+      url(`/blog/${post.slug}`, {
+        priority: 0.7,
+        changeFreq: "weekly",
+        lastMod: new Date(post.publishedAt),
+      })
+    );
+  } catch {
+    console.warn("⚠️  sitemap: could not fetch blog posts");
+    return [];
+  }
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [workspacePages] = await Promise.all([
+  const [workspacePages, blogPages] = await Promise.all([
     getWorkspacePages(),
+    getBlogPages(), 
   ]);
 
   const allRoutes: MetadataRoute.Sitemap = [
     ...MARKETING_PAGES,
     ...DOCS_PAGES,
+    ...blogPages,
     ...workspacePages,
   ];
 

@@ -10,11 +10,13 @@ import Image from "next/image";
 
 // ─── Use dynamic rendering — don't fail build if API is unreachable ───────────
 export const dynamic = "force-dynamic";
+export const dynamicParams = true;
 export const revalidate = 3600;
 
 // ─── Static generation (safe — returns [] if API fails) ──────────────────────
 export async function generateStaticParams() {
   const slugs = await getAllSlugs();
+  console.log("🔵 getAllSlugs result:", slugs); 
   return slugs.map((slug) => ({ slug }));
 }
 
@@ -22,11 +24,13 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const post = await getPostBySlug(params.slug);
+    const { slug } = await params;
+  const post = await getPostBySlug(slug);
   if (!post) return { title: "Post not found — SyncSupport Blog" };
 
+  const keywords = post.tags?.map((tag) => tag.name.toLowerCase()) ?? [];
   const title = post.seo?.title || post.title;
   const description = post.seo?.description || post.brief;
   const url = `https://www.syncsupport.app/blog/${post.slug}`;
@@ -35,6 +39,7 @@ export async function generateMetadata({
   return {
     title,
     description,
+    keywords, 
     openGraph: {
       title,
       description,
@@ -68,9 +73,10 @@ function formatDate(iso: string) {
 export default async function BlogPostPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const post = await getPostBySlug(params.slug);
+    const { slug } = await params;
+  const post = await getPostBySlug(slug);
   if (!post) notFound();
 
   return (
