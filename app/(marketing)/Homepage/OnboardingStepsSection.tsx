@@ -121,6 +121,7 @@ import { Heading } from "@/components/Heading";
 import { Paragraph } from "@/components/Paragraph";
 import Link from "next/link";
 import CTAWrapper from "@/components/CTAWrapper";
+import { IconArrowUp } from "@tabler/icons-react";
 
 const steps = [
   {
@@ -159,16 +160,15 @@ const steps = [
 
 function ViewDocsCTA({ href }: { href: string }) {
   return (
-    <Link href={href}>
-      <motion.span
-        whileTap={{ scale: 0.97 }}
-        className="inline-flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-b from-sky-900 to-cyan-700 shadow-lg cursor-pointer"
-      >
-        <span className="relative z-10 font-schibsted font-semibold text-white text-sm uppercase tracking-wide select-none px-6 py-2.5">
-          View Docs
-        </span>
-      </motion.span>
-    </Link>
+    <div className="rounded-[16px] inline-flex">
+      <Link href={href} className="block">
+        <button className="group p-[4px] rounded-[12px] bg-gradient-to-b from-white to-stone-200/40 shadow-[0_1px_3px_rgba(0,0,0,0.5)] active:shadow-[0_0px_1px_rgba(0,0,0,0.5)] active:scale-[0.995]">
+          <div className="bg-gradient-to-b from-stone-200/40 to-white/80 rounded-[8px] px-4 py-[6px]">
+            <span className="font-schibsted font-semibold tracking-wide uppercase text-neutral-900 text-sm">View Docs</span>
+          </div>
+        </button>
+      </Link>
+    </div>
   );
 }
 
@@ -228,11 +228,11 @@ export function OnboardingStepsSection() {
             viewport={{ once: true }}
             transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.2 }}
           >
-            <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
-              Setup in minutes.{" "}
-            </Heading>
-            <Heading as="span" className="text-sky-800 leading-tight font-extralight">
-              No complex tools, routing rules, or training required
+            <Heading as="h2" className="text-neutral-900 leading-tight font-semibold">
+              <span>Setup in minutes.{" "}</span>
+              <span className="text-sky-800 font-extralight">
+                No complex tools, routing rules, or training required
+              </span>
             </Heading>
           </motion.div>
 
@@ -312,7 +312,7 @@ export function OnboardingStepsSection() {
               </div>
 
               <div className="flex flex-col sm:flex-row items-start gap-4">
-                {/* Primary — matches HeroCTAPrimary */}
+                {/* Primary — black button with arrow */}
                 <CTAWrapper
                   loggedInHref="/dashboard"
                   loggedOutHref="/sign-up"
@@ -320,28 +320,32 @@ export function OnboardingStepsSection() {
                   loggedOutText="Get Started Free"
                 >
                   {({ text }) => (
-                    <motion.span
-                      whileTap={{ scale: 0.97 }}
-                      className="inline-flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-b from-sky-900 to-cyan-700 shadow-lg cursor-pointer"
-                    >
-                      <span className="relative z-10 font-schibsted font-semibold text-white text-sm uppercase tracking-wide select-none px-6 py-2.5">
-                        {text}
-                      </span>
-                    </motion.span>
+                    <div className="bg-gradient-to-b from-white/90 to-transparent p-[4px] rounded-[16px] inline-flex">
+                      <button className="group p-[4px] rounded-[12px] bg-gradient-to-b from-sky-900 to-cyan-700 shadow-[0_1px_2px_rgba(0,0,0,0.5)] active:shadow-[0_0px_1px_rgba(0,0,0,0.5)] active:scale-[0.995]">
+                        <div className="bg-gradient-to-b from-white/[0.08] to-transparent rounded-[8px] px-4 py-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-schibsted font-semibold tracking-wide uppercase text-white text-sm">{text}</span>
+                            <div className="relative flex items-center justify-center w-5 h-5">
+                              <span className="absolute inset-0 rounded-full bg-white/0 backdrop-blur-0 group-hover:bg-white/20 group-hover:backdrop-blur-sm transition-all duration-150 ease-out" />
+                              <IconArrowUp size={13} stroke={2.5} className="relative text-white rotate-90 transition-transform duration-100 ease-out group-hover:rotate-45" />
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    </div>
                   )}
                 </CTAWrapper>
 
-                {/* Secondary — matches HeroCTASecondary */}
-                <Link href="/docs">
-                  <motion.span
-                    whileTap={{ scale: 0.97 }}
-                    className="inline-flex items-center justify-center rounded-full border border-neutral-200 bg-white hover:border-neutral-300 transition-colors duration-200 cursor-pointer"
-                  >
-                    <span className="font-schibsted font-semibold text-neutral-800 text-sm uppercase tracking-wide select-none px-6 py-2.5">
-                      Read the Docs
-                    </span>
-                  </motion.span>
-                </Link>
+                {/* Secondary — white button */}
+                <div className="rounded-[16px] inline-flex">
+                  <Link href="/docs" className="block">
+                    <button className="group p-[4px] rounded-[12px] bg-gradient-to-b from-white to-stone-200/40 shadow-[0_1px_3px_rgba(0,0,0,0.5)] active:shadow-[0_0px_1px_rgba(0,0,0,0.5)] active:scale-[0.995]">
+                      <div className="bg-gradient-to-b from-stone-200/40 to-white/80 rounded-[8px] px-4 py-[6px]">
+                        <span className="font-schibsted font-semibold tracking-wide uppercase text-neutral-900 text-sm">Read the Docs</span>
+                      </div>
+                    </button>
+                  </Link>
+                </div>
               </div>
             </motion.div>
 

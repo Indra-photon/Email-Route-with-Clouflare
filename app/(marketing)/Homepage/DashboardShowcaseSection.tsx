@@ -90,11 +90,11 @@ export function DashboardShowcaseSection() {
             viewport={{ once: true }}
             transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
           >
-            <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
-              A Detailed Dashboard.{" "}
-            </Heading>
-            <Heading as="span" className="text-sky-800 leading-tight font-extralight">
-              Every ticket, every status, every agent — visible in one dashboard without a single standup.
+            <Heading as="h2" className="text-neutral-900 font-schibsted leading-tight">
+              <span>What changes the week you switch.{" "}</span>
+              <span className="text-sky-800 font-extralight">
+                — faster responses, fewer missed tickets, less time wasted.
+              </span>
             </Heading>
           </motion.div>
 

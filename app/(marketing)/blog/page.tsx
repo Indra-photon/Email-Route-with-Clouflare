@@ -5,6 +5,7 @@ import { Paragraph } from "@/components/Paragraph";
 import { CustomLink } from "@/components/CustomLink";
 import { Footer } from "@/components/Footer";
 import Image from "next/image";
+import Link from "next/link";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -20,9 +21,9 @@ function formatDate(iso: string) {
 
 function PostCard({ post }: { post: Post }) {
   return (
-    <CustomLink
+    <Link
       href={`/blog/${post.slug}`}
-      className="group flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-6 hover:border-sky-200 hover:shadow-md transition-all duration-200"
+      className="group flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-6 transition-all duration-200"
     >
       {/* Cover image */}
       {post.coverImage?.url && (
@@ -86,7 +87,7 @@ function PostCard({ post }: { post: Post }) {
           <span>{post.readTimeInMinutes} min read</span>
         </div>
       </div>
-    </CustomLink>
+    </Link>
   );
 }
 
@@ -94,19 +95,20 @@ function PostCard({ post }: { post: Post }) {
 
 function FeaturedPost({ post }: { post: Post }) {
   return (
-    <CustomLink
+    <Link
       href={`/blog/${post.slug}`}
-      className="group grid grid-cols-1 md:grid-cols-2 gap-8 rounded-2xl border border-neutral-200 bg-white p-8 hover:border-sky-200 hover:shadow-lg transition-all duration-200"
+      className="group grid grid-cols-1 md:grid-cols-2 gap-8 rounded-2xl border border-neutral-200 bg-white p-8 transition-all duration-200"
     >
       {/* Cover image */}
       {post.coverImage?.url && (
-        <div className="relative h-64 md:h-full w-full overflow-hidden rounded-xl bg-neutral-100">
-          <Image
+        <div className="relative h-72 md:h-96 w-full overflow-hidden rounded-xl ">
+        <Image
             src={post.coverImage.url}
             alt={post.title}
             fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
-          />
+            style={{ objectFit: "contain" }}
+            priority
+        />
         </div>
       )}
 
@@ -130,32 +132,62 @@ function FeaturedPost({ post }: { post: Post }) {
         )}
 
         <Heading
-          as="h2"
-          className="text-neutral-900 group-hover:text-sky-800 transition-colors leading-tight"
+          variant="blogHeader"
+          as="h1"
+          className="text-neutral-900 leading-tighter"
         >
           {post.title}
         </Heading>
 
         <Paragraph className="text-neutral-600">{post.brief}</Paragraph>
 
-        <div className="flex items-center gap-3 text-xs font-schibsted text-neutral-400 pt-2 border-t border-neutral-100">
-          {post.author.profilePicture && (
-            <Image
-              src={post.author.profilePicture}
-              alt={post.author.name}
-              width={24}
-              height={24}
-              className="rounded-full"
-            />
-          )}
-          <span className="text-neutral-500">{post.author.name}</span>
-          <span>·</span>
-          <span>{formatDate(post.publishedAt)}</span>
-          <span>·</span>
-          <span>{post.readTimeInMinutes} min read</span>
+        <div className="flex flex-col gap-3 pt-2 border-t border-neutral-100">
+          <div className="flex items-center gap-3 text-xs font-schibsted text-neutral-400">
+            {post.author.profilePicture && (
+              <Image
+                src={post.author.profilePicture}
+                alt={post.author.name}
+                width={24}
+                height={24}
+                className="rounded-full"
+              />
+            )}
+            <span className="text-neutral-500">{post.author.name}</span>
+            <span>·</span>
+            <span className="text-xs font-medium text-neutral-700">
+                Founder, SyncSupport
+              </span>
+            <a
+              href="https://x.com/Nil_phy_dreamer"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="X (Twitter)"
+              className="text-neutral-400 hover:text-neutral-700 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+            </a>
+            <a
+              href="https://www.linkedin.com/in/indranil-maiti-7542941b7/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="LinkedIn"
+              className="text-neutral-400 hover:text-sky-600 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+              </svg>
+            </a>
+          </div>
+          {/* <div className="flex items-center gap-2 text-xs font-medium text-neutral-400">
+            <span>{formatDate(post.publishedAt)}</span>
+            <span>·</span>
+            <span>{post.readTimeInMinutes} min read</span>
+          </div> */}
         </div>
       </div>
-    </CustomLink>
+    </Link>
   );
 }
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
+import { IconArrowUp } from "@tabler/icons-react";
 
 // 3x3 dot grid positions (normalized 0-1 in a 48x48 box)
 const DOT_POSITIONS = [
@@ -27,18 +28,16 @@ export default function HeroCTAPrimary({ text = "Get Started" }: { text?: string
   const [hovered, setHovered] = useState(false);
 
   return (
-    <div>
-      {/* THE BUTTON */}
+    <div className="bg-gradient-to-b from-white/90 to-transparent p-[4px] rounded-[16px] inline-flex">
       <motion.button
         onHoverStart={() => setHovered(true)}
         onHoverEnd={() => setHovered(false)}
-        whileTap={{ scale: 0.97 }}
-        className=" relative flex items-center justify-between gap-0 overflow-hidden rounded-full bg-gradient-to-b from-sky-900 to-cyan-700  shadow-xs cursor-pointer"
-        
+        whileTap={{ scale: 0.995 }}
+        className="relative group p-[4px] rounded-[12px] bg-gradient-to-b from-sky-900 to-cyan-700 shadow-[0_1px_2px_rgba(0,0,0,0.5)] active:shadow-[0_0px_1px_rgba(0,0,0,0.5)] cursor-pointer overflow-hidden"
       >
         {/* Shimmer sweep on hover */}
         <motion.div
-          className="absolute inset-0 pointer-events-none"
+          className="absolute inset-0 pointer-events-none z-10"
           style={{
             background:
               "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.12) 50%, transparent 70%)",
@@ -52,12 +51,21 @@ export default function HeroCTAPrimary({ text = "Get Started" }: { text?: string
           transition={{ duration: 0.7, ease: "easeInOut" }}
         />
 
-        {/* Text */}
-        <span
-          className="relative text-shadow-2xl z-10 font-schibsted font-semibold text-white text-sm uppercase tracking-wide select-none flex items-center justify-center flex-1 px-6 py-2.5"
-        >
-          {text}
-        </span>
+        <div className="bg-gradient-to-b from-white/[0.08] to-transparent rounded-[8px] px-4 py-2">
+          <div className="flex items-center gap-2">
+            <span className="relative z-10 font-schibsted font-semibold text-white text-sm uppercase tracking-wide select-none">
+              {text}
+            </span>
+            <div className="relative flex items-center justify-center w-5 h-5">
+              <span className="absolute inset-0 rounded-full bg-white/0 backdrop-blur-0 group-hover:bg-white/20 group-hover:backdrop-blur-sm transition-all duration-150 ease-out" />
+              <IconArrowUp
+                size={13}
+                stroke={2.5}
+                className="relative z-10 text-white rotate-90 transition-transform duration-150 ease-out group-hover:rotate-45"
+              />
+            </div>
+          </div>
+        </div>
       </motion.button>
     </div>
   );
@@ -113,26 +121,15 @@ export default function HeroCTAPrimary({ text = "Get Started" }: { text?: string
 
 
 export function HeroCTASecondary() {
-  const [hovered, setHovered] = useState(false);
-
   return (
-    <motion.button
-      onHoverStart={() => setHovered(true)}
-      onHoverEnd={() => setHovered(false)}
-      whileTap={{ scale: 0.97 }}
-      className="relative flex items-center px-6 py-2.5 rounded-full border border-neutral-200 bg-white hover:border-neutral-300 transition-colors duration-200 cursor-pointer group"
-    >
-      <span className="font-schibsted font-semibold text-neutral-800 text-sm uppercase tracking-wide select-none">
-        See How It Works
-      </span>
-
-      {/* Subtle underline slide */}
-      <motion.div
-        className="absolute bottom-2 left-5 right-5 h-px bg-neutral-300"
-        initial={{ scaleX: 0, originX: 0 }}
-        animate={{ scaleX: hovered ? 1 : 0 }}
-        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-      />
-    </motion.button>
+    <div className=" p-[4px] rounded-[16px] inline-flex">
+      <button className="group p-[4px] rounded-[12px] bg-gradient-to-b from-white to-stone-200/40 shadow-[0_1px_3px_rgba(0,0,0,0.5)] active:shadow-[0_0px_1px_rgba(0,0,0,0.5)] active:scale-[0.995] cursor-pointer">
+        <div className="bg-gradient-to-b from-stone-200/40 to-white/80 rounded-[8px] px-4 py-[5px]">
+          <span className="font-schibsted font-semibold tracking-wide uppercase text-neutral-900 text-sm select-none">
+            See How It Works
+          </span>
+        </div>
+      </button>
+    </div>
   );
 }

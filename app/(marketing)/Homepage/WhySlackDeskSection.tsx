@@ -725,11 +725,11 @@ export function WhySlackDeskSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
         >
-          <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
-            Why teams switch to SyncSupport.{" "}
-          </Heading>
-          <Heading as="span" className="text-sky-800 leading-tight font-extralight">
-            - a full customer support system for your business built on top of Slack.
+          <Heading as="h2" className="text-neutral-900 leading-tight font-semibold">
+            <span>Why teams switch to SyncSupport.{" "}</span>
+            <span className="text-sky-800 font-extralight">
+              - a full customer support system for your business built on top of Slack.
+            </span>
           </Heading>
         </motion.div>
 

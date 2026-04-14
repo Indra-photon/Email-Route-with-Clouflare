@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { Container } from "@/components/Container";
 import { Heading } from "@/components/Heading";
 import { Paragraph } from "@/components/Paragraph";
+import Link from "next/link";
+import { IconArrowUp } from "@tabler/icons-react";
 
 interface FAQItem {
   id: string;
@@ -12,55 +14,46 @@ interface FAQItem {
   answer: string;
 }
 
+// ── 6 highest-value questions only — rest live at /faq ────────────────────────
 const faqs: FAQItem[] = [
   {
     id: "1",
-    question: "How quickly will I receive notifications in Slack?",
-    answer: "Emails are routed to your Slack workspace in 2-5 seconds on average. Our infrastructure is designed for real-time notifications, ensuring your team never misses a customer message."
+    question: "How quickly do emails arrive in Slack?",
+    answer: "Emails are routed to your Slack channel in 2–5 seconds on average. Your team sees new customer messages the moment they arrive — no polling, no delay."
   },
   {
     id: "2",
-    question: "Can I use my own custom domain?",
-    answer: "Yes! You can add and verify your own custom domains. We provide simple DNS instructions to help you set up MX records. You can also use our test domain (galearen.resend.app) to get started immediately."
+    question: "Do I need to change my email provider?",
+    answer: "Not at all. Keep using Gmail, Zoho, Outlook, or any other provider. Simply set up email forwarding to your SyncSupport address. Emails arrive in both your inbox and Slack simultaneously."
   },
   {
     id: "3",
-    question: "Do I need to change my email provider?",
-    answer: "Not at all! You can keep using your current email provider (Gmail, Zoho, Outlook) and simply set up email forwarding. This way, emails go to both your inbox AND Slack, giving you the best of both worlds."
+    question: "Can I reply to customers directly from Slack?",
+    answer: "Yes. Claim a ticket with one click, then reply directly from Slack. Your customer receives the reply from your branded email address. Your team never has to open an email client."
   },
   {
     id: "4",
     question: "How many email aliases can I create?",
-    answer: "You can create unlimited email aliases (support@, sales@, help@, etc.) on your verified domains. Each alias can be routed to a different Slack channel for organized team workflows."
+    answer: "Unlimited. Create support@, sales@, billing@, help@ — as many as you need on your verified domains. Each alias routes to a dedicated Slack channel so your team stays organised by function."
   },
   {
     id: "5",
-    question: "Is my email data secure?",
-    answer: "Absolutely. We use industry-standard encryption for data in transit and at rest. Email content is stored in MongoDB Atlas with secure access controls, and we never read or analyze your customer emails."
+    question: "How is pricing structured?",
+    answer: "Flat-rate pricing — not per-user fees. You pay one monthly price regardless of how many team members use the workspace. Plans start at $19/month. No contracts, cancel anytime."
   },
   {
     id: "6",
-    question: "Can I reply to emails from Slack?",
-    answer: "This feature is coming in Phase 2 of our roadmap! Soon you'll be able to claim tickets, reply directly from Slack, and track conversation status - all without leaving your workspace."
+    question: "Is my email data secure?",
+    answer: "Yes. All data is encrypted in transit and at rest. We never read, analyse, or share your customer emails. Your data is yours — stored with strict access controls."
   },
-  {
-    id: "7",
-    question: "What happens if a Slack notification fails?",
-    answer: "We're implementing retry logic with exponential backoff to ensure reliable delivery. If a notification fails, the system will automatically retry multiple times before alerting you."
-  },
-  {
-    id: "8",
-    question: "How is pricing structured?",
-    answer: "We use flat-rate pricing instead of per-user fees, making it predictable and affordable for growing teams. Pricing details will be announced soon - we're committed to being 3-10x cheaper than competitors like Front or Help Scout."
-  }
 ];
 
 export function FAQSection() {
   const [openItems, setOpenItems] = useState<string[]>([]);
 
   const toggleItem = (id: string) => {
-    setOpenItems(prev => 
-      prev.includes(id) 
+    setOpenItems(prev =>
+      prev.includes(id)
         ? prev.filter(item => item !== id)
         : [...prev, id]
     );
@@ -70,7 +63,8 @@ export function FAQSection() {
     <section className="w-full py-20 md:py-32 bg-white">
       <Container>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
-          {/* Left Side - Heading and Description */}
+
+          {/* ── Left: heading + CTA ─────────────────────────────────────────── */}
           <div className="lg:col-span-5">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -80,42 +74,59 @@ export function FAQSection() {
               className="lg:sticky lg:top-24"
             >
               <Heading as="h2" className="text-neutral-900 mb-4">
-                Questions? <span className="text-sky-800 font-extralight">We've got answers.</span>
+                Still searching for{" "}
+                <span className="text-sky-800 font-extralight">answers?</span>
               </Heading>
-              
+
               <Paragraph variant="home-par" className="mb-8">
-                Everything you need to know about routing your support emails to Slack. Can't find what you're looking for? Reach out to our team.
+                We've covered the essentials here. For a complete guide to setting up SyncSupport, managing tickets, and scaling your support operation, check out our comprehensive FAQ.
               </Paragraph>
 
               {/* CTA */}
-              <div className="space-y-4">
-                <p className="text-sm font-schibsted font-medium text-neutral-600">
-                  Still have questions?
-                </p>
-                <a
-                  href="mailto:support@galearen.resend.app"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-neutral-900 text-white font-schibsted font-semibold text-base rounded-xl transition-all duration-200 hover:bg-neutral-800 hover:shadow-lg"
-                >
-                  Contact Support
-                  <svg 
-                    className="w-4 h-4" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </a>
+              <div className="flex flex-wrap gap-3 items-center">
+                {/* Contact Support — black button */}
+                <div className="bg-gradient-to-b from-white/20 to-transparent rounded-[16px] inline-flex">
+                  <a href="mailto:support@syncsupport.app" className="block">
+                    <button className="group p-[4px] rounded-[12px] bg-gradient-to-b from-zinc-700 to-black shadow-[0_1px_2px_rgba(0,0,0,0.5)] active:shadow-[0_0px_1px_rgba(0,0,0,0.5)] active:scale-[0.995]">
+                      <div className="bg-gradient-to-b from-white/[0.08] to-transparent rounded-[8px] px-4 py-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-schibsted font-semibold tracking-wide uppercase text-white text-sm">Contact Support</span>
+                          <div className="relative flex items-center justify-center w-5 h-5">
+                            {/* hover bg pill */}
+                            <span className="absolute inset-0 rounded-full bg-white/0 backdrop-blur-0 group-hover:bg-white/20 group-hover:backdrop-blur-sm transition-all duration-150 ease-out" />
+                            {/* icon */}
+                            <IconArrowUp
+                              size={13}
+                              stroke={2.5}
+                              className="relative text-white rotate-90 transition-transform duration-100 ease-out group-hover:rotate-45"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  </a>
+                </div>
+
+                {/* View All — light button */}
+                <div className=" rounded-[16px]  inline-flex">
+                  <Link href="/frequently-asked-questions" className="block">
+                    <button className="group p-[4px] rounded-[12px] bg-gradient-to-b from-white to-stone-200/40 shadow-[0_1px_3px_rgba(0,0,0,0.5)] active:shadow-[0_0px_1px_rgba(0,0,0,0.5)] active:scale-[0.995]">
+                      <div className="bg-gradient-to-b from-stone-200/40 to-white/80 rounded-[8px] px-4 py-[5px]">
+                        <span className="font-schibsted font-semibold tracking-wide uppercase text-neutral-900 text-sm">All FAQs</span>
+                      </div>
+                    </button>
+                  </Link>
+                </div>
               </div>
             </motion.div>
           </div>
 
-          {/* Right Side - FAQ Accordion */}
+          {/* ── Right: accordion ────────────────────────────────────────────── */}
           <div className="lg:col-span-7">
             <div className="space-y-4">
               {faqs.map((faq, index) => {
                 const isOpen = openItems.includes(faq.id);
-                
+
                 return (
                   <motion.div
                     key={faq.id}
@@ -138,10 +149,10 @@ export function FAQSection() {
                           animate={{ rotate: isOpen ? 180 : 0 }}
                           transition={{ duration: 0.3, ease: [.25, .46, .45, .94] }}
                         >
-                          <svg 
-                            className="w-6 h-6 text-sky-700" 
-                            fill="none" 
-                            viewBox="0 0 24 24" 
+                          <svg
+                            className="w-6 h-6 text-sky-700"
+                            fill="none"
+                            viewBox="0 0 24 24"
                             stroke="currentColor"
                           >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -149,7 +160,7 @@ export function FAQSection() {
                         </motion.div>
                       </div>
                     </button>
-                    
+
                     {isOpen && (
                       <motion.div
                         key={faq.id + "-answer"}
@@ -166,13 +177,13 @@ export function FAQSection() {
                       </motion.div>
                     )}
 
-                    {/* Subtle divider */}
                     <div className="h-px bg-neutral-200" />
                   </motion.div>
                 );
               })}
             </div>
           </div>
+
         </div>
       </Container>
     </section>
