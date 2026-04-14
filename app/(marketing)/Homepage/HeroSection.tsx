@@ -370,9 +370,9 @@ export function HeroSection() {
           {/* Heading — 3/5 width on desktop */}
           <div className="lg:w-3/5">
             <Heading as="h1" className="text-neutral-900 leading-tight">
-              <span>Stop Switching Tabs</span>
+              <span>Handle Customer Support</span>
               <span className="block text-sky-800 font-schibsted font-extralight">
-                No dropped tickets. No cluttered inbox. Instant support
+                Inside Slack. Answer customers. Track tickets. Close faster.
               </span>
             </Heading>
           </div>
@@ -380,8 +380,10 @@ export function HeroSection() {
           {/* Subheading + CTAs + Social proof — 2/5 width on desktop */}
           <div className="lg:w-2/5 mt-6 lg:mt-0 flex flex-col justify-center">
             <Paragraph variant="home-par" className="mb-8">
-              Everything your support team needs — email routing, live chat, ticket tracking, canned responses, and email templates — all operating from inside Slack. 
-              Customers reach you through any channel. Your team never leaves the one tool they already live in. Five minutes to set up.
+              SyncSupport is a customer support tool built inside Slack — handle email routing, 
+              live chat, ticket tracking, canned responses, and email templates without leaving 
+              your workspace. Customers reach you through any channel. Your team never leaves 
+              the one tool they already live in.
             </Paragraph>
 
             {/* CTA Buttons */}

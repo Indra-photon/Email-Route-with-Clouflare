@@ -23,7 +23,7 @@ export default function Home() {
         <DashboardShowcaseSection />
         <WhySlackDeskSection />
         <OnboardingStepsSection />
-        <TestimonialsSection />
+        {/* <TestimonialsSection /> */}
         <FAQSection />
         <Footer />
       </section>

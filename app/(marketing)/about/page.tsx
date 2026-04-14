@@ -3,6 +3,8 @@ import { Paragraph } from "@/components/Paragraph";
 import { CustomLink } from "@/components/CustomLink";
 import { Container } from "@/components/Container";
 import { Footer } from "@/components/Footer";
+import Link from "next/link";
+import { IconArrowUp } from "@tabler/icons-react";
 
 // ─── Stat card ────────────────────────────────────────────────────────────────
 function StatCard({ metric, label }: { metric: string; label: string }) {
@@ -366,32 +368,51 @@ export default function AboutPage() {
         </Container> */}
 
         {/* ── Closing CTA ───────────────────────────────────────────────────── */}
-        <Container className="pb-20 md:pb-28">
-          <div className="max-w-2xl">
-            <Heading as="h2" className="text-neutral-900 leading-tight mb-4">
-              Stop managing support in your inbox.
+        <div className="border-t border-neutral-200 bg-neutral-50">
+          <Container className="py-16 text-center">
+            <p className="font-schibsted text-xs font-semibold uppercase tracking-widest text-sky-600 mb-4">
+              Ready to get started?
+            </p>
+            <Heading as="h2" className="text-neutral-900 font-light tracking-tighter leading-tight mb-4">
+              Stop managing support{" "}
+              <span className="text-sky-800">in your inbox.</span>
             </Heading>
             <Paragraph variant="home-par" className="text-neutral-600 mb-8">
               Your team is already in Slack. Your customers deserve a response
               in minutes, not hours. SyncSupport connects the two — instantly,
               simply, and without per-seat pricing that punishes you for growing.
             </Paragraph>
-            <div className="flex flex-col sm:flex-row items-start gap-4">
-              <CustomLink
-                href="/sign-up"
-                className="px-7 py-3.5 bg-neutral-900 text-white font-schibsted font-semibold text-sm rounded-xl hover:bg-neutral-800 transition-colors duration-200 shadow-sm hover:shadow-md"
-              >
-                Get started free
-              </CustomLink>
-              <CustomLink
-                href="/docs"
-                className="px-7 py-3.5 border border-neutral-200 text-neutral-700 font-schibsted font-semibold text-sm rounded-xl hover:border-neutral-300 hover:bg-neutral-50 transition-colors duration-200"
-              >
-                Read the docs
-              </CustomLink>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              {/* Get Started — black button */}
+              <div className="bg-gradient-to-b from-white/20 to-transparent rounded-[16px] inline-flex">
+                <Link href="/sign-up" className="block">
+                  <button className="group p-[4px] rounded-[12px] bg-gradient-to-b from-zinc-700 to-black shadow-[0_1px_2px_rgba(0,0,0,0.5)] active:shadow-[0_0px_1px_rgba(0,0,0,0.5)] active:scale-[0.995]">
+                    <div className="bg-gradient-to-b from-white/[0.08] to-transparent rounded-[8px] px-4 py-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-schibsted font-semibold tracking-wide uppercase text-white text-sm">Get started free</span>
+                        <div className="relative flex items-center justify-center w-5 h-5">
+                          <span className="absolute inset-0 rounded-full bg-white/0 backdrop-blur-0 group-hover:bg-white/20 group-hover:backdrop-blur-sm transition-all duration-150 ease-out" />
+                          <IconArrowUp size={13} stroke={2.5} className="relative text-white rotate-90 transition-transform duration-100 ease-out group-hover:rotate-45" />
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                </Link>
+              </div>
+
+              {/* Read the docs — white button */}
+              <div className="rounded-[16px] inline-flex">
+                <Link href="/docs" className="block">
+                  <button className="group p-[4px] rounded-[12px] bg-gradient-to-b from-white to-stone-200/40 shadow-[0_1px_3px_rgba(0,0,0,0.5)] active:shadow-[0_0px_1px_rgba(0,0,0,0.5)] active:scale-[0.995]">
+                    <div className="bg-gradient-to-b from-stone-200/40 to-white/80 rounded-[8px] px-4 py-[6px]">
+                      <span className="font-schibsted font-semibold tracking-wide uppercase text-neutral-900 text-sm">Read the docs</span>
+                    </div>
+                  </button>
+                </Link>
+              </div>
             </div>
-          </div>
-        </Container>
+          </Container>
+        </div>
 
         <Footer />
 

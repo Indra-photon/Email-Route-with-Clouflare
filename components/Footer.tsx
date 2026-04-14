@@ -17,29 +17,38 @@ const footerSections: FooterSection[] = [
   {
     title: "Product",
     links: [
-      { label: "Features", href: "#features" },
-      { label: "Pricing", href: "#pricing" },
+      // { label: "Features", href: "#features" },       // hash link — broken outside homepage
+      // { label: "Pricing", href: "#pricing" },
+      { label: "About Us", href: "/about" },         // hash link — broken outside homepage
+      { label: "Pricing", href: "/pricing" },
       { label: "Documentation", href: "/docs" },
-      { label: "Support", href: "/support" },
-      { label: "Roadmap", href: "/roadmap" }
+      // { label: "Support", href: "/support" },         // page doesn't exist yet
+      // { label: "Roadmap", href: "/roadmap" }          // page doesn't exist yet
+      { label: "AI Visibility Audit by WebAudits.dev", href: "https://webaudits.dev" },
     ]
   },
   {
     title: "Resources",
     links: [
-      { label: "Getting Started", href: "/docs/getting-started" },
-      { label: "Setup Guides", href: "/docs/guides" },
-      { label: "API Reference", href: "/docs/api" },
-      { label: "Integrations", href: "/integrations" },
-      { label: "Status", href: "https://status.emailrouter.com" }
+      { label: "Documentation", href: "/docs" },
+      { label: "Domains", href: "/docs/domains" },
+      { label: "Email Aliases", href: "/docs/aliases" },
+      { label: "Tickets", href: "/docs/tickets" },
+      { label: "Slack Integration", href: "/docs/integrations/slack" },
+      // { label: "Discord", href: "/docs/integrations/discord" },
+      { label: "Live Chat", href: "/docs/chatbot" },
+      // { label: "Getting Started", href: "/docs/getting-started" },  // page doesn't exist yet
+      // { label: "Setup Guides", href: "/docs/guides" },              // page doesn't exist yet
+      // { label: "API Reference", href: "/docs/api" },                // page doesn't exist yet
+      // { label: "Status", href: "https://status.emailrouter.com" }   // old branding — needs new URL
     ]
   },
   {
     title: "Company",
     links: [
-      { label: "About", href: "/about" },
+      // { label: "About", href: "/about" },             // page doesn't exist yet
       { label: "Blog", href: "/blog" },
-      { label: "Contact", href: "/contact" },
+      // { label: "Contact", href: "/contact" },         // page doesn't exist yet
       { label: "Privacy Policy", href: "/privacy" },
       { label: "Terms of Service", href: "/terms-of-service" },
       { label: "Terms and Conditions", href: "/terms-and-conditions" }
@@ -48,11 +57,11 @@ const footerSections: FooterSection[] = [
   {
     title: "Support",
     links: [
-      { label: "Help Center", href: "/support" },
-      { label: "FAQ", href: "#faq" },
-      { label: "Contact Support", href: "mailto:help@syncsupport.app" },
-      { label: "Report Bug", href: "/report-bug" },
-      { label: "Feature Request", href: "/feature-request" }
+      // { label: "Help Center", href: "/support" },                         // page doesn't exist yet
+      { label: "FAQ", href: "/frequently-asked-questions" },
+      { label: "Contact Support", href: "mailto:support@syncsupport.app" }, // fixed: was help@
+      // { label: "Report Bug", href: "/report-bug" },                       // page doesn't exist yet
+      // { label: "Feature Request", href: "/feature-request" }              // page doesn't exist yet
     ]
   }
 ];
@@ -70,16 +79,16 @@ export function Footer() {
             <div className="mb-4">
               <Link href="/" className="flex items-center gap-2 group w-fit">
                 <Logo />
-                <span className="font-schibsted text-lg font-semibold text-white group-hover:text-sky-200 transition-colors duration-150">SyncSupport</span>
+                <span className="font-schibsted text-lg font-semibold text-white transition-colors duration-150">SyncSupport</span>
               </Link>
-              <p className="text-sm font-schibsted font-normal text-sky-200 mt-2 max-w-xs">
+              <p className="text-sm font-schibsted font-normal text-white mt-2 max-w-xs">
                 Route your support emails directly to Slack. Fast, collaborative,
                 and built for teams who want to work smarter.
               </p>
             </div>
 
-            {/* Social Links */}
-            <div className="flex items-center gap-4 mt-6">
+            {/* Social Links — all URLs need updating to syncsupport branding */}
+            {/* <div className="flex items-center gap-4 mt-6">
               <a
                 href="https://twitter.com/emailrouter"
                 target="_blank"
@@ -124,24 +133,35 @@ export function Footer() {
                   <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
                 </svg>
               </a>
-            </div>
+            </div> */}
           </div>
 
           {/* Footer Links Columns */}
           {footerSections.map((section) => (
             <div key={section.title} className="col-span-1">
-              <h4 className="text-sm font-schibsted font-semibold text-white mb-4">
+              <h4 className="text-sm font-schibsted font-semibold text-sky-200 mb-4">
                 {section.title}
               </h4>
               <ul className="space-y-3">
                 {section.links.map((link) => (
                   <li key={link.label}>
+                    {link.href.startsWith("http") ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-schibsted font-normal text-white transition-colors"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
                     <Link
                       href={link.href}
-                      className="text-sm font-schibsted font-normal text-sky-200 hover:text-white transition-colors"
+                      className="text-sm font-schibsted font-normal text-white transition-colors"
                     >
                       {link.label}
                     </Link>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -160,7 +180,7 @@ export function Footer() {
             {/* Legal Links */}
             <div className="flex items-center gap-6">
               <Link
-                href="/terms"
+                href="/terms-of-service"
                 className="text-xs font-schibsted font-normal text-sky-300 hover:text-white transition-colors"
               >
                 Terms of Service
@@ -171,21 +191,20 @@ export function Footer() {
               >
                 Privacy Policy
               </Link>
-              <Link
+              {/* <Link
                 href="/cookies"
                 className="text-xs font-schibsted font-normal text-sky-300 hover:text-white transition-colors"
               >
                 Cookie Policy
-              </Link>
+              </Link> */}
             </div>
           </div>
 
           {/* Built with badge */}
-          <div className="mt-6 flex items-center justify-center">
-            <p className="text-xs font-schibsted font-normal text-sky-300">
-              Built with{" "}
-              <span className="text-white">♥</span> for teams who love Slack
-            </p>
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <span className="hidden sm:block text-xs font-schibsted font-normal text-neutral-100 hover:text-white transition-colors">
+              Built by <Link href="https://x.com/Nil_phy_dreamer" className="hover:underline">Indranil</Link> and <Link href="" className="hover:underline">Aditya</Link>{" "}
+            </span>
           </div>
         </div>
       </div>

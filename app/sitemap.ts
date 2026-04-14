@@ -38,11 +38,12 @@ const MARKETING_PAGES: SitemapEntry[] = [
   // ── Core ──
   url("/",          { priority: 1.0, changeFreq: "weekly" }),
   url("/pricing",   { priority: 0.9, changeFreq: "weekly" }),
-  // url("/about",     { priority: 0.7, changeFreq: "monthly" }),
+  url("/about",     { priority: 0.7, changeFreq: "monthly" }),
   // url("/contact",   { priority: 0.6, changeFreq: "monthly" }),
   // url("/changelog", { priority: 0.7, changeFreq: "weekly" }),
   // url("/roadmap",   { priority: 0.7, changeFreq: "weekly" }),
   url("/blog",      { priority: 0.8, changeFreq: "weekly" }),
+  url("/frequently-asked-questions", { priority: 0.8, changeFreq: "monthly" }),
 
   // ── Legal ──
   url("/privacy",               { priority: 0.4, changeFreq: "yearly" }),
@@ -61,9 +62,9 @@ const MARKETING_PAGES: SitemapEntry[] = [
 const DOCS_PAGES: SitemapEntry[] = [
   url("/docs",                          { priority: 0.9, changeFreq: "weekly" }),
   url("/docs/domains",                  { priority: 0.8, changeFreq: "monthly" }),
-  url("/docs/integrations",             { priority: 0.8, changeFreq: "monthly" }),
+  // url("/docs/integrations",             { priority: 0.8, changeFreq: "monthly" }),
   url("/docs/integrations/slack",       { priority: 0.8, changeFreq: "monthly" }),
-  url("/docs/integrations/discord",     { priority: 0.7, changeFreq: "monthly" }),
+  // url("/docs/integrations/discord",     { priority: 0.7, changeFreq: "monthly" }),
   url("/docs/aliases",                  { priority: 0.8, changeFreq: "monthly" }),
   url("/docs/tickets",                  { priority: 0.7, changeFreq: "monthly" }),
   url("/docs/chatbot",                  { priority: 0.7, changeFreq: "monthly" }),
