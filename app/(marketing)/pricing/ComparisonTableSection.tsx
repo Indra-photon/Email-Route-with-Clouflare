@@ -19,7 +19,7 @@ type CellValue =
 
 interface ComparisonRow {
   feature: string;
-  slackdesk: CellValue;
+  syncsupport: CellValue;
   ticketping: CellValue;
   front: CellValue;
   pylon: CellValue;
@@ -31,7 +31,7 @@ interface ComparisonRow {
 const rows: ComparisonRow[] = [
   {
     feature: "Email → Slack routing",
-    slackdesk:  { type: "yes" },
+    syncsupport:  { type: "yes" },
     ticketping: { type: "yes" },
     front:      { type: "partial", note: "Slack notification only" },
     pylon:      { type: "yes" },
@@ -39,7 +39,7 @@ const rows: ComparisonRow[] = [
   },
   {
     feature: "Reply from Slack",
-    slackdesk:  { type: "yes" },
+    syncsupport:  { type: "yes" },
     ticketping: { type: "yes" },
     front:      { type: "partial", note: "Via Slack Connect only" },
     pylon:      { type: "yes" },
@@ -47,7 +47,7 @@ const rows: ComparisonRow[] = [
   },
   {
     feature: "Live chat widget",
-    slackdesk:  { type: "yes" },
+    syncsupport:  { type: "yes" },
     ticketping: { type: "yes" },
     front:      { type: "yes" },
     pylon:      { type: "yes" },
@@ -55,7 +55,7 @@ const rows: ComparisonRow[] = [
   },
   {
     feature: "Flat pricing — no per-seat fees",
-    slackdesk:  { type: "yes" },
+    syncsupport:  { type: "yes" },
     ticketping: { type: "yes" },
     front:      { type: "no" },
     pylon:      { type: "no" },
@@ -63,7 +63,7 @@ const rows: ComparisonRow[] = [
   },
   {
     feature: "Multiple email aliases",
-    slackdesk:  { type: "yes" },
+    syncsupport:  { type: "yes" },
     ticketping: { type: "partial", note: "Limited on lower tiers" },
     front:      { type: "yes" },
     pylon:      { type: "partial", note: "Via email integration" },
@@ -71,7 +71,7 @@ const rows: ComparisonRow[] = [
   },
   {
     feature: "Multi-domain support",
-    slackdesk:  { type: "yes" },
+    syncsupport:  { type: "yes" },
     ticketping: { type: "partial", note: "Scale plan only" },
     front:      { type: "yes" },
     pylon:      { type: "yes" },
@@ -79,7 +79,7 @@ const rows: ComparisonRow[] = [
   },
   {
     feature: "Ticket claiming & assignment",
-    slackdesk:  { type: "yes" },
+    syncsupport:  { type: "yes" },
     ticketping: { type: "yes" },
     front:      { type: "yes" },
     pylon:      { type: "yes" },
@@ -87,7 +87,7 @@ const rows: ComparisonRow[] = [
   },
   {
     feature: "Reports & analytics",
-    slackdesk:  { type: "yes" },
+    syncsupport:  { type: "yes" },
     ticketping: { type: "partial", note: "Startup plan+" },
     front:      { type: "yes" },
     pylon:      { type: "yes" },
@@ -95,7 +95,7 @@ const rows: ComparisonRow[] = [
   },
   {
     feature: "AI features",
-    slackdesk:  { type: "partial", note: "Coming soon" },
+    syncsupport:  { type: "partial", note: "Coming soon" },
     ticketping: { type: "yes" },
     front:      { type: "yes" },
     pylon:      { type: "partial", note: "Expensive add-on" },
@@ -103,7 +103,7 @@ const rows: ComparisonRow[] = [
   },
   {
     feature: "Pricing",
-    slackdesk:  { type: "text", value: "$19–$159/mo flat" },
+    syncsupport:  { type: "text", value: "$19–$159/mo flat" },
     ticketping: { type: "text", value: "$29–$199/mo flat" },
     front:      { type: "text", value: "$25/seat/mo" },
     pylon:      { type: "text", value: "$59/seat/mo" },
@@ -111,7 +111,7 @@ const rows: ComparisonRow[] = [
   },
   {
     feature: "Setup time",
-    slackdesk:  { type: "text", value: "~5 minutes" },
+    syncsupport:  { type: "text", value: "~5 minutes" },
     ticketping: { type: "text", value: "~10 minutes" },
     front:      { type: "text", value: "~1–2 hours" },
     pylon:      { type: "text", value: "2–5 days" },
@@ -119,11 +119,11 @@ const rows: ComparisonRow[] = [
   },
 ];
 
-const competitors = ["slackdesk", "ticketping", "front", "pylon", "zendesk"] as const;
+const competitors = ["syncsupport", "ticketping", "front", "pylon", "zendesk"] as const;
 type Competitor = typeof competitors[number];
 
 const LABELS: Record<Competitor, string> = {
-  slackdesk:  "SlackDesk",
+  syncsupport: "SyncSupport",
   ticketping: "Ticketping",
   front:      "Front",
   pylon:      "Pylon",
@@ -237,7 +237,7 @@ export function ComparisonTableSection() {
           transition={{ duration: 0.5, delay: 0.1, ease: EASE_OUT_QUAD }}
           className="w-full overflow-x-auto rounded-2xl border border-neutral-200 shadow-sm"
         >
-          <table className="w-full min-w-[680px] border-collapse">
+          <table className="w-full min-w-170 border-collapse">
 
             {/* ── Column headers ── */}
             <thead>
@@ -250,7 +250,7 @@ export function ComparisonTableSection() {
                 </th>
 
                 {competitors.map((c) => {
-                  const isUs = c === "slackdesk";
+                  const isUs = c === "syncsupport";
                   return (
                     <th
                       key={c}
@@ -309,7 +309,7 @@ export function ComparisonTableSection() {
                     </td>
 
                     {competitors.map((c) => {
-                      const isUs = c === "slackdesk";
+                      const isUs = c === "syncsupport";
                       const value = row[c];
                       return (
                         <td

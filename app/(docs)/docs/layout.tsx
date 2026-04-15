@@ -8,69 +8,49 @@ import type { Metadata } from "next";
 import * as PageTree from "fumadocs-core/page-tree";
 import { CustomItem, CustomFolder } from "@/components/docs/SidebarComponents";
 
-export const metadata: Metadata = {
-  title: "Documentation — Setup Guides, API Reference & Integrations",
-  description:
-    "Learn how to set up SyncSupport in 5 minutes. Step-by-step guides for routing support emails to Slack, connecting Discord, creating email aliases, embedding live chat widgets, managing tickets, and using the REST API.",
+const BASE_URL = "https://www.syncsupport.app";
 
+export const metadata: Metadata = {
+  title: {
+    default: "SyncSupport Docs",
+    template: "%s — SyncSupport Docs",
+  },
+  description:
+    "Learn how to route support emails to Slack, embed a live chat widget, create email aliases, and manage customer tickets — all without leaving Slack. Set up in under 5 minutes.",
   keywords: [
-    "how to route support emails to Slack",
-    "SyncSupport setup guide",
-    "email to Slack setup",
-    "Slack webhook email setup",
-    "connect email to Slack channel",
+    "SyncSupport documentation",
+    "email to Slack routing setup",
+    "Slack customer support docs",
+    "how to route email to Slack",
+    "SyncSupport getting started",
     "how to create email alias Slack",
     "how to embed live chat widget website",
-    "live chat Slack setup guide",
-    "canned responses setup helpdesk",
-    "Slack ticket management guide",
-    "Discord email routing setup",
     "DNS MX record email forwarding setup",
-    "SyncSupport API reference",
-    "email routing API docs",
-    "SyncSupport documentation",
   ],
-
   openGraph: {
-    title: "SyncSupport Docs — Set Up Email-to-Slack Routing in 5 Minutes",
+    title: "SyncSupport Docs — Set Up Email-to-Slack Support in 5 Minutes",
     description:
-      "Step-by-step guides for email routing, Slack and Discord integrations, live chat widget setup, canned responses, ticket management, and the SyncSupport API.",
-    url: "https://www.syncsupport.app/docs",
+      "Step-by-step guides for email routing, Slack setup, live chat widgets, email aliases, and ticket management. Everything your team needs to handle support without leaving Slack.",
+    url: `${BASE_URL}/docs`,
     siteName: "SyncSupport",
     locale: "en_US",
     type: "website",
-    images: [
-      {
-        url: "/images/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "SyncSupport Documentation",
-      },
-    ],
+    images: [{ url: "/images/og-image.png", width: 1200, height: 630, alt: "SyncSupport Docs" }],
   },
-
   twitter: {
     card: "summary_large_image",
     site: "@syncsupportapp",
-    title: "SyncSupport Docs — Set Up Email-to-Slack Routing in 5 Minutes",
-    description:
-      "Guides for email routing, Slack & Discord setup, live chat widgets, canned responses, and the REST API.",
+    title: "SyncSupport Docs — Email-to-Slack Support Setup",
+    description: "Guides for routing emails to Slack, live chat, aliases, and ticket management.",
     images: ["/images/og-image.png"],
   },
-
   alternates: {
-    canonical: "https://www.syncsupport.app/docs",
+    canonical: `${BASE_URL}/docs`,
   },
-
   robots: {
     index: true,
     follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
   },
 };
 
@@ -80,30 +60,15 @@ const tree: PageTree.Root = {
   name: "SyncSupport Docs",
   children: [
     { type: "page", name: "Introduction", url: "/docs" },
-    // { type: "page", name: "Quick Start", url: "/docs/getting-started" },
     {
       type: "folder",
       name: "Setup",
       defaultOpen: true,
       children: [
         { type: "page", name: "Add Your Domain", url: "/docs/domains" },
-        // { type: "page", name: "Integrations", url: "/docs/integrations" },
-        {
-          type: "page",
-          name: "Slack Integration",
-          url: "/docs/integrations/slack",
-        },
-        // {
-        //   type: "page",
-        //   name: "Discord Integration",
-        //   url: "/docs/integrations/discord",
-        // },
+        { type: "page", name: "Slack Integration", url: "/docs/integrations/slack" },
         { type: "page", name: "Email Aliases", url: "/docs/aliases" },
-        {
-          type: "page",
-          name: "Chat Widget Integration",
-          url: "/docs/chatbot",
-        },
+        { type: "page", name: "Chat Widget Integration", url: "/docs/chatbot" },
       ],
     },
     {
@@ -112,40 +77,74 @@ const tree: PageTree.Root = {
       defaultOpen: true,
       children: [
         { type: "page", name: "Ticket Management", url: "/docs/tickets" },
-        // { type: "page", name: "Chat Widget", url: "/docs/chatbot" },
-        // { type: "page", name: "API Reference", url: "/docs/api" },
-        // { type: "page", name: "Advanced", url: "/docs/advanced" },
-        // { type: "page", name: "Resources", url: "/docs/resources" },
-        // { type: "page", name: "Troubleshooting", url: "/docs/troubleshooting" },
       ],
     },
   ],
 };
+
+// ─── JSON-LD ──────────────────────────────────────────────────────────────────
+
+function DocsJsonLd() {
+  const schema = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": `${BASE_URL}/docs`,
+        url: `${BASE_URL}/docs`,
+        name: "SyncSupport Documentation",
+        description:
+          "Official documentation for SyncSupport — how to route support emails to Slack, set up live chat, create aliases, and manage tickets.",
+        isPartOf: { "@id": BASE_URL },
+        breadcrumb: {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
+            { "@type": "ListItem", position: 2, name: "Docs", item: `${BASE_URL}/docs` },
+          ],
+        },
+      },
+      {
+        "@type": "TechArticle",
+        "@id": `${BASE_URL}/docs#article`,
+        headline: "How to Set Up SyncSupport — Email-to-Slack Support Routing",
+        description:
+          "Complete setup guide: connect Slack, add your domain, create email aliases, embed a chat widget, and start handling customer support without leaving Slack.",
+        url: `${BASE_URL}/docs`,
+        publisher: { "@type": "Organization", name: "SyncSupport", url: BASE_URL },
+      },
+    ],
+  };
+  return (
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+  );
+}
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
 
 export default function DocsLayoutWrapper({ children }: { children: ReactNode }) {
   return (
     <FumaProvider>
+      <DocsJsonLd />
       <NavBar />
       <div className="docs-layout" style={{ "--fd-nav-height": "57px" } as React.CSSProperties}>
-      <DocsLayout
-        tree={tree}
-        nav={{ enabled: false }}
-        searchToggle={{ enabled: false }}
-        slots={{ themeSwitch: false }}
-        sidebar={{
-          defaultOpenLevel: 1,
-          collapsible: true,
-          footer: null,
-          components: {
-            Item: CustomItem,
-            Folder: CustomFolder,
-          },
-        }}
-      >
-        {children}
-      </DocsLayout>
+        <DocsLayout
+          tree={tree}
+          nav={{ enabled: false }}
+          searchToggle={{ enabled: false }}
+          slots={{ themeSwitch: false }}
+          sidebar={{
+            defaultOpenLevel: 1,
+            collapsible: true,
+            footer: null,
+            components: {
+              Item: CustomItem,
+              Folder: CustomFolder,
+            },
+          }}
+        >
+          {children}
+        </DocsLayout>
       </div>
     </FumaProvider>
   );

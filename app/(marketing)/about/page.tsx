@@ -310,62 +310,6 @@ export default function AboutPage() {
           </div>
         </Container>
 
-        {/* ── FAQ ───────────────────────────────────────────────────────────── */}
-        {/* <Container>
-          <p className="font-schibsted text-xs font-semibold uppercase tracking-widest text-sky-600 mb-4">
-            Common questions
-          </p>
-          <Heading as="h2" className="text-neutral-900 leading-tight mb-10 max-w-xl">
-            Everything you wanted to ask.
-          </Heading>
-
-          <div className="max-w-3xl divide-y divide-neutral-200">
-            {[
-              {
-                q: "Can I reply to customer emails from Slack?",
-                a: "Yes. SyncSupport lets you reply directly from Slack. Your reply lands in the customer's inbox as a proper email from your domain. No switching to Gmail or Outlook.",
-              },
-              {
-                q: "Does SyncSupport support live chat on my website?",
-                a: "Yes. Embed our chat widget in one line of code. Customer messages — including PDFs and images they send — appear in your Slack channel in real time alongside your email tickets.",
-              },
-              {
-                q: "How long does setup take?",
-                a: "Most teams are receiving tickets in Slack within 5 minutes of signing up. Connect Slack, add your domain, create an email alias. No engineering work required.",
-              },
-              {
-                q: "Do I pay per team member?",
-                a: "No. SyncSupport uses flat-rate pricing. Add as many team members as you need — your bill stays the same. Plans start from $19/month.",
-              },
-              {
-                q: "Does it work with Discord too?",
-                a: "Yes. SyncSupport supports both Slack and Discord. Connect whichever workspace your team already uses.",
-              },
-              {
-                q: "What happens if two agents try to reply to the same ticket?",
-                a: "When someone claims a ticket in Slack, it's immediately marked as owned and visible to the whole team. No duplicate replies, no confusion about who's handling what.",
-              },
-            ].map(({ q, a }) => (
-              <div key={q} className="py-6">
-                <Heading as="h3" variant="small" className="text-neutral-900 font-semibold mb-2">
-                  {q}
-                </Heading>
-                <Paragraph variant="default" className="text-neutral-600 leading-relaxed">
-                  {a}
-                </Paragraph>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-10">
-            <CustomLink
-              href="/docs"
-              className="inline-flex items-center font-schibsted text-sm font-semibold text-sky-800 hover:text-sky-900 underline underline-offset-4"
-            >
-              Read the full docs
-            </CustomLink>
-          </div>
-        </Container> */}
 
         {/* ── Closing CTA ───────────────────────────────────────────────────── */}
         <div className="border-t border-neutral-200 bg-neutral-50">

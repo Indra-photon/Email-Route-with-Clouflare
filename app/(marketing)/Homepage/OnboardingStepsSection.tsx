@@ -154,7 +154,7 @@ const steps = [
     title: "Add the live chat widget",
     description:
       "Copy the one-line snippet from your dashboard and paste it into your site's <head>. The widget goes live instantly — no npm, no build step. Your customers see it in seconds.",
-    docsHref: "/docs/widget",
+    docsHref: "/docs/chatbot",
   },
 ];
 

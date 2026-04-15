@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     title: "FAQ — Frequently Asked Questions About SyncSupport",
     description:
       "Everything you need to know about SyncSupport — email routing, live chat, canned responses, ticket tracking, pricing and security. All answered in one place.",
-    url: `${BASE_URL}/faq`,
+    url: `${BASE_URL}/frequently-asked-questions`,
     siteName: "SyncSupport",
     locale: "en_US",
     type: "website",
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
 
   // ── Canonical ─────────────────────────────────────────────────────────────
   alternates: {
-    canonical: `${BASE_URL}/faq`,
+    canonical: `${BASE_URL}/frequently-asked-questions`,
   },
 
   // ── Robots ────────────────────────────────────────────────────────────────
@@ -88,8 +88,8 @@ function FaqJsonLd() {
       // ── WebPage + Breadcrumb ────────────────────────────────────────────
       {
         "@type": "WebPage",
-        "@id": `${BASE_URL}/faq`,
-        url: `${BASE_URL}/faq`,
+        "@id": `${BASE_URL}/frequently-asked-questions`,
+        url: `${BASE_URL}/frequently-asked-questions`,
         name: "SyncSupport FAQ — Frequently Asked Questions",
         description:
           "Answers to common questions about SyncSupport — the customer support tool built inside Slack. Covers setup, email routing, live chat, canned responses, ticket tracking, pricing and security.",
@@ -107,7 +107,7 @@ function FaqJsonLd() {
               "@type": "ListItem",
               position: 2,
               name: "FAQ",
-              item: `${BASE_URL}/faq`,
+              item: `${BASE_URL}/frequently-asked-questions`,
             },
           ],
         },
@@ -116,8 +116,8 @@ function FaqJsonLd() {
       // ── FAQPage schema ──────────────────────────────────────────────────
       {
         "@type": "FAQPage",
-        "@id": `${BASE_URL}/faq#faqpage`,
-        url: `${BASE_URL}/faq`,
+        "@id": `${BASE_URL}/frequently-asked-questions#faqpage`,
+        url: `${BASE_URL}/frequently-asked-questions`,
         name: "SyncSupport Frequently Asked Questions",
         mainEntity: [
           // ── Getting Started ────────────────────────────────────────────
