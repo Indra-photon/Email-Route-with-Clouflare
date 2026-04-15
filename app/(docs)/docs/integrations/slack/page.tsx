@@ -152,6 +152,7 @@ import { Heading } from "@/components/Heading";
 import { Paragraph } from "@/components/Paragraph";
 import { Highlight } from "@/components/Highlight";
 import { CustomLink } from "@/components/CustomLink";
+import { DashboardLink } from "@/components/docs/DashboardLink";
 import { Callout } from "@/components/docs/Callout";
 import { DocsNavigation } from "@/components/docs/DocsNavigation";
 import { DocsPage, DocsBody } from "fumadocs-ui/page";
@@ -172,12 +173,12 @@ const STEPS: { id: string; title: string; body: React.ReactNode }[] = [
         Once you have added your domain and verified it <CustomLink href="/docs/domains" className="text-sky-800 hover:text-sky-900 underline">How to Add and Configure Your Domain</CustomLink>, 
         you can set up your Slack integration. From the dashboard,
         navigate to{" "}
-        <CustomLink
+        <DashboardLink
           href="/dashboard/integrations"
           className="text-sky-800 hover:text-sky-900 underline"
         >
           Integrations
-        </CustomLink>{" "}
+        </DashboardLink>{" "}
         from the sidebar. This is where all your workspace connections live.
       </Paragraph>
     ),

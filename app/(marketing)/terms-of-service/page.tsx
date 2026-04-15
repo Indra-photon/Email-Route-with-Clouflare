@@ -89,10 +89,10 @@ export default function TermsOfServicePage() {
               credentials and for all activity that occurs under your account. Notify
               us immediately at{" "}
               <a
-                href="mailto:support@syncsupport.com"
+                href="mailto:support@syncsupport.app"
                 className="text-sky-600 hover:text-sky-700 transition-colors"
               >
-                support@syncsupport.com
+                support@syncsupport.app
               </a>{" "}
               if you suspect any unauthorised access.
             </Paragraph>
@@ -277,10 +277,10 @@ export default function TermsOfServicePage() {
               <Paragraph className="text-neutral-700">
                 Email:{" "}
                 <a
-                  href="mailto:legal@syncsupport.com"
+                  href="mailto:legal@syncsupport.app"
                   className="text-sky-600 hover:text-sky-700 transition-colors"
                 >
-                  legal@syncsupport.com
+                  legal@syncsupport.app
                 </a>
               </Paragraph>
               <Paragraph className="text-neutral-700">

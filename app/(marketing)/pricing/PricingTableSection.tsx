@@ -9,6 +9,7 @@ import { Heading } from "@/components/Heading";
 import { Paragraph } from "@/components/Paragraph";
 import { useSubscription } from "@/hooks/useSubscription";
 import { DowngradeModal } from "@/components/billing/DowngradeModal";
+import { IconArrowUp } from "@tabler/icons-react";
 
 // ─── Types from DB (mirrors IPricingPlan but snake_case id) ───────────────────
 
@@ -245,65 +246,96 @@ function PricingCard({
     lostFeatures.push(`Downgrade from ${currentMeta.name} ($${currentMeta.price}/mo) to ${plan.name} ($${plan.price}/mo)`);
   }
 
-  function renderCta() {
-    const baseClass = `block w-full text-center rounded-xl px-4 py-3 font-schibsted text-sm font-semibold transition-colors duration-150 `;
-    const highlightVariant = isHighlight ? "bg-white text-neutral-800 hover:bg-neutral-100 " : "bg-white text-neutral-900 border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 ";
+  function BlackBtn({ label, onClick, disabled }: { label: string; onClick?: () => void; disabled?: boolean }) {
+    return (
+      <div className="bg-gradient-to-b from-white/20 to-transparent rounded-[16px] w-full inline-flex">
+        <button
+          onClick={onClick}
+          disabled={disabled}
+          className="group w-full p-[4px] rounded-[12px] bg-gradient-to-b from-zinc-700 to-black shadow-[0_1px_2px_rgba(0,0,0,0.5)] active:shadow-[0_0px_1px_rgba(0,0,0,0.5)] active:scale-[0.995] disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          <div className="bg-gradient-to-b from-white/[0.08] to-transparent rounded-[8px] px-4 py-2">
+            <div className="flex items-center justify-center gap-2">
+              <span className="font-schibsted font-semibold tracking-wide uppercase text-white text-sm">{label}</span>
+              <div className="relative flex items-center justify-center w-5 h-5">
+                <span className="absolute inset-0 rounded-full bg-white/0 group-hover:bg-white/20 group-hover:backdrop-blur-sm transition-all duration-150 ease-out" />
+                <IconArrowUp size={13} stroke={2.5} className="relative text-white rotate-90 transition-transform duration-100 ease-out group-hover:rotate-45" />
+              </div>
+            </div>
+          </div>
+        </button>
+      </div>
+    );
+  }
 
+  function WhiteBtn({ label, onClick, disabled, href }: { label: string; onClick?: () => void; disabled?: boolean; href?: string }) {
+    const inner = (
+      <div className="bg-gradient-to-b from-stone-200/40 to-white/80 rounded-[8px] px-4 py-[5px]">
+        <div className="flex items-center justify-center gap-2">
+          <span className="font-schibsted font-semibold tracking-wide uppercase text-neutral-900 text-sm">{label}</span>
+          <div className="relative flex items-center justify-center w-5 h-5">
+            <span className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/5 transition-all duration-150 ease-out rounded-full" />
+            <IconArrowUp size={13} stroke={2.5} className="relative text-neutral-800 rotate-90 transition-transform duration-100 ease-out group-hover:rotate-45" />
+          </div>
+        </div>
+      </div>
+    );
+    const btnClass = "group w-full p-[4px] rounded-[12px] bg-gradient-to-b from-white to-stone-200/40 shadow-[0_1px_3px_rgba(0,0,0,0.15)] active:shadow-[0_0px_1px_rgba(0,0,0,0.1)] active:scale-[0.995] disabled:opacity-60 disabled:cursor-not-allowed";
+    if (href) return (
+      <div className="rounded-[16px] w-full inline-flex">
+        <a href={href} className="block w-full"><button className={btnClass}>{inner}</button></a>
+      </div>
+    );
+    return (
+      <div className="rounded-[16px] w-full inline-flex">
+        <button onClick={onClick} disabled={disabled} className={btnClass}>{inner}</button>
+      </div>
+    );
+  }
+
+  function renderCta() {
     switch (action) {
       case "not-logged-in":
-        return (
-          <a href="/sign-up" className={baseClass + highlightVariant} onClick={() => captureCtaClick("sign_up")}>
-            {plan.ctaLabel}
-          </a>
-        );
+        return isHighlight
+          ? <WhiteBtn label={plan.ctaLabel} href="/sign-up" onClick={() => captureCtaClick("sign_up")} />
+          : <BlackBtn label={plan.ctaLabel} onClick={() => { captureCtaClick("sign_up"); window.location.href = "/sign-up"; }} />;
 
       case "no-plan":
-        // Logged in but never purchased — go straight to payment
         return (
           <>
-            <button
-              onClick={() => { captureCtaClick("checkout"); handleDirectCheckout(); }}
-              disabled={checkoutLoading}
-              className={baseClass + highlightVariant + "disabled:opacity-60 disabled:cursor-not-allowed"}
-            >
-              {checkoutLoading ? "Redirecting…" : plan.ctaLabel}
-            </button>
-            {checkoutError && (
-              <p className="font-schibsted text-xs text-red-500 mt-2 text-center">{checkoutError}</p>
-            )}
+            {isHighlight
+              ? <WhiteBtn label={checkoutLoading ? "Redirecting…" : plan.ctaLabel} onClick={() => { captureCtaClick("checkout"); handleDirectCheckout(); }} disabled={checkoutLoading} />
+              : <BlackBtn label={checkoutLoading ? "Redirecting…" : plan.ctaLabel} onClick={() => { captureCtaClick("checkout"); handleDirectCheckout(); }} disabled={checkoutLoading} />
+            }
+            {checkoutError && <p className="font-schibsted text-xs text-red-500 mt-2 text-center">{checkoutError}</p>}
           </>
         );
 
       case "current-plan":
         return (
-          <span className={`${baseClass} cursor-default opacity-60 ${isHighlight ? "bg-white/30 text-white" : "bg-neutral-100 text-neutral-500 border border-neutral-200"}`}>
+          <span className={`block w-full text-center rounded-xl px-4 py-3 font-schibsted text-sm font-semibold cursor-default opacity-60 ${isHighlight ? "bg-white/30 text-white" : "bg-neutral-100 text-neutral-500 border border-neutral-200"}`}>
             Current plan
           </span>
         );
 
       case "upgrade":
-      case "renew":
+      case "renew": {
+        const label = checkoutLoading ? "Redirecting…" : action === "renew" ? `Renew — ${plan.name}` : `Upgrade to ${plan.name}`;
         return (
           <>
-            <button
-              onClick={() => { captureCtaClick(action); handleDirectCheckout(); }}
-              disabled={checkoutLoading}
-              className={baseClass + highlightVariant + "disabled:opacity-60 disabled:cursor-not-allowed"}
-            >
-              {checkoutLoading ? "Redirecting…" : action === "renew" ? `Renew with ${plan.name}` : `Upgrade to ${plan.name}`}
-            </button>
-            {checkoutError && (
-              <p className="font-schibsted text-xs text-red-500 mt-2 text-center">{checkoutError}</p>
-            )}
+            {isHighlight
+              ? <WhiteBtn label={label} onClick={() => { captureCtaClick(action); handleDirectCheckout(); }} disabled={checkoutLoading} />
+              : <BlackBtn label={label} onClick={() => { captureCtaClick(action); handleDirectCheckout(); }} disabled={checkoutLoading} />
+            }
+            {checkoutError && <p className="font-schibsted text-xs text-red-500 mt-2 text-center">{checkoutError}</p>}
           </>
         );
+      }
 
       case "downgrade":
         return (
           <>
-            <button onClick={() => { captureCtaClick("downgrade"); setDowngradeOpen(true); }} className={baseClass + "bg-white text-neutral-500 border border-neutral-200 hover:bg-neutral-50 "}>
-              Downgrade to {plan.name}
-            </button>
+            <BlackBtn label={`Downgrade to ${plan.name}`} onClick={() => { captureCtaClick("downgrade"); setDowngradeOpen(true); }} />
             <DowngradeModal
               isOpen={downgradeOpen}
               onClose={() => setDowngradeOpen(false)}
@@ -318,11 +350,9 @@ function PricingCard({
         );
 
       case "contact":
-        return (
-          <a href="/contact" className={baseClass + highlightVariant} onClick={() => captureCtaClick("contact")}>
-            Book a demo
-          </a>
-        );
+        return isHighlight
+          ? <WhiteBtn label="Book a demo" href="mailto:support@syncsupport.app" onClick={() => captureCtaClick("contact")} />
+          : <BlackBtn label="Book a demo" onClick={() => { captureCtaClick("contact"); window.location.href = "mailto:support@syncsupport.app"; }} />;
     }
   }
 
@@ -431,13 +461,38 @@ export function PricingTableSection({ plans }: { plans: DbPricingPlan[] }) {
             ))}
           </div>
 
-        <motion.p
-          initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: 0.4, ease: EASE_OUT_QUAD }}
-          className="text-center font-schibsted text-xs text-neutral-400 mt-8"
+        <motion.div
+          initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ duration: 0.45, delay: 0.4, ease: EASE_OUT_QUAD }}
+          className="mt-10 w-full rounded-2xl bg-neutral-50 px-8 py-7 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
+          style={{ boxShadow: "0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 2px -1px rgba(0,0,0,0.06), 0px 2px 4px 0px rgba(0,0,0,0.04)" }}
         >
-          We do not charge suddenly if the ticket volume increases. If you hit your monthly limit, new tickets will queue up and you'll get a notification — you can then choose to upgrade or wait for the next month when limits reset.
-        </motion.p>
+          <div className="flex-1">
+            <p className="font-schibsted text-xl font-semibold text-neutral-800 mb-1.5">
+              No surprise charges.{" "}
+              <span className="font-normal text-neutral-500">Ever.</span>
+            </p>
+            <p className="font-schibsted text-xs text-neutral-500 leading-relaxed">
+              If you hit your monthly limit, new tickets <span className="text-neutral-700 font-medium">queue up</span> — we never charge you automatically. You'll get a notification and can choose to upgrade or wait for the next month when limits reset.{" "}
+              <span className="text-neutral-400">Need custom volume pricing or have a question about plans?</span>
+            </p>
+          </div>
+          <div className="shrink-0 bg-gradient-to-b from-white/20 to-transparent rounded-[16px] inline-flex">
+            <a href="mailto:pricing@syncsupport.app" className="block">
+              <button className="group p-[4px] rounded-[12px] bg-gradient-to-b from-zinc-700 to-black shadow-[0_1px_2px_rgba(0,0,0,0.5)] active:shadow-[0_0px_1px_rgba(0,0,0,0.5)] active:scale-[0.995]">
+                <div className="bg-gradient-to-b from-white/[0.08] to-transparent rounded-[8px] px-4 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-schibsted font-semibold tracking-wide uppercase text-white text-sm">Contact Us</span>
+                    <div className="relative flex items-center justify-center w-5 h-5">
+                      <span className="absolute inset-0 rounded-full bg-white/0 backdrop-blur-0 group-hover:bg-white/20 group-hover:backdrop-blur-sm transition-all duration-150 ease-out" />
+                      <IconArrowUp size={13} stroke={2.5} className="relative text-white rotate-90 transition-transform duration-100 ease-out group-hover:rotate-45" />
+                    </div>
+                  </div>
+                </div>
+              </button>
+            </a>
+          </div>
+        </motion.div>
 
       </div>
     </section>

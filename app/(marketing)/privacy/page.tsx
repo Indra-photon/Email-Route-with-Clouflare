@@ -148,10 +148,10 @@ export default function PrivacyPage() {
             <Paragraph className="text-neutral-700 leading-relaxed">
               You may request deletion of your data at any time by contacting us at{" "}
               <a
-                href="mailto:privacy@syncsupport.com"
+                href="mailto:privacy@syncsupport.app"
                 className="text-sky-600 hover:text-sky-700 transition-colors"
               >
-                privacy@syncsupport.com
+                privacy@syncsupport.app
               </a>
               . Deletion requests are processed within 30 days.
             </Paragraph>
@@ -195,10 +195,10 @@ export default function PrivacyPage() {
             <Paragraph className="text-neutral-700 leading-relaxed mt-4">
               To exercise any of these rights, contact us at{" "}
               <a
-                href="mailto:privacy@syncsupport.com"
+                href="mailto:privacy@syncsupport.app"
                 className="text-sky-600 hover:text-sky-700 transition-colors"
               >
-                privacy@syncsupport.com
+                privacy@syncsupport.app
               </a>
               .
             </Paragraph>
@@ -255,10 +255,10 @@ export default function PrivacyPage() {
               <Paragraph className="text-neutral-700">
                 Email:{" "}
                 <a
-                  href="mailto:privacy@syncsupport.com"
+                  href="mailto:privacy@syncsupport.app"
                   className="text-sky-600 hover:text-sky-700 transition-colors"
                 >
-                  privacy@syncsupport.com
+                  privacy@syncsupport.app
                 </a>
               </Paragraph>
             </div>

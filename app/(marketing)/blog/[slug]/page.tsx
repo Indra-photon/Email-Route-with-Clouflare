@@ -10,8 +10,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { IconArrowUp } from "@tabler/icons-react";
 
-// ─── Use dynamic rendering — don't fail build if API is unreachable ───────────
-export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 export const revalidate = 3600;
 

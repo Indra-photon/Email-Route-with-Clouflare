@@ -25,7 +25,7 @@ export default function TroubleshootingPage() {
       </div>
 
       <Callout type="info" title="Still Need Help?">
-        If you can't find a solution here, contact support at <CustomLink href="mailto:support@emailrouter.com" className="text-sky-800 hover:text-sky-900 underline">support@emailrouter.com</CustomLink>
+        If you can't find a solution here, contact support at <CustomLink href="mailto:support@syncsupport.app" className="text-sky-800 hover:text-sky-900 underline">support@syncsupport.app</CustomLink>
       </Callout>
 
       <div className="my-12">
@@ -289,7 +289,7 @@ export default function TroubleshootingPage() {
           If you're still experiencing issues:
         </Paragraph>
         <ul className="list-disc list-inside space-y-2 font-schibsted font-normal text-sm text-neutral-600">
-          <li>Email support: <CustomLink href="mailto:support@emailrouter.com" className="text-sky-800 hover:text-sky-900 underline">support@emailrouter.com</CustomLink></li>
+          <li>Email support: <CustomLink href="mailto:support@syncsupport.app" className="text-sky-800 hover:text-sky-900 underline">support@syncsupport.app</CustomLink></li>
           <li>Include: domain name, error messages, screenshots</li>
           <li>Response time: Usually within 4 hours</li>
         </ul>

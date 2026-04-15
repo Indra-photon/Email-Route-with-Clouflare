@@ -12,6 +12,7 @@ import { HowItWorksSection } from "./Homepage/HowItWorksSection";
 import { WhySlackDeskSection } from "./Homepage/WhySlackDeskSection";
 import { DashboardShowcaseSection } from "./Homepage/DashboardShowcaseSection";
 import { OnboardingStepsSection } from "./Homepage/OnboardingStepsSection";
+import { BlogPreviewSection } from "./Homepage/BlogPreviewSection";
 
 export default function Home() {
   return (
@@ -24,6 +25,7 @@ export default function Home() {
         <WhySlackDeskSection />
         <OnboardingStepsSection />
         {/* <TestimonialsSection /> */}
+        <BlogPreviewSection />
         <FAQSection />
         <Footer />
       </section>

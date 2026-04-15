@@ -616,6 +616,7 @@ import { Heading } from "@/components/Heading";
 import { Paragraph } from "@/components/Paragraph";
 import { Highlight } from "@/components/Highlight";
 import { CustomLink } from "@/components/CustomLink";
+import { DashboardLink } from "@/components/docs/DashboardLink";
 import { Callout } from "@/components/docs/Callout";
 import { DocsNavigation } from "@/components/docs/DocsNavigation";
 import { DocsPage, DocsBody } from "fumadocs-ui/page";
@@ -634,9 +635,9 @@ const DASHBOARD_STEPS: { title: string; body: React.ReactNode }[] = [
     body: (
       <Paragraph variant="docs-par">
         After you sign in and navigate to the dashboard, select{" "}
-        <CustomLink href="/dashboard/domains" className="text-sky-800 hover:text-sky-900 underline">
+        <DashboardLink href="/dashboard/domains" className="text-sky-800 hover:text-sky-900 underline">
           Domains
-        </CustomLink>{" "}
+        </DashboardLink>{" "}
         from the sidebar. Select the <Highlight>Add Domain</Highlight> tab, enter your
         domain name (e.g., <Highlight>acme.com</Highlight>), and click{" "}
         <Highlight>Add Domain</Highlight>.

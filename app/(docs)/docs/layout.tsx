@@ -2,7 +2,7 @@ import "./fumadocs.css";
 import "./fumadocs-theme.css";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import { FumaProvider } from "@/components/FumaProvider";
-import { NavBar } from "@/components/NavBar";
+import { NavBarServer as NavBar } from "@/components/NavBarServer";
 import React, { type ReactNode } from "react";
 import type { Metadata } from "next";
 import * as PageTree from "fumadocs-core/page-tree";
