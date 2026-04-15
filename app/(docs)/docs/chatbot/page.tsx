@@ -389,7 +389,7 @@ function StepCard({
       <div className="pt-3">
         <StepBadge n={step} />
       </div>
-      <div className="flex-1 rounded-xl border border-neutral-200/70 bg-white shadow-sm overflow-hidden">
+      <div className="flex-1 rounded-xl overflow-hidden" style={{ boxShadow: "0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 2px -1px rgba(0,0,0,0.06), 0px 2px 4px 0px rgba(0,0,0,0.04)" }}>
         <div className="px-4 py-2.5 bg-gradient-to-r from-sky-800 to-cyan-700">
           <span className="font-schibsted font-semibold text-white text-sm tracking-wide">
             {title}
@@ -413,10 +413,10 @@ export default function ChatbotPage() {
   return (
     <DocsPage toc={[
       { title: "Prerequisites", url: "#prerequisites", depth: 2 },
-      { title: "Go to Chat Widgets", url: "#go-to-chat-widgets", depth: 2 },
-      { title: "Create a widget", url: "#create-widget", depth: 2 },
-      { title: "Embed the script", url: "#embed-script", depth: 2 },
-      { title: "Reply to visitors", url: "#reply-to-visitors", depth: 2 },
+      { title: "Go to Chat Widgets", url: "#go-to-chat-widgets", depth: 4 },
+      { title: "Create a widget", url: "#create-widget", depth: 4 },
+      { title: "Embed the script", url: "#embed-script", depth: 4 },
+      { title: "Reply to visitors", url: "#reply-to-visitors", depth: 4 },
     ]} tableOfContent={{ style: 'clerk' }}>
       <DocsBody className="prose prose-neutral max-w-none">
 

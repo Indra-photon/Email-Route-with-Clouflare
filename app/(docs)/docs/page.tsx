@@ -204,13 +204,15 @@ import {
   IconChartBar, IconSparkles, IconMessageCheck, IconFileSpreadsheet,
   IconBrandSlack, IconWorld, IconAt, IconSend,
 } from "@tabler/icons-react";
+import { Paragraph } from "@/components/Paragraph";
+import { Heading } from "@/components/Heading";
 
 /* ═══════════════════════════════════════════════════════════════
    1. CONTENT
    ═══════════════════════════════════════════════════════════════ */
 
 const FEATURES: { icon: React.ElementType; title: string; description: string }[] = [
-  { icon: IconMail,           title: "Email → Slack Routing",    description: "Route support@, sales@, and billing@ to dedicated Slack or Discord channels. Every email lands in 2–5 seconds." },
+  { icon: IconMail,           title: "Email Routing",    description: "Route support@, sales@, and billing@ to dedicated Slack or Discord channels. Every email lands in 2–5 seconds." },
   { icon: IconMessageCircle,  title: "Live Chat Widget",         description: "Embed a chat widget on your website in two lines of code. Visitors chat — your team replies from Slack." },
   { icon: IconPhoto,          title: "File & Screenshot Sharing",description: "Users send bug screenshots inside the chat. You see them in Slack the moment they arrive." },
   { icon: IconUsers,          title: "Ticket Management",        description: "Claim tickets, track status, assign to teammates — all from the dashboard or directly inside Slack." },
@@ -228,11 +230,11 @@ const QUICK_START_STEPS: { icon: React.ElementType; title: string; href: string;
   { icon: IconSend,       title: "Send a test email",          href: "/docs/domains",             description: "Fire off a test message and watch it land in Slack within 5 seconds." },
 ];
 
-const POPULAR_GUIDES: { title: string; href: string; description: string }[] = [
-  { title: "Add and Configure Your Domain", href: "/docs/domains",             description: "Set up MX records and verify your domain for email routing." },
-  { title: "Slack Integration",             href: "/docs/integrations/slack",  description: "Connect SyncSupport to your Slack workspace." },
-  { title: "Create Email Aliases",          href: "/docs/aliases",             description: "Route support@, sales@, and billing@ to the right channels." },
-  { title: "Live Chat Widget",              href: "/docs/chatbot",             description: "Embed a chat widget and reply to visitors from Slack." },
+const POPULAR_GUIDES: { icon: React.ElementType; title: string; href: string; description: string }[] = [
+  { icon: IconWorld,         title: "Add and Configure Your Domain", href: "/docs/domains",            description: "Set up MX records and verify your domain for email routing." },
+  { icon: IconBrandSlack,    title: "Slack Integration",             href: "/docs/integrations/slack", description: "Connect SyncSupport to your Slack workspace." },
+  { icon: IconAt,            title: "Create Email Aliases",          href: "/docs/aliases",            description: "Route support@, sales@, and billing@ to the right channels." },
+  { icon: IconMessageCircle, title: "Live Chat Widget",              href: "/docs/chatbot",            description: "Embed a chat widget and reply to visitors from Slack." },
 ];
 
 /* ═══════════════════════════════════════════════════════════════
@@ -254,35 +256,34 @@ export default function GettingStartedPage() {
           <h1 className="font-schibsted font-bold text-2xl md:text-3xl leading-tight mb-3">
             Welcome to SyncSupport
           </h1>
-          <p className="font-schibsted text-sm text-sky-100 leading-relaxed max-w-lg">
+          <Paragraph className="font-schibsted text-sm text-white leading-relaxed">
             Route customer support emails directly into Slack. Your team sees every message instantly, replies without switching tabs, and closes tickets faster. Five minutes of setup — no onboarding call, no per-seat fees.
-          </p>
-          <div className="mt-5">
+          </Paragraph>
+          {/* <div className="mt-5">
             <DocVideo
               url="https://youtu.be/-Z3luBBqEM8"
               label="Watch overview · 3 min"
             />
-          </div>
+          </div> */}
         </div>
 
         {/* ── What SyncSupport does ── */}
         <div className="not-prose mb-12" id="what-syncsupport-does">
-          <p className="font-schibsted font-semibold text-neutral-900 text-base mb-0.5">What SyncSupport does</p>
-          <p className="font-schibsted text-sm text-neutral-500 mb-5">Everything your team needs to handle support — without leaving Slack.</p>
+          <Heading className="font-schibsted font-extralight text-neutral-900 mb-0.5">What SyncSupport does</Heading>
+          <Paragraph className="font-schibsted text-sm text-neutral-800 mb-5">Everything your team needs to handle support — without leaving Slack.</Paragraph>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {FEATURES.map(({ icon: Icon, title, description }) => (
               <div
                 key={title}
-                className="flex gap-3 items-start rounded-xl border border-sky-100 bg-gradient-to-br from-sky-50 to-cyan-50 p-4"
+                className="flex flex-col rounded-xl p-5"
+                style={{ boxShadow: "0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 2px -1px rgba(0,0,0,0.06), 0px 2px 4px 0px rgba(0,0,0,0.04)" }}
               >
-                <div className="flex-shrink-0 mt-0.5 flex items-center justify-center size-8 rounded-lg bg-gradient-to-br from-sky-800 to-cyan-600">
-                  <Icon size={16} className="text-white" />
+                <div className="flex items-center justify-between mb-3">
+                  <p className="font-schibsted font-semibold text-xl text-sky-900">{title}</p>
+                  <Icon size={44} strokeWidth={1.5} className="text-sky-800 flex-shrink-0" />
                 </div>
-                <div>
-                  <p className="font-schibsted font-semibold text-sm text-neutral-900 mb-0.5">{title}</p>
-                  <p className="font-schibsted text-xs text-neutral-500 leading-relaxed">{description}</p>
-                </div>
+                <Paragraph variant="small" className="font-schibsted text-neutral-800 leading-relaxed">{description}</Paragraph>
               </div>
             ))}
           </div>
@@ -290,26 +291,27 @@ export default function GettingStartedPage() {
 
         {/* ── Quick Start ── */}
         <div className="not-prose mb-12" id="quick-start">
-          <p className="font-schibsted font-semibold text-neutral-900 text-base mb-0.5">Quick start</p>
-          <p className="font-schibsted text-sm text-neutral-500 mb-5">Follow these steps in order to get fully set up.</p>
+          <Heading className="font-schibsted font-extralight text-neutral-900 mb-0.5">Quick start</Heading>
+          <Paragraph className="font-schibsted text-sm text-neutral-800 mb-5">Follow these steps in order to get fully set up.</Paragraph>
 
-          <div className="relative">
-            <div className="absolute left-[15px] top-6 bottom-6 w-px bg-gradient-to-b from-sky-800 to-cyan-200 z-0" />
+          <div className="flex flex-col gap-3">
             {QUICK_START_STEPS.map(({ icon: Icon, title, href, description }, i) => (
-              <div key={i} className="flex gap-4 items-start mb-3">
-                <span className="relative z-10 inline-flex items-center justify-center size-8 rounded-full bg-gradient-to-br from-sky-800 to-cyan-600 text-white text-sm font-bold font-schibsted flex-shrink-0 select-none mt-0.5 border-2 border-white shadow-sm">
-                  {i + 1}
-                </span>
-                <div className="flex-1 rounded-xl border border-sky-100 bg-gradient-to-br from-sky-50 to-cyan-50 overflow-hidden shadow-sm">
-                  <div className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-sky-800 to-cyan-600">
-                    <Icon size={14} className="text-sky-200 flex-shrink-0" />
-                    <CustomLink href={href} className="font-schibsted font-semibold text-white text-sm hover:underline">
+              <div
+                key={i}
+                className="flex gap-4 items-start rounded-xl p-5"
+                style={{ boxShadow: "0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 2px -1px rgba(0,0,0,0.06), 0px 2px 4px 0px rgba(0,0,0,0.04)" }}
+              >
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-3 mb-1">
+                    <span className="flex-shrink-0 font-schibsted font-bold text-2xl text-neutral-200 leading-none select-none">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <CustomLink href={href} className="font-schibsted font-semibold text-xl text-sky-900 hover:text-sky-700 leading-none">
                       {title}
                     </CustomLink>
                   </div>
-                  <div className="px-4 py-3 text-xs text-neutral-600 font-schibsted leading-relaxed">
-                    {description}
-                  </div>
+                  <Paragraph variant="small" className="font-schibsted text-neutral-800 leading-relaxed pl-10">{description}</Paragraph>
                 </div>
               </div>
             ))}
@@ -318,23 +320,23 @@ export default function GettingStartedPage() {
 
         {/* ── Popular Guides ── */}
         <div className="not-prose mb-12" id="popular-guides">
-          <p className="font-schibsted font-semibold text-neutral-900 text-base mb-0.5">Popular guides</p>
-          <p className="font-schibsted text-sm text-neutral-500 mb-5">Jump straight to what you need.</p>
+          <Heading className="font-schibsted font-extralight text-neutral-900 mb-0.5">Popular guides</Heading>
+          <Paragraph className="font-schibsted text-sm text-neutral-800 mb-5">Jump straight to what you need.</Paragraph>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {POPULAR_GUIDES.map(({ title, href, description }) => (
-              <CustomLink
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {POPULAR_GUIDES.map(({ icon: Icon, title, href, description }) => (
+              <a
                 key={href}
                 href={href}
-                className="group block rounded-xl border border-sky-100 bg-gradient-to-br from-sky-50 to-cyan-50 p-4 hover:border-sky-300 hover:from-sky-100 hover:to-cyan-100 transition-colors"
+                className="group flex flex-col rounded-xl p-5 transition-colors"
+                style={{ boxShadow: "0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 2px -1px rgba(0,0,0,0.06), 0px 2px 4px 0px rgba(0,0,0,0.04)" }}
               >
-                <p className="font-schibsted font-semibold text-sm text-sky-800 mb-1 group-hover:text-sky-900">
-                  {title} →
-                </p>
-                <p className="font-schibsted text-xs text-neutral-500 leading-relaxed">
-                  {description}
-                </p>
-              </CustomLink>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="font-schibsted font-semibold text-xl text-sky-900 group-hover:text-sky-700">{title}</p>
+                  <Icon size={44} strokeWidth={1.5} className="text-sky-800 flex-shrink-0" />
+                </div>
+                <Paragraph variant="small" className="font-schibsted text-neutral-800 leading-relaxed">{description}</Paragraph>
+              </a>
             ))}
           </div>
         </div>

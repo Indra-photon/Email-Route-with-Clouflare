@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+// Note: useState kept for PricingCard's local state (checkoutLoading, downgradeOpen, etc.)
 import { motion, AnimatePresence } from "motion/react";
 import posthog from "posthog-js";
 import { useUser } from "@clerk/nextjs";
@@ -331,7 +332,10 @@ function PricingCard({
       transition={{ duration: 0.5, delay: index * 0.1, ease: EASE_OUT_QUAD }}
       className="relative flex flex-col"
     >
-      <div className={`relative flex flex-col flex-1 rounded-2xl border ${isHighlight ? "bg-sky-800 -mt-4 pt-4" : "border-neutral-200 shadow-sm"}`}>
+      <div
+        className={`relative flex flex-col flex-1 rounded-2xl ${isHighlight ? "bg-sky-800 -mt-4 pt-4" : ""}`}
+        style={isHighlight ? undefined : { boxShadow: "0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 2px -1px rgba(0,0,0,0.06), 0px 2px 4px 0px rgba(0,0,0,0.04)" }}
+      >
         {/* Top section */}
         <div className={`px-6 pt-6 pb-5 border-b ${isHighlight ? "" : "border-neutral-100"}`}>
           <p className={`font-schibsted text-xs font-semibold uppercase tracking-widest ${isHighlight ? "text-white" : "text-neutral-500"} mb-3`}>{plan.name}</p>
@@ -376,9 +380,7 @@ function PricingCard({
 
 // ─── Section ──────────────────────────────────────────────────────────────────
 
-export function PricingTableSection() {
-  const [plans, setPlans] = useState<DbPricingPlan[]>([]);
-  const [loading, setLoading] = useState(true);
+export function PricingTableSection({ plans }: { plans: DbPricingPlan[] }) {
   const sectionRef = useRef<HTMLElement>(null);
   const { isSignedIn } = useUser();
 
@@ -404,35 +406,18 @@ export function PricingTableSection() {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    fetch("/api/public/pricing")
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) setPlans(data);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
   return (
     <section ref={sectionRef} className="w-full bg-white py-16 md:py-20 lg:py-28" id="pricing">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 xl:px-0">
 
         <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, ease: EASE_OUT_QUAD }} className="mb-12">
           <Heading as="h2" className="text-neutral-900 mb-4 leading-tight font-semibold">
-            Simple, predictable <span className="text-sky-800">pricing</span>
+            Simple, <span className="text-sky-800 font-extralight">predictable, pricing</span>
           </Heading>
           <Paragraph variant="home-par">No extra cost for bigger teams. Pick a plan and bring your whole team.</Paragraph>
         </motion.div>
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 items-end">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className={`rounded-2xl border border-neutral-100 bg-neutral-50 animate-pulse ${i === 1 ? "h-96" : "h-80"}`} />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 items-end">
             {plans.map((plan, i) => (
               <PricingCard
                 key={plan.id}
@@ -445,7 +430,6 @@ export function PricingTableSection() {
               />
             ))}
           </div>
-        )}
 
         <motion.p
           initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}

@@ -91,9 +91,9 @@ export function DashboardShowcaseSection() {
             transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
           >
             <Heading as="h2" className="text-neutral-900 font-schibsted leading-tight">
-              <span>What changes the week you switch.{" "}</span>
+              <span>An Integrated Dashboard.{" "}</span>
               <span className="text-sky-800 font-extralight">
-                — faster responses, fewer missed tickets, less time wasted.
+                — Ticket management, response times, and team performance at a glance.
               </span>
             </Heading>
           </motion.div>

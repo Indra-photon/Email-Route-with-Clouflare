@@ -260,7 +260,7 @@ function StepCard({
       <div className="pt-3">
         <StepBadge n={step} />
       </div>
-      <div className="flex-1 rounded-xl border border-neutral-200/70 bg-white shadow-sm overflow-hidden">
+      <div className="flex-1 rounded-xl overflow-hidden" style={{ boxShadow: "0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 2px -1px rgba(0,0,0,0.06), 0px 2px 4px 0px rgba(0,0,0,0.04)" }}>
         <div className="px-4 py-2.5 bg-gradient-to-r from-sky-800 to-cyan-700">
           <span className="font-schibsted font-semibold text-white text-sm tracking-wide">
             {title}
@@ -284,10 +284,10 @@ export default function SlackIntegrationPage() {
   return (
     <DocsPage toc={[
       { title: "Prerequisites", url: "#prerequisites", depth: 2 },
-      { title: "Go to Integrations", url: "#go-to-integrations", depth: 2 },
-      { title: "Add a Slack integration", url: "#add-slack-integration", depth: 2 },
-      { title: "Authorize with Slack", url: "#authorize-slack", depth: 2 },
-      { title: "Connect an email alias", url: "#connect-email-alias", depth: 2 },
+      { title: "Go to Integrations", url: "#go-to-integrations", depth: 4 },
+      { title: "Add a Slack integration", url: "#add-slack-integration", depth: 4 },
+      { title: "Authorize with Slack", url: "#authorize-slack", depth: 4 },
+      { title: "Connect an email alias", url: "#connect-email-alias", depth: 4 },
     ]}
     tableOfContent={{
     style: 'clerk',
@@ -375,7 +375,8 @@ export default function SlackIntegrationPage() {
             {ROUTING_EXAMPLES.map(({ alias, channel }) => (
               <div
                 key={alias}
-                className="p-4 border border-neutral-200 rounded-xl bg-white shadow-sm"
+                className="p-4 rounded-xl bg-white"
+                style={{ boxShadow: "0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 2px -1px rgba(0,0,0,0.06), 0px 2px 4px 0px rgba(0,0,0,0.04)" }}
               >
                 <div className="font-semibold text-neutral-900 mb-1 text-sm">
                   {alias}

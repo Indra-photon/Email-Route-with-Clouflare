@@ -393,7 +393,7 @@
 //       <div className="pt-0.5">
 //         <StepBadge n={step} />
 //       </div>
-//       <div className="flex-1 rounded-xl border border-neutral-200/70 bg-white shadow-sm overflow-hidden">
+//       <div className="flex-1 rounded-xl overflow-hidden" style={{ boxShadow: "0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 2px -1px rgba(0,0,0,0.06), 0px 2px 4px 0px rgba(0,0,0,0.04)" }}>
 //         <div className="px-4 py-2.5 bg-gradient-to-r from-sky-800 to-cyan-700">
 //           <span className="font-schibsted font-semibold text-white text-sm tracking-wide">{title}</span>
 //         </div>
@@ -720,7 +720,7 @@ function StepCard({ step, title, children }: { step: number; title: string; chil
       <div className="pt-3">
         <StepBadge n={step} />
       </div>
-      <div className="flex-1 rounded-xl border border-neutral-200/70 bg-white shadow-sm overflow-hidden">
+      <div className="flex-1 rounded-xl overflow-hidden" style={{ boxShadow: "0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 2px -1px rgba(0,0,0,0.06), 0px 2px 4px 0px rgba(0,0,0,0.04)" }}>
         <div className="px-4 py-2.5 bg-gradient-to-r from-sky-800 to-cyan-700">
           <span className="font-schibsted font-semibold text-white text-sm tracking-wide">{title}</span>
         </div>
@@ -824,10 +824,11 @@ export default function DomainsPage() {
 
   return (
     <DocsPage toc={[
-      { title: "Prerequisites", url: "#prerequisites", depth: 2 },
-      { title: "Add your domain", url: "#add-your-domain", depth: 2 },
-      { title: "Configure DNS records", url: "#configure-dns", depth: 2 },
-      { title: "Verify your domain", url: "#verify-domain", depth: 2 },
+      { title: "Prerequisites",                  url: "#prerequisites",       depth: 2 },
+      { title: "Add your domain",                url: "#add-your-domain",     depth: 4 },
+      { title: "Retrieve MX records",            url: "#retrieve-mx-records", depth: 4 },
+      { title: "Paste MX records in DNS",        url: "#configure-dns",       depth: 4 },
+      { title: "Verify your MX records",         url: "#verify-domain",       depth: 4 },
     ]}
     tableOfContent={{
     style: 'clerk',
@@ -878,13 +879,16 @@ export default function DomainsPage() {
           <div className="absolute left-[15px] top-10 bottom-4 w-px bg-gradient-to-b from-sky-800 to-cyan-100 z-0" />
 
           {/* ── Section 1: Dashboard steps ── */}
-          <div id="add-your-domain" />
           {DASHBOARD_STEPS.map((s, i) => {
             globalStep++;
+            const id = i === 0 ? "add-your-domain" : i === 1 ? "retrieve-mx-records" : undefined;
             return (
-              <StepCard key={`dashboard-${i}`} step={globalStep} title={s.title}>
-                {s.body}
-              </StepCard>
+              <div key={`dashboard-${i}`}>
+                {id && <div id={id} />}
+                <StepCard step={globalStep} title={s.title}>
+                  {s.body}
+                </StepCard>
+              </div>
             );
           })}
 
@@ -909,9 +913,12 @@ export default function DomainsPage() {
           {VERIFY_STEPS.map((s, i) => {
             globalStep++;
             return (
-              <StepCard key={`verify-${i}`} step={globalStep} title={s.title}>
-                {s.body}
-              </StepCard>
+              <div key={`verify-${i}`}>
+                {i === 0 && <div id="verify-domain" />}
+                <StepCard step={globalStep} title={s.title}>
+                  {s.body}
+                </StepCard>
+              </div>
             );
           })}
 

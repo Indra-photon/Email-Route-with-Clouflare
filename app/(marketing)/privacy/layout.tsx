@@ -5,13 +5,13 @@ export const metadata: Metadata = {
   description:
     "Learn how syncsupport collects, uses, and protects your personal data when you use our email-to-Slack support routing platform.",
   alternates: {
-    canonical: "https://syncsupport.app/privacy",
+    canonical: "https://www.syncsupport.app/privacy",
   },
   openGraph: {
     title: "Privacy Policy | syncsupport",
     description:
       "Learn how syncsupport collects, uses, and protects your personal data.",
-    url: "https://syncsupport.app/privacy",
+    url: "https://www.syncsupport.app/privacy",
     siteName: "syncsupport",
     type: "website",
   },
