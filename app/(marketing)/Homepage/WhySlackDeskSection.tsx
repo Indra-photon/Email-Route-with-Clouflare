@@ -44,7 +44,7 @@ const PricingVisual = () => (
       {[
         { h: 65, label: "Itercom", color: "bg-gradient-to-t from-red-400 to-red-300" },
         { h: 45, label: "Zedesk", color: "bg-gradient-to-t from-orange-400 to-orange-300" },
-        { h: 26, label: "SlackDesk", color: "bg-gradient-to-t from-sky-500 to-cyan-400" },
+        { h: 26, label: "Syncsupport", color: "bg-gradient-to-t from-sky-500 to-cyan-400" },
         ].map((item, i) => (
         <div key={item.label} className="flex-1 flex flex-col items-center">
             <motion.div
@@ -59,7 +59,7 @@ const PricingVisual = () => (
     </div>
     {/* Labels below bars */}
     <div className="flex gap-2 mt-1.5">
-      {["Intercom", "Zendesk", "SlackDesk"].map((label, i) => (
+      {["Intercom", "Zendesk", "Syncsupport"].map((label, i) => (
         <span key={label} className={`flex-1 text-center font-schibsted text-[9px] ${i === 2 ? "text-sky-600 font-semibold" : "text-neutral-400"}`}>
           {label}
         </span>

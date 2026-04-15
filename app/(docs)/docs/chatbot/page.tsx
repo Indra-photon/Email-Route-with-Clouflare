@@ -227,6 +227,7 @@ import { Heading } from "@/components/Heading";
 import { Paragraph } from "@/components/Paragraph";
 import { Highlight } from "@/components/Highlight";
 import { CustomLink } from "@/components/CustomLink";
+import { DashboardLink } from "@/components/docs/DashboardLink";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 import { Callout } from "@/components/docs/Callout";
 import { DocsNavigation } from "@/components/docs/DocsNavigation";
@@ -258,12 +259,12 @@ const REPLY_OPTIONS: {
     steps: [
       <>
         Go to{" "}
-        <CustomLink
+        <DashboardLink
           href="/dashboard/live-chats"
           className="text-sky-800 hover:text-sky-900 underline"
         >
           Dashboard → Live Chats
-        </CustomLink>
+        </DashboardLink>
         .
       </>,
       <>Select the active conversation from the sidebar.</>,
@@ -280,12 +281,12 @@ const STEPS: { id: string; title: string; body: React.ReactNode }[] = [
       <Paragraph variant="docs-par">
         Once your domain is verified and an integration is connected, navigate
         to{" "}
-        <CustomLink
+        <DashboardLink
           href="/dashboard/chat-widgets"
           className="text-sky-800 hover:text-sky-900 underline"
         >
           Chat Widgets
-        </CustomLink>{" "}
+        </DashboardLink>{" "}
         from the sidebar. This is where you create and manage the widgets
         installed on your website.
       </Paragraph>

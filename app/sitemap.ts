@@ -101,7 +101,7 @@ async function getWorkspacePages(): Promise<SitemapEntry[]> {
 
 async function getBlogPages(): Promise<SitemapEntry[]> {
   try {
-    const posts = await getAllPosts(100);
+    const posts = await getAllPosts(50);
     return posts.map((post) =>
       url(`/blog/${post.slug}`, {
         priority: 0.7,
@@ -135,6 +135,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   console.log(`   Marketing : ${MARKETING_PAGES.length}`);
   console.log(`   Docs      : ${DOCS_PAGES.length}`);
   console.log(`   Workspaces: ${workspacePages.length}`);
+    console.log(`   Blog posts: ${blogPages.length}`);
+    // see more details about blog pages 
+    console.log(`   Blog post URLs: ${blogPages.map(p => p.url).join(", ")}`);
+    
 
   return allRoutes;
 }

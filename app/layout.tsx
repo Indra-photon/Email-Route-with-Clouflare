@@ -334,6 +334,8 @@ export default async function RootLayout({
           {children}
           <GoogleTagManager gtmId="GTM-KDWNBW63" />
           <Script src="https://cloud.umami.is/script.js" data-website-id="3ec71afb-dca0-4a4c-808f-34fd434c9999" />
+          <Script id="chat-widget-key" strategy="beforeInteractive">{`window.CHAT_KEY = 'cw_d00385e832271d8a249f4df4';`}</Script>
+          <Script src="https://syncsupport.app/chat/widget.js" strategy="afterInteractive" />
           <Toaster position="top-right" />
         </body>
       </html>

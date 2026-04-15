@@ -21,7 +21,8 @@ async function fetchHashnode<T>(
     });
 
     if (!res.ok) {
-      console.error(`Hashnode API error: ${res.status}`);
+      const errorBody = await res.text();
+      console.error(`Hashnode API error: ${res.status}`, errorBody);
       return null;
     }
 
@@ -121,7 +122,7 @@ export async function getPostBySlug(slug: string): Promise<PostFull | null> {
 // Returns empty array safely if API fails — build won't break
 export async function getAllSlugs(): Promise<string[]> {
   try {
-    const posts = await getAllPosts(100);
+    const posts = await getAllPosts(50);
     return posts.map((p) => p.slug);
   } catch {
     return [];

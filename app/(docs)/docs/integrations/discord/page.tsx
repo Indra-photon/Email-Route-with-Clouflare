@@ -4,6 +4,7 @@ import { Heading } from "@/components/Heading";
 import { Paragraph } from "@/components/Paragraph";
 import { Highlight } from "@/components/Highlight";
 import { CustomLink } from "@/components/CustomLink";
+import { DashboardLink } from "@/components/docs/DashboardLink";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 import { Callout } from "@/components/docs/Callout";
 import { DocsNavigation } from "@/components/docs/DocsNavigation";
@@ -106,7 +107,7 @@ export default function DiscordIntegrationPage() {
 
         <Paragraph variant="docs-par" className="mb-4">
         <ol className="list-decimal list-inside space-y-3 ">
-          <li>Go to <CustomLink href="/dashboard/integrations" className="text-sky-800 hover:text-sky-900 underline">Dashboard → Integrations</CustomLink></li>
+          <li>Go to <DashboardLink href="/dashboard/integrations" className="text-sky-800 hover:text-sky-900 underline">Dashboard → Integrations</DashboardLink></li>
           <li>Click "Add Integration"</li>
           <li>Type: Select "Discord"</li>
           <li>Name: Enter a descriptive name</li>

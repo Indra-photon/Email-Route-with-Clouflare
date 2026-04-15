@@ -1,45 +1,37 @@
 import {
-  IconArticle,
-  IconBolt,
-  IconBriefcase2,
-  IconMail,
-  IconMessage2,
+  IconHome,
+  IconInfoCircle,
+  IconWriting,
+  IconCurrencyDollar,
+  IconBook2,
+  IconLayoutList,
+  IconTag,
 } from "@tabler/icons-react";
 
 export const navlinks = [
   {
     url: "/",
     label: "Home",
-    icon: IconBolt,
-  },
-  {
-    url: "/about",
-    label: "About",
-    icon: IconMessage2,
-  },
-  {
-    url: "/dashboard",
-    label: "Dashboard",
-    icon: IconBriefcase2,
-  },
-  {
-    url: "/blog",
-    label: "Blog",
-    icon: IconMail,
+    icon: IconHome,
   },
   {
     url: "/pricing",
     label: "Pricing",
-    icon: IconMail,
+    icon: IconTag,
   },
   {
     url: "/docs",
     label: "Docs",
-    icon: IconArticle,
+    icon: IconBook2,
   },
-  // {
-  //   url: "/support",
-  //   label: "Support",
-  //   icon: IconMessage2,
-  // },
+  {
+    url: "/blog",
+    label: "Blog",
+    icon: IconWriting,
+  },
+  {
+    url: "/about",
+    label: "About",
+    icon: IconLayoutList,
+  },
 ];

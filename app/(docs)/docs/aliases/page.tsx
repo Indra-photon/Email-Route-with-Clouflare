@@ -126,6 +126,7 @@ import { Heading } from "@/components/Heading";
 import { Paragraph } from "@/components/Paragraph";
 import { Highlight } from "@/components/Highlight";
 import { CustomLink } from "@/components/CustomLink";
+import { DashboardLink } from "@/components/docs/DashboardLink";
 import { Callout } from "@/components/docs/Callout";
 import { DocsNavigation } from "@/components/docs/DocsNavigation";
 import { DocsPage, DocsBody } from "fumadocs-ui/page";
@@ -143,12 +144,12 @@ const STEPS: { id: string; title: string; body: React.ReactNode }[] = [
       <Paragraph variant="docs-par">
         Once your domain is verified and at least one integration is connected,
         navigate to{" "}
-        <CustomLink
+        <DashboardLink
           href="/dashboard/aliases"
           className="text-sky-800 hover:text-sky-900 underline"
         >
           Dashboard → Aliases
-        </CustomLink>{" "}
+        </DashboardLink>{" "}
         from the sidebar. This is where you map email addresses to Slack or
         Discord channels.
       </Paragraph>

@@ -38,10 +38,10 @@ export default function SupportPage() {
               For general inquiries and technical support. We typically respond within 2-4 hours.
             </Paragraph>
             <a 
-              href="mailto:help@syncsupport.app" 
+              href="mailto:support@syncsupport.app" 
               className="text-sky-600 font-medium hover:text-sky-700 transition-colors inline-flex items-center gap-2"
             >
-              help@syncsupport.app
+              support@syncsupport.app
             </a>
           </div>
 
