@@ -2,10 +2,28 @@
 
 import Link from "next/link";
 import { Logo } from "@/constants/Logo";
+import {
+  IconInfoCircle,
+  IconTag,
+  IconBook2,
+  IconExternalLink,
+  IconWorld,
+  IconAt,
+  IconTicket,
+  IconBrandSlack,
+  IconMessageChatbot,
+  IconWriting,
+  IconShieldLock,
+  IconFileText,
+  IconHelpCircle,
+  IconMail,
+} from "@tabler/icons-react";
+import type { ComponentType } from "react";
 
 interface FooterLink {
   label: string;
   href: string;
+  icon: ComponentType<{ size?: number; className?: string }>;
 }
 
 interface FooterSection {
@@ -17,53 +35,39 @@ const footerSections: FooterSection[] = [
   {
     title: "Product",
     links: [
-      // { label: "Features", href: "#features" },       // hash link — broken outside homepage
-      // { label: "Pricing", href: "#pricing" },
-      { label: "About Us", href: "/about" },         // hash link — broken outside homepage
-      { label: "Pricing", href: "/pricing" },
-      { label: "Documentation", href: "/docs" },
-      // { label: "Support", href: "/support" },         // page doesn't exist yet
-      // { label: "Roadmap", href: "/roadmap" }          // page doesn't exist yet
-      { label: "AI Visibility Audit by WebAudits.dev", href: "https://webaudits.dev" },
-    ]
+      { label: "About Us", href: "/about", icon: IconInfoCircle },
+      { label: "Pricing", href: "/pricing", icon: IconTag },
+      { label: "Documentation", href: "/docs", icon: IconBook2 },
+      { label: "AI Visibility Audit", href: "https://webaudits.dev", icon: IconExternalLink },
+    ],
   },
   {
     title: "Resources",
     links: [
-      { label: "Documentation", href: "/docs" },
-      { label: "Domains", href: "/docs/domains" },
-      { label: "Email Aliases", href: "/docs/aliases" },
-      { label: "Tickets", href: "/docs/tickets" },
-      { label: "Slack Integration", href: "/docs/integrations/slack" },
-      // { label: "Discord", href: "/docs/integrations/discord" },
-      { label: "Live Chat", href: "/docs/chatbot" },
-      // { label: "Getting Started", href: "/docs/getting-started" },  // page doesn't exist yet
-      // { label: "Setup Guides", href: "/docs/guides" },              // page doesn't exist yet
-      // { label: "API Reference", href: "/docs/api" },                // page doesn't exist yet
-      // { label: "Status", href: "https://status.emailrouter.com" }   // old branding — needs new URL
-    ]
+      { label: "Documentation", href: "/docs", icon: IconBook2 },
+      { label: "Domains", href: "/docs/domains", icon: IconWorld },
+      { label: "Email Aliases", href: "/docs/aliases", icon: IconAt },
+      { label: "Tickets", href: "/docs/tickets", icon: IconTicket },
+      { label: "Slack Integration", href: "/docs/integrations/slack", icon: IconBrandSlack },
+      { label: "Live Chat", href: "/docs/chatbot", icon: IconMessageChatbot },
+    ],
   },
   {
     title: "Company",
     links: [
-      // { label: "About", href: "/about" },             // page doesn't exist yet
-      { label: "Blog", href: "/blog" },
-      // { label: "Contact", href: "/contact" },         // page doesn't exist yet
-      { label: "Privacy Policy", href: "/privacy" },
-      { label: "Terms of Service", href: "/terms-of-service" },
-      { label: "Terms and Conditions", href: "/terms-and-conditions" }
-    ]
+      { label: "Blog", href: "/blog", icon: IconWriting },
+      { label: "Privacy Policy", href: "/privacy", icon: IconShieldLock },
+      { label: "Terms of Service", href: "/terms-of-service", icon: IconFileText },
+      { label: "Terms and Conditions", href: "/terms-and-conditions", icon: IconFileText },
+    ],
   },
   {
     title: "Support",
     links: [
-      // { label: "Help Center", href: "/support" },                         // page doesn't exist yet
-      { label: "FAQ", href: "/frequently-asked-questions" },
-      { label: "Contact Support", href: "mailto:support@syncsupport.app" }, // fixed: was help@
-      // { label: "Report Bug", href: "/report-bug" },                       // page doesn't exist yet
-      // { label: "Feature Request", href: "/feature-request" }              // page doesn't exist yet
-    ]
-  }
+      { label: "FAQ", href: "/frequently-asked-questions", icon: IconHelpCircle },
+      { label: "Contact Support", href: "mailto:support@syncsupport.app", icon: IconMail },
+    ],
+  },
 ];
 
 export function Footer() {
@@ -86,54 +90,6 @@ export function Footer() {
                 and built for teams who want to work smarter.
               </p>
             </div>
-
-            {/* Social Links — all URLs need updating to syncsupport branding */}
-            {/* <div className="flex items-center gap-4 mt-6">
-              <a
-                href="https://twitter.com/emailrouter"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-sky-700 border border-sky-600 flex items-center justify-center hover:border-sky-400 hover:bg-sky-600 transition-colors group"
-                aria-label="Twitter"
-              >
-                <svg className="w-4 h-4 text-sky-200 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                </svg>
-              </a>
-              <a
-                href="https://github.com/emailrouter"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-sky-700 border border-sky-600 flex items-center justify-center hover:border-sky-400 hover:bg-sky-600 transition-colors group"
-                aria-label="GitHub"
-              >
-                <svg className="w-4 h-4 text-sky-200 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd"/>
-                </svg>
-              </a>
-              <a
-                href="https://linkedin.com/company/emailrouter"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-sky-700 border border-sky-600 flex items-center justify-center hover:border-sky-400 hover:bg-sky-600 transition-colors group"
-                aria-label="LinkedIn"
-              >
-                <svg className="w-4 h-4 text-sky-200 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                </svg>
-              </a>
-              <a
-                href="https://slack.com/emailrouter"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-sky-700 border border-sky-600 flex items-center justify-center hover:border-sky-400 hover:bg-sky-600 transition-colors group"
-                aria-label="Slack Community"
-              >
-                <svg className="w-4 h-4 text-sky-200 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
-                </svg>
-              </a>
-            </div> */}
           </div>
 
           {/* Footer Links Columns */}
@@ -143,27 +99,26 @@ export function Footer() {
                 {section.title}
               </h4>
               <ul className="space-y-3">
-                {section.links.map((link) => (
-                  <li key={link.label}>
-                    {link.href.startsWith("http") ? (
-                      <a
-                        href={link.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm font-schibsted font-normal text-white transition-colors"
-                      >
-                        {link.label}
-                      </a>
-                    ) : (
-                    <Link
-                      href={link.href}
-                      className="text-sm font-schibsted font-normal text-white transition-colors"
-                    >
+                {section.links.map((link) => {
+                  const Icon = link.icon;
+                  const inner = (
+                    <span className="flex items-center gap-2 text-sm font-schibsted font-normal text-white transition-colors">
+                      <Icon size={14} className="flex-shrink-0" />
                       {link.label}
-                    </Link>
-                    )}
-                  </li>
-                ))}
+                    </span>
+                  );
+                  return (
+                    <li key={link.label}>
+                      {link.href.startsWith("http") || link.href.startsWith("mailto") ? (
+                        <a href={link.href} target={link.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer">
+                          {inner}
+                        </a>
+                      ) : (
+                        <Link href={link.href}>{inner}</Link>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}
@@ -172,38 +127,21 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-sky-700">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            {/* Copyright */}
             <p className="text-xs font-schibsted font-normal text-sky-300">
               © {currentYear} SyncSupport. All rights reserved.
             </p>
-
-            {/* Legal Links */}
             <div className="flex items-center gap-6">
-              <Link
-                href="/terms-of-service"
-                className="text-xs font-schibsted font-normal text-sky-300 hover:text-white transition-colors"
-              >
+              <Link href="/terms-of-service" className="text-xs font-schibsted font-normal text-sky-300 hover:text-white transition-colors">
                 Terms of Service
               </Link>
-              <Link
-                href="/privacy"
-                className="text-xs font-schibsted font-normal text-sky-300 hover:text-white transition-colors"
-              >
+              <Link href="/privacy" className="text-xs font-schibsted font-normal text-sky-300 hover:text-white transition-colors">
                 Privacy Policy
               </Link>
-              {/* <Link
-                href="/cookies"
-                className="text-xs font-schibsted font-normal text-sky-300 hover:text-white transition-colors"
-              >
-                Cookie Policy
-              </Link> */}
             </div>
           </div>
-
-          {/* Built with badge */}
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
             <span className="hidden sm:block text-xs font-schibsted font-normal text-neutral-100 hover:text-white transition-colors">
-              Built by <Link href="https://x.com/Nil_phy_dreamer" className="hover:underline">Indranil</Link> and <Link href="" className="hover:underline">Aditya</Link>{" "}
+              Built by <Link href="https://x.com/Nil_phy_dreamer" className="hover:underline">Indranil</Link> and <Link href="" className="hover:underline">Aditya</Link>
             </span>
           </div>
         </div>

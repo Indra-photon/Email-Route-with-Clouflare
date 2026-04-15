@@ -9,7 +9,16 @@ import { navlinks } from "@/constants/navlinks"
 import { useUserStore } from "@/lib/store"
 import { useClerk } from "@clerk/nextjs"
 import { LogOut, User as UserIcon } from "lucide-react"
-import { IconUser, IconBook2 } from "@tabler/icons-react"
+import {
+  IconUser,
+  IconBook2,
+  IconRocket,
+  IconWorld,
+  IconPlug,
+  IconAt,
+  IconTicket,
+  IconMessageChatbot,
+} from "@tabler/icons-react"
 import { Logo } from "@/constants/Logo"
 import { Container } from "./Container"
 import type { Post } from "@/lib/blog/hashnode"
@@ -40,61 +49,37 @@ const DOC_LINKS = [
     title: "Getting Started",
     description: "Install and set up in 5 minutes",
     href: "/docs",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/>
-      </svg>
-    ),
+    icon: <IconRocket size={18} className="text-sky-800" />,
   },
   {
     title: "Domain Setup",
     description: "Configure DNS and MX records",
     href: "/docs/domains",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-      </svg>
-    ),
+    icon: <IconWorld size={18} className="text-sky-800" />,
   },
   {
     title: "Integrations",
     description: "Connect Slack, Discord and more",
     href: "/docs/integrations/slack",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/>
-      </svg>
-    ),
+    icon: <IconPlug size={18} className="text-sky-800" />,
   },
   {
     title: "Email Aliases",
     description: "Route emails to the right channel",
     href: "/docs/aliases",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
-      </svg>
-    ),
+    icon: <IconAt size={18} className="text-sky-800" />,
   },
   {
     title: "Ticket Management",
     description: "Claim, reply and resolve tickets",
     href: "/docs/tickets",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-      </svg>
-    ),
+    icon: <IconTicket size={18} className="text-sky-800" />,
   },
   {
     title: "Chatbot",
     description: "Embed the live chat widget",
     href: "/docs/chatbot",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-      </svg>
-    ),
+    icon: <IconMessageChatbot size={18} className="text-sky-800" />,
   },
 ]
 
@@ -132,7 +117,7 @@ function DocsContent({ onClose }: { onClose: () => void }) {
           onClick={onClose}
           className="flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-neutral-50 transition-colors duration-150 group"
         >
-          <div className="mt-0.5 size-6 rounded-lg bg-sky-50 flex items-center justify-center flex-shrink-0 text-sky-700 group-hover:bg-sky-100 transition-colors duration-150">
+          <div className="mt-0.5 flex-shrink-0">
             {link.icon}
           </div>
           <div>
