@@ -22,7 +22,7 @@ function FeaturedCard({ post }: { post: Post }) {
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className="group relative flex flex-col justify-end rounded-2xl border border-neutral-200 overflow-hidden bg-neutral-900 h-full min-h-[200px]"
+      className="group relative flex flex-col justify-end rounded-2xl border border-neutral-200 overflow-hidden bg-neutral-900 h-full min-h-[280px] md:min-h-[200px]"
     >
       {/* Cover image */}
       {post.coverImage?.url && (
@@ -143,7 +143,7 @@ function MiniCard({ post }: { post: Post }) {
 function CTACard() {
   return (
     <div className="flex flex-col justify-center gap-4 rounded-2xl border border-neutral-200 bg-neutral-50 px-6 py-6 h-full">
-      <p className="font-schibsted text-xs font-semibold uppercase tracking-widest text-sky-800">
+      <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 text-left">
         Stay sharp
       </p>
       <Heading as="h4" variant="small" className="text-neutral-900 leading-snug">
@@ -179,11 +179,11 @@ export async function BlogPreviewSection() {
   const [featured, second, third] = posts;
 
   return (
-    <section className="w-full bg-white py-20 md:py-12">
-      <Container>
+    <section className="w-full bg-white py-8 md:py-12">
+      <Container className="px-4 md:px-0">
 
         {/* Eyebrow */}
-        <p className="font-schibsted text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4">
+        <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4 text-left">
           From the blog
         </p>
 

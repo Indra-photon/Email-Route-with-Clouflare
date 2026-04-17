@@ -526,7 +526,7 @@ export function BenefitsSection() {
         <Grid.System unstable_useContainer>
           <div className="w-full">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 xl:px-0 py-16">
-              <p className="font-schibsted text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4">
+              <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4">
                 Proven impact
               </p>
               <motion.div
@@ -586,7 +586,7 @@ export function BenefitsSection() {
       {/* Tablet Layout */}
       <div className="hidden md:block lg:hidden">
         <div className="max-w-5xl mx-auto px-6 py-12">
-          <p className="font-schibsted text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4">
+          <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4">
             Proven impact
           </p>
           <div className="mb-10">
@@ -628,7 +628,7 @@ export function BenefitsSection() {
       {/* Mobile Layout */}
       <div className="block md:hidden">
         <div className="container mx-auto px-4 py-10">
-          <p className="font-schibsted text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4">
+          <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4">
             Proven impact
           </p>
           <div className="mb-8">
@@ -649,7 +649,8 @@ export function BenefitsSection() {
                     index !== benefits.length - 1 ? 'border-b' : ''
                   } border-neutral-200`}
                 >
-                  <div className="flex flex-col pb-12">
+                  <DecorationRenderer type={benefit.decoration} isHovered={false} />
+                  <div className="flex flex-col pb-12 relative z-10">
                     <span className="text-3xl font-schibsted font-light tracking-tight mb-1 text-sky-700">
                       {benefit.metric}
                     </span>

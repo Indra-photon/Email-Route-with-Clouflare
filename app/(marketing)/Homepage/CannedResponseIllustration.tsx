@@ -396,7 +396,7 @@ export const CannedResponseIllustration: React.FC = () => {
   const selectedResponse = CANNED_RESPONSES[0];
 
   return (
-    <div className="relative w-full overflow-hidden bg-neutral-50 border border-neutral-200 p-8 min-h-[340px] flex items-center justify-center">
+    <div className="relative w-full overflow-hidden bg-neutral-50 border border-neutral-200 p-4 md:p-8 min-h-[340px] flex items-center justify-center">
 
       {/* Top-left badge */}
       <div className="absolute top-3 left-4 flex items-center gap-1.5">
@@ -547,7 +547,7 @@ export const CannedResponseIllustration: React.FC = () => {
                         exit={{ opacity: 0, scale: 0.92, y: 6 }}
                         transition={{ duration: 0.18, ease: EASING.outQuint }}
                         style={{ transformOrigin: "bottom left" }}
-                        className="absolute bottom-[calc(100%+8px)] left-0 w-[280px] bg-white border border-neutral-200 overflow-hidden z-50"
+                        className="absolute bottom-[calc(100%+8px)] left-0 w-[280px] max-w-[calc(100vw-2rem)] bg-white border border-neutral-200 overflow-hidden z-50"
                       >
                         {/* Dropdown corner brackets */}
                         <span className="absolute -top-px -left-px font-mono text-[7px] leading-none text-sky-800 select-none z-10">■</span>

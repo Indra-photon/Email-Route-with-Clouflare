@@ -6,25 +6,35 @@ import { IconArrowUp } from "@tabler/icons-react";
 
 // 3x3 dot grid positions (normalized 0-1 in a 48x48 box)
 const DOT_POSITIONS = [
-  { x: 10, y: 10 }, { x: 24, y: 10 }, { x: 38, y: 10 },
-  { x: 10, y: 24 }, { x: 24, y: 24 }, { x: 38, y: 24 },
-  { x: 10, y: 38 }, { x: 24, y: 38 }, { x: 38, y: 38 },
+  { x: 10, y: 10 },
+  { x: 24, y: 10 },
+  { x: 38, y: 10 },
+  { x: 10, y: 24 },
+  { x: 24, y: 24 },
+  { x: 38, y: 24 },
+  { x: 10, y: 38 },
+  { x: 24, y: 38 },
+  { x: 38, y: 38 },
 ];
 
 // Arrow shape: dots morph into these positions to form →
 const ARROW_POSITIONS = [
-  { x: 8,  y: 38 }, // shaft start bottom-left
+  { x: 8, y: 38 }, // shaft start bottom-left
   { x: 14, y: 32 },
   { x: 20, y: 26 },
   { x: 26, y: 20 },
   { x: 38, y: 10 }, // tip top-right
-  { x: 28, y: 8  }, // top wing end
+  { x: 28, y: 8 }, // top wing end
   { x: 40, y: 22 }, // bottom wing end
   { x: 24, y: 24 }, // hidden
   { x: 24, y: 24 }, // hidden
 ];
 
-export default function HeroCTAPrimary({ text = "Get Started" }: { text?: string }) {
+export default function HeroCTAPrimary({
+  text = "Get Started",
+}: {
+  text?: string;
+}) {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -119,14 +129,13 @@ export default function HeroCTAPrimary({ text = "Get Started" }: { text?: string
 //   );
 // }
 
-
 export function HeroCTASecondary() {
   return (
     <div className=" p-[4px] rounded-[16px] inline-flex">
       <button className="group p-[4px] rounded-[12px] bg-gradient-to-b from-white to-stone-200/40 shadow-[0_1px_3px_rgba(0,0,0,0.5)] active:shadow-[0_0px_1px_rgba(0,0,0,0.5)] active:scale-[0.995] cursor-pointer">
         <div className="bg-gradient-to-b from-stone-200/40 to-white/80 rounded-[8px] px-4 py-[5px]">
           <span className="font-schibsted font-semibold tracking-wide uppercase text-neutral-900 text-sm select-none">
-            See How It Works
+            How It Works
           </span>
         </div>
       </button>

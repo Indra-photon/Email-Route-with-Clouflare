@@ -603,8 +603,7 @@ const SmallCard = ({ card, delay = 0 }: { card: CardData; delay?: number }) => {
 
   return (
     <motion.div
-      className="relative flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white"
-      style={{ height: 520 }}
+      className="relative flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white min-h-[360px] lg:h-[520px]"
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -613,7 +612,7 @@ const SmallCard = ({ card, delay = 0 }: { card: CardData; delay?: number }) => {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Watermark number */}
-      <div className="absolute top-3 left-4 select-none pointer-events-none">
+      <div className="hidden lg:block absolute top-3 left-4 select-none pointer-events-none">
         <span className="font-schibsted text-6xl font-bold leading-none text-neutral-100">
           {card.number}
         </span>
@@ -621,7 +620,7 @@ const SmallCard = ({ card, delay = 0 }: { card: CardData; delay?: number }) => {
 
       {/* Visual zone */}
       {card.Visual && (
-        <div className={`${card.id === 3 ? 'mt-18' : card.id === 1 ? 'mt-24' : 'mt-32'} ${card.id === 1 ? 'px-0' : 'px-5'}`}>
+        <div className={`${card.id === 3 ? 'mt-8 lg:mt-18' : card.id === 1 ? 'mt-10 lg:mt-24' : 'mt-10 lg:mt-32'} ${card.id === 1 ? 'px-0' : 'px-5'}`}>
           {card.id === 1
             ? <div style={{ width: "95%", margin: "0 auto", transform: "scaleY(0.95)", transformOrigin: "top center" }}><LaptopNotificationVisual isHovered={isHovered} /></div>
             : <card.Visual />
@@ -630,7 +629,7 @@ const SmallCard = ({ card, delay = 0 }: { card: CardData; delay?: number }) => {
       )}
 
       {/* Bottom text — always pinned to bottom */}
-      <div className="mt-auto px-5 pb-25">
+      <div className="mt-auto px-5 pb-6 lg:pb-25">
         <div className="flex items-center gap-2 mb-1.5">
           <Heading as="h3" variant="small" className="text-sky-800 font-normal leading-tight mt-5">
             {card.title}
@@ -650,8 +649,7 @@ const FeaturedCard = ({ card, delay = 0 }: { card: CardData; delay?: number }) =
   const [isHovered, setIsHovered] = useState(false);
   return (
   <motion.div
-    className="relative flex flex-col overflow-hidden rounded-2xl border border-neutral-300 bg-white shadow-2xl"
-    style={{ height: 550 }}
+    className="relative flex flex-col overflow-hidden rounded-2xl border border-neutral-300 bg-white shadow-2xl min-h-[420px] lg:h-[550px]"
     initial={{ opacity: 0, y: 16 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
@@ -674,7 +672,7 @@ const FeaturedCard = ({ card, delay = 0 }: { card: CardData; delay?: number }) =
       />
 
       {/* Watermark number — visible through shader */}
-      <span className="absolute top-4 left-5 z-20 font-schibsted text-6xl font-bold leading-none text-white/15 select-none pointer-events-none">
+      <span className="hidden lg:block absolute top-4 left-5 z-20 font-schibsted text-6xl font-bold leading-none text-white/15 select-none pointer-events-none">
         {card.number}
       </span>
     </div>
@@ -709,11 +707,11 @@ export function WhySlackDeskSection() {
   const [c1, , c3, c4] = cards;
 
   return (
-    <section className="w-full bg-white py-16 md:py-20 lg:py-24">
+    <section className="w-full bg-white py-8 md:py-20 lg:py-24">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 xl:px-0">
 
         {/* Eyebrow */}
-        <p className="font-schibsted text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4">
+        <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4 text-left">
           Why teams switch
         </p>
 

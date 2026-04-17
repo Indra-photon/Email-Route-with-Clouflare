@@ -438,7 +438,6 @@ const TAB_DURATION = 7; // seconds each tab stays active
 
 export function FeatureTabs() {
   const [activeTab, setActiveTab] = useState<TabId>("email");
-  // Bump this key whenever the active tab changes to remount the SVG trail
   const [trailKey, setTrailKey] = useState(0);
 
   const handleTabClick = (tabId: TabId) => {
@@ -446,13 +445,17 @@ export function FeatureTabs() {
     setTrailKey((k) => k + 1);
   };
 
-  const handleAdvanceTab = () => {
-    setActiveTab((current) => {
-      const idx = tabs.findIndex((t) => t.id === current);
-      return tabs[(idx + 1) % tabs.length].id;
-    });
-    setTrailKey((k) => k + 1);
-  };
+  // Single timer drives auto-advance — avoids double-firing from two mounted trails
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setActiveTab((current) => {
+        const idx = tabs.findIndex((t) => t.id === current);
+        return tabs[(idx + 1) % tabs.length].id;
+      });
+      setTrailKey((k) => k + 1);
+    }, TAB_DURATION * 1000);
+    return () => clearTimeout(timer);
+  }, [activeTab, trailKey]);
 
   return (
     /*
@@ -470,7 +473,7 @@ export function FeatureTabs() {
       className={[
         "relative grid w-full mt-10",
         // 5 columns: margins | hatched | card | hatched | margins
-        "grid-cols-[1fr_2.5rem_auto_2.5rem_1fr]",
+        "grid-cols-[1fr_0.75rem_auto_0.75rem_1fr] md:grid-cols-[1fr_2.5rem_auto_2.5rem_1fr]",
         // 5 rows: top-space | 1px line | content | 1px line | bottom-space
         "grid-rows-[1fr_1px_auto_1px_1fr]",
         // light/dark background + pattern colour token
@@ -527,18 +530,18 @@ export function FeatureTabs() {
 
       {/* ── THE CARD  (col 3, row 3 — the live content cell) ───────────── */}
       <div className="col-start-3 row-start-3 w-full">
-        <Container className="py-16">
+        <Container className="pt-6 pb-6 md:py-16">
 
           {/* ── Section label ─────────────────────────────────────────── */}
-          <p className="font-schibsted text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4 p-4">
+          <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4 p-4 text-left">
             Everything in one place
           </p>
 
           {/* ── Outer box ─────────────────────────────────────────────── */}
           <div className="border border-neutral-200 overflow-hidden">
 
-            {/* ── Tab row ───────────────────────────────────────────── */}
-            <div className="flex divide-x divide-neutral-200 border-b border-neutral-200">
+            {/* ── Tab row — desktop only ─────────────────────────────── */}
+            <div className="hidden md:flex divide-x divide-neutral-200 border-b border-neutral-200">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
@@ -572,24 +575,52 @@ export function FeatureTabs() {
                         className="absolute bottom-0 left-0 w-full h-5 overflow-hidden"
                         aria-hidden="true"
                       >
-                        {/* dim track */}
                         <div className="absolute bottom-0 left-0 right-0 h-px bg-sky-100" />
-
-                        {/* growing trail line behind the bolt */}
                         <motion.div
                           className="absolute bottom-0 left-0 h-px bg-sky-500 origin-left"
                           style={{ width: "100%" }}
                           initial={{ scaleX: 0 }}
                           animate={{ scaleX: 1 }}
                           transition={{ duration: TAB_DURATION, ease: "linear" }}
-                          onAnimationComplete={handleAdvanceTab}
                         />
-
                       </div>
                     )}
                   </button>
                 );
               })}
+            </div>
+
+            {/* ── Mobile step navigator ─────────────────────────────── */}
+            <div className="flex md:hidden items-center justify-start px-4 py-4 border-b border-neutral-200 bg-white relative overflow-hidden">
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
+                  className="flex items-center gap-2.5 font-schibsted font-semibold text-base text-sky-800"
+                >
+                  <span className="[&>svg]:w-5 [&>svg]:h-5">{tabs.find((t) => t.id === activeTab)?.icon}</span>
+                  {tabs.find((t) => t.id === activeTab)?.label}
+                </motion.span>
+              </AnimatePresence>
+
+              {/* Progress trail on mobile */}
+              <div
+                key={trailKey}
+                className="absolute bottom-0 left-0 w-full h-4 overflow-hidden pointer-events-none"
+                aria-hidden="true"
+              >
+                <div className="absolute bottom-0 left-0 right-0 h-px bg-sky-100" />
+                <motion.div
+                  className="absolute bottom-0 left-0 h-px bg-sky-500 origin-left"
+                  style={{ width: "100%" }}
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: TAB_DURATION, ease: "linear" }}
+                />
+              </div>
             </div>
 
             {/* ── Animated content area ─────────────────────────────── */}
@@ -603,7 +634,7 @@ export function FeatureTabs() {
                 className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-neutral-200"
               >
                 {/* Left — text ──────────────────────────────────────── */}
-                <div className="lg:w-[42%] shrink-0 flex flex-col gap-6 p-10">
+                <div className="lg:w-[42%] shrink-0 flex flex-col gap-6 p-5 md:p-10">
                   <Heading
                     variant="muted"
                     className="font-schibsted text-2xl lg:text-3xl text-sky-800 leading-tight"
@@ -616,19 +647,15 @@ export function FeatureTabs() {
                   </Paragraph>
                 </div>
 
-                {/* Right — illustration ─────────────────────────────── */}
-                <div className="flex-1 flex items-center justify-center bg-neutral-50 p-10">
-                  {/* <div className="bg-white/75 ring-1 ring-neutral-200 overflow-hidden rounded-t-[2.5rem] border border-transparent px-2 pt-2 shadow-md relative">
-                    <div className="bg-white ring-1 ring-neutral-100 overflow-hidden rounded-t-[2rem] p-6 h-[460px] w-[380px]"> */}
-                      {illustrations[activeTab] ?? (
-                        <div className="w-full h-full bg-neutral-50 flex items-center justify-center">
-                          <span className="font-schibsted text-sm text-neutral-400">
-                            Coming soon
-                          </span>
-                        </div>
-                      )}
-                    {/* </div>
-                  </div> */}
+                {/* Right — illustration ────────────────────────────── */}
+                <div className="flex flex-1 items-center justify-center bg-neutral-50 p-0 md:p-10">
+                  {illustrations[activeTab] ?? (
+                    <div className="w-full h-full bg-neutral-50 flex items-center justify-center">
+                      <span className="font-schibsted text-sm text-neutral-400">
+                        Coming soon
+                      </span>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             </AnimatePresence>

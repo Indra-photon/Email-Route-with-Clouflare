@@ -388,7 +388,7 @@ export const TicketStatusIllustration: React.FC = () => {
   }, [statusIndex]);
 
   return (
-    <div className="relative w-full overflow-hidden bg-neutral-50 border border-neutral-200 p-8 min-h-[320px] flex items-center justify-center">
+    <div className="relative w-full overflow-hidden bg-neutral-50 border border-neutral-200 p-4 md:p-8 min-h-[320px] flex items-center justify-center">
 
       {/* Top-left badge */}
       <div className="absolute top-3 left-4 flex items-center gap-1.5">
