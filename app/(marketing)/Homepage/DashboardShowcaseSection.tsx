@@ -26,7 +26,7 @@ export function DashboardShowcaseSection() {
     <div
       className={[
         "relative grid w-full",
-        "grid-cols-[1fr_2.5rem_auto_2.5rem_1fr]",
+        "grid-cols-[1fr_0.75rem_auto_0.75rem_1fr] md:grid-cols-[1fr_2.5rem_auto_2.5rem_1fr]",
         "grid-rows-[1fr_1px_auto_1px_1fr]",
         "bg-white dark:bg-gray-950",
         "[--pattern-fg:theme(colors.gray.950/5%)]",
@@ -75,36 +75,40 @@ export function DashboardShowcaseSection() {
 
       {/* ── Content cell ─────────────────────────────────────────────────── */}
       <div className="col-start-3 row-start-3 w-full">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 xl:px-0 py-16 md:py-20 lg:py-6">
-
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 xl:px-0 pt-6 pb-6 md:py-16">
           {/* ── Eyebrow ────────────────────────────────────────────────── */}
-          <p className="font-schibsted text-xs font-semibold uppercase tracking-widest text-sky-800 mb-1 p-4">
+          <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4 sm:p-4 text-left">
             Full visibility
           </p>
 
           {/* ── Heading block ──────────────────────────────────────────── */}
           <motion.div
-            className="mb-10 p-4"
+            className="mb-10 sm:px-4"
             initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
             whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             viewport={{ once: true }}
-            transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
+            transition={{
+              duration: 0.4,
+              ease: [0.25, 0.46, 0.45, 0.94],
+              delay: 0.2,
+            }}
           >
-            <Heading as="h2" className="text-neutral-900 font-schibsted leading-tight">
-              <span>An Integrated Dashboard.{" "}</span>
+            <Heading
+              as="h2"
+              className="text-neutral-900 font-schibsted leading-tight"
+            >
+              <span>An Integrated Dashboard. </span>
               <span className="text-sky-800 font-extralight">
-                — Ticket management, response times, and team performance at a glance.
+                — Ticket management, response times, and team performance at a
+                glance.
               </span>
             </Heading>
           </motion.div>
 
           {/* ── Dashboard screenshot ────────────────────────────────────── */}
-          <motion.div
-            className="relative w-full"
-          >
+          <motion.div className="relative w-full">
             {/* Outer frame — browser chrome feel */}
             <div className=" bg-neutral-100 p-2">
-
               {/* Fake browser bar */}
               {/* <div className="flex items-center gap-1.5 px-3 py-2 mb-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-neutral-200" />
@@ -126,9 +130,7 @@ export function DashboardShowcaseSection() {
                 />
               </div>
             </div>
-
           </motion.div>
-
         </div>
       </div>
     </div>

@@ -364,7 +364,7 @@ export function HeroSection() {
     <section className="w-full bg-white">
 
       {/* ── Hero content ──────────────────────────────────────────────────── */}
-      <Container className="pt-20 pb-10">
+      <Container className="px-4 pt-10 pb-5 md:px-0 md:pt-20 md:pb-10">
         <div className="flex flex-col lg:flex-row lg:gap-12">
 
           {/* Heading — 3/5 width on desktop */}
@@ -387,7 +387,7 @@ export function HeroSection() {
             </Paragraph>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-start gap-4">
+            <div className="flex flex-row items-start gap-4">
               <CTAWrapper
                 loggedInHref="/dashboard"
                 loggedOutHref="/sign-up"

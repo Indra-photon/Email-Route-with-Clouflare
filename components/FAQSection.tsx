@@ -60,8 +60,8 @@ export function FAQSection() {
   };
 
   return (
-    <section className="w-full py-20 md:py-32 bg-white">
-      <Container>
+    <section className="w-full py-8 md:py-32 bg-white">
+      <Container className="px-4 md:px-0">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
 
           {/* ── Left: heading + CTA ─────────────────────────────────────────── */}

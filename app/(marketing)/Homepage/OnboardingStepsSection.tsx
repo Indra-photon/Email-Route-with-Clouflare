@@ -177,7 +177,7 @@ export function OnboardingStepsSection() {
     <div
       className={[
         "relative grid w-full",
-        "grid-cols-[1fr_2.5rem_auto_2.5rem_1fr]",
+        "grid-cols-[1fr_0.75rem_auto_0.75rem_1fr] md:grid-cols-[1fr_2.5rem_auto_2.5rem_1fr]",
         "grid-rows-[1fr_1px_auto_1px_1fr]",
         "bg-white",
         "[--pattern-fg:theme(colors.gray.950/5%)]",
@@ -212,17 +212,17 @@ export function OnboardingStepsSection() {
       <div className="relative -top-px col-span-full col-start-1 row-start-4 h-px bg-(--pattern-fg)" />
 
       {/* ── Content card (col 3, row 3) ─────────────────────────────────── */}
-      <section className="col-start-3 row-start-3 w-full py-16 md:py-20 lg:py-24">
+      <section className="col-start-3 row-start-3 w-full py-8 md:py-20 lg:py-24">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 xl:px-0">
 
           {/* Eyebrow */}
-          <p className="font-schibsted text-xs font-semibold uppercase tracking-widest text-sky-800 p-4">
+          <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4 p-4 text-left">
             How it works
           </p>
 
           {/* Heading block */}
           <motion.div
-            className="mb-2 p-4"
+            className="mb-2 px-4"
             initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
             whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             viewport={{ once: true }}
@@ -252,7 +252,7 @@ export function OnboardingStepsSection() {
                 // viewport={{ once: true }}
                 // transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94], delay: index * 0.1 }}
                 className={[
-                  "flex flex-col gap-5 p-8 bg-white",
+                  "flex flex-col gap-5 p-5 md:p-8 bg-white",
                   "border-b border-neutral-200",
                   index < 2 ? "md:border-r border-neutral-200" : "",
                 ].join(" ")}
@@ -278,7 +278,7 @@ export function OnboardingStepsSection() {
               // whileInView={{ opacity: 1, y: 0 }}
               // viewport={{ once: true }}
               // transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.3 }}
-              className="flex flex-col gap-5 p-8 bg-white border-b md:border-b-0 md:border-r border-neutral-200"
+              className="flex flex-col gap-5 p-5 md:p-8 bg-white border-b md:border-b-0 md:border-r border-neutral-200"
             >
               <span className="font-mono text-xs font-normal tracking-widest text-sky-900 uppercase">
                 {steps[3].label}
@@ -300,7 +300,7 @@ export function OnboardingStepsSection() {
               // whileInView={{ opacity: 1, y: 0 }}
               // viewport={{ once: true }}
               // transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.4 }}
-              className="col-span-1 md:col-span-2 flex flex-col justify-between gap-8 p-8 bg-neutral-50"
+              className="col-span-1 md:col-span-2 flex flex-col justify-between gap-8 p-5 md:p-8 bg-neutral-50"
             >
               <div className="flex flex-col gap-4">
                 <Heading as="h3" className="text-neutral-900 leading-snug font-semibold">

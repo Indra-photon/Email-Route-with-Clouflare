@@ -408,7 +408,7 @@ export function EmailSlackIllustration() {
   return (
     <div
       ref={containerRef}
-      className="relative flex w-full items-center justify-between gap-8 overflow-hidden bg-neutral-50 border border-neutral-200 p-8 min-h-[400px]"
+      className="relative flex flex-col md:flex-row w-full items-center md:justify-between gap-4 md:gap-8 overflow-hidden bg-neutral-50 border border-neutral-200 p-4 md:p-8 min-h-[400px]"
     >
       {/* Top-left label */}
       <div className="absolute top-3 left-4 flex items-center gap-1.5">
@@ -594,7 +594,7 @@ export function EmailSlackIllustration() {
           <div className="flex h-56">
 
             {/* Sidebar — sky-950 */}
-            <div className="w-[108px] bg-sky-950 border-r border-sky-900 py-3 flex-shrink-0">
+            <div className="w-[80px] md:w-[108px] bg-sky-950 border-r border-sky-900 py-3 flex-shrink-0">
               <div className="font-mono text-[8px] tracking-widest text-neutral-100 uppercase px-3 mb-2">
                 Channels
               </div>
