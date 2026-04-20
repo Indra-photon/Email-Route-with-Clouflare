@@ -555,6 +555,7 @@ export async function POST(request: Request) {
               options: [
                 { text: { type: "plain_text", text: "🆕 Open", emoji: true }, value: `open__${emailThread._id.toString()}` },
                 { text: { type: "plain_text", text: "🔄 In Progress", emoji: true }, value: `in_progress__${emailThread._id.toString()}` },
+                { text: { type: "plain_text", text: "⏸️ Waiting", emoji: true }, value: `waiting__${emailThread._id.toString()}` },
                 { text: { type: "plain_text", text: "✅ Resolved", emoji: true }, value: `resolved__${emailThread._id.toString()}` },
               ],
             },
