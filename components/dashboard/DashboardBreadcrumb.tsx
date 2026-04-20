@@ -501,13 +501,13 @@ export function DashboardBreadcrumb() {
 
       {/* ── Right: search + actions + user ── */}
       <div className="flex items-center gap-2 shrink-0 ml-4">
-        <SearchBar />
+        {/* <SearchBar /> */}
 
-        <NotificationBell count={notifCount} items={notifItems} />
+        {/* <NotificationBell count={notifCount} items={notifItems} /> */}
 
-        <IconBtn>
+        {/* <IconBtn>
           <IconInfoCircle size={16} className="text-neutral-500" />
-        </IconBtn>
+        </IconBtn> */}
 
         <RefreshBtn />
 
