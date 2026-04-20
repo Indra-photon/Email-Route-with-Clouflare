@@ -1,0 +1,5 @@
+[
+  { "id": "alias_01", "email": "hello@acme.com", "domainId": "domain_01" },
+  { "id": "alias_02", "email": "billing@acme.com", "domainId": "domain_01" },
+  { "id": "alias_03", "email": "help@support.acme.com", "domainId": "domain_02" }
+]

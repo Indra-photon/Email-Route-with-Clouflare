@@ -413,8 +413,6 @@
 //   );
 // }
 
-
-
 // -------------------------------------- v 2.0 ---------------------------------
 
 // "use client";
@@ -586,7 +584,7 @@
 //       className={`
 //         relative flex items-center justify-center w-full h-9 rounded-lg
 //         transition-colors duration-150
-       
+
 //       `}
 //     >
 //       {/* {isActive && (
@@ -752,7 +750,6 @@
 //   );
 // }
 
-
 // function Sidebar({
 //   collapsed,
 //   isActive,
@@ -898,9 +895,6 @@
 //   );
 // }
 
-
-
-
 // -------------------------------------- v 3.0 ---------------------------------
 
 "use client";
@@ -913,7 +907,22 @@ import { AnimatePresence, motion } from "motion/react";
 import { CreditCard, User, Palette, Menu, ChevronLeft } from "lucide-react";
 import { Tooltip } from "radix-ui";
 // import { IconDashboard, IconMail, IconGlobe, IconAtSign, IconZap } from "@/constants/icons";
-import { IconMessageCircle, IconMessages, IconApiApp, IconTemplate, IconMessage2, IconTag, IconHome, IconFileDotsFilled, IconWriting, IconLayoutDashboard, IconWorldDownload, IconMail, IconMailbox, IconAdjustmentsHorizontal } from "@tabler/icons-react";
+import {
+  IconMessageCircle,
+  IconMessages,
+  IconApiApp,
+  IconTemplate,
+  IconMessage2,
+  IconTag,
+  IconHome,
+  IconFileDotsFilled,
+  IconWriting,
+  IconLayoutDashboard,
+  IconWorldDownload,
+  IconMail,
+  IconMailbox,
+  IconAdjustmentsHorizontal,
+} from "@tabler/icons-react";
 import { useUserStore } from "@/lib/store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DashboardBreadcrumb } from "@/components/dashboard/DashboardBreadcrumb";
@@ -1058,9 +1067,9 @@ const navGroups = [
         icon: null,
         tablerIcon: IconWriting,
         exact: false,
-      }
+      },
     ],
-  }
+  },
 ];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1082,7 +1091,9 @@ function NavIcon({
   isActive: boolean;
   size?: number;
 }) {
-  const colorClass = isActive ? "text-neutral-50" : "text-neutral-300 opacity-90";
+  const colorClass = isActive
+    ? "text-neutral-50"
+    : "text-neutral-300 opacity-90";
   if (item.tablerIcon) {
     return (
       <item.tablerIcon
@@ -1104,13 +1115,7 @@ function NavIcon({
 }
 
 // ─── Nav Pill with Radix Tooltip ──────────────────────────────────────────────
-function NavPill({
-  item,
-  isActive,
-}: {
-  item: NavItemType;
-  isActive: boolean;
-}) {
+function NavPill({ item, isActive }: { item: NavItemType; isActive: boolean }) {
   return (
     <Tooltip.Root delayDuration={200}>
       <Tooltip.Trigger asChild>
@@ -1188,7 +1193,12 @@ function UserProfileCard() {
 
   const getInitials = (name?: string) => {
     if (!name) return "U";
-    return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   return (
@@ -1241,7 +1251,6 @@ export default function DashboardNav({ children }: { children: ReactNode }) {
     // Tooltip.Provider wraps everything so tooltips work anywhere in the tree
     <Tooltip.Provider delayDuration={200} skipDelayDuration={100}>
       <div className="flex h-dvh">
-
         {/* ── Desktop Sidebar (fixed width, always collapsed) ─────────────── */}
         <aside className="hidden md:flex flex-col w-[68px] shrink-0 border-r border-sky-900/40 shadow-xl shadow-sky-900/10 overflow-hidden">
           <Sidebar isActive={isActive} />
@@ -1317,7 +1326,6 @@ export default function DashboardNav({ children }: { children: ReactNode }) {
           </div>
           <RightPanel />
         </main>
-
       </div>
     </Tooltip.Provider>
   );
