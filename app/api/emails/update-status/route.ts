@@ -4,6 +4,7 @@ import dbConnect from "@/lib/dbConnect";
 import { EmailThread } from "@/app/api/models/EmailThreadModel";
 import { Workspace } from "@/app/api/models/WorkspaceModel";
 import { getPostHogClient } from "@/lib/posthog-server";
+import { getSubscriptionGuard } from "@/lib/checkSubscriptionStatus";
 
 const VALID_STATUSES = ['open', 'in_progress', 'waiting', 'resolved'];
 
@@ -38,6 +39,10 @@ export async function POST(request: NextRequest) {
     if (!workspace) {
       return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
     }
+
+    const { isExpired, hasNoPlan } = await getSubscriptionGuard(workspace._id);
+    if (hasNoPlan) return NextResponse.json({ error: "No active plan. Please purchase a plan.", upgradeRequired: true }, { status: 403 });
+    if (isExpired) return NextResponse.json({ error: "Your plan has expired. Please renew.", upgradeRequired: true }, { status: 403 });
 
     // Find thread and verify access
     const thread = await EmailThread.findById(threadId);

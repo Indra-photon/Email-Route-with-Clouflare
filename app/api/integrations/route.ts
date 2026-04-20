@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { getOrCreateWorkspaceForCurrentUser } from "@/app/api/workspace/helpers";
 import { Integration } from "@/app/api/models/IntegrationModel";
 import { getPostHogClient } from "@/lib/posthog-server";
+import { getSubscriptionGuard } from "@/lib/checkSubscriptionStatus";
 
 export async function GET() {
   try {
@@ -91,6 +92,10 @@ export async function POST(request: Request) {
 
     await dbConnect();
     const workspace = await getOrCreateWorkspaceForCurrentUser();
+
+    const { isExpired, hasNoPlan } = await getSubscriptionGuard(workspace._id);
+    if (hasNoPlan) return NextResponse.json({ error: "No active plan. Please purchase a plan.", upgradeRequired: true }, { status: 403 });
+    if (isExpired) return NextResponse.json({ error: "Your plan has expired. Please renew.", upgradeRequired: true }, { status: 403 });
 
     const doc = await Integration.create({
       workspaceId: workspace._id,

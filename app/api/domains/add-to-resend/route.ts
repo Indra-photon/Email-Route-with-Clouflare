@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import dbConnect from "@/lib/dbConnect";
 import { Domain } from "@/app/api/models/DomainModel";
 import { getOrCreateWorkspaceForCurrentUser } from "@/app/api/workspace/helpers";
+import { getSubscriptionGuard } from "@/lib/checkSubscriptionStatus";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -36,6 +37,22 @@ export async function POST(request: Request) {
         { status: 404 }
       );
     }
+
+    // ── Plan guard ────────────────────────────────────────────────────────────────
+    const { isExpired, hasNoPlan } = await getSubscriptionGuard(workspace._id);
+    if (hasNoPlan) {
+      return NextResponse.json(
+        { error: "You need an active plan to configure domains. Please purchase a plan.", upgradeRequired: true },
+        { status: 403 }
+      );
+    }
+    if (isExpired) {
+      return NextResponse.json(
+        { error: "Your plan has expired. Please renew to configure domains.", upgradeRequired: true },
+        { status: 403 }
+      );
+    }
+    // ──────────────────────────────────────────────────────────────────────────────
 
     if (domain.resendDomainId) {
       return NextResponse.json(
