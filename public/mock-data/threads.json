@@ -1,0 +1,486 @@
+{
+  "mock_t01": {
+    "thread": {
+      "id": "mock_t01",
+      "from": "alice.johnson@gmail.com",
+      "fromName": "Alice Johnson",
+      "to": "hello@acme.com",
+      "subject": "Can't log into my account after password reset",
+      "status": "open",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-04-20T08:20:00.000Z",
+      "receivedAt": "2026-04-20T08:14:00.000Z",
+      "repliedAt": null
+    },
+    "messages": [
+      {
+        "id": "msg_t01_01",
+        "direction": "inbound",
+        "from": "alice.johnson@gmail.com",
+        "fromName": "Alice Johnson",
+        "to": "hello@acme.com",
+        "subject": "Can't log into my account after password reset",
+        "textBody": "Hi there,\n\nI reset my password yesterday using the link sent to my email, but now whenever I try to log in with the new password it says \"Invalid credentials\". I've tried multiple times and even cleared my browser cache.\n\nCan you help me get back in?\n\nThanks,\nAlice",
+        "attachments": [],
+        "createdAt": "2026-04-20T08:14:00.000Z",
+        "receivedAt": "2026-04-20T08:14:00.000Z"
+      }
+    ]
+  },
+  "mock_t02": {
+    "thread": {
+      "id": "mock_t02",
+      "from": "bob.smith@outlook.com",
+      "fromName": "Bob Smith",
+      "to": "hello@acme.com",
+      "subject": "Billing charge appeared twice this month",
+      "status": "open",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-04-20T07:00:00.000Z",
+      "receivedAt": "2026-04-20T06:55:00.000Z",
+      "repliedAt": null
+    },
+    "messages": [
+      {
+        "id": "msg_t02_01",
+        "direction": "inbound",
+        "from": "bob.smith@outlook.com",
+        "fromName": "Bob Smith",
+        "to": "hello@acme.com",
+        "subject": "Billing charge appeared twice this month",
+        "textBody": "Hello,\n\nI just checked my bank statement and I was charged $49 twice on April 1st for my Pro subscription. My account email is bob.smith@outlook.com.\n\nCould you please refund the duplicate charge? I've attached my bank statement screenshot.\n\nRegards,\nBob",
+        "attachments": [
+          { "id": "att_01", "filename": "bank-statement-april.png", "size": 84320 }
+        ],
+        "createdAt": "2026-04-20T06:55:00.000Z",
+        "receivedAt": "2026-04-20T06:55:00.000Z"
+      }
+    ]
+  },
+  "mock_t03": {
+    "thread": {
+      "id": "mock_t03",
+      "from": "carla.diaz@yahoo.com",
+      "fromName": "Carla Diaz",
+      "to": "billing@acme.com",
+      "subject": "Feature request: dark mode for mobile app",
+      "status": "open",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-04-19T22:45:00.000Z",
+      "receivedAt": "2026-04-19T22:30:00.000Z",
+      "repliedAt": null
+    },
+    "messages": [
+      {
+        "id": "msg_t03_01",
+        "direction": "inbound",
+        "from": "carla.diaz@yahoo.com",
+        "fromName": "Carla Diaz",
+        "to": "billing@acme.com",
+        "subject": "Feature request: dark mode for mobile app",
+        "textBody": "Hi team,\n\nI love the product but I use it a lot at night and the bright white background is really hard on the eyes. Many apps have dark mode now — any plans to add it to the mobile app?\n\nWould really appreciate this!\nCarla",
+        "attachments": [],
+        "createdAt": "2026-04-19T22:30:00.000Z",
+        "receivedAt": "2026-04-19T22:30:00.000Z"
+      }
+    ]
+  },
+  "mock_t04": {
+    "thread": {
+      "id": "mock_t04",
+      "from": "david.kim@proton.me",
+      "fromName": "David Kim",
+      "to": "hello@acme.com",
+      "subject": "Integration with Zapier keeps disconnecting",
+      "status": "in_progress",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-04-19T14:20:00.000Z",
+      "receivedAt": "2026-04-19T14:10:00.000Z",
+      "repliedAt": null
+    },
+    "messages": [
+      {
+        "id": "msg_t04_01",
+        "direction": "inbound",
+        "from": "david.kim@proton.me",
+        "fromName": "David Kim",
+        "to": "hello@acme.com",
+        "subject": "Integration with Zapier keeps disconnecting",
+        "textBody": "Hey support,\n\nI've set up a Zap that triggers whenever a new record is created in your platform. It works fine for about a day or two, then Zapier says the connection is broken and I have to reconnect it manually.\n\nThis is really disrupting my workflow. Is there a known issue with OAuth token expiry?\n\nDavid",
+        "attachments": [],
+        "createdAt": "2026-04-19T14:10:00.000Z",
+        "receivedAt": "2026-04-19T14:10:00.000Z"
+      },
+      {
+        "id": "msg_t04_02",
+        "direction": "outbound",
+        "from": "hello@acme.com",
+        "fromName": "Support Agent",
+        "to": "david.kim@proton.me",
+        "subject": "Re: Integration with Zapier keeps disconnecting",
+        "textBody": "Hi David,\n\nThanks for reaching out. You're right — we're aware of an issue with OAuth tokens expiring earlier than expected. Our engineering team is actively working on a fix.\n\nIn the meantime, you can use a long-lived API key instead of OAuth for the Zapier integration. I'll send you the steps.\n\nBest,\nSupport Team",
+        "attachments": [],
+        "createdAt": "2026-04-19T15:00:00.000Z",
+        "receivedAt": "2026-04-19T15:00:00.000Z"
+      }
+    ]
+  },
+  "mock_t05": {
+    "thread": {
+      "id": "mock_t05",
+      "from": "emma.white@company.io",
+      "fromName": "Emma White",
+      "to": "billing@acme.com",
+      "subject": "Export to CSV not including all columns",
+      "status": "in_progress",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-04-19T10:15:00.000Z",
+      "receivedAt": "2026-04-19T10:05:00.000Z",
+      "repliedAt": null
+    },
+    "messages": [
+      {
+        "id": "msg_t05_01",
+        "direction": "inbound",
+        "from": "emma.white@company.io",
+        "fromName": "Emma White",
+        "to": "billing@acme.com",
+        "subject": "Export to CSV not including all columns",
+        "textBody": "Hello,\n\nWhen I export my data to CSV, the \"custom tags\" and \"last activity\" columns are missing even though they show up on screen. I need these for a report I'm putting together.\n\nIs this a known bug? Running Chrome 124 on macOS.\n\nEmma",
+        "attachments": [],
+        "createdAt": "2026-04-19T10:05:00.000Z",
+        "receivedAt": "2026-04-19T10:05:00.000Z"
+      }
+    ]
+  },
+  "mock_t06": {
+    "thread": {
+      "id": "mock_t06",
+      "from": "frank.nguyen@startup.co",
+      "fromName": "Frank Nguyen",
+      "to": "hello@acme.com",
+      "subject": "API rate limit hit unexpectedly on free plan",
+      "status": "in_progress",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-04-18T18:00:00.000Z",
+      "receivedAt": "2026-04-18T17:45:00.000Z",
+      "repliedAt": null
+    },
+    "messages": [
+      {
+        "id": "msg_t06_01",
+        "direction": "inbound",
+        "from": "frank.nguyen@startup.co",
+        "fromName": "Frank Nguyen",
+        "to": "hello@acme.com",
+        "subject": "API rate limit hit unexpectedly on free plan",
+        "textBody": "Hi,\n\nAccording to your docs the free plan allows 1000 API calls/day. I'm only making around 300 calls and I'm getting 429 errors. Something seems off.\n\nFrank",
+        "attachments": [],
+        "createdAt": "2026-04-18T17:45:00.000Z",
+        "receivedAt": "2026-04-18T17:45:00.000Z"
+      },
+      {
+        "id": "msg_t06_02",
+        "direction": "outbound",
+        "from": "hello@acme.com",
+        "fromName": "Support Agent",
+        "to": "frank.nguyen@startup.co",
+        "subject": "Re: API rate limit hit unexpectedly on free plan",
+        "textBody": "Hi Frank,\n\nThanks for flagging this. Could you share your workspace ID so I can check your usage logs? It's possible there's a per-minute burst limit being hit rather than the daily cap.\n\nLooking into it now.\n\nSupport",
+        "attachments": [],
+        "createdAt": "2026-04-18T18:30:00.000Z",
+        "receivedAt": "2026-04-18T18:30:00.000Z"
+      }
+    ]
+  },
+  "mock_t07": {
+    "thread": {
+      "id": "mock_t07",
+      "from": "grace.lee@enterprise.com",
+      "fromName": "Grace Lee",
+      "to": "billing@acme.com",
+      "subject": "Team member invite email never arrived",
+      "status": "waiting",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-04-18T09:40:00.000Z",
+      "receivedAt": "2026-04-18T09:30:00.000Z",
+      "repliedAt": "2026-04-18T11:00:00.000Z"
+    },
+    "messages": [
+      {
+        "id": "msg_t07_01",
+        "direction": "inbound",
+        "from": "grace.lee@enterprise.com",
+        "fromName": "Grace Lee",
+        "to": "billing@acme.com",
+        "subject": "Team member invite email never arrived",
+        "textBody": "Hi,\n\nI invited three colleagues to my workspace but none of them received the email. I checked the spam folder too — nothing there. The invites show as \"Pending\" in my dashboard.\n\nGrace",
+        "attachments": [],
+        "createdAt": "2026-04-18T09:30:00.000Z",
+        "receivedAt": "2026-04-18T09:30:00.000Z"
+      },
+      {
+        "id": "msg_t07_02",
+        "direction": "outbound",
+        "from": "billing@acme.com",
+        "fromName": "Support Agent",
+        "to": "grace.lee@enterprise.com",
+        "subject": "Re: Team member invite email never arrived",
+        "textBody": "Hi Grace,\n\nI've resent the invites manually from our end. Your colleagues should receive them within the next few minutes. Could you confirm once they check?\n\nAlso — are their email addresses on a corporate domain that might be filtering bulk senders?\n\nThanks,\nSupport",
+        "attachments": [],
+        "createdAt": "2026-04-18T11:00:00.000Z",
+        "receivedAt": "2026-04-18T11:00:00.000Z"
+      }
+    ]
+  },
+  "mock_t08": {
+    "thread": {
+      "id": "mock_t08",
+      "from": "henry.brown@freelance.net",
+      "fromName": "Henry Brown",
+      "to": "hello@acme.com",
+      "subject": "Dashboard loading slowly on Firefox",
+      "status": "waiting",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-04-17T15:30:00.000Z",
+      "receivedAt": "2026-04-17T15:20:00.000Z",
+      "repliedAt": "2026-04-17T16:45:00.000Z"
+    },
+    "messages": [
+      {
+        "id": "msg_t08_01",
+        "direction": "inbound",
+        "from": "henry.brown@freelance.net",
+        "fromName": "Henry Brown",
+        "to": "hello@acme.com",
+        "subject": "Dashboard loading slowly on Firefox",
+        "textBody": "Hey,\n\nThe main dashboard takes about 12 seconds to load on Firefox 125. Chrome is fine at under 2 seconds. I've disabled extensions and the problem persists.\n\nHenry",
+        "attachments": [],
+        "createdAt": "2026-04-17T15:20:00.000Z",
+        "receivedAt": "2026-04-17T15:20:00.000Z"
+      },
+      {
+        "id": "msg_t08_02",
+        "direction": "outbound",
+        "from": "hello@acme.com",
+        "fromName": "Support Agent",
+        "to": "henry.brown@freelance.net",
+        "subject": "Re: Dashboard loading slowly on Firefox",
+        "textBody": "Hi Henry,\n\nThanks for the detail — that's helpful. We've reproduced the issue on Firefox 125 internally. It looks like a CSS animation that isn't GPU-accelerated in Firefox is causing the bottleneck.\n\nA fix has been merged and will go out in our next release (this week). We'll update you once it's live.\n\nApologies for the inconvenience!\nSupport",
+        "attachments": [],
+        "createdAt": "2026-04-17T16:45:00.000Z",
+        "receivedAt": "2026-04-17T16:45:00.000Z"
+      }
+    ]
+  },
+  "mock_t09": {
+    "thread": {
+      "id": "mock_t09",
+      "from": "isabella.chen@design.studio",
+      "fromName": "Isabella Chen",
+      "to": "billing@acme.com",
+      "subject": "Webhook payload missing custom fields",
+      "status": "waiting",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-04-16T13:10:00.000Z",
+      "receivedAt": "2026-04-16T13:00:00.000Z",
+      "repliedAt": "2026-04-16T14:30:00.000Z"
+    },
+    "messages": [
+      {
+        "id": "msg_t09_01",
+        "direction": "inbound",
+        "from": "isabella.chen@design.studio",
+        "fromName": "Isabella Chen",
+        "to": "billing@acme.com",
+        "subject": "Webhook payload missing custom fields",
+        "textBody": "Hello,\n\nWe're using your webhook to sync data to our internal system. The payload includes standard fields fine, but the custom fields we've defined (e.g. \"client_id\", \"project_code\") are not appearing in the JSON body.\n\nIs there a setting to include custom fields in webhook payloads?\n\nIsabella",
+        "attachments": [],
+        "createdAt": "2026-04-16T13:00:00.000Z",
+        "receivedAt": "2026-04-16T13:00:00.000Z"
+      },
+      {
+        "id": "msg_t09_02",
+        "direction": "outbound",
+        "from": "billing@acme.com",
+        "fromName": "Support Agent",
+        "to": "isabella.chen@design.studio",
+        "subject": "Re: Webhook payload missing custom fields",
+        "textBody": "Hi Isabella,\n\nCustom fields in webhook payloads are available on our Business plan and above. You're currently on the Starter plan.\n\nIf you'd like to upgrade, I can set up a trial of Business for your workspace for 14 days so you can test the feature. Let me know!\n\nSupport",
+        "attachments": [],
+        "createdAt": "2026-04-16T14:30:00.000Z",
+        "receivedAt": "2026-04-16T14:30:00.000Z"
+      }
+    ]
+  },
+  "mock_t10": {
+    "thread": {
+      "id": "mock_t10",
+      "from": "james.wilson@retail.shop",
+      "fromName": "James Wilson",
+      "to": "hello@acme.com",
+      "subject": "How do I downgrade my subscription?",
+      "status": "resolved",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-04-15T09:05:00.000Z",
+      "receivedAt": "2026-04-15T09:00:00.000Z",
+      "repliedAt": "2026-04-15T10:30:00.000Z"
+    },
+    "messages": [
+      {
+        "id": "msg_t10_01",
+        "direction": "inbound",
+        "from": "james.wilson@retail.shop",
+        "fromName": "James Wilson",
+        "to": "hello@acme.com",
+        "subject": "How do I downgrade my subscription?",
+        "textBody": "Hi,\n\nI'd like to downgrade from Pro to Free. I can't find the option in settings — only an upgrade button. How do I do this?\n\nJames",
+        "attachments": [],
+        "createdAt": "2026-04-15T09:00:00.000Z",
+        "receivedAt": "2026-04-15T09:00:00.000Z"
+      },
+      {
+        "id": "msg_t10_02",
+        "direction": "outbound",
+        "from": "hello@acme.com",
+        "fromName": "Support Agent",
+        "to": "james.wilson@retail.shop",
+        "subject": "Re: How do I downgrade my subscription?",
+        "textBody": "Hi James,\n\nTo downgrade: go to Settings → Billing → Manage Plan → then click \"Switch to Free\". The change takes effect at the end of your current billing cycle.\n\nLet me know if you run into any trouble!\n\nSupport",
+        "attachments": [],
+        "createdAt": "2026-04-15T10:30:00.000Z",
+        "receivedAt": "2026-04-15T10:30:00.000Z"
+      },
+      {
+        "id": "msg_t10_03",
+        "direction": "inbound",
+        "from": "james.wilson@retail.shop",
+        "fromName": "James Wilson",
+        "to": "hello@acme.com",
+        "subject": "Re: How do I downgrade my subscription?",
+        "textBody": "Perfect, found it! Thanks so much — done now.",
+        "attachments": [],
+        "createdAt": "2026-04-15T10:45:00.000Z",
+        "receivedAt": "2026-04-15T10:45:00.000Z"
+      }
+    ]
+  },
+  "mock_t11": {
+    "thread": {
+      "id": "mock_t11",
+      "from": "kate.martin@saas.app",
+      "fromName": "Kate Martin",
+      "to": "billing@acme.com",
+      "subject": "Two-factor authentication not working with Authy",
+      "status": "resolved",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-04-14T14:10:00.000Z",
+      "receivedAt": "2026-04-14T14:00:00.000Z",
+      "repliedAt": "2026-04-14T15:20:00.000Z"
+    },
+    "messages": [
+      {
+        "id": "msg_t11_01",
+        "direction": "inbound",
+        "from": "kate.martin@saas.app",
+        "fromName": "Kate Martin",
+        "to": "billing@acme.com",
+        "subject": "Two-factor authentication not working with Authy",
+        "textBody": "Hello,\n\nI enabled 2FA using Authy but every time I try to log in, the code is rejected even though the time is correct. I've tried regenerating the code multiple times.\n\nKate",
+        "attachments": [],
+        "createdAt": "2026-04-14T14:00:00.000Z",
+        "receivedAt": "2026-04-14T14:00:00.000Z"
+      },
+      {
+        "id": "msg_t11_02",
+        "direction": "outbound",
+        "from": "billing@acme.com",
+        "fromName": "Support Agent",
+        "to": "kate.martin@saas.app",
+        "subject": "Re: Two-factor authentication not working with Authy",
+        "textBody": "Hi Kate,\n\nThis is usually caused by a clock drift issue. In Authy, go to Settings → Account → Enable Backups, then try syncing time. Also make sure your phone's time is set to \"automatic\".\n\nIf that doesn't work, I can reset your 2FA so you can set it up fresh.\n\nSupport",
+        "attachments": [],
+        "createdAt": "2026-04-14T15:20:00.000Z",
+        "receivedAt": "2026-04-14T15:20:00.000Z"
+      },
+      {
+        "id": "msg_t11_03",
+        "direction": "inbound",
+        "from": "kate.martin@saas.app",
+        "fromName": "Kate Martin",
+        "to": "billing@acme.com",
+        "subject": "Re: Two-factor authentication not working with Authy",
+        "textBody": "The time sync fixed it! All working now, thank you.",
+        "attachments": [],
+        "createdAt": "2026-04-14T15:35:00.000Z",
+        "receivedAt": "2026-04-14T15:35:00.000Z"
+      }
+    ]
+  },
+  "mock_t12": {
+    "thread": {
+      "id": "mock_t12",
+      "from": "liam.turner@agency.co",
+      "fromName": "Liam Turner",
+      "to": "hello@acme.com",
+      "subject": "Bulk import stopped halfway through 500 records",
+      "status": "resolved",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-04-13T11:25:00.000Z",
+      "receivedAt": "2026-04-13T11:15:00.000Z",
+      "repliedAt": "2026-04-13T13:00:00.000Z"
+    },
+    "messages": [
+      {
+        "id": "msg_t12_01",
+        "direction": "inbound",
+        "from": "liam.turner@agency.co",
+        "fromName": "Liam Turner",
+        "to": "hello@acme.com",
+        "subject": "Bulk import stopped halfway through 500 records",
+        "textBody": "Hey,\n\nI was importing 500 contacts via CSV and it stopped at record 247 with no error message. The import just shows as \"Completed\" but only 246 contacts were added.\n\nLiam",
+        "attachments": [
+          { "id": "att_02", "filename": "contacts-import.csv", "size": 42100 }
+        ],
+        "createdAt": "2026-04-13T11:15:00.000Z",
+        "receivedAt": "2026-04-13T11:15:00.000Z"
+      },
+      {
+        "id": "msg_t12_02",
+        "direction": "outbound",
+        "from": "hello@acme.com",
+        "fromName": "Support Agent",
+        "to": "liam.turner@agency.co",
+        "subject": "Re: Bulk import stopped halfway through 500 records",
+        "textBody": "Hi Liam,\n\nI looked at your import log — record 247 had a duplicate email address that caused a silent failure. Our importer stops at the first duplicate by default.\n\nI've enabled the \"skip duplicates\" setting for your account. Please re-import your full CSV and it should complete successfully.\n\nSupport",
+        "attachments": [],
+        "createdAt": "2026-04-13T13:00:00.000Z",
+        "receivedAt": "2026-04-13T13:00:00.000Z"
+      }
+    ]
+  }
+}

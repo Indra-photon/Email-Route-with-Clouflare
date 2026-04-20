@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Schibsted_Grotesk } from "next/font/google";
 import "./globals.css";
-import { GoogleTagManager } from '@next/third-parties/google'
-import Script from 'next/script'
-import { Toaster } from "@/components/ui/sonner"
+import { GoogleTagManager } from "@next/third-parties/google";
+import Script from "next/script";
+import { Toaster } from "@/components/ui/sonner";
 import {
   ClerkProvider,
   SignInButton,
@@ -11,9 +11,8 @@ import {
   SignedIn,
   SignedOut,
   UserButton,
-} from '@clerk/nextjs'
+} from "@clerk/nextjs";
 import { UserSync } from "@/components/UserSync";
-
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,7 +40,8 @@ export const metadata: Metadata = {
 
   // ── Core ──────────────────────────────────────────────────────────────────
   title: {
-    default: "SyncSupport | Slack-Native Helpdesk — Email, Live Chat & Canned Responses",
+    default:
+      "SyncSupport | Slack-Native Helpdesk — Email, Live Chat & Canned Responses",
     template: "%s | SyncSupport",
   },
   description:
@@ -212,7 +212,6 @@ export const metadata: Metadata = {
   },
 };
 
-
 // ─── JSON-LD ──────────────────────────────────────────────────────────────────
 
 export function JsonLd() {
@@ -321,7 +320,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
   return (
     <ClerkProvider>
       <html lang="en">
@@ -333,9 +331,15 @@ export default async function RootLayout({
           <JsonLd />
           {children}
           <GoogleTagManager gtmId="GTM-KDWNBW63" />
-          <Script src="https://cloud.umami.is/script.js" data-website-id="3ec71afb-dca0-4a4c-808f-34fd434c9999" />
-          <Script id="chat-widget-key" strategy="beforeInteractive">{`window.CHAT_KEY = 'cw_d00385e832271d8a249f4df4';`}</Script>
-          <Script src="https://syncsupport.app/chat/widget.js" strategy="afterInteractive" />
+          <Script
+            src="https://cloud.umami.is/script.js"
+            data-website-id="3ec71afb-dca0-4a4c-808f-34fd434c9999"
+          />
+          {/* <Script id="chat-widget-key" strategy="beforeInteractive">{`window.CHAT_KEY = 'cw_d00385e832271d8a249f4df4';`}</Script> */}
+          <Script
+            src="https://syncsupport.app/chat/widget.js"
+            strategy="afterInteractive"
+          />
           <Toaster position="top-right" />
         </body>
       </html>

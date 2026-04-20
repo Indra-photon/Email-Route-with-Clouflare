@@ -1,0 +1,4 @@
+[
+  { "id": "domain_01", "domain": "acme.com" },
+  { "id": "domain_02", "domain": "support.acme.com" }
+]
