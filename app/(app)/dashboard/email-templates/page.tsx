@@ -1,7 +1,3 @@
-
-
-
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -53,21 +49,21 @@ const easeOutCubic = [0.215, 0.61, 0.355, 1] as const;
 // ─── Variables ────────────────────────────────────────────────────────────────
 
 const VARS = [
-  { key: "{name}",    desc: "Customer name" },
-  { key: "{email}",   desc: "Customer email" },
+  { key: "{name}", desc: "Customer name" },
+  { key: "{email}", desc: "Customer email" },
   { key: "{subject}", desc: "Email subject" },
-  { key: "{date}",    desc: "Today's date" },
-  { key: "{agent}",   desc: "Agent name" },
+  { key: "{date}", desc: "Today's date" },
+  { key: "{agent}", desc: "Agent name" },
   { key: "[message]...[/message]", desc: "Slack editable region" },
 ];
 
 // ─── Page Tabs ────────────────────────────────────────────────────────────────
 
 const PAGE_TABS: { id: PageTab; label: string; icon: React.ReactNode }[] = [
-  { id: "add",       label: "Add Template",  icon: <IconPlus size={15} /> },
-  { id: "templates", label: "Templates",     icon: <IconTable size={15} /> },
-  { id: "edit",      label: "Edit",          icon: <IconPencil size={15} /> },
-  { id: "delete",    label: "Delete",        icon: <IconTrash size={15} /> },
+  { id: "add", label: "Add Template", icon: <IconPlus size={15} /> },
+  { id: "templates", label: "Templates", icon: <IconTable size={15} /> },
+  { id: "edit", label: "Edit", icon: <IconPencil size={15} /> },
+  { id: "delete", label: "Delete", icon: <IconTrash size={15} /> },
 ];
 
 // ─── Preview Modal ────────────────────────────────────────────────────────────
@@ -90,9 +86,16 @@ function PreviewModal({
       .replace(/\{name\}/g, "Jane Smith")
       .replace(/\{email\}/g, "jane@example.com")
       .replace(/\{subject\}/g, subject || "Support Request")
-      .replace(/\{date\}/g, new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }))
+      .replace(
+        /\{date\}/g,
+        new Date().toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
+      )
       .replace(/\{agent\}/g, "Alex (Support)")
-      .replace(/\[message\]([\s\S]*?)\[\/message\]/ig, (_, m) => m);
+      .replace(/\[message\]([\s\S]*?)\[\/message\]/gi, (_, m) => m);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -133,7 +136,9 @@ function PreviewModal({
         <div className="px-5 py-4 space-y-3 max-h-[60vh] overflow-y-auto">
           <div className="rounded-lg bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 p-4 space-y-3">
             <div className="flex gap-2">
-              <span className="text-xs font-schibsted font-semibold text-neutral-500 w-14 shrink-0">Subject:</span>
+              <span className="text-xs font-schibsted font-semibold text-neutral-500 w-14 shrink-0">
+                Subject:
+              </span>
               <span className="text-xs font-schibsted text-neutral-800 dark:text-neutral-200">
                 {sampleVars(subject) || "(no subject)"}
               </span>
@@ -173,7 +178,9 @@ function BodyEditor({
 }) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-schibsted font-semibold text-neutral-500 dark:text-neutral-400">Body</label>
+      <label className="text-sm font-schibsted font-semibold text-neutral-500 dark:text-neutral-400">
+        Body
+      </label>
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -188,7 +195,10 @@ function BodyEditor({
           <IconTerminal size={13} /> Smart Slack Integration
         </p>
         <ul className="list-disc pl-4 space-y-1 text-sky-700 dark:text-sky-300">
-          <li><strong>Plain Text:</strong> Write normal text. Fully editable in Slack.</li>
+          <li>
+            <strong>Plain Text:</strong> Write normal text. Fully editable in
+            Slack.
+          </li>
           <li>
             <strong>Editable HTML:</strong> Wrap message in{" "}
             <code className="font-mono bg-white/60 dark:bg-sky-900/50 border border-sky-200 dark:border-sky-700 px-1 rounded text-[10px]">
@@ -196,7 +206,10 @@ function BodyEditor({
             </code>{" "}
             — only that region is editable in Slack.
           </li>
-          <li><strong>Static HTML:</strong> HTML without tags sends exactly as designed.</li>
+          <li>
+            <strong>Static HTML:</strong> HTML without tags sends exactly as
+            designed.
+          </li>
         </ul>
       </div>
     </div>
@@ -205,7 +218,13 @@ function BodyEditor({
 
 // ─── Variable Chips ───────────────────────────────────────────────────────────
 
-function VarChips({ onInsert, disabled }: { onInsert: (v: string) => void; disabled?: boolean }) {
+function VarChips({
+  onInsert,
+  disabled,
+}: {
+  onInsert: (v: string) => void;
+  disabled?: boolean;
+}) {
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       <span className="text-xs font-schibsted text-neutral-500 flex items-center gap-1 mr-1">
@@ -246,8 +265,8 @@ function TemplatesTable({
     mode === "view"
       ? ["Name", "Subject", "Variables", "Created", "Actions"]
       : mode === "edit"
-      ? ["Name", "Subject", "Variables", "Created", "Edit"]
-      : ["Name", "Subject", "Variables", "Created", "Delete"];
+        ? ["Name", "Subject", "Variables", "Created", "Edit"]
+        : ["Name", "Subject", "Variables", "Created", "Delete"];
 
   return (
     <div className="overflow-x-auto rounded-lg border border-neutral-900 dark:border-neutral-700">
@@ -351,7 +370,10 @@ function TemplatesTable({
                     <AnimatedDeleteButton
                       onDelete={async () => {
                         try {
-                          const res = await fetch(`/api/email-templates/${t._id}`, { method: "DELETE" });
+                          const res = await fetch(
+                            `/api/email-templates/${t._id}`,
+                            { method: "DELETE" },
+                          );
                           if (!res.ok) throw new Error("Failed");
                           toast.success("Template deleted");
                           setTimeout(() => onDelete(t._id), 400);
@@ -402,14 +424,21 @@ function EditModal({
       const res = await fetch(`/api/email-templates/${template._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), subject: subject.trim(), body: body.trim() }),
+        body: JSON.stringify({
+          name: name.trim(),
+          subject: subject.trim(),
+          body: body.trim(),
+        }),
       });
       if (!res.ok) throw new Error("Failed");
       const updated = await res.json();
       onUpdate(updated);
       setStatus("success");
       toast.success("Template saved");
-      setTimeout(() => { setStatus("idle"); onClose(); }, 1000);
+      setTimeout(() => {
+        setStatus("idle");
+        onClose();
+      }, 1000);
     } catch {
       setStatus("idle");
       toast.error("Failed to save template");
@@ -421,7 +450,9 @@ function EditModal({
       <motion.div
         className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"
         onClick={onClose}
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
         transition={{ duration: 0.15 }}
       />
       <motion.div
@@ -437,9 +468,15 @@ function EditModal({
             <p className="text-sm font-schibsted font-semibold text-neutral-900 dark:text-neutral-100">
               Edit Template
             </p>
-            <p className="text-xs font-schibsted text-neutral-500 mt-0.5">{template.name}</p>
+            <p className="text-xs font-schibsted text-neutral-500 mt-0.5">
+              {template.name}
+            </p>
           </div>
-          <button type="button" onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none"
+          >
             <IconX size={15} className="text-neutral-500" />
           </button>
         </div>
@@ -451,13 +488,27 @@ function EditModal({
             <label className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400">
               Template Name <span className="text-red-500">*</span>
             </label>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Welcome Response" disabled={isBusy} className={inputClass} />
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Welcome Response"
+              disabled={isBusy}
+              className={inputClass}
+            />
           </div>
 
           {/* Subject */}
           <div className="flex flex-col space-y-1">
-            <label className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400">Email Subject</label>
-            <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g. Re: {subject}" disabled={isBusy} className={inputClass} />
+            <label className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400">
+              Email Subject
+            </label>
+            <input
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="e.g. Re: {subject}"
+              disabled={isBusy}
+              className={inputClass}
+            />
           </div>
 
           {/* Var chips */}
@@ -474,7 +525,13 @@ function EditModal({
               successLabel="Saved!"
               errorLabel="Failed"
               idleIcon={<IconCheck size={13} />}
-              state={status === "loading" ? "loading" : status === "success" ? "success" : "idle"}
+              state={
+                status === "loading"
+                  ? "loading"
+                  : status === "success"
+                    ? "success"
+                    : "idle"
+              }
               onClick={handleSave}
               idleWidth={80}
               loadingWidth={90}
@@ -504,7 +561,12 @@ function EditModal({
 
       <AnimatePresence>
         {previewing && (
-          <PreviewModal name={name} subject={subject} body={body} onClose={() => setPreviewing(false)} />
+          <PreviewModal
+            name={name}
+            subject={subject}
+            body={body}
+            onClose={() => setPreviewing(false)}
+          />
         )}
       </AnimatePresence>
     </div>
@@ -526,7 +588,10 @@ function EmptyState() {
       </div>
       <Paragraph variant="muted" className="text-center max-w-sm">
         No templates yet. Go to Add Template to create your first one.{" "}
-        <CustomLink href="/docs/email-templates" className="text-sky-800 underline font-schibsted font-bold">
+        <CustomLink
+          href="/docs/email-templates"
+          className="text-sky-800 underline font-schibsted font-bold"
+        >
           Read our docs
         </CustomLink>
       </Paragraph>
@@ -540,7 +605,10 @@ function TemplatesSkeleton() {
   return (
     <div className="space-y-2 animate-pulse">
       {[1, 2, 3].map((i) => (
-        <div key={i} className="h-12 rounded-lg bg-neutral-100 dark:bg-neutral-800" />
+        <div
+          key={i}
+          className="h-12 rounded-lg bg-neutral-100 dark:bg-neutral-800"
+        />
       ))}
     </div>
   );
@@ -564,7 +632,9 @@ export default function EmailTemplatesPage() {
   const [editTarget, setEditTarget] = useState<EmailTemplate | null>(null);
 
   // Preview (view tab)
-  const [previewTarget, setPreviewTarget] = useState<EmailTemplate | null>(null);
+  const [previewTarget, setPreviewTarget] = useState<EmailTemplate | null>(
+    null,
+  );
 
   useEffect(() => {
     fetch("/api/email-templates")
@@ -574,9 +644,12 @@ export default function EmailTemplatesPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleDelete = (id: string) => setTemplates((prev) => prev.filter((t) => t._id !== id));
+  const handleDelete = (id: string) =>
+    setTemplates((prev) => prev.filter((t) => t._id !== id));
   const handleUpdate = (updated: EmailTemplate) =>
-    setTemplates((prev) => prev.map((t) => (t._id === updated._id ? updated : t)));
+    setTemplates((prev) =>
+      prev.map((t) => (t._id === updated._id ? updated : t)),
+    );
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -586,7 +659,11 @@ export default function EmailTemplatesPage() {
       const res = await fetch("/api/email-templates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: addName.trim(), subject: addSubject.trim(), body: addBody.trim() }),
+        body: JSON.stringify({
+          name: addName.trim(),
+          subject: addSubject.trim(),
+          body: addBody.trim(),
+        }),
       });
       if (!res.ok) throw new Error("Failed");
       const created = await res.json();
@@ -594,7 +671,9 @@ export default function EmailTemplatesPage() {
       setAddStatus("success");
       toast.success("Template created!");
       setActiveTab("templates");
-      setAddName(""); setAddSubject(""); setAddBody("");
+      setAddName("");
+      setAddSubject("");
+      setAddBody("");
       setTimeout(() => setAddStatus("idle"), 2000);
     } catch {
       setAddStatus("idle");
@@ -606,16 +685,20 @@ export default function EmailTemplatesPage() {
     "w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-schibsted text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 transition-colors focus:border-sky-600 outline-none disabled:opacity-50 disabled:cursor-not-allowed";
 
   return (
-    <div className="space-y-6 border border-neutral-400 rounded-lg p-4 min-h-screen">
-
+    <div className="space-y-6 border border-neutral-400 rounded-lg p-4 h-[calc(100dvh-56px-48px)]">
       {/* Page Heading */}
       <div>
-        <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
+        <Heading
+          variant="muted"
+          className="font-bold text-neutral-900 dark:text-neutral-100"
+        >
           Email Templates
         </Heading>
         <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
           Create reusable reply templates for your Slack team. Variables like{" "}
-          <code className="text-xs bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded font-mono">{"{name}"}</code>{" "}
+          <code className="text-xs bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded font-mono">
+            {"{name}"}
+          </code>{" "}
           are auto-filled from incoming email data.
         </Paragraph>
       </div>
@@ -653,19 +736,26 @@ export default function EmailTemplatesPage() {
         {/* Tab Content */}
         <div className="p-4">
           <AnimatePresence mode="wait" initial={false}>
-
             {/* ── Templates tab ── */}
             {activeTab === "templates" && (
-              <motion.div key="templates"
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              <motion.div
+                key="templates"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18, ease: easeOutQuint }}
               >
-                {loading ? <TemplatesSkeleton /> : templates.length === 0 ? <EmptyState /> : (
+                {loading ? (
+                  <TemplatesSkeleton />
+                ) : templates.length === 0 ? (
+                  <EmptyState />
+                ) : (
                   <>
                     {/* Variable reference row */}
                     <div className="mb-4 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/40 px-4 py-3">
                       <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 mb-2">
-                        <IconVariable size={12} /> Available Variables — click to copy
+                        <IconVariable size={12} /> Available Variables — click
+                        to copy
                       </p>
                       <div className="flex flex-wrap gap-1.5">
                         {VARS.map((v) => (
@@ -673,7 +763,10 @@ export default function EmailTemplatesPage() {
                             key={v.key}
                             type="button"
                             title={v.desc}
-                            onClick={() => { navigator.clipboard.writeText(v.key); toast.success(`${v.key} copied!`); }}
+                            onClick={() => {
+                              navigator.clipboard.writeText(v.key);
+                              toast.success(`${v.key} copied!`);
+                            }}
                             className="px-2 py-0.5 rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-[11px] font-mono text-neutral-600 dark:text-neutral-400 hover:border-sky-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer"
                           >
                             {v.key}
@@ -695,11 +788,17 @@ export default function EmailTemplatesPage() {
 
             {/* ── Add tab ── */}
             {activeTab === "add" && (
-              <motion.div key="add"
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              <motion.div
+                key="add"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18, ease: easeOutQuint }}
               >
-                <form onSubmit={handleAddSubmit} className="space-y-4 max-w-2xl">
+                <form
+                  onSubmit={handleAddSubmit}
+                  className="space-y-4 max-w-2xl"
+                >
                   {/* Name */}
                   <div className="flex flex-col space-y-1">
                     <label className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400">
@@ -730,10 +829,17 @@ export default function EmailTemplatesPage() {
                   </div>
 
                   {/* Var chips */}
-                  <VarChips onInsert={(v) => setAddBody((b) => b + v)} disabled={addStatus !== "idle"} />
+                  <VarChips
+                    onInsert={(v) => setAddBody((b) => b + v)}
+                    disabled={addStatus !== "idle"}
+                  />
 
                   {/* Body */}
-                  <BodyEditor value={addBody} onChange={setAddBody} disabled={addStatus !== "idle"} />
+                  <BodyEditor
+                    value={addBody}
+                    onChange={setAddBody}
+                    disabled={addStatus !== "idle"}
+                  />
 
                   {/* Actions */}
                   <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -746,7 +852,11 @@ export default function EmailTemplatesPage() {
                       idleWidth={140}
                       loadingWidth={110}
                       successWidth={100}
-                      disabled={addStatus !== "idle" || !addName.trim() || !addBody.trim()}
+                      disabled={
+                        addStatus !== "idle" ||
+                        !addName.trim() ||
+                        !addBody.trim()
+                      }
                       className="font-schibsted px-4 py-2 rounded-md bg-gradient-to-t from-sky-900 to-cyan-600 text-white border-0 focus:outline-none cursor-pointer flex items-center justify-center gap-2 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
                     />
                     <button
@@ -764,13 +874,22 @@ export default function EmailTemplatesPage() {
 
             {/* ── Edit tab ── */}
             {activeTab === "edit" && (
-              <motion.div key="edit"
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              <motion.div
+                key="edit"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18, ease: easeOutQuint }}
               >
-                {loading ? <TemplatesSkeleton /> : templates.length === 0 ? <EmptyState /> : (
+                {loading ? (
+                  <TemplatesSkeleton />
+                ) : templates.length === 0 ? (
+                  <EmptyState />
+                ) : (
                   <>
-                    <p className="text-xs font-schibsted text-neutral-400 mb-3">Click Edit on a row to modify that template.</p>
+                    <p className="text-xs font-schibsted text-neutral-400 mb-3">
+                      Click Edit on a row to modify that template.
+                    </p>
                     <TemplatesTable
                       templates={templates}
                       mode="edit"
@@ -784,13 +903,22 @@ export default function EmailTemplatesPage() {
 
             {/* ── Delete tab ── */}
             {activeTab === "delete" && (
-              <motion.div key="delete"
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              <motion.div
+                key="delete"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18, ease: easeOutQuint }}
               >
-                {loading ? <TemplatesSkeleton /> : templates.length === 0 ? <EmptyState /> : (
+                {loading ? (
+                  <TemplatesSkeleton />
+                ) : templates.length === 0 ? (
+                  <EmptyState />
+                ) : (
                   <>
-                    <p className="text-xs font-schibsted text-neutral-400 mb-3">Delete a template permanently.</p>
+                    <p className="text-xs font-schibsted text-neutral-400 mb-3">
+                      Delete a template permanently.
+                    </p>
                     <TemplatesTable
                       templates={templates}
                       mode="delete"
@@ -800,7 +928,6 @@ export default function EmailTemplatesPage() {
                 )}
               </motion.div>
             )}
-
           </AnimatePresence>
         </div>
       </Card>
@@ -811,7 +938,10 @@ export default function EmailTemplatesPage() {
           <EditModal
             template={editTarget}
             onClose={() => setEditTarget(null)}
-            onUpdate={(t) => { handleUpdate(t); setEditTarget(null); }}
+            onUpdate={(t) => {
+              handleUpdate(t);
+              setEditTarget(null);
+            }}
           />
         )}
       </AnimatePresence>

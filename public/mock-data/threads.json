@@ -482,5 +482,175 @@
         "receivedAt": "2026-04-13T13:00:00.000Z"
       }
     ]
+  },
+  "mock_t13": {
+    "thread": {
+      "id": "mock_t13",
+      "from": "alice.johnson@gmail.com",
+      "fromName": "Alice Johnson",
+      "to": "hello@acme.com",
+      "subject": "Password reset link expired too quickly",
+      "status": "resolved",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-03-10T10:05:00.000Z",
+      "receivedAt": "2026-03-10T10:00:00.000Z",
+      "repliedAt": "2026-03-10T11:00:00.000Z"
+    },
+    "messages": [
+      {
+        "id": "msg_t13_01",
+        "direction": "inbound",
+        "from": "alice.johnson@gmail.com",
+        "fromName": "Alice Johnson",
+        "to": "hello@acme.com",
+        "subject": "Password reset link expired too quickly",
+        "textBody": "Hi,\n\nThe password reset link I got expired before I could use it — it was only valid for 10 minutes and I was in a meeting. Can you make it last longer or resend one?\n\nAlice",
+        "attachments": [],
+        "createdAt": "2026-03-10T10:00:00.000Z",
+        "receivedAt": "2026-03-10T10:00:00.000Z"
+      },
+      {
+        "id": "msg_t13_02",
+        "direction": "outbound",
+        "from": "hello@acme.com",
+        "fromName": "Support Agent",
+        "to": "alice.johnson@gmail.com",
+        "subject": "Re: Password reset link expired too quickly",
+        "textBody": "Hi Alice,\n\nI've sent you a new reset link — this one is valid for 24 hours. We're also looking into extending the default expiry time based on your feedback.\n\nSupport",
+        "attachments": [],
+        "createdAt": "2026-03-10T11:00:00.000Z",
+        "receivedAt": "2026-03-10T11:00:00.000Z"
+      }
+    ]
+  },
+  "mock_t14": {
+    "thread": {
+      "id": "mock_t14",
+      "from": "alice.johnson@gmail.com",
+      "fromName": "Alice Johnson",
+      "to": "hello@acme.com",
+      "subject": "App crashes on iOS 17 when opening notifications",
+      "status": "resolved",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-02-14T08:35:00.000Z",
+      "receivedAt": "2026-02-14T08:30:00.000Z",
+      "repliedAt": "2026-02-14T09:45:00.000Z"
+    },
+    "messages": [
+      {
+        "id": "msg_t14_01",
+        "direction": "inbound",
+        "from": "alice.johnson@gmail.com",
+        "fromName": "Alice Johnson",
+        "to": "hello@acme.com",
+        "subject": "App crashes on iOS 17 when opening notifications",
+        "textBody": "Hello,\n\nEvery time I tap a push notification on my iPhone (iOS 17.3) the app crashes immediately. Happens 100% of the time. No crash log visible on my end.\n\nAlice",
+        "attachments": [
+          { "id": "att_t14_01", "filename": "crash-screenshot.png", "size": 95200 }
+        ],
+        "createdAt": "2026-02-14T08:30:00.000Z",
+        "receivedAt": "2026-02-14T08:30:00.000Z"
+      },
+      {
+        "id": "msg_t14_02",
+        "direction": "outbound",
+        "from": "hello@acme.com",
+        "fromName": "Support Agent",
+        "to": "alice.johnson@gmail.com",
+        "subject": "Re: App crashes on iOS 17 when opening notifications",
+        "textBody": "Hi Alice,\n\nThis was a known issue with deep link handling on iOS 17 — it was fixed in v2.4.1. Please update the app from the App Store and it should resolve the crash.\n\nSupport",
+        "attachments": [],
+        "createdAt": "2026-02-14T09:45:00.000Z",
+        "receivedAt": "2026-02-14T09:45:00.000Z"
+      }
+    ]
+  },
+  "mock_t15": {
+    "thread": {
+      "id": "mock_t15",
+      "from": "bob.smith@outlook.com",
+      "fromName": "Bob Smith",
+      "to": "hello@acme.com",
+      "subject": "Invoice PDF not generating correctly",
+      "status": "resolved",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-03-22T14:10:00.000Z",
+      "receivedAt": "2026-03-22T14:00:00.000Z",
+      "repliedAt": "2026-03-22T15:30:00.000Z"
+    },
+    "messages": [
+      {
+        "id": "msg_t15_01",
+        "direction": "inbound",
+        "from": "bob.smith@outlook.com",
+        "fromName": "Bob Smith",
+        "to": "hello@acme.com",
+        "subject": "Invoice PDF not generating correctly",
+        "textBody": "Hi,\n\nWhen I download my invoice as PDF the layout is broken — the table overflows the page and half the total is cut off. Using the latest Chrome.\n\nBob",
+        "attachments": [],
+        "createdAt": "2026-03-22T14:00:00.000Z",
+        "receivedAt": "2026-03-22T14:00:00.000Z"
+      },
+      {
+        "id": "msg_t15_02",
+        "direction": "outbound",
+        "from": "hello@acme.com",
+        "fromName": "Support Agent",
+        "to": "bob.smith@outlook.com",
+        "subject": "Re: Invoice PDF not generating correctly",
+        "textBody": "Hi Bob,\n\nThere was a PDF rendering bug affecting invoices with more than 5 line items. It's been patched — please try downloading again and it should be formatted correctly.\n\nSupport",
+        "attachments": [],
+        "createdAt": "2026-03-22T15:30:00.000Z",
+        "receivedAt": "2026-03-22T15:30:00.000Z"
+      }
+    ]
+  },
+  "mock_t16": {
+    "thread": {
+      "id": "mock_t16",
+      "from": "bob.smith@outlook.com",
+      "fromName": "Bob Smith",
+      "to": "billing@acme.com",
+      "subject": "Can I transfer my account to another email?",
+      "status": "waiting",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-04-18T11:05:00.000Z",
+      "receivedAt": "2026-04-18T11:00:00.000Z",
+      "repliedAt": "2026-04-18T12:00:00.000Z"
+    },
+    "messages": [
+      {
+        "id": "msg_t16_01",
+        "direction": "inbound",
+        "from": "bob.smith@outlook.com",
+        "fromName": "Bob Smith",
+        "to": "billing@acme.com",
+        "subject": "Can I transfer my account to another email?",
+        "textBody": "Hi team,\n\nI want to change my account email from bob.smith@outlook.com to my work email bob@smithconsulting.com. Is this possible without losing my data or subscription?\n\nBob",
+        "attachments": [],
+        "createdAt": "2026-04-18T11:00:00.000Z",
+        "receivedAt": "2026-04-18T11:00:00.000Z"
+      },
+      {
+        "id": "msg_t16_02",
+        "direction": "outbound",
+        "from": "billing@acme.com",
+        "fromName": "Support Agent",
+        "to": "bob.smith@outlook.com",
+        "subject": "Re: Can I transfer my account to another email?",
+        "textBody": "Hi Bob,\n\nYes, we can transfer your account. I'll need you to verify ownership of both email addresses. Could you reply from bob@smithconsulting.com confirming the transfer?\n\nSupport",
+        "attachments": [],
+        "createdAt": "2026-04-18T12:00:00.000Z",
+        "receivedAt": "2026-04-18T12:00:00.000Z"
+      }
+    ]
   }
 }

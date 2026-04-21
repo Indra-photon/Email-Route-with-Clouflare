@@ -47,8 +47,8 @@ async function dbConnect(): Promise<void> {
 }
 
 async function connectWithRetry(retries = 3, delay = 2000): Promise<void> {
-    // Disconnect any existing stale connections before retrying
-    if (mongoose.connection.readyState !== 0) {
+    // Only disconnect if in a truly broken state (3 = disconnecting)
+    if (mongoose.connection.readyState === 3) {
         try {
             await mongoose.disconnect();
             console.log('Disconnected from stale connection');

@@ -178,27 +178,21 @@ function DNSTable({ records, domainName }: { records: DomainDetail["dnsRecords"]
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
 
   if (!records?.length) return (
-    <div className="space-y-2">
-      <p className="text-xs font-schibsted font-semibold text-neutral-700 dark:text-neutral-300">
-        DNS records for sending emails from your workspace
-      </p>
-      <p className="text-xs font-schibsted text-neutral-500 dark:text-neutral-400">
-        No DNS records yet. Add this domain to Resend first.
-      </p>
+    <div className="space-y-1.5">
+      <p className="text-xs font-schibsted font-semibold text-neutral-700">DNS records for sending emails</p>
+      <p className="text-[11px] font-schibsted text-neutral-400">No DNS records yet. Add this domain to Resend first.</p>
     </div>
   );
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-schibsted font-semibold text-neutral-700 dark:text-neutral-300">
-        DNS records for sending emails from your workspace
-      </p>
-      <div className="overflow-x-auto rounded-lg border border-neutral-900 dark:border-neutral-700">
+      <p className="text-xs font-schibsted font-semibold text-neutral-700">DNS records for sending emails</p>
+      <div className="overflow-x-auto rounded-xl border border-neutral-200">
         <table className="min-w-full text-xs">
           <thead>
             <tr>
               {["Type", "Name", "Value", "TTL", "Priority", "Status"].map((h) => (
-                <th key={h} className="px-3 py-2 text-left font-schibsted bg-linear-to-b from-sky-700 to-cyan-600 text-neutral-50">
+                <th key={h} className="px-3 py-2 text-left font-schibsted font-semibold text-[10px] tracking-wider uppercase bg-gradient-to-b from-sky-700 to-cyan-600 text-white">
                   {h}
                 </th>
               ))}
@@ -209,81 +203,57 @@ function DNSTable({ records, domainName }: { records: DomainDetail["dnsRecords"]
               const displayName = r.name === "@" || !r.name ? "@" : r.name;
               const isVerified = r.status === "verified";
               return (
-                <tr key={i} className="border-t border-neutral-900 dark:border-neutral-700">
-                  <td className="px-3 py-2">
-                    <span className="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded-sm border border-neutral-800 font-schibsted font-bold text-neutral-700 dark:text-neutral-300">
+                <tr key={i} className="border-t border-neutral-100 hover:bg-neutral-50 transition-colors">
+                  <td className="px-3 py-2.5">
+                    <span className="px-1.5 py-0.5 bg-neutral-100 rounded font-schibsted font-bold text-[11px] text-neutral-600">
                       {r.type}
                     </span>
                   </td>
-                  <td className="px-3 py-2 max-w-50">
+                  <td className="px-3 py-2.5 max-w-50">
                     <div className="flex items-center cursor-pointer group/name"
                       onMouseEnter={() => setHoveredItem(`${i}-name`)}
                       onMouseLeave={() => setHoveredItem(null)}
-                      onClick={() => {
-                        navigator.clipboard.writeText(displayName);
-                        setCopiedItem(`${i}-name`);
-                        setTimeout(() => setCopiedItem(null), 2000);
-                      }}
+                      onClick={() => { navigator.clipboard.writeText(displayName); setCopiedItem(`${i}-name`); setTimeout(() => setCopiedItem(null), 2000); }}
                     >
                       <span className="flex items-center gap-2 relative">
-                        <code className="truncate text-neutral-500 group-hover/name:text-neutral-900 dark:text-neutral-300 font-schibsted font-semibold transition-colors duration-200">
-                          {displayName}
-                        </code>
+                        <code className="truncate text-neutral-500 group-hover/name:text-neutral-900 font-schibsted font-medium transition-colors duration-150">{displayName}</code>
                         <AnimatePresence>
                           {hoveredItem === `${i}-name` && (
-                            <motion.span
-                              initial={{ opacity: 0.95, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-                              transition={{ duration: 0.25, ease: [.075, .82, .165, 1] }}
-                              className="absolute left-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 text-xs font-schibsted text-neutral-600 dark:text-neutral-400 flex items-center gap-1 whitespace-nowrap"
-                            >
-                              <CopyIcon copied={copiedItem === `${i}-name`} size={16} />
+                            <motion.span initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.15 }}
+                              className="absolute left-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 text-xs font-schibsted text-neutral-500 flex items-center gap-1 whitespace-nowrap">
+                              <CopyIcon copied={copiedItem === `${i}-name`} size={14} />
                             </motion.span>
                           )}
                         </AnimatePresence>
                       </span>
                     </div>
                   </td>
-                  <td className="px-3 py-2 max-w-50">
+                  <td className="px-3 py-2.5 max-w-50">
                     <div className="flex items-center cursor-pointer group/value"
                       onMouseEnter={() => setHoveredItem(`${i}-value`)}
                       onMouseLeave={() => setHoveredItem(null)}
-                      onClick={() => {
-                        if (!r.value) return;
-                        navigator.clipboard.writeText(r.value);
-                        setCopiedItem(`${i}-value`);
-                        setTimeout(() => setCopiedItem(null), 2000);
-                      }}
+                      onClick={() => { if (!r.value) return; navigator.clipboard.writeText(r.value); setCopiedItem(`${i}-value`); setTimeout(() => setCopiedItem(null), 2000); }}
                     >
                       <span className="flex items-center gap-2 relative">
-                        <code className="truncate max-w-30 text-neutral-500 group-hover/value:text-neutral-900 dark:text-neutral-300 font-schibsted font-semibold">
-                          {r.value}
-                        </code>
+                        <code className="truncate max-w-30 text-neutral-500 group-hover/value:text-neutral-900 font-schibsted font-medium transition-colors duration-150">{r.value}</code>
                         <AnimatePresence>
                           {hoveredItem === `${i}-value` && r.value && (
-                            <motion.span
-                              initial={{ opacity: 0.95, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-                              transition={{ duration: 0.15, ease: [.165, .84, .44, 1] }}
-                              className="absolute left-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 text-xs font-schibsted text-neutral-600 dark:text-neutral-400 flex items-center gap-1 whitespace-nowrap"
-                            >
-                              <CopyIcon copied={copiedItem === `${i}-value`} size={16} />
+                            <motion.span initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.15 }}
+                              className="absolute left-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 text-xs font-schibsted text-neutral-500 flex items-center gap-1 whitespace-nowrap">
+                              <CopyIcon copied={copiedItem === `${i}-value`} size={14} />
                             </motion.span>
                           )}
                         </AnimatePresence>
                       </span>
                     </div>
                   </td>
-                  <td className="px-3 py-2 font-schibsted font-semibold text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 cursor-pointer transition-colors duration-200">
-                    {r.ttl ?? "—"}
-                  </td>
-                  <td className="px-3 py-2 font-schibsted font-semibold text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 cursor-pointer transition-colors duration-200">
-                    {r.priority ?? "—"}
-                  </td>
-                  <td className="px-3 py-2">
-                    <span className={`inline-flex items-center gap-1 rounded-sm px-2 py-0.5 font-schibsted font-semibold ${
-                      isVerified
-                        ? "bg-green-50 border border-green-900 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                        : "bg-amber-50 border border-amber-900 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+                  <td className="px-3 py-2.5 font-schibsted text-neutral-500 tabular-nums">{r.ttl ?? "—"}</td>
+                  <td className="px-3 py-2.5 font-schibsted text-neutral-500 tabular-nums">{r.priority ?? "—"}</td>
+                  <td className="px-3 py-2.5">
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-schibsted font-semibold ${
+                      isVerified ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"
                     }`}>
+                      <span className={`size-1.5 rounded-full ${isVerified ? "bg-green-400" : "bg-amber-400"}`} />
                       {isVerified ? "Verified" : "Pending"}
                     </span>
                   </td>
@@ -307,15 +277,13 @@ function MXTable({ records }: { records: DomainDetail["receivingMxRecords"] }) {
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-schibsted font-semibold text-neutral-700 dark:text-neutral-300">
-        DNS records for receiving emails in your workspace
-      </p>
-      <div className="overflow-x-auto rounded-lg border border-neutral-900 dark:border-neutral-700">
+      <p className="text-xs font-schibsted font-semibold text-neutral-700">DNS records for receiving emails</p>
+      <div className="overflow-x-auto rounded-xl border border-neutral-200">
         <table className="min-w-full text-xs">
           <thead>
             <tr>
               {["Type", "Name", "Value", "TTL", "Priority", "Status"].map((h) => (
-                <th key={h} className="px-3 py-2 text-left font-schibsted bg-linear-to-b from-sky-700 to-cyan-600 text-neutral-50">
+                <th key={h} className="px-3 py-2 text-left font-schibsted font-semibold text-[10px] tracking-wider uppercase bg-gradient-to-b from-sky-700 to-cyan-600 text-white">
                   {h}
                 </th>
               ))}
@@ -325,81 +293,47 @@ function MXTable({ records }: { records: DomainDetail["receivingMxRecords"] }) {
             {records.map((r, i) => {
               const displayName = r.name === "@" || !r.name ? "@" : r.name;
               return (
-                <tr key={i} className="border-t border-neutral-900 dark:border-neutral-700">
-                  <td className="px-3 py-2 max-w-50">
-                    <span className="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded-sm border border-neutral-800 font-schibsted font-bold text-neutral-700 dark:text-neutral-300">
-                      {r.type}
-                    </span>
+                <tr key={i} className="border-t border-neutral-100 hover:bg-neutral-50 transition-colors">
+                  <td className="px-3 py-2.5">
+                    <span className="px-1.5 py-0.5 bg-neutral-100 rounded font-schibsted font-bold text-[11px] text-neutral-600">{r.type}</span>
                   </td>
-                  <td className="px-3 py-2 max-w-50">
-                    <div className="flex items-center cursor-pointer group/mx-name"
-                      onMouseEnter={() => setHoveredItem(`${i}-mx-name`)}
-                      onMouseLeave={() => setHoveredItem(null)}
-                      onClick={() => {
-                        navigator.clipboard.writeText(displayName);
-                        setCopiedItem(`${i}-mx-name`);
-                        setTimeout(() => setCopiedItem(null), 2000);
-                      }}
-                    >
+                  <td className="px-3 py-2.5 max-w-50">
+                    <div className="flex items-center cursor-pointer group/mx-name" onMouseEnter={() => setHoveredItem(`${i}-mx-name`)} onMouseLeave={() => setHoveredItem(null)}
+                      onClick={() => { navigator.clipboard.writeText(displayName); setCopiedItem(`${i}-mx-name`); setTimeout(() => setCopiedItem(null), 2000); }}>
                       <span className="flex items-center gap-2 relative">
-                        <code className="truncate text-neutral-500 group-hover/mx-name:text-neutral-900 dark:text-neutral-300 font-schibsted font-semibold transition-colors duration-200">
-                          {displayName}
-                        </code>
+                        <code className="truncate text-neutral-500 group-hover/mx-name:text-neutral-900 font-schibsted font-medium transition-colors duration-150">{displayName}</code>
                         <AnimatePresence>
                           {hoveredItem === `${i}-mx-name` && (
-                            <motion.span
-                              initial={{ opacity: 0.95, scale: 0.9, filter: "blur(1px)" }}
-                              animate={{ opacity: 1, scale: 1, filter: "blur(0)" }}
-                              exit={{ opacity: 0, scale: 0.9, filter: "blur(1px)" }}
-                              transition={{ duration: 0.25, ease: [.075, .82, .165, 1] }}
-                              className="absolute left-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 text-xs font-schibsted text-neutral-600 dark:text-neutral-400 flex items-center gap-1 whitespace-nowrap"
-                            >
-                              <CopyIcon copied={copiedItem === `${i}-mx-name`} size={16} />
+                            <motion.span initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.15 }}
+                              className="absolute left-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 text-xs font-schibsted text-neutral-500 whitespace-nowrap">
+                              <CopyIcon copied={copiedItem === `${i}-mx-name`} size={14} />
                             </motion.span>
                           )}
                         </AnimatePresence>
                       </span>
                     </div>
                   </td>
-                  <td className="px-3 py-2 max-w-50">
-                    <div className="flex items-center cursor-pointer group/mx-value"
-                      onMouseEnter={() => setHoveredItem(`${i}-mx-value`)}
-                      onMouseLeave={() => setHoveredItem(null)}
-                      onClick={() => {
-                        navigator.clipboard.writeText(r.value);
-                        setCopiedItem(`${i}-mx-value`);
-                        setTimeout(() => setCopiedItem(null), 2000);
-                      }}
-                    >
+                  <td className="px-3 py-2.5 max-w-50">
+                    <div className="flex items-center cursor-pointer group/mx-value" onMouseEnter={() => setHoveredItem(`${i}-mx-value`)} onMouseLeave={() => setHoveredItem(null)}
+                      onClick={() => { navigator.clipboard.writeText(r.value); setCopiedItem(`${i}-mx-value`); setTimeout(() => setCopiedItem(null), 2000); }}>
                       <span className="flex items-center gap-2 relative">
-                        <code className="truncate max-w-30 text-neutral-500 group-hover/mx-value:text-neutral-900 dark:text-neutral-300 font-schibsted font-semibold transition-colors duration-200">
-                          {r.value}
-                        </code>
+                        <code className="truncate max-w-30 text-neutral-500 group-hover/mx-value:text-neutral-900 font-schibsted font-medium transition-colors duration-150">{r.value}</code>
                         <AnimatePresence>
                           {hoveredItem === `${i}-mx-value` && (
-                            <motion.span
-                              initial={{ opacity: 0.95, scale: 0.9, filter: "blur(1px)" }}
-                              animate={{ opacity: 1, scale: 1, filter: "blur(0)" }}
-                              exit={{ opacity: 0, scale: 0.9, filter: "blur(1px)" }}
-                              transition={{ duration: 0.15, ease: [.165, .84, .44, 1] }}
-                              className="absolute left-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 text-xs font-schibsted text-neutral-600 dark:text-neutral-400 flex items-center gap-1 whitespace-nowrap"
-                            >
-                              <CopyIcon copied={copiedItem === `${i}-mx-value`} size={16} />
+                            <motion.span initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.15 }}
+                              className="absolute left-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 text-xs font-schibsted text-neutral-500 whitespace-nowrap">
+                              <CopyIcon copied={copiedItem === `${i}-mx-value`} size={14} />
                             </motion.span>
                           )}
                         </AnimatePresence>
                       </span>
                     </div>
                   </td>
-                  <td className="px-3 py-2 max-w-50 font-schibsted font-semibold text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 cursor-pointer transition-colors duration-200">
-                    {r.ttl ?? "—"}
-                  </td>
-                  <td className="px-3 py-2 max-w-50 font-schibsted font-semibold text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 cursor-pointer transition-colors duration-200">
-                    {r.priority}
-                  </td>
-                  <td className="px-3 py-2 max-w-50">
-                    <span className="inline-flex items-center gap-1 rounded-sm px-2 py-0.5 font-schibsted font-semibold bg-green-50 border border-green-900 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                      Verified
+                  <td className="px-3 py-2.5 font-schibsted text-neutral-500 tabular-nums">{r.ttl ?? "—"}</td>
+                  <td className="px-3 py-2.5 font-schibsted text-neutral-500 tabular-nums">{r.priority}</td>
+                  <td className="px-3 py-2.5">
+                    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-schibsted font-semibold bg-green-50 text-green-700">
+                      <span className="size-1.5 rounded-full bg-green-400" />Verified
                     </span>
                   </td>
                 </tr>
@@ -512,7 +446,7 @@ function ExpandedPanel({
     <motion.div
       layout
       transition={{ duration: 0.3, type: "spring", stiffness: 300, damping: 25 }}
-      className="px-4 pb-4 pt-1 border-t border-neutral-100 dark:border-neutral-800 mt-1"
+      className="px-4 pb-4 pt-3 border-t border-neutral-100 mt-1"
     >
       <motion.div
         layout
@@ -585,12 +519,12 @@ function DomainCard({
 
   const getStatusBadge = () => {
     if (localStatus.verifiedForSending || localStatus.status === "verified") {
-      return <Badge className="bg-green-50 border border-green-900 text-green-800 dark:bg-green-900/30 dark:text-green-400 rounded-sm font-schibsted font-semibold">Verified</Badge>;
+      return <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-schibsted font-semibold bg-green-50 text-green-700"><span className="size-1.5 rounded-full bg-green-400" />Verified</span>;
     }
     if (localStatus.status === "active") {
-      return <Badge className="bg-blue-100 border border-blue-900 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-sm font-schibsted font-semibold">Active</Badge>;
+      return <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-schibsted font-semibold bg-sky-50 text-sky-700"><span className="size-1.5 rounded-full bg-sky-400" />Active</span>;
     }
-    return <Badge className="bg-amber-100 border border-amber-900 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 rounded-sm font-schibsted font-semibold">Pending Verification</Badge>;
+    return <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-schibsted font-semibold bg-amber-50 text-amber-700"><span className="size-1.5 rounded-full bg-amber-400" />Pending</span>;
   };
 
   return (

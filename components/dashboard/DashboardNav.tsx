@@ -927,6 +927,7 @@ import { useUserStore } from "@/lib/store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DashboardBreadcrumb } from "@/components/dashboard/DashboardBreadcrumb";
 import { RightPanel } from "./right-panel/RightPanel";
+import { getPanelConfig } from "./right-panel/rightPanelConfig";
 
 // ─── Easing ──────────────────────────────────────────────────────────────────
 const EASE_OUT_QUART: [number, number, number, number] = [0.165, 0.84, 0.44, 1];
@@ -1092,20 +1093,20 @@ function NavIcon({
   size?: number;
 }) {
   const colorClass = isActive
-    ? "text-neutral-50"
-    : "text-neutral-300 opacity-90";
+    ? "text-white"
+    : "text-white/80 group-hover:text-sky-100";
   if (item.tablerIcon) {
     return (
       <item.tablerIcon
-        size={20}
-        className={`shrink-0 transition-colors duration-150 ${colorClass} hover:text-neutral-50`}
+        size={17}
+        className={`shrink-0 transition-colors duration-150 ${colorClass}`}
       />
     );
   }
   if (item.icon) {
     return (
       <item.icon
-        className={`shrink-0 transition-colors duration-150 ${colorClass} hover:text-neutral-50`}
+        className={`shrink-0 transition-colors duration-150 ${colorClass}`}
         style={{ width: size, height: size }}
         isAnimating={false}
       />
@@ -1114,45 +1115,69 @@ function NavIcon({
   return null;
 }
 
-// ─── Nav Pill with Radix Tooltip ──────────────────────────────────────────────
-function NavPill({ item, isActive }: { item: NavItemType; isActive: boolean }) {
+// ─── Nav Pill (collapsed: icon + tooltip / expanded: icon + label) ────────────
+function NavPill({
+  item,
+  isActive,
+  expanded,
+}: {
+  item: NavItemType;
+  isActive: boolean;
+  expanded: boolean;
+}) {
+  const link = (
+    <Link
+      href={item.href}
+      aria-label={item.label}
+      style={{ WebkitTapHighlightColor: "transparent" }}
+      className="group relative flex items-center gap-2.5 w-full rounded-lg px-2.5 py-2 transition-colors duration-150"
+    >
+      {/* Animated active bubble */}
+      {isActive && (
+        <motion.div
+          layoutId="nav-bubble"
+          className="absolute inset-0 rounded-lg bg-white/[0.12] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15),inset_0_-1px_0_0_rgba(0,0,0,0.1)]"
+          transition={{ ease: [0.23, 1, 0.32, 1], duration: 0.3 }}
+        />
+      )}
+      {/* Hover layer (only when inactive) */}
+      {!isActive && (
+        <span className="absolute inset-0 rounded-lg bg-white/0 group-hover:bg-white/[0.06] transition-colors duration-150" />
+      )}
+      {/* Active left accent */}
+      {isActive && expanded && (
+        <motion.span
+          layoutId="nav-accent"
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-sky-200 rounded-full"
+          transition={{ ease: [0.23, 1, 0.32, 1], duration: 0.3 }}
+        />
+      )}
+      <span className="relative z-10 flex items-center justify-center shrink-0">
+        <NavIcon item={item} isActive={isActive} size={17} />
+      </span>
+      {expanded && (
+        <span
+          className={`relative z-10 text-[14px] font-schibsted tracking-tight whitespace-nowrap transition-colors duration-150 ${isActive ? "text-white font-semibold" : "text-white/80 font-light group-hover:text-sky-50"}`}
+        >
+          {item.label}
+        </span>
+      )}
+    </Link>
+  );
+
+  if (expanded) return link;
+
   return (
     <Tooltip.Root delayDuration={200}>
-      <Tooltip.Trigger asChild>
-        <Link
-          href={item.href}
-          aria-label={item.label}
-          style={{ WebkitTapHighlightColor: "transparent" }}
-          className={`
-            relative flex items-center justify-center pb-4 pt-4 w-full h-9 rounded-lg
-            transition-colors duration-150
-            
-          `}
-        >
-          {/* Active left accent bar */}
-          {/* {isActive && (
-            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-white rounded-full" />
-          )} */}
-          <NavIcon item={item} isActive={isActive} size={18} />
-        </Link>
-      </Tooltip.Trigger>
-
+      <Tooltip.Trigger asChild>{link}</Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content
           side="right"
-          sideOffset={12}
-          className="
-            z-50 select-none
-            rounded-lg bg-neutral-900 px-3 py-1.5
-            text-xs font-schibsted font-medium text-white
-            shadow-lg
-            will-change-[transform,opacity]
-            data-[state=delayed-open]:animate-tooltip-in
-            data-[state=closed]:animate-tooltip-out
-          "
+          sideOffset={14}
+          className="z-50 select-none rounded-lg bg-sky-950 border border-sky-800/60 px-3 py-1.5 text-[11px] font-schibsted font-medium text-sky-100 shadow-xl shadow-sky-950/40 will-change-[transform,opacity] data-[state=delayed-open]:animate-tooltip-in data-[state=closed]:animate-tooltip-out"
         >
           {item.label}
-          <Tooltip.Arrow className="fill-neutral-900" />
+          <Tooltip.Arrow className="fill-sky-950" />
         </Tooltip.Content>
       </Tooltip.Portal>
     </Tooltip.Root>
@@ -1163,23 +1188,26 @@ function NavPill({ item, isActive }: { item: NavItemType; isActive: boolean }) {
 function NavGroup({
   group,
   isActive,
+  expanded,
 }: {
   group: (typeof navGroups)[0];
   isActive: (href: string, exact?: boolean) => boolean;
+  expanded: boolean;
 }) {
   return (
     <div className="flex flex-col gap-0.5">
-      {/* Tiny section label */}
-      {/* <p className="text-[8px] font-schibsted font-semibold tracking-widest text-white/30 uppercase text-center select-none mb-0.5">
-        {group.label.slice(0, 3)}
-      </p> */}
-      {/* Dark pill container */}
-      <div className="bg-sky-900 rounded-4xl p-1.5 flex flex-col gap-0.5">
+      <div className="flex flex-col gap-px p-1">
+        {expanded && (
+          <p className="px-2.5 pt-1.5 pb-1 text-[11px] font-schibsted font-light tracking-[0.20em] text-sky-100 uppercase select-none">
+            {group.label}
+          </p>
+        )}
         {group.items.map((item) => (
           <NavPill
             key={item.href}
             item={item}
             isActive={isActive(item.href, item.exact)}
+            expanded={expanded}
           />
         ))}
       </div>
@@ -1187,10 +1215,33 @@ function NavGroup({
   );
 }
 
-// ─── User Profile Card (avatar only, always collapsed) ────────────────────────
-function UserProfileCard() {
-  const user = useUserStore((s) => s.user);
+// ─── Edge Toggle Button ───────────────────────────────────────────────────────
+function EdgeToggle({
+  expanded,
+  onToggle,
+}: {
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      onClick={onToggle}
+      aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
+      className="absolute top-1/2 -translate-y-1/2 -right-3 z-50 flex items-center justify-center w-6 h-6 rounded-full bg-sky-800 hover:bg-sky-700 border border-sky-600/50 shadow-lg shadow-sky-950/50 transition-colors duration-150 cursor-pointer"
+    >
+      <motion.div
+        animate={{ rotate: expanded ? 180 : 0 }}
+        transition={{ duration: 0.3, ease: EASE_OUT_QUART }}
+      >
+        <ChevronLeft size={12} className="text-sky-200" />
+      </motion.div>
+    </button>
+  );
+}
 
+// ─── User Profile Card ────────────────────────────────────────────────────────
+function UserProfileCard({ expanded }: { expanded: boolean }) {
+  const user = useUserStore((s) => s.user);
   const getInitials = (name?: string) => {
     if (!name) return "U";
     return name
@@ -1202,30 +1253,51 @@ function UserProfileCard() {
   };
 
   return (
-    <div className="flex justify-center py-3 border-b border-sky-700/50">
-      <Avatar className="size-8 border-2 border-sky-600/50 shrink-0">
-        <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
-        <AvatarFallback className="bg-sky-700 text-white text-xs font-schibsted font-semibold">
-          {getInitials(user?.name)}
-        </AvatarFallback>
-      </Avatar>
+    <div
+      className={`border-b border-white/[0.07] ${expanded ? "px-3 py-3.5" : "flex justify-center py-3"}`}
+    >
+      <div className={`flex items-center ${expanded ? "gap-2.5" : ""}`}>
+        <Avatar className="size-7 shrink-0 ring-1 ring-white/20">
+          <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
+          <AvatarFallback className="bg-sky-600 text-white text-[10px] font-schibsted font-bold">
+            {getInitials(user?.name)}
+          </AvatarFallback>
+        </Avatar>
+        {expanded && (
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-schibsted font-semibold text-white/90 truncate leading-tight">
+              {user?.name || "User"}
+            </p>
+            <p className="text-[11px] font-schibsted text-sky-300/50 truncate leading-tight">
+              {user?.email || ""}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-// ─── Sidebar (always collapsed icon-only) ────────────────────────────────────
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
 function Sidebar({
   isActive,
+  expanded,
 }: {
   isActive: (href: string, exact?: boolean) => boolean;
+  expanded: boolean;
 }) {
   return (
-    <div className="flex flex-col h-full bg-sky-800">
-      <UserProfileCard />
+    <div className="flex flex-col h-full bg-gradient-to-b from-sky-800 to-sky-900">
+      <UserProfileCard expanded={expanded} />
       <nav className="flex-1 px-2 py-3 overflow-y-auto overflow-x-hidden scrollbar-none">
-        <div className="flex flex-col space-y-8">
+        <div className="flex flex-col h-full gap-8">
           {navGroups.map((group) => (
-            <NavGroup key={group.label} group={group} isActive={isActive} />
+            <NavGroup
+              key={group.label}
+              group={group}
+              isActive={isActive}
+              expanded={expanded}
+            />
           ))}
         </div>
       </nav>
@@ -1237,6 +1309,7 @@ function Sidebar({
 export default function DashboardNav({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -1248,13 +1321,22 @@ export default function DashboardNav({ children }: { children: ReactNode }) {
   };
 
   return (
-    // Tooltip.Provider wraps everything so tooltips work anywhere in the tree
     <Tooltip.Provider delayDuration={200} skipDelayDuration={100}>
       <div className="flex h-dvh">
-        {/* ── Desktop Sidebar (fixed width, always collapsed) ─────────────── */}
-        <aside className="hidden md:flex flex-col w-[68px] shrink-0 border-r border-sky-900/40 shadow-xl shadow-sky-900/10 overflow-hidden">
-          <Sidebar isActive={isActive} />
-        </aside>
+        {/* ── Desktop Sidebar ─────────────────────────────────────────────── */}
+        <div className="relative hidden md:flex shrink-0">
+          <motion.aside
+            animate={{ width: expanded ? 210 : 68 }}
+            transition={{ duration: 0.3, ease: EASE_OUT_QUART }}
+            className="flex flex-col border-r border-sky-900/40 shadow-xl shadow-sky-900/10 overflow-hidden"
+          >
+            <Sidebar isActive={isActive} expanded={expanded} />
+          </motion.aside>
+          <EdgeToggle
+            expanded={expanded}
+            onToggle={() => setExpanded((e) => !e)}
+          />
+        </div>
 
         {/* ── Mobile Hamburger ───────────────────────────────────────────── */}
         <button
@@ -1302,7 +1384,7 @@ export default function DashboardNav({ children }: { children: ReactNode }) {
           )}
         </AnimatePresence>
 
-        {/* ── Mobile Drawer ──────────────────────────────────────────────── */}
+        {/* ── Mobile Drawer (always expanded) ────────────────────────────── */}
         <AnimatePresence>
           {mobileOpen && (
             <motion.aside
@@ -1311,9 +1393,9 @@ export default function DashboardNav({ children }: { children: ReactNode }) {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ duration: 0.3, ease: EASE_OUT_QUART }}
-              className="fixed top-0 left-0 bottom-0 w-[68px] z-50 md:hidden shadow-2xl overflow-hidden"
+              className="fixed top-0 left-0 bottom-0 w-56 z-50 md:hidden shadow-2xl overflow-hidden"
             >
-              <Sidebar isActive={isActive} />
+              <Sidebar isActive={isActive} expanded={true} />
             </motion.aside>
           )}
         </AnimatePresence>
@@ -1324,7 +1406,7 @@ export default function DashboardNav({ children }: { children: ReactNode }) {
             <DashboardBreadcrumb />
             <div className="px-10 py-6">{children}</div>
           </div>
-          <RightPanel />
+          <RightPanel config={getPanelConfig(pathname)} />
         </main>
       </div>
     </Tooltip.Provider>

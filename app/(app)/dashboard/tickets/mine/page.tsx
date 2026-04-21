@@ -941,6 +941,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useTicketPanelStore } from "@/components/dashboard/right-panel/useTicketPanelStore";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
 import {
@@ -1667,7 +1668,9 @@ function ConversationSheet({
         {/* ── Action bar ───────────────────────────────────────────────────── */}
         <div className="flex items-center gap-2 px-5 py-2.5 border-b border-neutral-100 bg-neutral-50 flex-shrink-0">
           {/* Status badge */}
-          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-schibsted font-semibold ${statusCfg.className}`}>
+          <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-schibsted font-semibold ${statusCfg.className}`}
+          >
             <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
             {statusCfg.label}
           </span>
@@ -1711,7 +1714,10 @@ function ConversationSheet({
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"}`}>
+                <div
+                  key={i}
+                  className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"}`}
+                >
                   <div className="h-16 w-56 rounded-xl bg-neutral-100 animate-pulse" />
                 </div>
               ))}
@@ -1719,34 +1725,53 @@ function ConversationSheet({
           ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-2 text-center">
               <Send size={22} className="text-neutral-200" />
-              <p className="text-xs font-schibsted text-neutral-400">No messages yet</p>
+              <p className="text-xs font-schibsted text-neutral-400">
+                No messages yet
+              </p>
             </div>
           ) : (
             messages.map((msg) => {
               const isOut = msg.direction === "outbound";
               return (
-                <div key={msg.id} className={`flex ${isOut ? "justify-end" : "justify-start"}`}>
+                <div
+                  key={msg.id}
+                  className={`flex ${isOut ? "justify-end" : "justify-start"}`}
+                >
                   <div className="max-w-[82%]">
-                    <div className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap font-schibsted ${
-                      isOut
-                        ? "rounded-tr-sm bg-sky-500 text-white"
-                        : "rounded-tl-sm bg-neutral-100 text-neutral-800"
-                    }`}>
+                    <div
+                      className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap font-schibsted ${
+                        isOut
+                          ? "rounded-tr-sm bg-sky-500 text-white"
+                          : "rounded-tl-sm bg-neutral-100 text-neutral-800"
+                      }`}
+                    >
                       {msg.textBody}
                       {msg.attachments?.length > 0 && (
                         <div className="mt-2 space-y-1">
                           {msg.attachments.map((a) => (
-                            <div key={a.id} className={`flex items-center gap-2 text-xs rounded-lg px-2 py-1.5 ${isOut ? "bg-sky-600/40" : "bg-neutral-200"}`}>
+                            <div
+                              key={a.id}
+                              className={`flex items-center gap-2 text-xs rounded-lg px-2 py-1.5 ${isOut ? "bg-sky-600/40" : "bg-neutral-200"}`}
+                            >
                               <IconPaperclip size={11} />
-                              <span className="truncate font-medium">{a.filename}</span>
-                              {a.size && <span className="opacity-60 shrink-0">({Math.round(a.size / 1024)}KB)</span>}
+                              <span className="truncate font-medium">
+                                {a.filename}
+                              </span>
+                              {a.size && (
+                                <span className="opacity-60 shrink-0">
+                                  ({Math.round(a.size / 1024)}KB)
+                                </span>
+                              )}
                             </div>
                           ))}
                         </div>
                       )}
                     </div>
-                    <p className={`text-[10px] mt-1 text-neutral-400 font-schibsted ${isOut ? "text-right" : ""}`}>
-                      {isOut ? "You" : msg.fromName || msg.from} · {formatTime(msg.createdAt || msg.receivedAt || "")}
+                    <p
+                      className={`text-[10px] mt-1 text-neutral-400 font-schibsted ${isOut ? "text-right" : ""}`}
+                    >
+                      {isOut ? "You" : msg.fromName || msg.from} ·{" "}
+                      {formatTime(msg.createdAt || msg.receivedAt || "")}
                     </p>
                   </div>
                 </div>
@@ -1769,14 +1794,20 @@ function ConversationSheet({
             />
             <div className="flex items-center justify-between px-3 py-2 border-t border-neutral-100 bg-neutral-50">
               <span className="text-[10px] font-schibsted text-neutral-400">
-                {reply.length > 0 ? `${reply.length} chars` : "Replying as agent"}
+                {reply.length > 0
+                  ? `${reply.length} chars`
+                  : "Replying as agent"}
               </span>
               <button
                 onClick={onSend}
                 disabled={!reply.trim() || sending}
                 className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-sky-500 text-white text-xs font-schibsted font-semibold hover:bg-sky-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
-                {sending ? <RefreshCw size={12} className="animate-spin" /> : <Send size={12} />}
+                {sending ? (
+                  <RefreshCw size={12} className="animate-spin" />
+                ) : (
+                  <Send size={12} />
+                )}
                 Send reply
               </button>
             </div>
@@ -1825,7 +1856,7 @@ export default function MyTicketsPage() {
   const fetchTickets = useCallback(async () => {
     setLoading(true);
     try {
-      // ── MOCK (re-enable for design testing) ──────────────────────────────
+      // ── MOCK ──────────────────────────────────────────────────────────────
       // const [ticketRes, domRes, aliasRes] = await Promise.all([
       //   fetch("/mock-data/tickets.json"),
       //   fetch("/mock-data/domains.json"),
@@ -1874,7 +1905,7 @@ export default function MyTicketsPage() {
           })),
         );
       }
-      // ─────────────────────────────────────────────────────────────────────
+      // ──────────────────────────────────────────────────────────────────────
     } catch {
       toast.error("Failed to load tickets");
     } finally {
@@ -1892,7 +1923,7 @@ export default function MyTicketsPage() {
     setThread(null);
     setMessages([]);
     try {
-      // ── MOCK (re-enable for design testing) ──────────────────────────────
+      // ── MOCK ──────────────────────────────────────────────────────────────
       // const res = await fetch("/mock-data/threads.json");
       // const allThreads = await res.json();
       // const data = allThreads[id];
@@ -1907,7 +1938,7 @@ export default function MyTicketsPage() {
       const data = await res.json();
       setThread(data.thread);
       setMessages(data.messages);
-      // ─────────────────────────────────────────────────────────────────────
+      // ──────────────────────────────────────────────────────────────────────
     } catch {
       toast.error("Failed to load conversation");
     } finally {
@@ -1920,7 +1951,7 @@ export default function MyTicketsPage() {
     if (!selectedTicket) return;
     setConvRefreshing(true);
     try {
-      // ── MOCK (re-enable for design testing) ──────────────────────────────
+      // ── MOCK ──────────────────────────────────────────────────────────────
       // const res = await fetch("/mock-data/threads.json");
       // const allThreads = await res.json();
       // const data = allThreads[selectedTicket.id];
@@ -1933,7 +1964,7 @@ export default function MyTicketsPage() {
       const data = await res.json();
       setThread(data.thread);
       setMessages(data.messages);
-      // ─────────────────────────────────────────────────────────────────────
+      // ──────────────────────────────────────────────────────────────────────
     } catch {
       /* silent */
     } finally {
@@ -1947,11 +1978,29 @@ export default function MyTicketsPage() {
     return () => clearInterval(iv);
   }, [selectedTicket, refreshConversation]);
 
+  // ── Ticket panel store ────────────────────────────────────────────────────
+  const setPanelTicket = useTicketPanelStore((s) => s.setSelectedTicket);
+
+  // Clear panel selection when leaving the page
+  useEffect(() => {
+    const clearPanel = useTicketPanelStore.getState().clearSelected;
+    return () => clearPanel();
+  }, []);
+
   // ── Card click ───────────────────────────────────────────────────────────
   const handleCardClick = (ticket: Ticket) => {
-    setSelectedTicket(ticket);
-    setSheetOpen(true);
-    fetchConversation(ticket.id);
+    // Write to panel store — fills the right panel
+    setPanelTicket({
+      id: ticket.id,
+      from: ticket.from,
+      fromName: ticket.fromName,
+      subject: ticket.subject,
+      status: ticket.status,
+      receivedAt: ticket.receivedAt,
+      assignedTo: ticket.assignedTo,
+      assignedToName: ticket.assignedToName,
+      assignedToEmail: ticket.assignedToEmail,
+    });
   };
 
   // ── Send reply ───────────────────────────────────────────────────────────
@@ -2138,14 +2187,14 @@ export default function MyTicketsPage() {
       {/* ── Top Bar ─────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 px-5 py-3 bg-white border-b border-neutral-200 flex-shrink-0">
         {/* Search */}
-        <div className="flex items-center gap-2 flex-1 min-w-md bg-white border border-neutral-600 rounded-full px-3.5 h-9 transition-colors">
+        <div className="flex items-center gap-2 flex-1 min-w-sm max-w-[400px] bg-white border border-neutral-600 rounded-full px-3.5 h-9 transition-colors">
           <Search size={13} className="text-neutral-400 shrink-0" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by subject, customer, or email…"
-            className="flex-1 text-sm tracking-tighter font-schibsted text-neutral-800 placeholder-neutral-600 bg-transparent outline-none"
+            className="flex-1 text-sm tracking-tighter font-schibsted text-neutral-800 placeholder-neutral-500 bg-transparent outline-none"
           />
           {searchQuery && (
             <button
