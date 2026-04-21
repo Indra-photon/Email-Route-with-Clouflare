@@ -15,25 +15,33 @@ export interface SubscriptionGuard {
 export async function getSubscriptionGuard(
   workspaceId: Types.ObjectId | string
 ): Promise<SubscriptionGuard> {
-  const [sub, workspace] = await Promise.all([
-    Subscription.findOne({ workspaceId }),
-    Workspace.findById(workspaceId).lean(),
-  ]);
+  // ── Always look up the subscription directly by workspaceId ──────────────
+  // We do NOT rely on workspace.planId being set — that field can be null if
+  // the Workspace.findByIdAndUpdate call in the Dodo webhook silently failed.
+  const sub = await Subscription.findOne({ workspaceId });
 
-  // No plan purchased yet — block all write actions
-  if (!workspace?.planId) {
+  // No subscription record at all → genuinely new user
+  if (!sub) {
     return { isExpired: false, hasNoPlan: true, sub: null };
   }
 
-  if (!sub) {
-    // Has a planId in workspace but no subscription record (edge case after manual DB edits)
-    return { isExpired: false, hasNoPlan: false, sub: null };
+  // ── Self-heal: if workspace.subscriptionId is null, fix it now ───────────
+  // This handles the edge case where the Dodo webhook updated the Subscription
+  // correctly but the Workspace.findByIdAndUpdate call failed silently.
+  try {
+    await Workspace.updateOne(
+      { _id: workspaceId, $or: [{ subscriptionId: null }, { subscriptionId: { $exists: false } }, { planId: null }] },
+      { $set: { subscriptionId: sub._id, planId: sub.planId } }
+    );
+  } catch {
+    // Non-critical — don't block the request if self-heal fails
   }
 
   const now = new Date();
   const isExpired =
     sub.status === "cancelled" ||
     sub.status === "inactive" ||
+    sub.status === "past_due" ||
     (sub.currentPeriodEnd !== null && now > sub.currentPeriodEnd);
 
   return { isExpired, hasNoPlan: false, sub };

@@ -413,20 +413,34 @@ export async function POST(request: Request) {
 
     // ── Look up parent thread for reply threading ────────────────────────
     let parentThread: any = null;
+    // Also find the original INBOUND ticket to update its status
+    let originalInboundTicket: any = null;
     if (inReplyTo) {
       const refsToCheck = [inReplyTo, ...references].filter(Boolean);
       console.log("🔗 In-Reply-To:", inReplyTo, "| references:", references);
 
+      // Find parent thread for Slack threading (needs slackMessageTs)
       parentThread = await EmailThread.findOne({
         messageId: { $in: refsToCheck },
         slackMessageTs: { $exists: true, $ne: null },
         // no direction filter — match both inbound and outbound
       }).sort({ createdAt: 1 }).lean();
 
+      // Find the original INBOUND ticket to flip its status back to "open"
+      // when the customer replies — so the agent knows action is needed again
+      originalInboundTicket = await EmailThread.findOne({
+        messageId: { $in: refsToCheck },
+        direction: "inbound",
+      }).sort({ createdAt: 1 });
+
       if (parentThread) {
         console.log("🧵 Found parent thread:", parentThread._id, "slackTs:", parentThread.slackMessageTs);
       } else {
         console.log("⚠️ No parent thread found — will post as new message");
+      }
+
+      if (originalInboundTicket) {
+        console.log("🔁 Found original inbound ticket:", originalInboundTicket._id, "status:", originalInboundTicket.status);
       }
     }
 
@@ -456,6 +470,19 @@ export async function POST(request: Request) {
       receivedAt: new Date(emailData.created_at || Date.now()),
     });
     console.log("💾 Email saved to database:", emailThread._id);
+
+    // ── Auto status transition: customer replied → flip original ticket back to "open" ──
+    // When a customer sends a reply (inbound) on a thread that was "waiting" or "resolved",
+    // it means they need attention again. Flip the original inbound ticket to "open".
+    if (originalInboundTicket) {
+      const prevStatus = originalInboundTicket.status;
+      if (prevStatus === "waiting" || prevStatus === "resolved" || prevStatus === "in_progress") {
+        originalInboundTicket.status = "open";
+        originalInboundTicket.statusUpdatedAt = new Date();
+        await originalInboundTicket.save();
+        console.log(`🔄 Auto-status: original inbound ticket ${originalInboundTicket._id} flipped from "${prevStatus}" → "open" (customer replied)`);
+      }
+    }
 
     // ── Increment inbound ticket counter on the workspace's subscription ──
     await Subscription.updateOne(
@@ -555,6 +582,7 @@ export async function POST(request: Request) {
               options: [
                 { text: { type: "plain_text", text: "🆕 Open", emoji: true }, value: `open__${emailThread._id.toString()}` },
                 { text: { type: "plain_text", text: "🔄 In Progress", emoji: true }, value: `in_progress__${emailThread._id.toString()}` },
+                { text: { type: "plain_text", text: "⏸️ Waiting", emoji: true }, value: `waiting__${emailThread._id.toString()}` },
                 { text: { type: "plain_text", text: "✅ Resolved", emoji: true }, value: `resolved__${emailThread._id.toString()}` },
               ],
             },

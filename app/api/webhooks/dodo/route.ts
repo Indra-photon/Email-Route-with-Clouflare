@@ -5,6 +5,7 @@ import { Subscription } from "@/app/api/models/SubscriptionModel";
 import { Alias } from "@/app/api/models/AliasModel";
 import { verifyDodoSignature } from "@/lib/dodo";
 import { getPostHogClient } from "@/lib/posthog-server";
+import mongoose from "mongoose";
 
 export async function POST(request: Request) {
   const rawBody = await request.text();
@@ -28,9 +29,18 @@ export async function POST(request: Request) {
   const data = (event.data ?? {}) as Record<string, unknown>;
   const metadata = (event.metadata ?? data.metadata ?? {}) as Record<string, string>;
 
+  // ── Log the raw metadata so we can debug Dodo payload structure issues ─────
+  console.log(`📦 Dodo webhook [${type}] — raw metadata:`, JSON.stringify(metadata));
+  console.log(`📦 Dodo webhook [${type}] — event keys:`, Object.keys(event));
+  console.log(`📦 Dodo webhook [${type}] — data keys:`, Object.keys(data));
+
   await dbConnect();
 
-  const workspaceId = metadata.workspaceId;
+  const workspaceIdRaw = metadata.workspaceId;
+  // Explicitly cast to ObjectId so Mongoose never does a silent string-comparison fail
+  const workspaceId = workspaceIdRaw && mongoose.Types.ObjectId.isValid(workspaceIdRaw)
+    ? new mongoose.Types.ObjectId(workspaceIdRaw)
+    : null;
 
   try {
     switch (type) {
@@ -38,7 +48,10 @@ export async function POST(request: Request) {
       // Dodo may send either "subscription.active" or "subscription.activated"
       case "subscription.active":
       case "subscription.activated": {
-        if (!workspaceId) break;
+        if (!workspaceId) {
+          console.error(`❌ Dodo webhook [${type}]: workspaceId missing from metadata — cannot link subscription! Raw metadata:`, JSON.stringify(metadata));
+          break;
+        }
 
         const planId = (metadata.planId ?? "starter") as "starter" | "growth" | "scale";
         const periodStart = data.current_period_start
@@ -66,10 +79,23 @@ export async function POST(request: Request) {
           { upsert: true, new: true }
         );
 
-        await Workspace.findByIdAndUpdate(workspaceId, {
-          planId,
-          subscriptionId: sub._id,
-        });
+        // ── Update workspace — verify it was actually found ─────────────────
+        const workspaceResult = await Workspace.findByIdAndUpdate(
+          workspaceId,
+          { planId, subscriptionId: sub._id },
+          { new: true }
+        );
+        if (!workspaceResult) {
+          // This is the root cause of the historical null subscriptionId bug:
+          // The subscription was created but the workspace was never linked.
+          console.error(
+            `❌ CRITICAL: Workspace not found for workspaceId=${workspaceId.toString()} during ${type} webhook.`,
+            `Subscription ${sub._id} created/updated but workspace.subscriptionId NOT set.`,
+            `Manual fix required.`
+          );
+        } else {
+          console.log(`✅ Workspace ${workspaceId} updated: planId=${planId}, subscriptionId=${sub._id}`);
+        }
 
         // Re-activate all aliases that were paused due to limit
         await Alias.updateMany(

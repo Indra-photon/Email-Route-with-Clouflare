@@ -8,6 +8,7 @@ import { Domain } from "@/app/api/models/DomainModel";
 import { Subscription } from "@/app/api/models/SubscriptionModel";
 import { Resend } from "resend";
 import { getPostHogClient } from "@/lib/posthog-server";
+import { getSubscriptionGuard } from "@/lib/checkSubscriptionStatus";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -53,6 +54,10 @@ export async function POST(request: Request) {
         { status: 404 }
       );
     }
+
+    const { isExpired, hasNoPlan } = await getSubscriptionGuard(workspace._id);
+    if (hasNoPlan) return NextResponse.json({ error: "No active plan. Please purchase a plan.", upgradeRequired: true }, { status: 403 });
+    if (isExpired) return NextResponse.json({ error: "Your plan has expired. Please renew to send replies.", upgradeRequired: true }, { status: 403 });
 
     const thread = await EmailThread.findById(threadId);
 
@@ -176,8 +181,8 @@ export async function POST(request: Request) {
     );
 
     // Save thread updates (including auto-claim)
-    // Status becomes "open" after a reply — waiting for customer's next message
-    thread.status = "open";
+    // Status becomes "waiting" after a reply — agent replied, awaiting customer's next message
+    thread.status = "waiting";
     thread.statusUpdatedAt = new Date();
     thread.repliedAt = new Date();
     await thread.save();
