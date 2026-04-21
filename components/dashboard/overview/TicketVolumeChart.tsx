@@ -189,6 +189,7 @@ export function TicketVolumeChart({ domains, aliases }: TicketVolumeChartProps) 
             onChange={handleDomainChange}
             placeholder="All Domains"
             width="w-44"
+            compact
           />
           <AnimatedDropdown
             options={aliasOptions}
@@ -196,6 +197,7 @@ export function TicketVolumeChart({ domains, aliases }: TicketVolumeChartProps) 
             onChange={(aliasId) => setFilters((f) => ({ ...f, aliasId }))}
             placeholder="All Aliases"
             width="w-52"
+            compact
           />
           <AnimatedDropdown
             options={rangeOptions}
@@ -203,6 +205,7 @@ export function TicketVolumeChart({ domains, aliases }: TicketVolumeChartProps) 
             onChange={(range) => setFilters((f) => ({ ...f, range: range as LocalFilters["range"] }))}
             placeholder="Last 7 days"
             width="w-36"
+            compact
           />
         </div>
       </div>

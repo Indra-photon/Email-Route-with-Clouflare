@@ -252,6 +252,7 @@ export function NeedsAttentionTable() {
               onChange={(domainId) => setFilters((f) => ({ ...f, domainId, aliasId: "all" }))}
               placeholder="All Domains"
               width="w-36"
+              compact
             />
             <AnimatedDropdown
               options={[{ value: "all", label: "All Aliases" }, ...(filters.domainId === "all" ? aliases : aliases.filter((a) => a.domainId === filters.domainId)).map((a) => ({ value: a.id, label: a.label }))]}
@@ -259,6 +260,7 @@ export function NeedsAttentionTable() {
               onChange={(aliasId) => setFilters((f) => ({ ...f, aliasId }))}
               placeholder="All Aliases"
               width="w-40"
+              compact
             />
             <AnimatedDropdown
               options={[{ value: "7d", label: "Last 7 days" }, { value: "14d", label: "Last 14 days" }, { value: "30d", label: "Last 30 days" }]}
@@ -266,6 +268,7 @@ export function NeedsAttentionTable() {
               onChange={(range) => setFilters((f) => ({ ...f, range: range as FilterState["range"] }))}
               placeholder="Last 7 days"
               width="w-32"
+              compact
             />
           </div>
         </div>

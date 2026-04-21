@@ -428,6 +428,7 @@ export function StatusBreakdownChart({ domains, aliases }: StatusBreakdownChartP
             onChange={handleDomainChange}
             placeholder="All Domains"
             width="w-44"
+            compact
           />
           <AnimatedDropdown
             options={aliasOptions}
@@ -435,6 +436,7 @@ export function StatusBreakdownChart({ domains, aliases }: StatusBreakdownChartP
             onChange={(aliasId) => setFilters((f) => ({ ...f, aliasId }))}
             placeholder="All Aliases"
             width="w-44"
+            compact
           />
         </div>
       </div>

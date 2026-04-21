@@ -26,6 +26,7 @@ interface AnimatedDropdownProps {
   label?: string;
   className?: string;
   width?: string;
+  compact?: boolean;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -39,6 +40,7 @@ export default function AnimatedDropdown({
   label,
   className = "",
   width = "w-48",
+  compact = false,
 }: AnimatedDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -82,11 +84,13 @@ export default function AnimatedDropdown({
         type="button"
         onClick={() => !disabled && setIsOpen((o) => !o)}
         disabled={disabled}
-        className={`${width} flex items-center justify-between gap-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-schibsted text-left transition-colors duration-100 focus:border-sky-800 dark:focus:border-neutral-400 outline-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
-          isOpen ? "border-sky-800 dark:border-neutral-400" : ""
+        className={`${width} flex items-center justify-between gap-2 rounded-lg border bg-white px-3 font-schibsted text-left transition-colors duration-100 outline-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
+          compact
+            ? `h-9 text-xs tracking-tighter ${isOpen ? "border-sky-800" : "border-neutral-600 hover:border-neutral-900"}`
+            : `py-2 text-sm border-neutral-300 dark:border-neutral-600 dark:bg-neutral-800 focus:border-sky-800 dark:focus:border-neutral-400 ${isOpen ? "border-sky-800 dark:border-neutral-400" : ""}`
         }`}
       >
-        <span className={selected ? "text-neutral-700 dark:text-neutral-300" : "text-neutral-400"}>
+        <span className={selected ? (compact ? "text-neutral-800" : "text-neutral-700 dark:text-neutral-300") : "text-neutral-400"}>
           {selected?.label ?? placeholder}
         </span>
         <motion.span
@@ -107,9 +111,7 @@ export default function AnimatedDropdown({
             exit={{ opacity: 0, y: -4, scaleY: 0.95, scaleX: 0.98 }}
             transition={{ duration: 0.2, ease: easeOutQuint }}
             style={{ transformOrigin: "top" }}
-            className={`absolute z-50 ${width} mt-0 rounded-lg 
-            border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg 
-            shadow-neutral-200/50 dark:shadow-neutral-900/50 overflow-hidden`}
+            className={`absolute z-50 ${width} mt-0 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 overflow-hidden ${compact ? "shadow-sm" : "shadow-lg shadow-neutral-200/50 dark:shadow-neutral-900/50"}`}
           >
             <div className="max-h-48 overflow-y-auto py-1">
               {options.length === 0 ? (
@@ -134,10 +136,12 @@ export default function AnimatedDropdown({
                       <button
                         type="button"
                         onClick={() => handleSelect(option.value)}
-                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-schibsted font-semibold text-left transition-colors duration-75 cursor-pointer ${
+                        className={`w-full flex items-center gap-2 px-3 py-2 font-schibsted text-left transition-colors duration-75 cursor-pointer ${
+                          compact ? "text-xs tracking-tighter" : "text-sm font-semibold"
+                        } ${
                           isSelected
-                            ? " dark:bg-sky-900/20 text-sky-800 dark:text-sky-300 font-medium"
-                            : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                            ? compact ? "text-sky-800 font-medium" : "dark:bg-sky-900/20 text-sky-800 dark:text-sky-300 font-medium"
+                            : compact ? "text-neutral-800 hover:bg-neutral-50" : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800"
                         }`}
                       >
                         <span className="flex-1 truncate">{option.label}</span>

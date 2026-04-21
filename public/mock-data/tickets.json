@@ -191,7 +191,71 @@
       "aliasId": "alias_01",
       "attachmentCount": 1,
       "lastMessageDirection": "inbound"
+    },
+    {
+      "id": "mock_t13",
+      "from": "alice.johnson@gmail.com",
+      "fromName": "Alice Johnson",
+      "subject": "Password reset link expired too quickly",
+      "status": "resolved",
+      "receivedAt": "2026-03-10T10:00:00.000Z",
+      "repliedAt": "2026-03-10T11:00:00.000Z",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-03-10T10:05:00.000Z",
+      "aliasId": "alias_01",
+      "attachmentCount": 0,
+      "lastMessageDirection": "inbound"
+    },
+    {
+      "id": "mock_t14",
+      "from": "alice.johnson@gmail.com",
+      "fromName": "Alice Johnson",
+      "subject": "App crashes on iOS 17 when opening notifications",
+      "status": "resolved",
+      "receivedAt": "2026-02-14T08:30:00.000Z",
+      "repliedAt": "2026-02-14T09:45:00.000Z",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-02-14T08:35:00.000Z",
+      "aliasId": "alias_01",
+      "attachmentCount": 1,
+      "lastMessageDirection": "inbound"
+    },
+    {
+      "id": "mock_t15",
+      "from": "bob.smith@outlook.com",
+      "fromName": "Bob Smith",
+      "subject": "Invoice PDF not generating correctly",
+      "status": "resolved",
+      "receivedAt": "2026-03-22T14:00:00.000Z",
+      "repliedAt": "2026-03-22T15:30:00.000Z",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-03-22T14:10:00.000Z",
+      "aliasId": "alias_01",
+      "attachmentCount": 0,
+      "lastMessageDirection": "inbound"
+    },
+    {
+      "id": "mock_t16",
+      "from": "bob.smith@outlook.com",
+      "fromName": "Bob Smith",
+      "subject": "Can I transfer my account to another email?",
+      "status": "waiting",
+      "receivedAt": "2026-04-18T11:00:00.000Z",
+      "repliedAt": "2026-04-18T12:00:00.000Z",
+      "assignedTo": "user_mock01",
+      "assignedToEmail": "support@acme.com",
+      "assignedToName": "Support Agent",
+      "claimedAt": "2026-04-18T11:05:00.000Z",
+      "aliasId": "alias_02",
+      "attachmentCount": 0,
+      "lastMessageDirection": "outbound"
     }
   ],
-  "total": 12
+  "total": 16
 }

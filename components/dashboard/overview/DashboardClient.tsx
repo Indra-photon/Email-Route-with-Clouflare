@@ -53,21 +53,19 @@
 //       <StatCards />
 
 //       {/* Chart row — explicit min-h so ResponsiveContainer gets a real pixel height */}
-      // <div className="py-4 grid grid-cols-5 gap-4" style={{ minHeight: 360 }}>
-      //   <div className="col-span-3 min-w-0 min-h-0">
-      //     <TicketVolumeChart domains={domains} aliases={aliases} />
-      //   </div>
-      //   <div className="col-span-2 min-w-0 min-h-0">
-      //     <StatusBreakdownChart domains={domains} aliases={aliases} />
-      //   </div>
-      // </div>
+// <div className="py-4 grid grid-cols-5 gap-4" style={{ minHeight: 360 }}>
+//   <div className="col-span-3 min-w-0 min-h-0">
+//     <TicketVolumeChart domains={domains} aliases={aliases} />
+//   </div>
+//   <div className="col-span-2 min-w-0 min-h-0">
+//     <StatusBreakdownChart domains={domains} aliases={aliases} />
+//   </div>
+// </div>
 
 //       <NeedsAttentionTable />
 //     </div>
 //   );
 // }
-
-
 
 "use client";
 
@@ -102,10 +100,10 @@ export function DashboardClient() {
           const data = await aliasesRes.json();
           setAliases(
             data.map((a: any) => ({
-              id:       a.id,
-              label:    a.email,
+              id: a.id,
+              label: a.email,
               domainId: a.domainId ?? "unknown",
-            }))
+            })),
           );
         }
       } catch (err) {
@@ -117,7 +115,6 @@ export function DashboardClient() {
 
   return (
     <div className="flex flex-col gap-4">
-
       {/* Row 1 — StatCards (self-contained with own filters) */}
       <StatCards />
 
@@ -140,7 +137,6 @@ export function DashboardClient() {
           <NeedsAttentionTable />
         </div>
       </div>
-
     </div>
   );
 }
