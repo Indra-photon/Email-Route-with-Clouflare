@@ -395,7 +395,7 @@ export default function ChatEmbedPage() {
       transition: {
         duration: 0.6,
         repeat: Infinity,
-        ease: "easeInOut",
+        ease: "easeInOut" as const,
         delay: i * 0.15,
       },
     }),
