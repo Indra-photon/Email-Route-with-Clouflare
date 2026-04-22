@@ -18,6 +18,7 @@ export interface IEmailThread extends Document {
 
   direction: "inbound" | "outbound";
   status: "open" | "in_progress" | "waiting" | "resolved";
+  priority: "urgent" | "moderate" | "not-urgent";
 
   attachments: Array<{
     id: string;
@@ -131,6 +132,12 @@ const EmailThreadSchema = new Schema<IEmailThread>(
       type: String,
       enum: ["open", "in_progress", "waiting", "resolved"],
       default: "open",
+      index: true,
+    },
+    priority: {
+      type: String,
+      enum: ["urgent", "moderate", "not-urgent"],
+      default: "moderate",
       index: true,
     },
 
