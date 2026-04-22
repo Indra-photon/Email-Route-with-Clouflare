@@ -6,7 +6,7 @@ type HeadingProps<T extends React.ElementType = "h1"> = {
   children: React.ReactNode;
   as?: T;
   id?: string;
-  variant?: "default" | "muted" | "small" | "blogHeader";
+  variant?: "default" | "muted" | "small" | "blogHeader" | "dashboardHeader";
 };
 
 export const Heading = <T extends React.ElementType = "h1">({
@@ -18,22 +18,23 @@ export const Heading = <T extends React.ElementType = "h1">({
 }: HeadingProps<T>) => {
   const Tag = as || "h1";
 
-    const variants = {
-      default: "text-2xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold leading-tight text-white",
-      muted: "text-xl sm:text-xl md:text-xl lg:text-2xl xl:text-3xl font-regular leading-tight text-white",
-      small: "text-lg sm:text-lg md:text-lg lg:text-xl xl:text-2xl font-regular leading-tight text-white",
-      blogHeader: "text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-semibold leading-tight text-neutral-100",
-    };
-  
+  const variants = {
+    default:
+      "text-2xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold leading-tight text-white",
+    muted:
+      "text-xl sm:text-xl md:text-xl lg:text-2xl xl:text-3xl font-regular leading-tight text-white",
+    small:
+      "text-lg sm:text-lg md:text-lg lg:text-xl xl:text-2xl font-regular leading-tight text-white",
+    blogHeader:
+      "text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-semibold leading-tight text-neutral-100",
+    dashboardHeader:
+      "font-schibsted text-xl font-semibold tracking-[0.07em] text-neutral-800",
+  };
+
   return (
-    
     <Tag
       id={id}
-      className={twMerge(
-        "font-schibsted",
-        variants[variant],
-        className
-      )}
+      className={twMerge("font-schibsted", variants[variant], className)}
     >
       {children}
     </Tag>

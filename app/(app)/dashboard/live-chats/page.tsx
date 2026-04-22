@@ -33,6 +33,8 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { Search, X } from "lucide-react";
+import { Heading } from "@/components/Heading";
+import { Paragraph } from "@/components/Paragraph";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -147,12 +149,18 @@ function FilterDropdown({
   useEffect(() => {
     if (!open) return;
     const onClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
     };
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
     document.addEventListener("mousedown", onClick);
     document.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("mousedown", onClick); document.removeEventListener("keydown", onKey); };
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
   }, [open]);
 
   const SelectedIcon = selected?.icon;
@@ -164,11 +172,18 @@ function FilterDropdown({
         onClick={() => !disabled && setOpen((o) => !o)}
         disabled={disabled}
         className={`w-full flex items-center justify-between gap-2 rounded-lg border px-3 h-9 text-xs tracking-tighter font-schibsted text-left transition-colors duration-100 outline-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer bg-white ${
-          open ? "border-sky-800" : "border-neutral-600 hover:border-neutral-900"
+          open
+            ? "border-sky-800"
+            : "border-neutral-600 hover:border-neutral-900"
         } ${selected ? "text-neutral-800" : "text-neutral-400"}`}
       >
         <span className="flex items-center gap-1.5 truncate">
-          {SelectedIcon && <SelectedIcon size={13} className={`shrink-0 ${selected ? "text-neutral-800" : "text-neutral-400"}`} />}
+          {SelectedIcon && (
+            <SelectedIcon
+              size={13}
+              className={`shrink-0 ${selected ? "text-neutral-800" : "text-neutral-400"}`}
+            />
+          )}
           <span className="truncate">{selected?.label ?? placeholder}</span>
         </span>
         <motion.span
@@ -199,20 +214,43 @@ function FilterDropdown({
                     key={opt.value}
                     initial={{ opacity: 0.6, y: -3 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.12, delay: i * 0.02, ease: [0.215, 0.61, 0.355, 1] }}
+                    transition={{
+                      duration: 0.12,
+                      delay: i * 0.02,
+                      ease: [0.215, 0.61, 0.355, 1],
+                    }}
                   >
                     <button
                       type="button"
-                      onClick={() => { onChange(opt.value); setOpen(false); }}
+                      onClick={() => {
+                        onChange(opt.value);
+                        setOpen(false);
+                      }}
                       className={`w-full flex items-center gap-2 px-3 py-2 text-xs tracking-tighter font-schibsted text-left transition-colors duration-75 cursor-pointer ${
-                        isSelected ? "text-sky-800 font-medium" : "text-neutral-800 hover:bg-neutral-50"
+                        isSelected
+                          ? "text-sky-800 font-medium"
+                          : "text-neutral-800 hover:bg-neutral-50"
                       }`}
                     >
-                      {Icon && <Icon size={13} className={isSelected ? "text-sky-600" : "text-neutral-400"} />}
+                      {Icon && (
+                        <Icon
+                          size={13}
+                          className={
+                            isSelected ? "text-sky-600" : "text-neutral-400"
+                          }
+                        />
+                      )}
                       <span className="flex-1 truncate">{opt.label}</span>
                       {isSelected && (
-                        <motion.span initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.15 }}>
-                          <IconCheck size={13} className="text-sky-700 shrink-0" />
+                        <motion.span
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.15 }}
+                        >
+                          <IconCheck
+                            size={13}
+                            className="text-sky-700 shrink-0"
+                          />
                         </motion.span>
                       )}
                     </button>
@@ -630,10 +668,13 @@ export default function LiveChatsPage() {
         {/* Left header */}
         <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-b from-sky-700 to-cyan-600 shrink-0">
           <div>
-            <p className="text-sm font-schibsted font-semibold text-white">
+            <Heading variant="dashboardHeader" className="text-white">
               Live Chats
-            </p>
-            <p className="text-[11px] font-schibsted text-sky-100/80 mt-0.5">
+            </Heading>
+            <Paragraph variant="dashboard-subHeading" className="text-white/90">
+              View and manage live conversations.
+            </Paragraph>
+            <p className="text-xs tracking-tighter font-schibsted text-neutral-800 mt-2">
               {conversations.length} total · auto-refreshes
             </p>
           </div>
@@ -663,7 +704,10 @@ export default function LiveChatsPage() {
               className="flex-1 text-xs tracking-tighter font-schibsted text-neutral-800 placeholder-neutral-400 bg-transparent outline-none"
             />
             {filterSearch && (
-              <button onClick={() => setFilterSearch("")} className="text-neutral-300 hover:text-neutral-500">
+              <button
+                onClick={() => setFilterSearch("")}
+                className="text-neutral-300 hover:text-neutral-500"
+              >
                 <X size={12} />
               </button>
             )}
@@ -673,10 +717,14 @@ export default function LiveChatsPage() {
           <div className="flex items-center gap-2">
             <FilterDropdown
               options={[
-                { value: "all", label: "Any time",      icon: IconClock },
+                { value: "all", label: "Any time", icon: IconClock },
                 { value: "24h", label: "Last 24 hours", icon: IconClock },
-                { value: "7d",  label: "Last 7 days",   icon: IconCalendarWeek },
-                { value: "30d", label: "Last 30 days",  icon: IconCalendarMonth },
+                { value: "7d", label: "Last 7 days", icon: IconCalendarWeek },
+                {
+                  value: "30d",
+                  label: "Last 30 days",
+                  icon: IconCalendarMonth,
+                },
               ]}
               value={filterRange}
               onChange={setFilterRange}
@@ -692,9 +740,9 @@ export default function LiveChatsPage() {
             />
             <FilterDropdown
               options={[
-                { value: "all",    label: "All Status", icon: IconCircle },
-                { value: "open",   label: "Open",       icon: IconCircleCheck },
-                { value: "closed", label: "Closed",     icon: IconCircle },
+                { value: "all", label: "All Status", icon: IconCircle },
+                { value: "open", label: "Open", icon: IconCircleCheck },
+                { value: "closed", label: "Closed", icon: IconCircle },
               ]}
               value={filterStatus}
               onChange={setFilterStatus}
@@ -704,10 +752,18 @@ export default function LiveChatsPage() {
           </div>
 
           {/* Clear */}
-          {(filterDomain !== "all" || filterStatus !== "all" || filterRange !== "all" || filterSearch) && (
+          {(filterDomain !== "all" ||
+            filterStatus !== "all" ||
+            filterRange !== "all" ||
+            filterSearch) && (
             <div className="flex justify-end">
               <button
-                onClick={() => { setFilterDomain("all"); setFilterStatus("all"); setFilterRange("all"); setFilterSearch(""); }}
+                onClick={() => {
+                  setFilterDomain("all");
+                  setFilterStatus("all");
+                  setFilterRange("all");
+                  setFilterSearch("");
+                }}
                 className="text-[11px] font-schibsted text-sky-600 hover:text-sky-800 transition-colors"
               >
                 Clear filters
@@ -723,12 +779,20 @@ export default function LiveChatsPage() {
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-6 py-12 gap-2">
               <div className="size-10 rounded-2xl bg-neutral-100 flex items-center justify-center mb-1">
-                <IconMessageCircle size={18} className="text-neutral-300" strokeWidth={1.5} />
+                <IconMessageCircle
+                  size={18}
+                  className="text-neutral-300"
+                  strokeWidth={1.5}
+                />
               </div>
               {conversations.length === 0 ? (
                 <>
-                  <p className="text-sm font-schibsted font-semibold text-neutral-600">No conversations yet</p>
-                  <p className="text-[11px] font-schibsted text-neutral-400 leading-relaxed">Add a chat widget to your site to start receiving messages.</p>
+                  <p className="text-sm font-schibsted font-semibold text-neutral-600">
+                    No conversations yet
+                  </p>
+                  <p className="text-[11px] font-schibsted text-neutral-400 leading-relaxed">
+                    Add a chat widget to your site to start receiving messages.
+                  </p>
                   <Link
                     href="/dashboard/chat-widgets"
                     className="mt-1 text-[11px] font-schibsted font-semibold text-sky-700 hover:text-sky-900 transition-colors"
@@ -738,8 +802,12 @@ export default function LiveChatsPage() {
                 </>
               ) : (
                 <>
-                  <p className="text-sm font-schibsted font-semibold text-neutral-600">No results</p>
-                  <p className="text-[11px] font-schibsted text-neutral-400">Try adjusting your filters.</p>
+                  <p className="text-sm font-schibsted font-semibold text-neutral-600">
+                    No results
+                  </p>
+                  <p className="text-[11px] font-schibsted text-neutral-400">
+                    Try adjusting your filters.
+                  </p>
                   <button
                     onClick={() => {
                       setFilterDomain("all");
@@ -858,11 +926,18 @@ export default function LiveChatsPage() {
               className="flex flex-col items-center justify-center h-full text-center px-8 gap-2"
             >
               <div className="size-14 rounded-2xl bg-neutral-100 flex items-center justify-center mb-1">
-                <IconMessageCircle size={26} className="text-neutral-300" strokeWidth={1.5} />
+                <IconMessageCircle
+                  size={26}
+                  className="text-neutral-300"
+                  strokeWidth={1.5}
+                />
               </div>
-              <p className="text-sm font-schibsted font-semibold text-neutral-600">No chat open</p>
+              <p className="text-sm font-schibsted font-semibold text-neutral-600">
+                No chat open
+              </p>
               <p className="text-[11px] font-schibsted text-neutral-400 leading-relaxed max-w-[200px]">
-                Select a conversation from the list to start chatting with a visitor.
+                Select a conversation from the list to start chatting with a
+                visitor.
               </p>
             </motion.div>
           ) : convLoading ? (
@@ -947,10 +1022,18 @@ export default function LiveChatsPage() {
                 {data.messages.length === 0 && (
                   <div className="flex flex-col items-center justify-center h-full py-12 gap-2 text-center">
                     <div className="size-10 rounded-2xl bg-neutral-100 flex items-center justify-center">
-                      <IconMessageCircle size={18} className="text-neutral-300" strokeWidth={1.5} />
+                      <IconMessageCircle
+                        size={18}
+                        className="text-neutral-300"
+                        strokeWidth={1.5}
+                      />
                     </div>
-                    <p className="text-xs font-schibsted font-semibold text-neutral-500">No messages yet</p>
-                    <p className="text-[11px] font-schibsted text-neutral-400">The visitor hasn't sent anything yet.</p>
+                    <p className="text-xs font-schibsted font-semibold text-neutral-500">
+                      No messages yet
+                    </p>
+                    <p className="text-[11px] font-schibsted text-neutral-400">
+                      The visitor hasn't sent anything yet.
+                    </p>
                   </div>
                 )}
                 {data.messages.map((msg) => (

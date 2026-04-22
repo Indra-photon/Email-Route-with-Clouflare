@@ -15,6 +15,10 @@ import {
   IconMessageDots,
   IconMessageFilled,
   IconTable,
+  IconWorld,
+  IconBooks,
+  IconExternalLink,
+  IconBook2,
 } from "@tabler/icons-react";
 import { Heading } from "@/components/Heading";
 import { Paragraph } from "@/components/Paragraph";
@@ -814,10 +818,11 @@ function AliasesTable({
                         <AnimatedDropdown
                           label=""
                           options={[
-                            { value: "", label: "None" },
+                            { value: "", label: "None", icon: IconWorld },
                             ...integrations.map((i) => ({
                               value: i.id,
                               label: `${i.name} (${i.type})`,
+                              icon: IconWorld,
                             })),
                           ]}
                           value={editIntegration}
@@ -1114,13 +1119,10 @@ export default function AliasesPage() {
     <div className="space-y-6 border border-neutral-400 rounded-lg p-4 h-[calc(100dvh-56px-48px)]">
       {/* Page heading */}
       <div>
-        <Heading
-          variant="muted"
-          className="font-bold text-neutral-900 dark:text-neutral-100"
-        >
+        <Heading variant="dashboardHeader" className="">
           Create Email Aliases for Your Domains
         </Heading>
-        <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+        <Paragraph variant="dashboard-subHeading" className="">
           Set up email addresses like support@yourdomain.com and route them to
           your Slack or Discord channels.
         </Paragraph>
@@ -1129,39 +1131,51 @@ export default function AliasesPage() {
       {/* Main tabbed card */}
       <Card className="min-h-[300px] overflow-hidden">
         {/* Tab bar */}
-        <div className="flex items-center gap-1.5 pb-4 border-b border-neutral-100 dark:border-neutral-800 flex-wrap">
-          {PAGE_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActivePageTab(tab.id)}
-              className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-schibsted font-semibold transition-all duration-150 focus:outline-none cursor-pointer ${
-                activePageTab === tab.id
-                  ? "text-white"
-                  : "text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-              }`}
+        <div className="flex items-center justify-between pb-4 pt-4 border-t border-b border-neutral-500 dark:border-neutral-800 flex-wrap gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {PAGE_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActivePageTab(tab.id)}
+                className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-schibsted font-semibold tracking-tighter transition-all duration-150 focus:outline-none cursor-pointer ${
+                  activePageTab === tab.id
+                    ? "text-white"
+                    : "text-neutral-800 tracking-tighter dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                }`}
+              >
+                {activePageTab === tab.id && (
+                  <motion.span
+                    layoutId="page-tab-bg"
+                    className="absolute inset-0 bg-gradient-to-r from-sky-800 to-cyan-700 rounded-lg z-0 shadow-sm"
+                    transition={{
+                      type: "spring",
+                      stiffness: 280,
+                      damping: 30,
+                      duration: 0.3,
+                    }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                  {tab.id === "aliases" && <IconTable size={15} />}
+                  {tab.id === "add" && <IconPlus size={15} />}
+                  {tab.id === "edit" && <IconPencil size={15} />}
+                  {tab.id === "delete" && <IconTrash size={15} />}
+                  {tab.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-schibsted font-semibold text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors duration-150 focus:outline-none shrink-0">
+            <CustomLink
+              href="/docs/aliases"
+              className="text-sm text-neutral-700 hover:text-sky-900 transition-colors underline"
             >
-              {activePageTab === tab.id && (
-                <motion.span
-                  layoutId="page-tab-bg"
-                  className="absolute inset-0 bg-gradient-to-r from-sky-800 to-cyan-700 rounded-lg z-0 shadow-sm"
-                  transition={{
-                    type: "spring",
-                    stiffness: 280,
-                    damping: 30,
-                    duration: 0.3,
-                  }}
-                />
-              )}
-              <span className="relative z-10 flex items-center gap-2">
-                {tab.id === "aliases" && <IconTable size={15} />}
-                {tab.id === "add" && <IconPlus size={15} />}
-                {tab.id === "edit" && <IconPencil size={15} />}
-                {tab.id === "delete" && <IconTrash size={15} />}
-                {tab.label}
-              </span>
-            </button>
-          ))}
+              <IconBook2 size={14} />
+              <span>Read our Docs</span>
+            </CustomLink>
+          </div>
         </div>
 
         {/* Tab content */}
@@ -1236,7 +1250,7 @@ export default function AliasesPage() {
                 <form onSubmit={handleAddSubmit} className="space-y-4">
                   <div className="flex flex-wrap gap-3 items-end">
                     <div className="flex flex-col space-y-1">
-                      <label className="block text-lg font-schibsted font-regular text-neutral-700 dark:text-neutral-300 mb-1">
+                      <label className="text-sm font-schibsted text-neutral-800 ml-1 tracking-tighter dark:text-neutral-400">
                         Local part
                       </label>
                       <input
@@ -1246,36 +1260,44 @@ export default function AliasesPage() {
                         placeholder="support"
                         required
                         disabled={addStatus !== "idle" || domains.length === 0}
-                        className="w-40 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-schibsted text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 transition-colors focus:border-sky-800 outline-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-40 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-transparent dark:bg-neutral-800 px-3 py-2 text-sm tracking-tighter font-schibsted text-neutral-800 dark:text-neutral-100 placeholder-neutral-500 transition-colors duration-100 focus:border-sky-800 dark:focus:border-neutral-400 outline-none focus:outline-none [box-shadow:none] focus:[box-shadow:none] "
                       />
                     </div>
-                    <AnimatedDropdown
-                      label="Domain"
-                      options={domains.map((d) => ({
-                        value: d.id,
-                        label: d.domain,
-                      }))}
-                      value={selectedDomainId}
-                      onChange={setSelectedDomainId}
-                      placeholder="No domains available"
-                      disabled={addStatus !== "idle" || domains.length === 0}
-                      width="w-48"
-                    />
-                    <AnimatedDropdown
-                      label="Integration"
-                      options={[
-                        { value: "", label: "None" },
-                        ...integrations.map((i) => ({
-                          value: i.id,
-                          label: `${i.name} (${i.type})`,
-                        })),
-                      ]}
-                      value={selectedIntegrationId}
-                      onChange={setSelectedIntegrationId}
-                      placeholder="Select integration"
-                      disabled={addStatus !== "idle"}
-                      width="w-48"
-                    />
+                    <div className="flex flex-col space-y-1">
+                      <label className="text-sm font-schibsted text-neutral-800 ml-1 tracking-tighter dark:text-neutral-400">
+                        Domain
+                      </label>
+                      <AnimatedDropdown
+                        options={domains.map((d) => ({
+                          value: d.id,
+                          label: d.domain,
+                        }))}
+                        value={selectedDomainId}
+                        onChange={setSelectedDomainId}
+                        placeholder="No domains available"
+                        disabled={addStatus !== "idle" || domains.length === 0}
+                        width="w-48"
+                      />
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <label className="text-sm font-schibsted text-neutral-800 ml-1 tracking-tighter dark:text-neutral-400">
+                        Integration
+                      </label>
+                      <AnimatedDropdown
+                        options={[
+                          { value: "", label: "None" },
+                          ...integrations.map((i) => ({
+                            value: i.id,
+                            label: `${i.name} (${i.type})`,
+                          })),
+                        ]}
+                        value={selectedIntegrationId}
+                        onChange={setSelectedIntegrationId}
+                        placeholder="Select integration"
+                        disabled={addStatus !== "idle"}
+                        width="w-48"
+                      />
+                    </div>
                     <AnimatedSubmitButton
                       idleLabel="Add Alias"
                       loadingLabel="Adding..."
@@ -1285,8 +1307,7 @@ export default function AliasesPage() {
                       idleWidth={110}
                       loadingWidth={110}
                       successWidth={90}
-                      disabled={addStatus !== "idle" || domains.length === 0}
-                      className="font-schibsted px-4 py-2 rounded-md bg-gradient-to-t from-sky-900 to-cyan-600 text-white border-0 focus:outline-none cursor-pointer flex items-center justify-center gap-2 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="font-schibsted px-4 py-2 rounded-md bg-gradient-to-b from-sky-900 to-cyan-700 text-white border-0 focus:outline-none cursor-pointer flex items-center justify-center gap-2 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
                     />
                   </div>
                 </form>

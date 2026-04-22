@@ -9,6 +9,11 @@ import {
   IconHourglass,
   IconMail,
   IconArrowRight,
+  IconWorld,
+  IconAt,
+  IconCalendarWeek,
+  IconCalendar,
+  IconCalendarMonth,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import type { FilterState } from "./FilterBar";
@@ -247,7 +252,7 @@ export function NeedsAttentionTable() {
           )}
           <div className="flex items-center gap-2">
             <AnimatedDropdown
-              options={[{ value: "all", label: "All Domains" }, ...domains.map((d) => ({ value: d.id, label: d.label }))]}
+              options={[{ value: "all", label: "All Domains", icon: IconWorld }, ...domains.map((d) => ({ value: d.id, label: d.label, icon: IconWorld }))]}
               value={filters.domainId}
               onChange={(domainId) => setFilters((f) => ({ ...f, domainId, aliasId: "all" }))}
               placeholder="All Domains"
@@ -255,7 +260,7 @@ export function NeedsAttentionTable() {
               compact
             />
             <AnimatedDropdown
-              options={[{ value: "all", label: "All Aliases" }, ...(filters.domainId === "all" ? aliases : aliases.filter((a) => a.domainId === filters.domainId)).map((a) => ({ value: a.id, label: a.label }))]}
+              options={[{ value: "all", label: "All Aliases", icon: IconAt }, ...(filters.domainId === "all" ? aliases : aliases.filter((a) => a.domainId === filters.domainId)).map((a) => ({ value: a.id, label: a.label, icon: IconAt }))]}
               value={filters.aliasId}
               onChange={(aliasId) => setFilters((f) => ({ ...f, aliasId }))}
               placeholder="All Aliases"
@@ -263,7 +268,7 @@ export function NeedsAttentionTable() {
               compact
             />
             <AnimatedDropdown
-              options={[{ value: "7d", label: "Last 7 days" }, { value: "14d", label: "Last 14 days" }, { value: "30d", label: "Last 30 days" }]}
+              options={[{ value: "7d", label: "Last 7 days", icon: IconCalendarWeek }, { value: "14d", label: "Last 14 days", icon: IconCalendar }, { value: "30d", label: "Last 30 days", icon: IconCalendarMonth }]}
               value={filters.range}
               onChange={(range) => setFilters((f) => ({ ...f, range: range as FilterState["range"] }))}
               placeholder="Last 7 days"

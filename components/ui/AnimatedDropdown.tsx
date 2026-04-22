@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { IconChevronDown, IconCheck } from "@tabler/icons-react";
 
@@ -15,6 +16,7 @@ const easeInCubic = [0.55, 0.055, 0.675, 0.19] as const;
 export interface DropdownOption {
   value: string;
   label: string;
+  icon?: React.ElementType;
 }
 
 interface AnimatedDropdownProps {
@@ -90,8 +92,12 @@ export default function AnimatedDropdown({
             : `py-2 text-sm border-neutral-300 dark:border-neutral-600 dark:bg-neutral-800 focus:border-sky-800 dark:focus:border-neutral-400 ${isOpen ? "border-sky-800 dark:border-neutral-400" : ""}`
         }`}
       >
-        <span className={selected ? (compact ? "text-neutral-800" : "text-neutral-700 dark:text-neutral-300") : "text-neutral-400"}>
-          {selected?.label ?? placeholder}
+        <span className={`flex items-center gap-1.5 truncate ${selected ? (compact ? "text-neutral-800" : "text-neutral-700 dark:text-neutral-300") : "text-neutral-400"}`}>
+          {selected?.icon && React.createElement(selected.icon, {
+            size: 13,
+            className: `shrink-0 ${selected ? (compact ? "text-neutral-800" : "text-neutral-600") : "text-neutral-400"}`,
+          })}
+          <span className="truncate">{selected?.label ?? placeholder}</span>
         </span>
         <motion.span
           animate={{ rotate: isOpen ? 180 : 0 }}
@@ -144,6 +150,10 @@ export default function AnimatedDropdown({
                             : compact ? "text-neutral-800 hover:bg-neutral-50" : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800"
                         }`}
                       >
+                        {option.icon && React.createElement(option.icon, {
+                          size: 13,
+                          className: `shrink-0 ${isSelected ? (compact ? "text-sky-600" : "text-sky-600") : "text-neutral-400"}`,
+                        })}
                         <span className="flex-1 truncate">{option.label}</span>
                         {isSelected && (
                           <motion.span
