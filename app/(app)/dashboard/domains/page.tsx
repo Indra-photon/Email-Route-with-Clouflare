@@ -48,13 +48,10 @@ export default function DomainsPage() {
   return (
     <div className="space-y-6 border border-neutral-400 rounded-lg p-4 h-[calc(100dvh-56px-48px)]">
       <div>
-        <Heading
-          variant="muted"
-          className="font-bold text-neutral-900 dark:text-neutral-100"
-        >
+        <Heading variant="dashboardHeader" className="">
           Add Your Domains
         </Heading>
-        <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+        <Paragraph variant="dashboard-subHeading" className="">
           Add and verify your domains to use for email aliases and receive
           emails at your custom address.
         </Paragraph>

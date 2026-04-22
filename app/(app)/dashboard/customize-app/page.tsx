@@ -152,12 +152,12 @@ export default function CustomizeAppPage() {
       {/* Page Heading */}
       <div>
         <Heading
-          variant="muted"
+          variant="dashboardHeader"
           className="font-bold text-neutral-900 dark:text-neutral-100"
         >
           Customize App
         </Heading>
-        <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+        <Paragraph variant="dashboard-subHeading" className="">
           Customize how your Slack bot appears when posting email notifications
           to your channels.
         </Paragraph>

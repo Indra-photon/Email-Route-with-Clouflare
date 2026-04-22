@@ -16,6 +16,9 @@ import {
   IconPlugConnected,
   IconTrash,
   IconTable,
+  IconBooks,
+  IconExternalLink,
+  IconBook2,
 } from "@tabler/icons-react";
 import { Heading } from "@/components/Heading";
 import { Paragraph } from "@/components/Paragraph";
@@ -166,11 +169,7 @@ function IntegrationAddForm({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2 items-end">
-        <TypeSelector
-          value={type}
-          onChange={handleTypeChange}
-          disabled={isBusy}
-        />
+        <TypeSelector value={type} onChange={handleTypeChange} />
       </div>
 
       <AnimatePresence mode="wait" initial={false}>
@@ -185,7 +184,7 @@ function IntegrationAddForm({
             className="flex flex-wrap gap-2 items-end"
           >
             <div className="flex flex-col space-y-1">
-              <label className="text-sm font-schibsted text-neutral-700 dark:text-neutral-300">
+              <label className="text-sm font-schibsted text-neutral-500 dark:text-neutral-400">
                 Name
               </label>
               <input
@@ -193,34 +192,16 @@ function IntegrationAddForm({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Support channel"
-                disabled={isBusy}
-                className="w-48 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-schibsted text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 transition-colors focus:border-sky-800 outline-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-64 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-transparent dark:bg-neutral-800 px-3 py-2 text-sm tracking-tighter font-schibsted text-neutral-800 dark:text-neutral-100 placeholder-neutral-500 transition-colors duration-100 focus:border-sky-800 dark:focus:border-neutral-400 outline-none focus:outline-none [box-shadow:none] focus:[box-shadow:none]"
               />
             </div>
             <a
-              href={
-                name.trim()
-                  ? `/api/integrations/slack/oauth?name=${encodeURIComponent(name.trim())}`
-                  : "#"
-              }
-              onClick={(e) => {
-                if (!name.trim()) e.preventDefault();
-              }}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-md font-schibsted text-sm text-white bg-gradient-to-t from-sky-900 to-cyan-600 transition-opacity duration-150 ${
-                !name.trim()
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:opacity-90"
-              }`}
+              href={`/api/integrations/slack/oauth?name=${encodeURIComponent(name.trim())}`}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-schibsted text-sm text-white bg-gradient-to-b from-sky-900 to-cyan-700 hover:opacity-90 transition-opacity duration-150"
             >
               <IconBrandSlack size={15} />
               Add to Slack
             </a>
-            <CustomLink
-              href="/docs/integrations/slack"
-              className="text-sm font-schibsted text-sky-700 hover:text-sky-900 dark:text-sky-400 transition-colors underline pb-2"
-            >
-              Read our docs
-            </CustomLink>
           </motion.div>
         )}
 
@@ -244,7 +225,7 @@ function IntegrationAddForm({
                     placeholder="e.g. Support channel"
                     required
                     disabled={isBusy}
-                    className="w-48 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-schibsted text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 transition-colors focus:border-sky-800 outline-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-48 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-transparent dark:bg-neutral-800 px-3 py-2 text-sm tracking-tighter font-schibsted text-neutral-800 dark:text-neutral-100 placeholder-neutral-500 transition-colors duration-100 focus:border-sky-800 dark:focus:border-neutral-400 outline-none focus:outline-none [box-shadow:none] focus:[box-shadow:none] disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div className="flex flex-col space-y-1">
@@ -543,15 +524,12 @@ export default function IntegrationsPage() {
       {/* Page heading */}
       <div>
         <Heading
-          variant="muted"
+          variant="dashboardHeader"
           className="font-bold text-neutral-900 dark:text-neutral-100"
         >
           Connect Your Team Workspace
         </Heading>
-        <Paragraph
-          variant="default"
-          className="text-neutral-600 dark:text-neutral-400 mt-1"
-        >
+        <Paragraph variant="dashboard-subHeading" className="">
           Add Slack or Discord integrations to route incoming emails directly to
           your team channels.
         </Paragraph>
@@ -560,38 +538,50 @@ export default function IntegrationsPage() {
       {/* Main tabbed card */}
       <Card className="min-h-[300px] overflow-hidden">
         {/* Tab bar */}
-        <div className="flex items-center gap-1.5 pb-4 border-b border-neutral-100 dark:border-neutral-800 flex-wrap">
-          {PAGE_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActivePageTab(tab.id)}
-              className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-schibsted font-semibold transition-all duration-150 focus:outline-none cursor-pointer ${
-                activePageTab === tab.id
-                  ? "text-white"
-                  : "text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-              }`}
+        <div className="flex items-center justify-between pb-4 pt-4 border-t border-b border-neutral-500 dark:border-neutral-800 flex-wrap gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {PAGE_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActivePageTab(tab.id)}
+                className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-schibsted font-semibold tracking-tighter transition-all duration-150 focus:outline-none cursor-pointer ${
+                  activePageTab === tab.id
+                    ? "text-white"
+                    : "text-neutral-800 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                }`}
+              >
+                {activePageTab === tab.id && (
+                  <motion.span
+                    layoutId="integrations-tab-bg"
+                    className="absolute inset-0 bg-gradient-to-r from-sky-800 to-cyan-700 rounded-lg z-0 shadow-sm"
+                    transition={{
+                      type: "spring",
+                      stiffness: 280,
+                      damping: 30,
+                      duration: 0.3,
+                    }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                  {tab.id === "integrations" && <IconTable size={15} />}
+                  {tab.id === "add" && <IconPlus size={15} />}
+                  {tab.id === "delete" && <IconTrash size={15} />}
+                  {tab.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-schibsted font-semibold text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors duration-150 focus:outline-none shrink-0">
+            <CustomLink
+              href="/docs/domains"
+              className="text-sm text-neutral-700 hover:text-sky-900 transition-colors underline"
             >
-              {activePageTab === tab.id && (
-                <motion.span
-                  layoutId="integrations-tab-bg"
-                  className="absolute inset-0 bg-gradient-to-r from-sky-800 to-cyan-700 rounded-lg z-0 shadow-sm"
-                  transition={{
-                    type: "spring",
-                    stiffness: 280,
-                    damping: 30,
-                    duration: 0.3,
-                  }}
-                />
-              )}
-              <span className="relative z-10 flex items-center gap-2">
-                {tab.id === "integrations" && <IconTable size={15} />}
-                {tab.id === "add" && <IconPlus size={15} />}
-                {tab.id === "delete" && <IconTrash size={15} />}
-                {tab.label}
-              </span>
-            </button>
-          ))}
+              <IconBook2 size={14} />
+              <span>Read our Docs</span>
+            </CustomLink>
+          </div>
         </div>
 
         {/* Tab content */}

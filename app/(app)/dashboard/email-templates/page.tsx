@@ -25,6 +25,9 @@ import {
   IconTerminal,
   IconTable,
   IconInfoCircle,
+  IconBooks,
+  IconExternalLink,
+  IconBook2,
 } from "@tabler/icons-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -178,7 +181,7 @@ function BodyEditor({
 }) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-schibsted font-semibold text-neutral-500 dark:text-neutral-400">
+      <label className="text-sm font-schibsted text-neutral-800 ml-1 tracking-tighter dark:text-neutral-400">
         Body
       </label>
       <textarea
@@ -187,7 +190,7 @@ function BodyEditor({
         disabled={disabled}
         rows={10}
         placeholder={`Hi {name},\n\nThank you for reaching out about "{subject}".\n\n...\n\n-- OR wrap HTML --\n<html>...[message]Hi {name}...[/message]...</html>`}
-        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-xs font-mono text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 transition-colors focus:border-sky-600 outline-none resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-transparent dark:bg-neutral-800 px-3 py-2 text-xs font-mono text-neutral-800 dark:text-neutral-100 placeholder-neutral-500 transition-colors duration-100 focus:border-sky-600 dark:focus:border-neutral-400 outline-none focus:outline-none [box-shadow:none] focus:[box-shadow:none] resize-none"
       />
       {/* Info callout — matches sky callout style from aliases page */}
       <div className="text-xs font-schibsted text-sky-800 dark:text-sky-200 bg-sky-50 dark:bg-sky-900/20 px-3 py-3 rounded-lg border border-sky-100 dark:border-sky-800 space-y-1.5">
@@ -415,7 +418,7 @@ function EditModal({
   const isBusy = status !== "idle";
 
   const inputClass =
-    "w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-schibsted text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 transition-colors focus:border-sky-600 outline-none disabled:opacity-50 disabled:cursor-not-allowed";
+    "w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-transparent dark:bg-neutral-800 px-3 py-2 text-sm tracking-tighter font-schibsted text-neutral-800 dark:text-neutral-100 placeholder-neutral-500 transition-colors duration-100 focus:border-sky-600 dark:focus:border-neutral-400 outline-none focus:outline-none [box-shadow:none] focus:[box-shadow:none]";
 
   const handleSave = async () => {
     if (!name.trim() || !body.trim()) return;
@@ -485,7 +488,7 @@ function EditModal({
         <div className="px-5 py-4 space-y-4">
           {/* Name */}
           <div className="flex flex-col space-y-1">
-            <label className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400">
+            <label className="text-sm font-schibsted text-neutral-500 dark:text-neutral-400">
               Template Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -499,7 +502,7 @@ function EditModal({
 
           {/* Subject */}
           <div className="flex flex-col space-y-1">
-            <label className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400">
+            <label className="text-sm font-schibsted text-neutral-500 dark:text-neutral-400">
               Email Subject
             </label>
             <input
@@ -518,7 +521,7 @@ function EditModal({
           <BodyEditor value={body} onChange={setBody} disabled={isBusy} />
 
           {/* Actions */}
-          <div className="flex items-center gap-2 pt-1 pb-2">
+          <div className="flex items-center justify-between gap-2 pt-1">
             <AnimatedButton
               idleLabel="Save"
               loadingLabel="Saving..."
@@ -682,19 +685,16 @@ export default function EmailTemplatesPage() {
   };
 
   const inputClass =
-    "w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-schibsted text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 transition-colors focus:border-sky-600 outline-none disabled:opacity-50 disabled:cursor-not-allowed";
+    "w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-transparent dark:bg-neutral-800 px-3 py-2 text-sm tracking-tighter font-schibsted text-neutral-800 dark:text-neutral-100 placeholder-neutral-500 transition-colors duration-100 focus:border-sky-600 dark:focus:border-neutral-400 outline-none focus:outline-none [box-shadow:none] focus:[box-shadow:none]";
 
   return (
     <div className="space-y-6 border border-neutral-400 rounded-lg p-4 h-[calc(100dvh-56px-48px)]">
       {/* Page Heading */}
       <div>
-        <Heading
-          variant="muted"
-          className="font-bold text-neutral-900 dark:text-neutral-100"
-        >
+        <Heading variant="dashboardHeader" className="">
           Email Templates
         </Heading>
-        <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+        <Paragraph variant="dashboard-subHeading" className="">
           Create reusable reply templates for your Slack team. Variables like{" "}
           <code className="text-xs bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded font-mono">
             {"{name}"}
@@ -706,31 +706,43 @@ export default function EmailTemplatesPage() {
       {/* Main tabbed card */}
       <Card className="min-h-[300px] overflow-hidden">
         {/* Tab bar */}
-        <div className="flex items-center gap-1.5 pb-4 border-b border-neutral-100 dark:border-neutral-800 flex-wrap">
-          {PAGE_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-schibsted font-semibold transition-all duration-150 focus:outline-none cursor-pointer ${
-                activeTab === tab.id
-                  ? "text-white"
-                  : "text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-              }`}
+        <div className="flex items-center justify-between pb-4 pt-4 border-t border-b border-neutral-500 dark:border-neutral-800 flex-wrap gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {PAGE_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-schibsted font-semibold tracking-tighter transition-all duration-150 focus:outline-none cursor-pointer ${
+                  activeTab === tab.id
+                    ? "text-white"
+                    : "text-neutral-800 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                }`}
+              >
+                {activeTab === tab.id && (
+                  <motion.span
+                    layoutId="email-tab-bg"
+                    className="absolute inset-0 bg-gradient-to-r from-sky-800 to-cyan-700 rounded-lg z-0 shadow-sm"
+                    transition={{ type: "spring", stiffness: 280, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                  {tab.icon}
+                  {tab.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-schibsted font-semibold text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors duration-150 focus:outline-none shrink-0">
+            <CustomLink
+              href="/docs/email-templates"
+              className="text-sm text-neutral-700 hover:text-sky-900 transition-colors underline"
             >
-              {activeTab === tab.id && (
-                <motion.span
-                  layoutId="email-tab-bg"
-                  className="absolute inset-0 bg-gradient-to-r from-sky-800 to-cyan-700 rounded-lg z-0 shadow-sm"
-                  transition={{ type: "spring", stiffness: 280, damping: 30 }}
-                />
-              )}
-              <span className="relative z-10 flex items-center gap-2">
-                {tab.icon}
-                {tab.label}
-              </span>
-            </button>
-          ))}
+              <IconBook2 size={14} />
+              <span>Read our Docs</span>
+            </CustomLink>
+          </div>
         </div>
 
         {/* Tab Content */}
@@ -753,7 +765,7 @@ export default function EmailTemplatesPage() {
                   <>
                     {/* Variable reference row */}
                     <div className="mb-4 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/40 px-4 py-3">
-                      <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 mb-2">
+                      <p className="text-sm font-schibsted text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 mb-2">
                         <IconVariable size={12} /> Available Variables — click
                         to copy
                       </p>
@@ -801,7 +813,7 @@ export default function EmailTemplatesPage() {
                 >
                   {/* Name */}
                   <div className="flex flex-col space-y-1">
-                    <label className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400">
+                    <label className="text-sm font-schibsted text-neutral-800 ml-1 tracking-tighter dark:text-neutral-400">
                       Template Name <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -809,37 +821,28 @@ export default function EmailTemplatesPage() {
                       onChange={(e) => setAddName(e.target.value)}
                       placeholder="e.g. Welcome Response"
                       required
-                      disabled={addStatus !== "idle"}
                       className={inputClass}
                     />
                   </div>
 
                   {/* Subject */}
                   <div className="flex flex-col space-y-1">
-                    <label className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400">
+                    <label className="text-sm font-schibsted text-neutral-800 ml-1 tracking-tighter dark:text-neutral-400">
                       Email Subject
                     </label>
                     <input
                       value={addSubject}
                       onChange={(e) => setAddSubject(e.target.value)}
                       placeholder="e.g. Re: {subject}"
-                      disabled={addStatus !== "idle"}
                       className={inputClass}
                     />
                   </div>
 
                   {/* Var chips */}
-                  <VarChips
-                    onInsert={(v) => setAddBody((b) => b + v)}
-                    disabled={addStatus !== "idle"}
-                  />
+                  <VarChips onInsert={(v) => setAddBody((b) => b + v)} />
 
                   {/* Body */}
-                  <BodyEditor
-                    value={addBody}
-                    onChange={setAddBody}
-                    disabled={addStatus !== "idle"}
-                  />
+                  <BodyEditor value={addBody} onChange={setAddBody} />
 
                   {/* Actions */}
                   <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -852,20 +855,14 @@ export default function EmailTemplatesPage() {
                       idleWidth={140}
                       loadingWidth={110}
                       successWidth={100}
-                      disabled={
-                        addStatus !== "idle" ||
-                        !addName.trim() ||
-                        !addBody.trim()
-                      }
-                      className="font-schibsted px-4 py-2 rounded-md bg-gradient-to-t from-sky-900 to-cyan-600 text-white border-0 focus:outline-none cursor-pointer flex items-center justify-center gap-2 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="font-schibsted px-4 py-2 rounded-md bg-gradient-to-b from-sky-900 to-cyan-700 text-white border-0 focus:outline-none cursor-pointer flex items-center justify-center gap-2 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
                     />
                     <button
                       type="button"
-                      disabled={addStatus !== "idle" || !addBody.trim()}
                       onClick={() => setAddPreviewing(true)}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-schibsted font-semibold text-neutral-600 dark:text-neutral-400 border border-neutral-300 dark:border-neutral-700 hover:border-neutral-600 hover:text-neutral-900 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none disabled:opacity-50"
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-schibsted font-semibold text-neutral-600 dark:text-neutral-400 border border-neutral-300 dark:border-neutral-700 hover:border-neutral-600 hover:text-neutral-900 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none"
                     >
-                      <IconEye size={13} /> Preview
+                      <IconEye size={14} strokeWidth={2.5} /> Preview
                     </button>
                   </div>
                 </form>

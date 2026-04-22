@@ -16,6 +16,10 @@ import {
   IconTrash,
   IconTable,
   IconX,
+  IconWorld,
+  IconBooks,
+  IconExternalLink,
+  IconBook2,
 } from "@tabler/icons-react";
 import { Heading } from "@/components/Heading";
 import { Paragraph } from "@/components/Paragraph";
@@ -444,29 +448,40 @@ function WidgetAddForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex flex-wrap gap-3 items-end">
-        <AnimatedDropdown
-          label="Domain"
-          options={domains.map((d) => ({ value: d.domain, label: d.domain }))}
-          value={selectedDomain}
-          onChange={setSelectedDomain}
-          placeholder="No verified domains"
-          disabled={isBusy || domains.length === 0}
-          width="w-52"
-        />
-        <AnimatedDropdown
-          label="Integration"
-          options={integrations.map((i) => ({
-            value: i.id,
-            label: `${i.name} (${i.type})`,
-          }))}
-          value={selectedIntegrationId}
-          onChange={setSelectedIntegrationId}
-          placeholder="No integrations"
-          disabled={isBusy || integrations.length === 0}
-          width="w-52"
-        />
         <div className="flex flex-col space-y-1">
-          <label className="block text-lg font-schibsted font-regular text-neutral-700 dark:text-neutral-300 mb-1">
+          <label className="text-sm font-schibsted text-neutral-800 ml-1 dark:text-neutral-400">
+            Domain
+          </label>
+          <AnimatedDropdown
+            options={domains.map((d) => ({
+              value: d.domain,
+              label: d.domain,
+              icon: IconWorld,
+            }))}
+            value={selectedDomain}
+            onChange={setSelectedDomain}
+            placeholder="No verified domains"
+            width="w-52"
+          />
+        </div>
+        <div className="flex flex-col space-y-1">
+          <label className="text-sm font-schibsted text-neutral-800 ml-1 dark:text-neutral-400">
+            Integration
+          </label>
+          <AnimatedDropdown
+            options={integrations.map((i) => ({
+              value: i.id,
+              label: `${i.name} (${i.type})`,
+              icon: IconTable,
+            }))}
+            value={selectedIntegrationId}
+            onChange={setSelectedIntegrationId}
+            placeholder="No integrations"
+            width="w-52"
+          />
+        </div>
+        <div className="flex flex-col space-y-1">
+          <label className="text-sm font-schibsted text-neutral-800 ml-1 dark:text-neutral-400">
             Welcome Message
           </label>
           <input
@@ -474,12 +489,11 @@ function WidgetAddForm({
             value={welcomeMessage}
             onChange={(e) => setWelcomeMessage(e.target.value)}
             placeholder="Hi! How can we help?"
-            disabled={isBusy}
-            className="w-64 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-schibsted text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 transition-colors focus:border-sky-800 outline-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-64 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-transparent dark:bg-neutral-800 px-3 py-2 text-sm tracking-tighter font-schibsted text-neutral-800 dark:text-neutral-100 placeholder-neutral-500 transition-colors duration-100 focus:border-sky-800 dark:focus:border-neutral-400 outline-none focus:outline-none [box-shadow:none] focus:[box-shadow:none]"
           />
         </div>
         <div className="flex flex-col space-y-1">
-          <label className="block text-lg font-schibsted font-regular text-neutral-700 dark:text-neutral-300 mb-1">
+          <label className="text-sm font-schibsted text-neutral-800 ml-1 dark:text-neutral-400">
             Your Brand Color
           </label>
           <div className="flex items-center gap-1.5 h-[38px]">
@@ -487,9 +501,8 @@ function WidgetAddForm({
               <button
                 key={c}
                 type="button"
-                disabled={isBusy}
                 onClick={() => setAccentColor(c)}
-                className={`w-6 h-6 rounded-full border-2 transition-all duration-150 focus:outline-none cursor-pointer disabled:opacity-50 ${
+                className={`w-6 h-6 rounded-full border-2 transition-all duration-150 focus:outline-none cursor-pointer ${
                   accentColor === c
                     ? "border-neutral-800 dark:border-neutral-200 scale-110"
                     : "border-transparent hover:scale-105"
@@ -501,8 +514,7 @@ function WidgetAddForm({
               type="color"
               value={accentColor}
               onChange={(e) => setAccentColor(e.target.value)}
-              disabled={isBusy}
-              className="w-6 h-6 rounded-full border border-neutral-300 cursor-pointer disabled:opacity-50"
+              className="w-6 h-6 rounded-full border border-neutral-300 cursor-pointer"
               title="Custom color"
             />
           </div>
@@ -516,15 +528,8 @@ function WidgetAddForm({
           idleWidth={130}
           loadingWidth={120}
           successWidth={110}
-          disabled={isBusy || domains.length === 0 || integrations.length === 0}
-          className="font-schibsted px-4 py-2 rounded-md bg-gradient-to-t from-sky-900 to-cyan-600 text-white border-0 focus:outline-none cursor-pointer flex items-center justify-center gap-2 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
+          className="font-schibsted px-4 py-2 rounded-md bg-gradient-to-b from-sky-900 to-cyan-700 text-white border-0 focus:outline-none cursor-pointer flex items-center justify-center gap-2 overflow-hidden"
         />
-        <CustomLink
-          href="/docs/chatbot"
-          className="text-sm font-schibsted text-sky-700 hover:text-sky-900 dark:text-sky-400 transition-colors underline pb-2"
-        >
-          Read our docs
-        </CustomLink>
       </div>
     </form>
   );
@@ -618,13 +623,13 @@ export default function ChatWidgetsDashboard() {
       {/* Page heading */}
       <div>
         <Heading
-          variant="muted"
+          variant="dashboardHeader"
           className="font-bold text-neutral-900 dark:text-neutral-100"
         >
           Chat Widgets
         </Heading>
         <Paragraph
-          variant="default"
+          variant="dashboard-subHeading"
           className="text-neutral-600 dark:text-neutral-400 mt-1"
         >
           Create embeddable live chat widgets for your verified domains. Each
@@ -635,38 +640,50 @@ export default function ChatWidgetsDashboard() {
       {/* Main tabbed card */}
       <Card className="min-h-[300px] overflow-hidden">
         {/* Tab bar */}
-        <div className="flex items-center gap-1.5 pb-4 border-b border-neutral-100 dark:border-neutral-800 flex-wrap">
-          {PAGE_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActivePageTab(tab.id)}
-              className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-schibsted font-semibold transition-all duration-150 focus:outline-none cursor-pointer ${
-                activePageTab === tab.id
-                  ? "text-white"
-                  : "text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-              }`}
+        <div className="flex items-center justify-between pb-4 pt-4 border-t border-b border-neutral-500 dark:border-neutral-800 flex-wrap gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {PAGE_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActivePageTab(tab.id)}
+                className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-schibsted font-semibold tracking-tighter transition-all duration-150 focus:outline-none cursor-pointer ${
+                  activePageTab === tab.id
+                    ? "text-white"
+                    : "text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                }`}
+              >
+                {activePageTab === tab.id && (
+                  <motion.span
+                    layoutId="widgets-tab-bg"
+                    className="absolute inset-0 bg-gradient-to-r from-sky-800 to-cyan-700 rounded-lg z-0 shadow-sm"
+                    transition={{
+                      type: "spring",
+                      stiffness: 280,
+                      damping: 30,
+                      duration: 0.3,
+                    }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                  {tab.id === "widgets" && <IconTable size={15} />}
+                  {tab.id === "create" && <IconPlus size={15} />}
+                  {tab.id === "delete" && <IconTrash size={15} />}
+                  {tab.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-schibsted font-semibold text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors duration-150 focus:outline-none shrink-0">
+            <CustomLink
+              href="/docs/chat-widgets"
+              className="text-sm text-neutral-700 hover:text-sky-900 transition-colors underline"
             >
-              {activePageTab === tab.id && (
-                <motion.span
-                  layoutId="widgets-tab-bg"
-                  className="absolute inset-0 bg-gradient-to-r from-sky-800 to-cyan-700 rounded-lg z-0 shadow-sm"
-                  transition={{
-                    type: "spring",
-                    stiffness: 280,
-                    damping: 30,
-                    duration: 0.3,
-                  }}
-                />
-              )}
-              <span className="relative z-10 flex items-center gap-2">
-                {tab.id === "widgets" && <IconTable size={15} />}
-                {tab.id === "create" && <IconPlus size={15} />}
-                {tab.id === "delete" && <IconTrash size={15} />}
-                {tab.label}
-              </span>
-            </button>
-          ))}
+              <IconBook2 size={14} />
+              <span>Read our Docs</span>
+            </CustomLink>
+          </div>
         </div>
 
         {/* Tab content */}

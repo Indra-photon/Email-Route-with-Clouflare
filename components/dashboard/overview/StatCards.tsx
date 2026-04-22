@@ -11,6 +11,11 @@ import {
   IconTrendingUp,
   IconTrendingDown,
   IconArrowRight,
+  IconWorld,
+  IconAt,
+  IconCalendarWeek,
+  IconCalendar,
+  IconCalendarMonth,
 } from "@tabler/icons-react";
 import { useAuth } from "@clerk/nextjs";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
@@ -483,9 +488,9 @@ function RecentActivityBox({ loading }: { loading: boolean }) {
 // ─── Filter options (fetched once on mount) ───────────────────────────────────
 
 const rangeOptions = [
-  { value: "7d", label: "Last 7 days" },
-  { value: "14d", label: "Last 14 days" },
-  { value: "30d", label: "Last 30 days" },
+  { value: "7d",  label: "Last 7 days",  icon: IconCalendarWeek  },
+  { value: "14d", label: "Last 14 days", icon: IconCalendar      },
+  { value: "30d", label: "Last 30 days", icon: IconCalendarMonth },
 ];
 
 export function StatCards() {
@@ -551,13 +556,13 @@ export function StatCards() {
       : aliases.filter((a) => a.domainId === filters.domainId);
 
   const domainOptions = [
-    { value: "all", label: "All Domains" },
-    ...domains.map((d) => ({ value: d.id, label: d.label })),
+    { value: "all", label: "All Domains", icon: IconWorld },
+    ...domains.map((d) => ({ value: d.id, label: d.label, icon: IconWorld })),
   ];
 
   const aliasOptions = [
-    { value: "all", label: "All Aliases" },
-    ...visibleAliases.map((a) => ({ value: a.id, label: a.label })),
+    { value: "all", label: "All Aliases", icon: IconAt },
+    ...visibleAliases.map((a) => ({ value: a.id, label: a.label, icon: IconAt })),
   ];
 
   return (

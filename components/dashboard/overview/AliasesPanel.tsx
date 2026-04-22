@@ -192,6 +192,7 @@ import {
   IconCircleCheck,
   IconCircleX,
   IconChevronDown,
+  IconWorld,
 } from "@tabler/icons-react";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
 
@@ -597,8 +598,8 @@ export function AliasesPanel() {
           {!aliasLoading && domains.length > 1 && (
             <AnimatedDropdown
                 options={[
-                { value: "all", label: "All domains" },
-                ...domains.map((d) => ({ value: d, label: d })),
+                { value: "all", label: "All domains", icon: IconWorld },
+                ...domains.map((d) => ({ value: d, label: d, icon: IconWorld })),
                 ]}
                 value={selectedDomain}
                 onChange={setSelectedDomain}

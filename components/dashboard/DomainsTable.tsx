@@ -15,6 +15,9 @@ import {
   IconX,
   IconWorldUpload,
   IconTable,
+  IconBooks,
+  IconExternalLink,
+  IconBook2,
 } from "@tabler/icons-react";
 import { Paragraph } from "../Paragraph";
 import { Heading } from "../Heading";
@@ -22,6 +25,7 @@ import DomainAddForm from "./DomainAddForm";
 import { CopyIcon } from "@/constants/icons";
 import { AnimatedDeleteButton } from "../ui/AnimatedDeleteButton";
 import { CopyIconButton } from "@/components/ui/CopyIconButton";
+import { CustomLink } from "../CustomLink";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -74,9 +78,9 @@ type PageTab = "domains" | "add" | "delete";
 type BtnState = "idle" | "loading" | "success" | "error";
 
 const PAGE_TABS: { id: PageTab; label: string }[] = [
-  { id: "add",     label: "Add Domain" },
+  { id: "add", label: "Add Domain" },
   { id: "domains", label: "Domains" },
-  { id: "delete",  label: "Delete" },
+  { id: "delete", label: "Delete" },
 ];
 
 // ─── Animated Button (exported for use in aliases page) ───────────────────────
@@ -111,10 +115,13 @@ export function AnimatedButton({
   disabled?: boolean;
 }) {
   const width =
-    state === "loading" ? loadingWidth
-    : state === "success" ? successWidth
-    : state === "error" ? (errorWidth ?? idleWidth)
-    : idleWidth;
+    state === "loading"
+      ? loadingWidth
+      : state === "success"
+        ? successWidth
+        : state === "error"
+          ? (errorWidth ?? idleWidth)
+          : idleWidth;
 
   return (
     <motion.button
@@ -127,8 +134,11 @@ export function AnimatedButton({
     >
       <AnimatePresence mode="wait" initial={false}>
         {state === "loading" && (
-          <motion.span key="loading"
-            initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+          <motion.span
+            key="loading"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.15, ease: outCubic }}
             className="flex items-center gap-1.5 whitespace-nowrap"
           >
@@ -137,8 +147,11 @@ export function AnimatedButton({
           </motion.span>
         )}
         {state === "success" && (
-          <motion.span key="success"
-            initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+          <motion.span
+            key="success"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2, ease: outQuint }}
             className="flex items-center gap-1.5 whitespace-nowrap"
           >
@@ -147,8 +160,11 @@ export function AnimatedButton({
           </motion.span>
         )}
         {state === "error" && (
-          <motion.span key="error"
-            initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+          <motion.span
+            key="error"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.15, ease: outCubic }}
             className="flex items-center gap-1.5 whitespace-nowrap"
           >
@@ -157,8 +173,11 @@ export function AnimatedButton({
           </motion.span>
         )}
         {state === "idle" && (
-          <motion.span key="idle"
-            initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+          <motion.span
+            key="idle"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.1, ease: outCubic }}
             className="flex items-center gap-1.5 whitespace-nowrap"
           >
@@ -173,29 +192,47 @@ export function AnimatedButton({
 
 // ─── DNS Records Table (Sending) ──────────────────────────────────────────────
 
-function DNSTable({ records, domainName }: { records: DomainDetail["dnsRecords"]; domainName: string }) {
+function DNSTable({
+  records,
+  domainName,
+}: {
+  records: DomainDetail["dnsRecords"];
+  domainName: string;
+}) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
 
-  if (!records?.length) return (
-    <div className="space-y-1.5">
-      <p className="text-xs font-schibsted font-semibold text-neutral-700">DNS records for sending emails</p>
-      <p className="text-[11px] font-schibsted text-neutral-400">No DNS records yet. Add this domain to Resend first.</p>
-    </div>
-  );
+  if (!records?.length)
+    return (
+      <div className="space-y-1.5">
+        <p className="text-xs font-schibsted font-semibold text-neutral-700">
+          DNS records for sending emails
+        </p>
+        <p className="text-[11px] font-schibsted text-neutral-400">
+          No DNS records yet. Add this domain to Resend first.
+        </p>
+      </div>
+    );
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-schibsted font-semibold text-neutral-700">DNS records for sending emails</p>
+      <p className="text-xs font-schibsted font-semibold text-neutral-700">
+        DNS records for sending emails
+      </p>
       <div className="overflow-x-auto rounded-xl border border-neutral-200">
         <table className="min-w-full text-xs">
           <thead>
             <tr>
-              {["Type", "Name", "Value", "TTL", "Priority", "Status"].map((h) => (
-                <th key={h} className="px-3 py-2 text-left font-schibsted font-semibold text-[10px] tracking-wider uppercase bg-gradient-to-b from-sky-700 to-cyan-600 text-white">
-                  {h}
-                </th>
-              ))}
+              {["Type", "Name", "Value", "TTL", "Priority", "Status"].map(
+                (h) => (
+                  <th
+                    key={h}
+                    className="px-3 py-2 text-left font-schibsted font-semibold text-[10px] tracking-wider uppercase bg-gradient-to-b from-sky-700 to-cyan-600 text-white"
+                  >
+                    {h}
+                  </th>
+                ),
+              )}
             </tr>
           </thead>
           <tbody>
@@ -203,25 +240,43 @@ function DNSTable({ records, domainName }: { records: DomainDetail["dnsRecords"]
               const displayName = r.name === "@" || !r.name ? "@" : r.name;
               const isVerified = r.status === "verified";
               return (
-                <tr key={i} className="border-t border-neutral-100 hover:bg-neutral-50 transition-colors">
+                <tr
+                  key={i}
+                  className="border-t border-neutral-100 hover:bg-neutral-50 transition-colors"
+                >
                   <td className="px-3 py-2.5">
                     <span className="px-1.5 py-0.5 bg-neutral-100 rounded font-schibsted font-bold text-[11px] text-neutral-600">
                       {r.type}
                     </span>
                   </td>
                   <td className="px-3 py-2.5 max-w-50">
-                    <div className="flex items-center cursor-pointer group/name"
+                    <div
+                      className="flex items-center cursor-pointer group/name"
                       onMouseEnter={() => setHoveredItem(`${i}-name`)}
                       onMouseLeave={() => setHoveredItem(null)}
-                      onClick={() => { navigator.clipboard.writeText(displayName); setCopiedItem(`${i}-name`); setTimeout(() => setCopiedItem(null), 2000); }}
+                      onClick={() => {
+                        navigator.clipboard.writeText(displayName);
+                        setCopiedItem(`${i}-name`);
+                        setTimeout(() => setCopiedItem(null), 2000);
+                      }}
                     >
                       <span className="flex items-center gap-2 relative">
-                        <code className="truncate text-neutral-500 group-hover/name:text-neutral-900 font-schibsted font-medium transition-colors duration-150">{displayName}</code>
+                        <code className="truncate text-neutral-500 group-hover/name:text-neutral-900 font-schibsted font-medium transition-colors duration-150">
+                          {displayName}
+                        </code>
                         <AnimatePresence>
                           {hoveredItem === `${i}-name` && (
-                            <motion.span initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.15 }}
-                              className="absolute left-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 text-xs font-schibsted text-neutral-500 flex items-center gap-1 whitespace-nowrap">
-                              <CopyIcon copied={copiedItem === `${i}-name`} size={14} />
+                            <motion.span
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.9 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute left-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 text-xs font-schibsted text-neutral-500 flex items-center gap-1 whitespace-nowrap"
+                            >
+                              <CopyIcon
+                                copied={copiedItem === `${i}-name`}
+                                size={14}
+                              />
                             </motion.span>
                           )}
                         </AnimatePresence>
@@ -229,31 +284,57 @@ function DNSTable({ records, domainName }: { records: DomainDetail["dnsRecords"]
                     </div>
                   </td>
                   <td className="px-3 py-2.5 max-w-50">
-                    <div className="flex items-center cursor-pointer group/value"
+                    <div
+                      className="flex items-center cursor-pointer group/value"
                       onMouseEnter={() => setHoveredItem(`${i}-value`)}
                       onMouseLeave={() => setHoveredItem(null)}
-                      onClick={() => { if (!r.value) return; navigator.clipboard.writeText(r.value); setCopiedItem(`${i}-value`); setTimeout(() => setCopiedItem(null), 2000); }}
+                      onClick={() => {
+                        if (!r.value) return;
+                        navigator.clipboard.writeText(r.value);
+                        setCopiedItem(`${i}-value`);
+                        setTimeout(() => setCopiedItem(null), 2000);
+                      }}
                     >
                       <span className="flex items-center gap-2 relative">
-                        <code className="truncate max-w-30 text-neutral-500 group-hover/value:text-neutral-900 font-schibsted font-medium transition-colors duration-150">{r.value}</code>
+                        <code className="truncate max-w-30 text-neutral-500 group-hover/value:text-neutral-900 font-schibsted font-medium transition-colors duration-150">
+                          {r.value}
+                        </code>
                         <AnimatePresence>
                           {hoveredItem === `${i}-value` && r.value && (
-                            <motion.span initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.15 }}
-                              className="absolute left-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 text-xs font-schibsted text-neutral-500 flex items-center gap-1 whitespace-nowrap">
-                              <CopyIcon copied={copiedItem === `${i}-value`} size={14} />
+                            <motion.span
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.9 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute left-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 text-xs font-schibsted text-neutral-500 flex items-center gap-1 whitespace-nowrap"
+                            >
+                              <CopyIcon
+                                copied={copiedItem === `${i}-value`}
+                                size={14}
+                              />
                             </motion.span>
                           )}
                         </AnimatePresence>
                       </span>
                     </div>
                   </td>
-                  <td className="px-3 py-2.5 font-schibsted text-neutral-500 tabular-nums">{r.ttl ?? "—"}</td>
-                  <td className="px-3 py-2.5 font-schibsted text-neutral-500 tabular-nums">{r.priority ?? "—"}</td>
+                  <td className="px-3 py-2.5 font-schibsted text-neutral-500 tabular-nums">
+                    {r.ttl ?? "—"}
+                  </td>
+                  <td className="px-3 py-2.5 font-schibsted text-neutral-500 tabular-nums">
+                    {r.priority ?? "—"}
+                  </td>
                   <td className="px-3 py-2.5">
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-schibsted font-semibold ${
-                      isVerified ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"
-                    }`}>
-                      <span className={`size-1.5 rounded-full ${isVerified ? "bg-green-400" : "bg-amber-400"}`} />
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-schibsted font-semibold ${
+                        isVerified
+                          ? "bg-green-50 text-green-700"
+                          : "bg-amber-50 text-amber-700"
+                      }`}
+                    >
+                      <span
+                        className={`size-1.5 rounded-full ${isVerified ? "bg-green-400" : "bg-amber-400"}`}
+                      />
                       {isVerified ? "Verified" : "Pending"}
                     </span>
                   </td>
@@ -277,36 +358,66 @@ function MXTable({ records }: { records: DomainDetail["receivingMxRecords"] }) {
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-schibsted font-semibold text-neutral-700">DNS records for receiving emails</p>
+      <p className="text-xs font-schibsted font-semibold text-neutral-700">
+        DNS records for receiving emails
+      </p>
       <div className="overflow-x-auto rounded-xl border border-neutral-200">
         <table className="min-w-full text-xs">
           <thead>
             <tr>
-              {["Type", "Name", "Value", "TTL", "Priority", "Status"].map((h) => (
-                <th key={h} className="px-3 py-2 text-left font-schibsted font-semibold text-[10px] tracking-wider uppercase bg-gradient-to-b from-sky-700 to-cyan-600 text-white">
-                  {h}
-                </th>
-              ))}
+              {["Type", "Name", "Value", "TTL", "Priority", "Status"].map(
+                (h) => (
+                  <th
+                    key={h}
+                    className="px-3 py-2 text-left font-schibsted font-semibold text-[10px] tracking-wider uppercase bg-gradient-to-b from-sky-700 to-cyan-600 text-white"
+                  >
+                    {h}
+                  </th>
+                ),
+              )}
             </tr>
           </thead>
           <tbody>
             {records.map((r, i) => {
               const displayName = r.name === "@" || !r.name ? "@" : r.name;
               return (
-                <tr key={i} className="border-t border-neutral-100 hover:bg-neutral-50 transition-colors">
+                <tr
+                  key={i}
+                  className="border-t border-neutral-100 hover:bg-neutral-50 transition-colors"
+                >
                   <td className="px-3 py-2.5">
-                    <span className="px-1.5 py-0.5 bg-neutral-100 rounded font-schibsted font-bold text-[11px] text-neutral-600">{r.type}</span>
+                    <span className="px-1.5 py-0.5 bg-neutral-100 rounded font-schibsted font-bold text-[11px] text-neutral-600">
+                      {r.type}
+                    </span>
                   </td>
                   <td className="px-3 py-2.5 max-w-50">
-                    <div className="flex items-center cursor-pointer group/mx-name" onMouseEnter={() => setHoveredItem(`${i}-mx-name`)} onMouseLeave={() => setHoveredItem(null)}
-                      onClick={() => { navigator.clipboard.writeText(displayName); setCopiedItem(`${i}-mx-name`); setTimeout(() => setCopiedItem(null), 2000); }}>
+                    <div
+                      className="flex items-center cursor-pointer group/mx-name"
+                      onMouseEnter={() => setHoveredItem(`${i}-mx-name`)}
+                      onMouseLeave={() => setHoveredItem(null)}
+                      onClick={() => {
+                        navigator.clipboard.writeText(displayName);
+                        setCopiedItem(`${i}-mx-name`);
+                        setTimeout(() => setCopiedItem(null), 2000);
+                      }}
+                    >
                       <span className="flex items-center gap-2 relative">
-                        <code className="truncate text-neutral-500 group-hover/mx-name:text-neutral-900 font-schibsted font-medium transition-colors duration-150">{displayName}</code>
+                        <code className="truncate text-neutral-500 group-hover/mx-name:text-neutral-900 font-schibsted font-medium transition-colors duration-150">
+                          {displayName}
+                        </code>
                         <AnimatePresence>
                           {hoveredItem === `${i}-mx-name` && (
-                            <motion.span initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.15 }}
-                              className="absolute left-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 text-xs font-schibsted text-neutral-500 whitespace-nowrap">
-                              <CopyIcon copied={copiedItem === `${i}-mx-name`} size={14} />
+                            <motion.span
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.9 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute left-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 text-xs font-schibsted text-neutral-500 whitespace-nowrap"
+                            >
+                              <CopyIcon
+                                copied={copiedItem === `${i}-mx-name`}
+                                size={14}
+                              />
                             </motion.span>
                           )}
                         </AnimatePresence>
@@ -314,26 +425,49 @@ function MXTable({ records }: { records: DomainDetail["receivingMxRecords"] }) {
                     </div>
                   </td>
                   <td className="px-3 py-2.5 max-w-50">
-                    <div className="flex items-center cursor-pointer group/mx-value" onMouseEnter={() => setHoveredItem(`${i}-mx-value`)} onMouseLeave={() => setHoveredItem(null)}
-                      onClick={() => { navigator.clipboard.writeText(r.value); setCopiedItem(`${i}-mx-value`); setTimeout(() => setCopiedItem(null), 2000); }}>
+                    <div
+                      className="flex items-center cursor-pointer group/mx-value"
+                      onMouseEnter={() => setHoveredItem(`${i}-mx-value`)}
+                      onMouseLeave={() => setHoveredItem(null)}
+                      onClick={() => {
+                        navigator.clipboard.writeText(r.value);
+                        setCopiedItem(`${i}-mx-value`);
+                        setTimeout(() => setCopiedItem(null), 2000);
+                      }}
+                    >
                       <span className="flex items-center gap-2 relative">
-                        <code className="truncate max-w-30 text-neutral-500 group-hover/mx-value:text-neutral-900 font-schibsted font-medium transition-colors duration-150">{r.value}</code>
+                        <code className="truncate max-w-30 text-neutral-500 group-hover/mx-value:text-neutral-900 font-schibsted font-medium transition-colors duration-150">
+                          {r.value}
+                        </code>
                         <AnimatePresence>
                           {hoveredItem === `${i}-mx-value` && (
-                            <motion.span initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.15 }}
-                              className="absolute left-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 text-xs font-schibsted text-neutral-500 whitespace-nowrap">
-                              <CopyIcon copied={copiedItem === `${i}-mx-value`} size={14} />
+                            <motion.span
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.9 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute left-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 text-xs font-schibsted text-neutral-500 whitespace-nowrap"
+                            >
+                              <CopyIcon
+                                copied={copiedItem === `${i}-mx-value`}
+                                size={14}
+                              />
                             </motion.span>
                           )}
                         </AnimatePresence>
                       </span>
                     </div>
                   </td>
-                  <td className="px-3 py-2.5 font-schibsted text-neutral-500 tabular-nums">{r.ttl ?? "—"}</td>
-                  <td className="px-3 py-2.5 font-schibsted text-neutral-500 tabular-nums">{r.priority}</td>
+                  <td className="px-3 py-2.5 font-schibsted text-neutral-500 tabular-nums">
+                    {r.ttl ?? "—"}
+                  </td>
+                  <td className="px-3 py-2.5 font-schibsted text-neutral-500 tabular-nums">
+                    {r.priority}
+                  </td>
                   <td className="px-3 py-2.5">
                     <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-schibsted font-semibold bg-green-50 text-green-700">
-                      <span className="size-1.5 rounded-full bg-green-400" />Verified
+                      <span className="size-1.5 rounded-full bg-green-400" />
+                      Verified
                     </span>
                   </td>
                 </tr>
@@ -374,15 +508,18 @@ function ExpandedPanel({
           receivingMxRecords: initialDetail.receivingMxRecords || [],
           lastCheckedAt: initialDetail.lastCheckedAt,
         }
-      : null
+      : null,
   );
   const [loadingDetail, setLoadingDetail] = useState(!initialDetail);
   const [addToResendState, setAddToResendState] = useState<BtnState>("idle");
   const [checkState, setCheckState] = useState<BtnState>("idle");
-  const [lastFetchedAt, setLastFetchedAt] = useState<number | null>(initialDetail ? Date.now() : null);
+  const [lastFetchedAt, setLastFetchedAt] = useState<number | null>(
+    initialDetail ? Date.now() : null,
+  );
 
   const STALE_AFTER_MS = 30_000;
-  const isStale = lastFetchedAt === null || Date.now() - lastFetchedAt > STALE_AFTER_MS;
+  const isStale =
+    lastFetchedAt === null || Date.now() - lastFetchedAt > STALE_AFTER_MS;
 
   const fetchDetail = useCallback(async () => {
     try {
@@ -431,8 +568,11 @@ function ExpandedPanel({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       if (data.domain) {
-        setDetail((prev) => prev ? { ...prev, ...data.domain } : data.domain);
-        onStatusChange?.({ status: data.domain.status, verifiedForSending: data.domain.verifiedForSending });
+        setDetail((prev) => (prev ? { ...prev, ...data.domain } : data.domain));
+        onStatusChange?.({
+          status: data.domain.status,
+          verifiedForSending: data.domain.verifiedForSending,
+        });
       }
       setCheckState(data.verified ? "success" : "error");
       setTimeout(() => setCheckState("idle"), 2000);
@@ -445,14 +585,27 @@ function ExpandedPanel({
   return (
     <motion.div
       layout
-      transition={{ duration: 0.3, type: "spring", stiffness: 300, damping: 25 }}
+      transition={{
+        duration: 0.3,
+        type: "spring",
+        stiffness: 300,
+        damping: 25,
+      }}
       className="px-4 pb-4 pt-3 border-t border-neutral-100 mt-1"
     >
       <motion.div
         layout
         initial={{ opacity: 0.5, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1, transition: { duration: 0.10, ease: [.075, .82, .165, 1] } }}
-        exit={{ opacity: 0.5, scale: 0.98, transition: { duration: 0.10, ease: [.075, .82, .165, 1] } }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          transition: { duration: 0.1, ease: [0.075, 0.82, 0.165, 1] },
+        }}
+        exit={{
+          opacity: 0.5,
+          scale: 0.98,
+          transition: { duration: 0.1, ease: [0.075, 0.82, 0.165, 1] },
+        }}
         style={{ transformOrigin: "top left" }}
         className="space-y-4"
       >
@@ -470,7 +623,10 @@ function ExpandedPanel({
               idleIcon={<IconPlus size={13} />}
               onClick={handleAddToResend}
               state={addToResendState}
-              idleWidth={120} loadingWidth={100} successWidth={84} errorWidth={80}
+              idleWidth={120}
+              loadingWidth={100}
+              successWidth={84}
+              errorWidth={80}
               className="shrink-0 px-3 py-1.5 rounded-md text-xs font-schibsted text-white bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center gap-1.5 overflow-hidden border-0 focus:outline-none cursor-pointer disabled:opacity-60"
             />
           )}
@@ -483,7 +639,10 @@ function ExpandedPanel({
               idleIcon={<IconRefresh size={13} />}
               onClick={handleCheckVerification}
               state={checkState}
-              idleWidth={148} loadingWidth={110} successWidth={90} errorWidth={84}
+              idleWidth={148}
+              loadingWidth={110}
+              successWidth={90}
+              errorWidth={84}
               className="shrink-0 px-3 py-1.5 rounded-md text-xs font-schibsted text-white bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center gap-1.5 overflow-hidden border-0 focus:outline-none cursor-pointer disabled:opacity-60"
             />
           )}
@@ -512,26 +671,46 @@ function DomainCard({
   deleteMode?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [localStatus, setLocalStatus] = useState<Pick<DomainRow, "status" | "verifiedForSending">>({
+  const [localStatus, setLocalStatus] = useState<
+    Pick<DomainRow, "status" | "verifiedForSending">
+  >({
     status: domain.status,
     verifiedForSending: domain.verifiedForSending,
   });
 
   const getStatusBadge = () => {
     if (localStatus.verifiedForSending || localStatus.status === "verified") {
-      return <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-schibsted font-semibold bg-green-50 text-green-700"><span className="size-1.5 rounded-full bg-green-400" />Verified</span>;
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-schibsted font-semibold bg-green-50 text-green-700">
+          <span className="size-1.5 rounded-full bg-green-400" />
+          Verified
+        </span>
+      );
     }
     if (localStatus.status === "active") {
-      return <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-schibsted font-semibold bg-sky-50 text-sky-700"><span className="size-1.5 rounded-full bg-sky-400" />Active</span>;
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-schibsted font-semibold bg-sky-50 text-sky-700">
+          <span className="size-1.5 rounded-full bg-sky-400" />
+          Active
+        </span>
+      );
     }
-    return <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-schibsted font-semibold bg-amber-50 text-amber-700"><span className="size-1.5 rounded-full bg-amber-400" />Pending</span>;
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-schibsted font-semibold bg-amber-50 text-amber-700">
+        <span className="size-1.5 rounded-full bg-amber-400" />
+        Pending
+      </span>
+    );
   };
 
   return (
     <motion.div
       layout
       style={{ transformOrigin: "top center" }}
-      variants={{ hidden: { opacity: 0, scaleY: 0 }, show: { opacity: 1, scaleY: 1 } }}
+      variants={{
+        hidden: { opacity: 0, scaleY: 0 },
+        show: { opacity: 1, scaleY: 1 },
+      }}
       animate="show"
       exit={{ opacity: 0, scaleY: 0.85 }}
       transition={{
@@ -580,7 +759,9 @@ function DomainCard({
           <AnimatedDeleteButton
             onDelete={async () => {
               try {
-                const res = await fetch("/api/domains/" + domain.id, { method: "DELETE" });
+                const res = await fetch("/api/domains/" + domain.id, {
+                  method: "DELETE",
+                });
                 if (!res.ok) {
                   const body = await res.json().catch(() => ({}));
                   throw new Error(body.error || "Failed to delete");
@@ -643,57 +824,83 @@ function EmptyState() {
 
 // ─── Root Export ──────────────────────────────────────────────────────────────
 
-export default function DomainsTable({ initialDomains }: { initialDomains: DomainRow[] }) {
+export default function DomainsTable({
+  initialDomains,
+}: {
+  initialDomains: DomainRow[];
+}) {
   const [domains, setDomains] = useState<DomainRow[]>(initialDomains);
   const [activePageTab, setActivePageTab] = useState<PageTab>("add");
 
-  const handleDelete = (id: string) => setDomains((prev) => prev.filter((d) => d.id !== id));
-  const handleDomainAdded = (domain: DomainRow) => setDomains((prev) => [domain, ...prev]);
+  const handleDelete = (id: string) =>
+    setDomains((prev) => prev.filter((d) => d.id !== id));
+  const handleDomainAdded = (domain: DomainRow) =>
+    setDomains((prev) => [domain, ...prev]);
   const handleStatusChange = (id: string, patch: Partial<DomainRow>) => {
-    setDomains((prev) => prev.map((d) => (d.id === id ? { ...d, ...patch } : d)));
+    setDomains((prev) =>
+      prev.map((d) => (d.id === id ? { ...d, ...patch } : d)),
+    );
   };
 
   return (
     <Card className="min-h-[300px]">
-
       {/* Tab bar */}
-      <div className="flex items-center gap-1.5 pb-4 border-b border-neutral-100 dark:border-neutral-800 flex-wrap">
-        {PAGE_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActivePageTab(tab.id)}
-            className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-schibsted font-semibold transition-all duration-150 focus:outline-none cursor-pointer ${
-              activePageTab === tab.id
-                ? "text-white"
-                : "text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-            }`}
+      <div className="flex items-center justify-between pb-4 pt-4 border-b border-t border-neutral-500 dark:border-neutral-800 flex-wrap gap-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {PAGE_TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActivePageTab(tab.id)}
+              className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-schibsted font-semibold tracking-tighter transition-all duration-150 focus:outline-none cursor-pointer ${
+                activePageTab === tab.id
+                  ? "text-white"
+                  : "text-neutral-800 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+              }`}
+            >
+              {activePageTab === tab.id && (
+                <motion.span
+                  layoutId="domains-tab-bg"
+                  className="absolute inset-0 bg-gradient-to-b from-sky-900 to-cyan-700 rounded-lg z-0 shadow-sm"
+                  transition={{
+                    type: "spring",
+                    stiffness: 280,
+                    damping: 30,
+                    duration: 0.3,
+                  }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-2">
+                {tab.id === "domains" && <IconTable size={15} />}
+                {tab.id === "add" && <IconPlus size={15} />}
+                {tab.id === "delete" && <IconTrash size={15} />}
+                {tab.label}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-schibsted font-semibold text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors duration-150 focus:outline-none shrink-0">
+          <IconBook2 size={14} />
+          <CustomLink
+            href="/docs/domains"
+            className="text-sm text-neutral-700 hover:text-sky-900 transition-colors underline"
           >
-            {activePageTab === tab.id && (
-              <motion.span
-                layoutId="domains-tab-bg"
-                className="absolute inset-0 bg-gradient-to-b from-sky-900 to-cyan-700 rounded-lg z-0 shadow-sm"
-                transition={{ type: "spring", stiffness: 280, damping: 30, duration: 0.3 }}
-              />
-            )}
-            <span className="relative z-10 flex items-center gap-2">
-              {tab.id === "domains" && <IconTable size={15} />}
-              {tab.id === "add"     && <IconPlus size={15} />}
-              {tab.id === "delete"  && <IconTrash size={15} />}
-              {tab.label}
-            </span>
-          </button>
-        ))}
+            Read our docs
+          </CustomLink>
+        </div>
       </div>
 
       {/* Tab content */}
       <div className="pt-4">
         <AnimatePresence mode="wait" initial={false}>
-
           {/* ── Domains tab ── */}
           {activePageTab === "domains" && (
-            <motion.div key="domains"
-              initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+            <motion.div
+              key="domains"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18, ease: outQuint }}
             >
               {domains.length === 0 ? (
@@ -717,18 +924,27 @@ export default function DomainsTable({ initialDomains }: { initialDomains: Domai
 
           {/* ── Add Domain tab ── */}
           {activePageTab === "add" && (
-            <motion.div key="add"
-              initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+            <motion.div
+              key="add"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18, ease: outQuint }}
             >
-              <DomainAddForm onDomainAdded={handleDomainAdded} onSuccess={() => setActivePageTab("domains")} />
+              <DomainAddForm
+                onDomainAdded={handleDomainAdded}
+                onSuccess={() => setActivePageTab("domains")}
+              />
             </motion.div>
           )}
 
           {/* ── Delete tab ── */}
           {activePageTab === "delete" && (
-            <motion.div key="delete"
-              initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+            <motion.div
+              key="delete"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18, ease: outQuint }}
             >
               {domains.length === 0 ? (
@@ -755,7 +971,6 @@ export default function DomainsTable({ initialDomains }: { initialDomains: Domai
               )}
             </motion.div>
           )}
-
         </AnimatePresence>
       </div>
     </Card>

@@ -267,6 +267,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
 import type { DomainOption, AliasOption } from "./FilterBar";
+import { IconWorld, IconAt } from "@tabler/icons-react";
 
 // ── Easing ────────────────────────────────────────────────────────────────────
 
@@ -393,13 +394,13 @@ export function StatusBreakdownChart({ domains, aliases }: StatusBreakdownChartP
       : aliases.filter((a) => a.domainId === filters.domainId);
 
   const domainOptions = [
-    { value: "all", label: "All Domains" },
-    ...domains.map((d) => ({ value: d.id, label: d.label })),
+    { value: "all", label: "All Domains", icon: IconWorld },
+    ...domains.map((d) => ({ value: d.id, label: d.label, icon: IconWorld })),
   ];
 
   const aliasOptions = [
-    { value: "all", label: "All Aliases" },
-    ...visibleAliases.map((a) => ({ value: a.id, label: a.label })),
+    { value: "all", label: "All Aliases", icon: IconAt },
+    ...visibleAliases.map((a) => ({ value: a.id, label: a.label, icon: IconAt })),
   ];
 
   function handleDomainChange(domainId: string) {
