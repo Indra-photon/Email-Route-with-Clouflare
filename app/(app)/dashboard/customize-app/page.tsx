@@ -101,7 +101,9 @@ export default function CustomizeAppPage() {
   // Load customisation when domain changes
   useEffect(() => {
     if (!selectedDomainId) {
-      setBotName(""); setBotAvatar(null); setBotDescription("");
+      setBotName("");
+      setBotAvatar(null);
+      setBotDescription("");
       return;
     }
     fetch(`/api/domains/update-customization?domainId=${selectedDomainId}`)
@@ -115,7 +117,10 @@ export default function CustomizeAppPage() {
   }, [selectedDomainId]);
 
   const handleSave = async () => {
-    if (!selectedDomainId) { toast.error("Please select a domain"); return; }
+    if (!selectedDomainId) {
+      toast.error("Please select a domain");
+      return;
+    }
     setSaveState("loading");
     try {
       const res = await fetch("/api/domains/update-customization", {
@@ -143,21 +148,23 @@ export default function CustomizeAppPage() {
   const hasValues = !!(botName || botAvatar || botDescription);
 
   return (
-    <div className="space-y-6 border border-neutral-400 rounded-lg p-4 min-h-screen">
-
+    <div className="space-y-6 border border-neutral-400 rounded-lg p-4 h-[calc(100dvh-56px-48px)]">
       {/* Page Heading */}
       <div>
-        <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
+        <Heading
+          variant="muted"
+          className="font-bold text-neutral-900 dark:text-neutral-100"
+        >
           Customize App
         </Heading>
         <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-          Customize how your Slack bot appears when posting email notifications to your channels.
+          Customize how your Slack bot appears when posting email notifications
+          to your channels.
         </Paragraph>
       </div>
 
       {/* Main Card */}
       <Card className="min-h-[300px] overflow-hidden">
-
         {/* Domain selector tab bar */}
         {!loading && domains.length > 0 && (
           <div className="flex items-center gap-1.5 pb-4 border-b border-neutral-100 dark:border-neutral-800 flex-wrap">
@@ -189,11 +196,13 @@ export default function CustomizeAppPage() {
         {/* Content */}
         <div className="pt-4">
           <AnimatePresence mode="wait" initial={false}>
-
             {/* Loading */}
             {loading && (
-              <motion.div key="loading"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
               >
                 <PageSkeleton />
@@ -202,8 +211,11 @@ export default function CustomizeAppPage() {
 
             {/* No domains */}
             {!loading && domains.length === 0 && (
-              <motion.div key="empty"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
               >
                 <NoDomains />
@@ -220,7 +232,6 @@ export default function CustomizeAppPage() {
                 transition={{ duration: 0.18, ease: easeOutQuint }}
                 className="max-w-2xl space-y-6"
               >
-
                 {/* Bot Name */}
                 <div className="flex flex-col space-y-1">
                   <label className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400">
@@ -298,7 +309,11 @@ export default function CustomizeAppPage() {
                         exit={{ opacity: 0, x: -6 }}
                         transition={{ duration: 0.15, ease: easeOutCubic }}
                         disabled={isBusy}
-                        onClick={() => { setBotName(""); setBotAvatar(null); setBotDescription(""); }}
+                        onClick={() => {
+                          setBotName("");
+                          setBotAvatar(null);
+                          setBotDescription("");
+                        }}
                         className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-schibsted text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 transition-colors cursor-pointer focus:outline-none disabled:opacity-50"
                       >
                         <IconX size={12} /> Clear All
@@ -306,10 +321,8 @@ export default function CustomizeAppPage() {
                     )}
                   </AnimatePresence>
                 </div>
-
               </motion.div>
             )}
-
           </AnimatePresence>
         </div>
       </Card>

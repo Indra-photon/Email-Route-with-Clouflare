@@ -1,6 +1,3 @@
-
-
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -67,14 +64,20 @@ function TypeSelector({
   onChange: (v: "slack" | "discord") => void;
   disabled?: boolean;
 }) {
-  const options: { value: "slack" | "discord"; label: string; Icon: React.ElementType }[] = [
+  const options: {
+    value: "slack" | "discord";
+    label: string;
+    Icon: React.ElementType;
+  }[] = [
     { value: "slack", label: "Slack", Icon: IconBrandSlack },
     // { value: "discord", label: "Discord", Icon: IconBrandDiscord },
   ];
 
   return (
     <div className="flex flex-col space-y-1">
-      <label className="text-sm font-schibsted text-neutral-700 dark:text-neutral-300">Type</label>
+      <label className="text-sm font-schibsted text-neutral-700 dark:text-neutral-300">
+        Type
+      </label>
       <div className="flex gap-2">
         {options.map(({ value: v, label, Icon }) => {
           const isSelected = value === v;
@@ -132,7 +135,11 @@ function IntegrationAddForm({
       const res = await fetch("/api/integrations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "discord", name: name.trim(), webhookUrl: webhookUrl.trim() }),
+        body: JSON.stringify({
+          type: "discord",
+          name: name.trim(),
+          webhookUrl: webhookUrl.trim(),
+        }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -150,14 +157,20 @@ function IntegrationAddForm({
       }, 1000);
     } catch (err) {
       setStatus("idle");
-      toast.error(err instanceof Error ? err.message : "Failed to add integration");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to add integration",
+      );
     }
   };
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2 items-end">
-        <TypeSelector value={type} onChange={handleTypeChange} disabled={isBusy} />
+        <TypeSelector
+          value={type}
+          onChange={handleTypeChange}
+          disabled={isBusy}
+        />
       </div>
 
       <AnimatePresence mode="wait" initial={false}>
@@ -172,7 +185,9 @@ function IntegrationAddForm({
             className="flex flex-wrap gap-2 items-end"
           >
             <div className="flex flex-col space-y-1">
-              <label className="text-sm font-schibsted text-neutral-700 dark:text-neutral-300">Name</label>
+              <label className="text-sm font-schibsted text-neutral-700 dark:text-neutral-300">
+                Name
+              </label>
               <input
                 type="text"
                 value={name}
@@ -183,16 +198,27 @@ function IntegrationAddForm({
               />
             </div>
             <a
-              href={name.trim() ? `/api/integrations/slack/oauth?name=${encodeURIComponent(name.trim())}` : "#"}
-              onClick={(e) => { if (!name.trim()) e.preventDefault(); }}
+              href={
+                name.trim()
+                  ? `/api/integrations/slack/oauth?name=${encodeURIComponent(name.trim())}`
+                  : "#"
+              }
+              onClick={(e) => {
+                if (!name.trim()) e.preventDefault();
+              }}
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-md font-schibsted text-sm text-white bg-gradient-to-t from-sky-900 to-cyan-600 transition-opacity duration-150 ${
-                !name.trim() ? "opacity-50 cursor-not-allowed" : "hover:opacity-90"
+                !name.trim()
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:opacity-90"
               }`}
             >
               <IconBrandSlack size={15} />
               Add to Slack
             </a>
-            <CustomLink href="/docs/integrations/slack" className="text-sm font-schibsted text-sky-700 hover:text-sky-900 dark:text-sky-400 transition-colors underline pb-2">
+            <CustomLink
+              href="/docs/integrations/slack"
+              className="text-sm font-schibsted text-sky-700 hover:text-sky-900 dark:text-sky-400 transition-colors underline pb-2"
+            >
               Read our docs
             </CustomLink>
           </motion.div>
@@ -276,7 +302,10 @@ function IntegrationCard({
     <motion.div
       layout
       style={{ transformOrigin: "top center" }}
-      variants={{ hidden: { opacity: 0, scaleY: 0 }, show: { opacity: 1, scaleY: 1 } }}
+      variants={{
+        hidden: { opacity: 0, scaleY: 0 },
+        show: { opacity: 1, scaleY: 1 },
+      }}
       animate="show"
       exit={{ opacity: 0, scaleY: 0.85 }}
       transition={{
@@ -289,7 +318,11 @@ function IntegrationCard({
         <CardContent className="p-4 flex items-center gap-4">
           {/* Icon */}
           <div className="shrink-0 w-8 h-8 rounded-md bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center">
-            {isSlack ? <IconBrandSlack size={15} className="text-white" /> : <IconBrandDiscord size={15} className="text-white" />}
+            {isSlack ? (
+              <IconBrandSlack size={15} className="text-white" />
+            ) : (
+              <IconBrandDiscord size={15} className="text-white" />
+            )}
           </div>
 
           {/* Name + type — clickable (only when not in delete mode) */}
@@ -298,14 +331,19 @@ function IntegrationCard({
             onClick={() => !deleteMode && setIsOpen((o) => !o)}
             className={`flex-1 min-w-0 text-left focus:outline-none ${deleteMode ? "cursor-default" : "cursor-pointer"}`}
           >
-            <p className="font-schibsted font-bold text-sm text-neutral-900 dark:text-neutral-100 truncate">{integration.name}</p>
+            <p className="font-schibsted font-bold text-sm text-neutral-900 dark:text-neutral-100 truncate">
+              {integration.name}
+            </p>
             <div className="mt-0.5 flex items-center gap-2">
-              <Badge className={`border-0 font-schibsted tracking-tight capitalize rounded-sm ${
-                isSlack
-                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                  : "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400"
-              }`}>
-                {integration.type}{isOAuth && " · OAuth"}
+              <Badge
+                className={`border-0 font-schibsted tracking-tight capitalize rounded-sm ${
+                  isSlack
+                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                    : "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400"
+                }`}
+              >
+                {integration.type}
+                {isOAuth && " · OAuth"}
               </Badge>
             </div>
           </button>
@@ -333,7 +371,9 @@ function IntegrationCard({
             onDelete={async () => {
               setIsOpen(false);
               try {
-                const res = await fetch(`/api/integrations/${integration.id}`, { method: "DELETE" });
+                const res = await fetch(`/api/integrations/${integration.id}`, {
+                  method: "DELETE",
+                });
                 if (!res.ok) {
                   const body = await res.json().catch(() => ({}));
                   throw new Error(body.error || "Failed to delete");
@@ -360,29 +400,53 @@ function IntegrationCard({
             <div className="px-4 pb-4 pt-1 border-t border-neutral-100 dark:border-neutral-800 mt-1 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Name</p>
-                  <p className="text-sm font-schibsted font-medium text-neutral-900 dark:text-neutral-100">{integration.name}</p>
+                  <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
+                    Name
+                  </p>
+                  <p className="text-sm font-schibsted font-medium text-neutral-900 dark:text-neutral-100">
+                    {integration.name}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Type</p>
+                  <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
+                    Type
+                  </p>
                   <p className="text-sm font-schibsted font-medium text-neutral-900 dark:text-neutral-100 capitalize">
-                    {integration.type}{isOAuth ? " (OAuth)" : " (Webhook)"}
+                    {integration.type}
+                    {isOAuth ? " (OAuth)" : " (Webhook)"}
                   </p>
                 </div>
                 {isOAuth && integration.slackTeamName && (
                   <div>
-                    <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Workspace</p>
-                    <p className="text-sm font-schibsted font-medium text-neutral-900 dark:text-neutral-100">{integration.slackTeamName}</p>
+                    <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
+                      Workspace
+                    </p>
+                    <p className="text-sm font-schibsted font-medium text-neutral-900 dark:text-neutral-100">
+                      {integration.slackTeamName}
+                    </p>
                   </div>
                 )}
                 {isOAuth && integration.slackChannelName && (
                   <div>
-                    <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Channel</p>
-                    <p className="text-sm font-schibsted font-medium text-neutral-900 dark:text-neutral-100">#{integration.slackChannelName}</p>
+                    <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
+                      Channel
+                    </p>
+                    <p className="text-sm font-schibsted font-medium text-neutral-900 dark:text-neutral-100">
+                      #{integration.slackChannelName}
+                    </p>
                   </div>
                 )}
-                <div className={isOAuth && (integration.slackTeamName || integration.slackChannelName) ? "" : "col-span-2"}>
-                  <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Created</p>
+                <div
+                  className={
+                    isOAuth &&
+                    (integration.slackTeamName || integration.slackChannelName)
+                      ? ""
+                      : "col-span-2"
+                  }
+                >
+                  <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
+                    Created
+                  </p>
                   <p className="text-sm font-schibsted text-neutral-700 dark:text-neutral-300 tabular-nums">
                     {new Date(integration.createdAt).toLocaleString()}
                   </p>
@@ -391,9 +455,13 @@ function IntegrationCard({
 
               {!isOAuth && (
                 <div className="space-y-2">
-                  <p className="text-xs font-schibsted font-semibold text-neutral-700 dark:text-neutral-300">Webhook URL</p>
+                  <p className="text-xs font-schibsted font-semibold text-neutral-700 dark:text-neutral-300">
+                    Webhook URL
+                  </p>
                   <div className="flex items-center gap-2 rounded-md border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 px-3 py-2">
-                    <code className="flex-1 text-xs font-mono text-neutral-700 dark:text-neutral-300 truncate">{integration.webhookUrl}</code>
+                    <code className="flex-1 text-xs font-mono text-neutral-700 dark:text-neutral-300 truncate">
+                      {integration.webhookUrl}
+                    </code>
                     <CopyIconButton value={integration.webhookUrl} />
                   </div>
                 </div>
@@ -465,18 +533,27 @@ export default function IntegrationsPage() {
     fetchIntegrations();
   }, []);
 
-  const handleDelete = (id: string) => setIntegrations((prev) => prev.filter((i) => i.id !== id));
-  const handleIntegrationAdded = (integration: Integration) => setIntegrations((prev) => [integration, ...prev]);
+  const handleDelete = (id: string) =>
+    setIntegrations((prev) => prev.filter((i) => i.id !== id));
+  const handleIntegrationAdded = (integration: Integration) =>
+    setIntegrations((prev) => [integration, ...prev]);
 
   return (
-    <div className="space-y-6 border border-neutral-400 rounded-lg p-4 min-h-screen">
+    <div className="space-y-6 border border-neutral-400 rounded-lg p-4 h-[calc(100dvh-56px-48px)]">
       {/* Page heading */}
       <div>
-        <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
+        <Heading
+          variant="muted"
+          className="font-bold text-neutral-900 dark:text-neutral-100"
+        >
           Connect Your Team Workspace
         </Heading>
-        <Paragraph variant="default" className="text-neutral-600 dark:text-neutral-400 mt-1">
-          Add Slack or Discord integrations to route incoming emails directly to your team channels.
+        <Paragraph
+          variant="default"
+          className="text-neutral-600 dark:text-neutral-400 mt-1"
+        >
+          Add Slack or Discord integrations to route incoming emails directly to
+          your team channels.
         </Paragraph>
       </div>
 
@@ -499,7 +576,12 @@ export default function IntegrationsPage() {
                 <motion.span
                   layoutId="integrations-tab-bg"
                   className="absolute inset-0 bg-gradient-to-r from-sky-800 to-cyan-700 rounded-lg z-0 shadow-sm"
-                  transition={{ type: "spring", stiffness: 280, damping: 30, duration: 0.3 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 280,
+                    damping: 30,
+                    duration: 0.3,
+                  }}
                 />
               )}
               <span className="relative z-10 flex items-center gap-2">
@@ -515,11 +597,13 @@ export default function IntegrationsPage() {
         {/* Tab content */}
         <div className="pt-4">
           <AnimatePresence mode="wait" initial={false}>
-
             {/* ── Integrations tab ── */}
             {activePageTab === "integrations" && (
-              <motion.div key="integrations"
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              <motion.div
+                key="integrations"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18, ease: easeOutQuint }}
               >
                 {loading ? (
@@ -530,7 +614,11 @@ export default function IntegrationsPage() {
                   <motion.div layout className="space-y-2">
                     <AnimatePresence mode="popLayout">
                       {integrations.map((i) => (
-                        <IntegrationCard key={i.id} integration={i} onDelete={handleDelete} />
+                        <IntegrationCard
+                          key={i.id}
+                          integration={i}
+                          onDelete={handleDelete}
+                        />
                       ))}
                     </AnimatePresence>
                   </motion.div>
@@ -540,18 +628,27 @@ export default function IntegrationsPage() {
 
             {/* ── Add Integration tab ── */}
             {activePageTab === "add" && (
-              <motion.div key="add"
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              <motion.div
+                key="add"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18, ease: easeOutQuint }}
               >
-                <IntegrationAddForm onIntegrationAdded={handleIntegrationAdded} onSuccess={() => setActivePageTab("integrations")} />
+                <IntegrationAddForm
+                  onIntegrationAdded={handleIntegrationAdded}
+                  onSuccess={() => setActivePageTab("integrations")}
+                />
               </motion.div>
             )}
 
             {/* ── Delete tab ── */}
             {activePageTab === "delete" && (
-              <motion.div key="delete"
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              <motion.div
+                key="delete"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18, ease: easeOutQuint }}
               >
                 {loading ? (
@@ -560,11 +657,18 @@ export default function IntegrationsPage() {
                   <EmptyState />
                 ) : (
                   <>
-                    <p className="text-xs font-schibsted text-neutral-400 mb-3">Select an integration to delete it permanently.</p>
+                    <p className="text-xs font-schibsted text-neutral-400 mb-3">
+                      Select an integration to delete it permanently.
+                    </p>
                     <motion.div layout className="space-y-2">
                       <AnimatePresence mode="popLayout">
                         {integrations.map((i) => (
-                          <IntegrationCard key={i.id} integration={i} onDelete={handleDelete} deleteMode />
+                          <IntegrationCard
+                            key={i.id}
+                            integration={i}
+                            onDelete={handleDelete}
+                            deleteMode
+                          />
                         ))}
                       </AnimatePresence>
                     </motion.div>
@@ -572,7 +676,6 @@ export default function IntegrationsPage() {
                 )}
               </motion.div>
             )}
-
           </AnimatePresence>
         </div>
       </Card>

@@ -1,0 +1,36 @@
+{
+  "alice.johnson@gmail.com": {
+    "total": 3,
+    "resolved": 2,
+    "open": 1,
+    "in_progress": 0,
+    "waiting": 0,
+    "tickets": [
+      { "id": "mock_t01", "subject": "Can't log into my account after password reset", "status": "open", "receivedAt": "2026-04-20T08:14:00.000Z", "from": "alice.johnson@gmail.com", "fromName": "Alice Johnson" },
+      { "id": "mock_t13", "subject": "Password reset link expired too quickly", "status": "resolved", "receivedAt": "2026-03-10T10:00:00.000Z", "from": "alice.johnson@gmail.com", "fromName": "Alice Johnson" },
+      { "id": "mock_t14", "subject": "App crashes on iOS 17 when opening notifications", "status": "resolved", "receivedAt": "2026-02-14T08:30:00.000Z", "from": "alice.johnson@gmail.com", "fromName": "Alice Johnson" }
+    ]
+  },
+  "bob.smith@outlook.com": {
+    "total": 3,
+    "resolved": 1,
+    "open": 1,
+    "in_progress": 0,
+    "waiting": 1,
+    "tickets": [
+      { "id": "mock_t02", "subject": "Billing charge appeared twice this month", "status": "open", "receivedAt": "2026-04-20T06:55:00.000Z", "from": "bob.smith@outlook.com", "fromName": "Bob Smith" },
+      { "id": "mock_t16", "subject": "Can I transfer my account to another email?", "status": "waiting", "receivedAt": "2026-04-18T11:00:00.000Z", "from": "bob.smith@outlook.com", "fromName": "Bob Smith" },
+      { "id": "mock_t15", "subject": "Invoice PDF not generating correctly", "status": "resolved", "receivedAt": "2026-03-22T14:00:00.000Z", "from": "bob.smith@outlook.com", "fromName": "Bob Smith" }
+    ]
+  },
+  "carla.diaz@yahoo.com": { "total": 1, "resolved": 0, "open": 1, "in_progress": 0, "waiting": 0, "tickets": [{ "id": "mock_t03", "subject": "Feature request: dark mode for mobile app", "status": "open", "receivedAt": "2026-04-19T22:30:00.000Z", "from": "carla.diaz@yahoo.com", "fromName": "Carla Diaz" }] },
+  "david.kim@proton.me": { "total": 1, "resolved": 0, "open": 0, "in_progress": 1, "waiting": 0, "tickets": [{ "id": "mock_t04", "subject": "Integration with Zapier keeps disconnecting", "status": "in_progress", "receivedAt": "2026-04-19T14:10:00.000Z", "from": "david.kim@proton.me", "fromName": "David Kim" }] },
+  "emma.white@company.io": { "total": 1, "resolved": 0, "open": 0, "in_progress": 1, "waiting": 0, "tickets": [{ "id": "mock_t05", "subject": "Export to CSV not including all columns", "status": "in_progress", "receivedAt": "2026-04-19T10:05:00.000Z", "from": "emma.white@company.io", "fromName": "Emma White" }] },
+  "frank.nguyen@startup.co": { "total": 1, "resolved": 0, "open": 0, "in_progress": 1, "waiting": 0, "tickets": [{ "id": "mock_t06", "subject": "API rate limit hit unexpectedly on free plan", "status": "in_progress", "receivedAt": "2026-04-18T17:45:00.000Z", "from": "frank.nguyen@startup.co", "fromName": "Frank Nguyen" }] },
+  "grace.lee@enterprise.com": { "total": 1, "resolved": 0, "open": 0, "in_progress": 0, "waiting": 1, "tickets": [{ "id": "mock_t07", "subject": "Team member invite email never arrived", "status": "waiting", "receivedAt": "2026-04-18T09:30:00.000Z", "from": "grace.lee@enterprise.com", "fromName": "Grace Lee" }] },
+  "henry.brown@freelance.net": { "total": 1, "resolved": 0, "open": 0, "in_progress": 0, "waiting": 1, "tickets": [{ "id": "mock_t08", "subject": "Dashboard loading slowly on Firefox", "status": "waiting", "receivedAt": "2026-04-17T15:20:00.000Z", "from": "henry.brown@freelance.net", "fromName": "Henry Brown" }] },
+  "isabella.chen@design.studio": { "total": 1, "resolved": 0, "open": 0, "in_progress": 0, "waiting": 1, "tickets": [{ "id": "mock_t09", "subject": "Webhook payload missing custom fields", "status": "waiting", "receivedAt": "2026-04-16T13:00:00.000Z", "from": "isabella.chen@design.studio", "fromName": "Isabella Chen" }] },
+  "james.wilson@retail.shop": { "total": 1, "resolved": 1, "open": 0, "in_progress": 0, "waiting": 0, "tickets": [{ "id": "mock_t10", "subject": "How do I downgrade my subscription?", "status": "resolved", "receivedAt": "2026-04-15T09:00:00.000Z", "from": "james.wilson@retail.shop", "fromName": "James Wilson" }] },
+  "kate.martin@saas.app": { "total": 1, "resolved": 1, "open": 0, "in_progress": 0, "waiting": 0, "tickets": [{ "id": "mock_t11", "subject": "Two-factor authentication not working with Authy", "status": "resolved", "receivedAt": "2026-04-14T14:00:00.000Z", "from": "kate.martin@saas.app", "fromName": "Kate Martin" }] },
+  "liam.turner@agency.co": { "total": 1, "resolved": 1, "open": 0, "in_progress": 0, "waiting": 0, "tickets": [{ "id": "mock_t12", "subject": "Bulk import stopped halfway through 500 records", "status": "resolved", "receivedAt": "2026-04-13T11:15:00.000Z", "from": "liam.turner@agency.co", "fromName": "Liam Turner" }] }
+}

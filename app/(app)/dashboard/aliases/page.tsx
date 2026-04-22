@@ -42,8 +42,17 @@ type Alias = {
   createdAt: string;
 };
 
-type IntegrationOption = { id: string; name: string; type: "slack" | "discord" };
-type CannedResponse = { _id: string; title: string; body: string; createdAt: string };
+type IntegrationOption = {
+  id: string;
+  name: string;
+  type: "slack" | "discord";
+};
+type CannedResponse = {
+  _id: string;
+  title: string;
+  body: string;
+  createdAt: string;
+};
 type CannedFormState = "idle" | "loading" | "success";
 type ActiveTab = "edit" | "delete";
 type PageTab = "add" | "aliases" | "edit" | "delete";
@@ -75,7 +84,9 @@ function CannedResponseModal({
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
   const [editState, setEditState] = useState<CannedFormState>("idle");
-  const [feedbackMsg, setFeedbackMsg] = useState<"success" | "error" | null>(null);
+  const [feedbackMsg, setFeedbackMsg] = useState<"success" | "error" | null>(
+    null,
+  );
   const [elementRef, bounds] = useMeasure();
 
   useEffect(() => {
@@ -102,7 +113,11 @@ function CannedResponseModal({
       const res = await fetch("/api/canned-responses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ aliasId, title: title.trim(), body: body.trim() }),
+        body: JSON.stringify({
+          aliasId,
+          title: title.trim(),
+          body: body.trim(),
+        }),
       });
       if (!res.ok) throw new Error("Failed to create");
       const created = await res.json();
@@ -131,13 +146,19 @@ function CannedResponseModal({
       const res = await fetch(`/api/canned-responses/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: editTitle.trim(), body: editBody.trim() }),
+        body: JSON.stringify({
+          title: editTitle.trim(),
+          body: editBody.trim(),
+        }),
       });
       if (!res.ok) throw new Error("Failed to update");
       const updated = await res.json();
       setResponses((prev) => prev.map((r) => (r._id === id ? updated : r)));
       setEditState("success");
-      setTimeout(() => { setEditingId(null); setEditState("idle"); }, 1000);
+      setTimeout(() => {
+        setEditingId(null);
+        setEditState("idle");
+      }, 1000);
     } catch {
       toast.error("Failed to update canned response");
       setEditState("idle");
@@ -177,10 +198,18 @@ function CannedResponseModal({
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 dark:border-neutral-800">
               <div>
-                <p className="text-sm font-schibsted font-semibold text-neutral-900 dark:text-neutral-100">Canned Responses</p>
-                <p className="text-xs font-schibsted text-neutral-500 mt-0.5">{aliasEmail}</p>
+                <p className="text-sm font-schibsted font-semibold text-neutral-900 dark:text-neutral-100">
+                  Canned Responses
+                </p>
+                <p className="text-xs font-schibsted text-neutral-500 mt-0.5">
+                  {aliasEmail}
+                </p>
               </div>
-              <button type="button" onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none"
+              >
                 <IconX size={15} className="text-neutral-500" />
               </button>
             </div>
@@ -189,38 +218,81 @@ function CannedResponseModal({
             <div className="flex items-center justify-between px-5 pt-3 pb-2">
               <motion.button
                 type="button"
-                onClick={() => { setView("add"); setEditingId(null); }}
+                onClick={() => {
+                  setView("add");
+                  setEditingId(null);
+                }}
                 className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-schibsted font-medium transition-colors focus:outline-none cursor-pointer ${view === "add" ? "text-neutral-900 dark:text-neutral-100" : "text-neutral-400 dark:text-neutral-500 hover:text-neutral-600"}`}
               >
                 {view === "add" && (
-                  <motion.span layoutId="canned-tab-bg" className="absolute inset-0 bg-neutral-100 dark:bg-neutral-800 rounded-md z-0" transition={{ type: "spring", stiffness: 400, damping: 30 }} />
+                  <motion.span
+                    layoutId="canned-tab-bg"
+                    className="absolute inset-0 bg-neutral-100 dark:bg-neutral-800 rounded-md z-0"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
                 )}
-                <span className="relative z-10 flex items-center gap-1.5"><IconPlus size={12} />Add New</span>
+                <span className="relative z-10 flex items-center gap-1.5">
+                  <IconPlus size={12} />
+                  Add New
+                </span>
               </motion.button>
 
               <div>
                 <AnimatePresence mode="wait" initial={false}>
                   {view === "add" ? (
-                    <motion.button key="saved-btn" type="button" onClick={() => { setView("saved"); setActiveTab("edit"); setEditingId(null); }}
-                      initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+                    <motion.button
+                      key="saved-btn"
+                      type="button"
+                      onClick={() => {
+                        setView("saved");
+                        setActiveTab("edit");
+                        setEditingId(null);
+                      }}
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
                       transition={{ duration: 0.13, ease: [0.23, 1, 0.32, 1] }}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-schibsted font-medium text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 transition-colors focus:outline-none cursor-pointer"
                     >
-                      <IconMessageDots size={12} />Saved Responses
+                      <IconMessageDots size={12} />
+                      Saved Responses
                     </motion.button>
                   ) : (
-                    <motion.div key="sub-tabs" initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-                      transition={{ duration: 0.13, ease: [0.23, 1, 0.32, 1] }} className="flex items-center gap-0.5"
+                    <motion.div
+                      key="sub-tabs"
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.13, ease: [0.23, 1, 0.32, 1] }}
+                      className="flex items-center gap-0.5"
                     >
                       {(["edit", "delete"] as ActiveTab[]).map((tab) => (
-                        <button key={tab} type="button" onClick={() => { setActiveTab(tab); setEditingId(null); }}
+                        <button
+                          key={tab}
+                          type="button"
+                          onClick={() => {
+                            setActiveTab(tab);
+                            setEditingId(null);
+                          }}
                           className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-schibsted font-medium transition-colors focus:outline-none cursor-pointer capitalize ${activeTab === tab ? "text-neutral-900 dark:text-neutral-100" : "text-neutral-400 dark:text-neutral-500 hover:text-neutral-600"}`}
                         >
                           {activeTab === tab && (
-                            <motion.span layoutId={`subtab-bubble-${aliasId}`} className="absolute inset-0 bg-neutral-100 dark:bg-neutral-800 rounded-md z-0" transition={{ type: "spring", stiffness: 400, damping: 30 }} />
+                            <motion.span
+                              layoutId={`subtab-bubble-${aliasId}`}
+                              className="absolute inset-0 bg-neutral-100 dark:bg-neutral-800 rounded-md z-0"
+                              transition={{
+                                type: "spring",
+                                stiffness: 400,
+                                damping: 30,
+                              }}
+                            />
                           )}
                           <span className="relative z-10 flex items-center gap-1.5">
-                            {tab === "edit" ? <IconPencil size={11} /> : <IconTrash size={11} />}
+                            {tab === "edit" ? (
+                              <IconPencil size={11} />
+                            ) : (
+                              <IconTrash size={11} />
+                            )}
                             {tab === "edit" ? "Edit" : "Delete"}
                           </span>
                         </button>
@@ -235,21 +307,40 @@ function CannedResponseModal({
             <div className="px-5 pb-1">
               <AnimatePresence mode="popLayout" initial={false}>
                 {view === "add" && (
-                  <motion.form key="add-view" onSubmit={handleAdd}
+                  <motion.form
+                    key="add-view"
+                    onSubmit={handleAdd}
                     initial={{ opacity: 0, y: -10, filter: "blur(4px)" }}
                     animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                     exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
-                    transition={{ duration: 0.20, ease: "easeOut" }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
                     className="pt-1 pb-4 space-y-2"
                   >
-                    <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title (e.g. Password Reset)"
-                      className="w-full text-xs font-schibsted bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md px-3 py-2 focus:outline-none focus:border-sky-400" />
-                    <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Write the response body..." rows={4}
-                      className="w-full text-xs font-schibsted bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md px-3 py-2 focus:outline-none focus:border-sky-400 resize-none" />
+                    <input
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="Title (e.g. Password Reset)"
+                      className="w-full text-xs font-schibsted bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md px-3 py-2 focus:outline-none focus:border-sky-400"
+                    />
+                    <textarea
+                      value={body}
+                      onChange={(e) => setBody(e.target.value)}
+                      placeholder="Write the response body..."
+                      rows={4}
+                      className="w-full text-xs font-schibsted bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md px-3 py-2 focus:outline-none focus:border-sky-400 resize-none"
+                    />
                     <div className="flex items-center gap-3">
-                      <AnimatedSubmitButton idleLabel="Add Response" loadingLabel="Adding..." successLabel="Added!" idleIcon={<IconPlus size={12} />}
-                        state={formState} idleWidth={110} loadingWidth={90} successWidth={76}
-                        className="px-3 py-1.5 rounded-md text-xs font-schibsted text-white bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center gap-1.5 overflow-hidden border-0 focus:outline-none cursor-pointer disabled:opacity-60" />
+                      <AnimatedSubmitButton
+                        idleLabel="Add Response"
+                        loadingLabel="Adding..."
+                        successLabel="Added!"
+                        idleIcon={<IconPlus size={12} />}
+                        state={formState}
+                        idleWidth={110}
+                        loadingWidth={90}
+                        successWidth={76}
+                        className="px-3 py-1.5 rounded-md text-xs font-schibsted text-white bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center gap-1.5 overflow-hidden border-0 focus:outline-none cursor-pointer disabled:opacity-60"
+                      />
                       <AnimatePresence>
                         {feedbackMsg && (
                           <motion.span
@@ -257,12 +348,19 @@ function CannedResponseModal({
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 12 }}
-                            transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+                            transition={{
+                              duration: 0.22,
+                              ease: [0.23, 1, 0.32, 1],
+                            }}
                             className={`text-[11px] font-schibsted font-medium ${
-                              feedbackMsg === "success" ? "text-green-600" : "text-red-500"
+                              feedbackMsg === "success"
+                                ? "text-green-600"
+                                : "text-red-500"
                             }`}
                           >
-                            {feedbackMsg === "success" ? "Response saved" : "There is some error. Try again"}
+                            {feedbackMsg === "success"
+                              ? "Response saved"
+                              : "There is some error. Try again"}
                           </motion.span>
                         )}
                       </AnimatePresence>
@@ -271,52 +369,143 @@ function CannedResponseModal({
                 )}
 
                 {view === "saved" && (
-                  <motion.div key="saved-view"
-                    initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }} className="pb-4"
+                  <motion.div
+                    key="saved-view"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
+                    className="pb-4"
                   >
                     {loading ? (
                       <div className="flex items-center justify-center py-8 gap-2">
-                        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-3.5 h-3.5 border-2 border-neutral-300 border-t-neutral-500 rounded-full" />
-                        <p className="text-xs font-schibsted text-neutral-400">Loading...</p>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{
+                            repeat: Infinity,
+                            duration: 1,
+                            ease: "linear",
+                          }}
+                          className="w-3.5 h-3.5 border-2 border-neutral-300 border-t-neutral-500 rounded-full"
+                        />
+                        <p className="text-xs font-schibsted text-neutral-400">
+                          Loading...
+                        </p>
                       </div>
                     ) : responses.length === 0 ? (
-                      <p className="text-xs font-schibsted text-neutral-400 py-6 text-center">No canned responses yet. Use Add New to create one.</p>
+                      <p className="text-xs font-schibsted text-neutral-400 py-6 text-center">
+                        No canned responses yet. Use Add New to create one.
+                      </p>
                     ) : (
                       <AnimatePresence mode="wait" initial={false}>
                         {activeTab === "edit" && (
-                          <motion.div key="edit-tab" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-                            transition={{ duration: 0.13, ease: [0.23, 1, 0.32, 1] }} className="space-y-2 pt-1"
+                          <motion.div
+                            key="edit-tab"
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            transition={{
+                              duration: 0.13,
+                              ease: [0.23, 1, 0.32, 1],
+                            }}
+                            className="space-y-2 pt-1"
                           >
                             <AnimatePresence initial={false}>
                               {responses.map((r) => (
-                                <motion.div key={r._id} layout initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
-                                  exit={{ opacity: 0, height: 0 }} transition={{ type: "spring", stiffness: 300, damping: 28 }} className="overflow-hidden"
+                                <motion.div
+                                  key={r._id}
+                                  layout
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: "auto" }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  transition={{
+                                    type: "spring",
+                                    stiffness: 300,
+                                    damping: 28,
+                                  }}
+                                  className="overflow-hidden"
                                 >
                                   <div className="border border-neutral-100 dark:border-neutral-800 rounded-lg p-3 bg-neutral-50 dark:bg-neutral-800/40">
-                                    <AnimatePresence mode="wait" initial={false}>
+                                    <AnimatePresence
+                                      mode="wait"
+                                      initial={false}
+                                    >
                                       {editingId === r._id ? (
-                                        <motion.div key="editing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }} className="space-y-2">
-                                          <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)}
-                                            className="w-full text-xs font-schibsted font-semibold bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md px-2.5 py-1.5 focus:outline-none focus:border-sky-400" placeholder="Title" />
-                                          <textarea value={editBody} onChange={(e) => setEditBody(e.target.value)} rows={3}
-                                            className="w-full text-xs font-schibsted bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md px-2.5 py-1.5 focus:outline-none focus:border-sky-400 resize-none" placeholder="Response body..." />
+                                        <motion.div
+                                          key="editing"
+                                          initial={{ opacity: 0 }}
+                                          animate={{ opacity: 1 }}
+                                          exit={{ opacity: 0 }}
+                                          transition={{ duration: 0.12 }}
+                                          className="space-y-2"
+                                        >
+                                          <input
+                                            value={editTitle}
+                                            onChange={(e) =>
+                                              setEditTitle(e.target.value)
+                                            }
+                                            className="w-full text-xs font-schibsted font-semibold bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md px-2.5 py-1.5 focus:outline-none focus:border-sky-400"
+                                            placeholder="Title"
+                                          />
+                                          <textarea
+                                            value={editBody}
+                                            onChange={(e) =>
+                                              setEditBody(e.target.value)
+                                            }
+                                            rows={3}
+                                            className="w-full text-xs font-schibsted bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md px-2.5 py-1.5 focus:outline-none focus:border-sky-400 resize-none"
+                                            placeholder="Response body..."
+                                          />
                                           <div className="flex items-center gap-2">
-                                            <AnimatedButton idleLabel="Save" loadingLabel="Saving..." successLabel="Saved!" errorLabel="Failed"
-                                              idleIcon={<IconCheck size={12} />} state={editState} onClick={() => handleEditSave(r._id)}
-                                              idleWidth={60} loadingWidth={74} successWidth={66} errorWidth={60}
-                                              className="px-3 py-1.5 rounded-md text-xs font-schibsted text-white bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center gap-1.5 overflow-hidden border-0 focus:outline-none cursor-pointer disabled:opacity-60" />
-                                            <button type="button" onClick={() => setEditingId(null)} className="px-3 py-1.5 rounded-md text-xs font-schibsted text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none">Cancel</button>
+                                            <AnimatedButton
+                                              idleLabel="Save"
+                                              loadingLabel="Saving..."
+                                              successLabel="Saved!"
+                                              errorLabel="Failed"
+                                              idleIcon={<IconCheck size={12} />}
+                                              state={editState}
+                                              onClick={() =>
+                                                handleEditSave(r._id)
+                                              }
+                                              idleWidth={60}
+                                              loadingWidth={74}
+                                              successWidth={66}
+                                              errorWidth={60}
+                                              className="px-3 py-1.5 rounded-md text-xs font-schibsted text-white bg-gradient-to-t from-sky-900 to-cyan-600 flex items-center justify-center gap-1.5 overflow-hidden border-0 focus:outline-none cursor-pointer disabled:opacity-60"
+                                            />
+                                            <button
+                                              type="button"
+                                              onClick={() => setEditingId(null)}
+                                              className="px-3 py-1.5 rounded-md text-xs font-schibsted text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none"
+                                            >
+                                              Cancel
+                                            </button>
                                           </div>
                                         </motion.div>
                                       ) : (
-                                        <motion.div key="viewing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }} className="flex items-start justify-between gap-3">
+                                        <motion.div
+                                          key="viewing"
+                                          initial={{ opacity: 0 }}
+                                          animate={{ opacity: 1 }}
+                                          exit={{ opacity: 0 }}
+                                          transition={{ duration: 0.12 }}
+                                          className="flex items-start justify-between gap-3"
+                                        >
                                           <div className="min-w-0">
-                                            <p className="text-xs font-schibsted font-semibold text-neutral-800 dark:text-neutral-200 mb-0.5">{r.title}</p>
-                                            <p className="text-xs font-schibsted text-neutral-500 line-clamp-2">{r.body}</p>
+                                            <p className="text-xs font-schibsted font-semibold text-neutral-800 dark:text-neutral-200 mb-0.5">
+                                              {r.title}
+                                            </p>
+                                            <p className="text-xs font-schibsted text-neutral-500 line-clamp-2">
+                                              {r.body}
+                                            </p>
                                           </div>
-                                          <button type="button" onClick={() => startEdit(r)} className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-schibsted text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none">
-                                            <IconPencil size={11} />Edit
+                                          <button
+                                            type="button"
+                                            onClick={() => startEdit(r)}
+                                            className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-schibsted text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none"
+                                          >
+                                            <IconPencil size={11} />
+                                            Edit
                                           </button>
                                         </motion.div>
                                       )}
@@ -329,28 +518,67 @@ function CannedResponseModal({
                         )}
 
                         {activeTab === "delete" && (
-                          <motion.div key="delete-tab" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-                            transition={{ duration: 0.13, ease: [0.23, 1, 0.32, 1] }} className="space-y-2 pt-1"
+                          <motion.div
+                            key="delete-tab"
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            transition={{
+                              duration: 0.13,
+                              ease: [0.23, 1, 0.32, 1],
+                            }}
+                            className="space-y-2 pt-1"
                           >
                             <AnimatePresence initial={false}>
                               {responses.map((r) => (
-                                <motion.div key={r._id} layout initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
-                                  exit={{ opacity: 0, height: 0 }} transition={{ type: "spring", stiffness: 300, damping: 28 }} className="overflow-hidden"
+                                <motion.div
+                                  key={r._id}
+                                  layout
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: "auto" }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  transition={{
+                                    type: "spring",
+                                    stiffness: 300,
+                                    damping: 28,
+                                  }}
+                                  className="overflow-hidden"
                                 >
                                   <div className="border border-neutral-100 dark:border-neutral-800 rounded-lg p-3 bg-neutral-50 dark:bg-neutral-800/40 flex items-start justify-between gap-3">
                                     <div className="min-w-0">
-                                      <p className="text-xs font-schibsted font-semibold text-neutral-800 dark:text-neutral-200 mb-0.5">{r.title}</p>
-                                      <p className="text-xs font-schibsted text-neutral-500 line-clamp-2">{r.body}</p>
+                                      <p className="text-xs font-schibsted font-semibold text-neutral-800 dark:text-neutral-200 mb-0.5">
+                                        {r.title}
+                                      </p>
+                                      <p className="text-xs font-schibsted text-neutral-500 line-clamp-2">
+                                        {r.body}
+                                      </p>
                                     </div>
                                     <div className="shrink-0">
-                                      <AnimatedDeleteButton onDelete={async () => {
-                                        try {
-                                          const res = await fetch(`/api/canned-responses/${r._id}`, { method: "DELETE" });
-                                          if (!res.ok) throw new Error("Failed");
-                                          setTimeout(() => setResponses((prev) => prev.filter((x) => x._id !== r._id)), 300);
-                                          return "success";
-                                        } catch { toast.error("Failed to delete"); return "error"; }
-                                      }} />
+                                      <AnimatedDeleteButton
+                                        onDelete={async () => {
+                                          try {
+                                            const res = await fetch(
+                                              `/api/canned-responses/${r._id}`,
+                                              { method: "DELETE" },
+                                            );
+                                            if (!res.ok)
+                                              throw new Error("Failed");
+                                            setTimeout(
+                                              () =>
+                                                setResponses((prev) =>
+                                                  prev.filter(
+                                                    (x) => x._id !== r._id,
+                                                  ),
+                                                ),
+                                              300,
+                                            );
+                                            return "success";
+                                          } catch {
+                                            toast.error("Failed to delete");
+                                            return "error";
+                                          }
+                                        }}
+                                      />
                                     </div>
                                   </div>
                                 </motion.div>
@@ -385,16 +613,23 @@ function AliasesTable({
   aliases: Alias[];
   mode: "view" | "edit" | "delete";
   integrations: IntegrationOption[];
-  cannedTriggerRefs: React.MutableRefObject<Record<string, HTMLButtonElement | null>>;
+  cannedTriggerRefs: React.MutableRefObject<
+    Record<string, HTMLButtonElement | null>
+  >;
   onCannedOpen: (aliasId: string) => void;
   onDelete: (id: string) => void;
   onUpdate: (updated: Alias) => void;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editIntegration, setEditIntegration] = useState("");
-  const [saveState, setSaveState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [saveState, setSaveState] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
 
-  const handleRowClick = (aliasId: string, currentIntegrationId: string | null) => {
+  const handleRowClick = (
+    aliasId: string,
+    currentIntegrationId: string | null,
+  ) => {
     if (mode !== "edit") return;
     if (expandedId === aliasId) {
       setExpandedId(null);
@@ -413,12 +648,16 @@ function AliasesTable({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ integrationId: editIntegration || null }),
       });
-      if (!res.ok) throw new Error((await res.json()).error || "Failed to update");
+      if (!res.ok)
+        throw new Error((await res.json()).error || "Failed to update");
       const updated: Alias = await res.json();
       onUpdate(updated);
       setSaveState("success");
       toast.success("Integration updated");
-      setTimeout(() => { setSaveState("idle"); setExpandedId(null); }, 1500);
+      setTimeout(() => {
+        setSaveState("idle");
+        setExpandedId(null);
+      }, 1500);
     } catch (err: any) {
       toast.error(err.message || "Failed to update");
       setSaveState("error");
@@ -426,11 +665,19 @@ function AliasesTable({
     }
   };
 
-  const columns = mode === "view"
-    ? ["Email", "Status", "Domain", "Integration", "Created At", "Canned Responses"]
-    : mode === "edit"
-    ? ["Email", "Status", "Domain", "Integration", "Created At"]
-    : ["Email", "Status", "Domain", "Integration", "Created At", "Delete"];
+  const columns =
+    mode === "view"
+      ? [
+          "Email",
+          "Status",
+          "Domain",
+          "Integration",
+          "Created At",
+          "Canned Responses",
+        ]
+      : mode === "edit"
+        ? ["Email", "Status", "Domain", "Integration", "Created At"]
+        : ["Email", "Status", "Domain", "Integration", "Created At", "Delete"];
 
   return (
     <div className="overflow-x-auto rounded-lg border border-neutral-900 dark:border-neutral-700">
@@ -438,7 +685,10 @@ function AliasesTable({
         <thead>
           <tr>
             {columns.map((h) => (
-              <th key={h} className="px-3 py-2 text-left font-schibsted bg-linear-to-b from-sky-700 to-cyan-600 text-neutral-50">
+              <th
+                key={h}
+                className="px-3 py-2 text-left font-schibsted bg-linear-to-b from-sky-700 to-cyan-600 text-neutral-50"
+              >
                 {h}
               </th>
             ))}
@@ -451,13 +701,23 @@ function AliasesTable({
                 key={a.id}
                 onClick={() => handleRowClick(a.id, a.integrationId)}
                 className={`border-t border-neutral-900 dark:border-neutral-700 transition-colors duration-150 ${
-                  mode === "edit" ? "cursor-pointer hover:bg-sky-50 dark:hover:bg-sky-900/10" : "hover:bg-neutral-50 dark:hover:bg-neutral-800/40"
+                  mode === "edit"
+                    ? "cursor-pointer hover:bg-sky-50 dark:hover:bg-sky-900/10"
+                    : "hover:bg-neutral-50 dark:hover:bg-neutral-800/40"
                 } ${expandedId === a.id ? "bg-sky-50 dark:bg-sky-900/10" : ""}`}
               >
                 <td className="px-3 py-2 font-schibsted font-semibold text-neutral-700 dark:text-neutral-300">
                   <div className="flex items-center gap-2">
                     {mode === "edit" && (
-                      <motion.span animate={{ rotate: expandedId === a.id ? 90 : 0 }} transition={{ type: "spring", stiffness: 300, damping: 25 }} className="text-neutral-400">
+                      <motion.span
+                        animate={{ rotate: expandedId === a.id ? 90 : 0 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 25,
+                        }}
+                        className="text-neutral-400"
+                      >
                         ›
                       </motion.span>
                     )}
@@ -465,54 +725,80 @@ function AliasesTable({
                   </div>
                 </td>
                 <td className="px-3 py-2">
-                  <span className={`inline-flex items-center rounded-sm px-2 py-0.5 font-schibsted font-semibold border ${
-                    a.status === "active"
-                      ? "bg-green-50 border-green-900 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                      : "bg-neutral-100 border-neutral-400 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"
-                  }`}>
+                  <span
+                    className={`inline-flex items-center rounded-sm px-2 py-0.5 font-schibsted font-semibold border ${
+                      a.status === "active"
+                        ? "bg-green-50 border-green-900 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                        : "bg-neutral-100 border-neutral-400 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"
+                    }`}
+                  >
                     {a.status === "active" ? "Active" : "Inactive"}
                   </span>
                 </td>
-                <td className="px-3 py-2 font-schibsted text-neutral-500 dark:text-neutral-400">{a.domain}</td>
-                <td className="px-3 py-2 font-schibsted text-neutral-500 dark:text-neutral-400">{a.integrationName ?? "—"}</td>
+                <td className="px-3 py-2 font-schibsted text-neutral-500 dark:text-neutral-400">
+                  {a.domain}
+                </td>
+                <td className="px-3 py-2 font-schibsted text-neutral-500 dark:text-neutral-400">
+                  {a.integrationName ?? "—"}
+                </td>
                 <td className="px-3 py-2 font-schibsted text-neutral-500 dark:text-neutral-400 tabular-nums">
-                  {new Date(a.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  {new Date(a.createdAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
                 </td>
 
                 {mode === "view" && (
                   <td className="px-3 py-2">
                     <button
                       type="button"
-                      ref={(el) => { cannedTriggerRefs.current[a.id] = el; }}
-                      onClick={(e) => { e.stopPropagation(); onCannedOpen(a.id); }}
+                      ref={(el) => {
+                        cannedTriggerRefs.current[a.id] = el;
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onCannedOpen(a.id);
+                      }}
                       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-schibsted font-semibold text-neutral-600 dark:text-neutral-400 border border-neutral-300 dark:border-neutral-700 hover:border-neutral-600 hover:text-neutral-900 dark:hover:bg-neutral-800 transition-colors duration-150 cursor-pointer focus:outline-none"
                     >
-                      <IconMessageFilled size={12} />Canned Responses
+                      <IconMessageFilled size={12} />
+                      Canned Responses
                     </button>
                   </td>
                 )}
 
                 {mode === "delete" && (
                   <td className="px-3 py-2">
-                    <AnimatedDeleteButton onDelete={async () => {
-                      try {
-                        const res = await fetch(`/api/aliases/${a.id}`, { method: "DELETE" });
-                        if (!res.ok) throw new Error((await res.json()).error || "Failed to delete");
-                        toast.success(`Alias "${a.email}" deleted`);
-                        setTimeout(() => onDelete(a.id), 400);
-                        return "success";
-                      } catch (err: any) {
-                        toast.error(err.message || "Failed to delete alias");
-                        return "error";
-                      }
-                    }} />
+                    <AnimatedDeleteButton
+                      onDelete={async () => {
+                        try {
+                          const res = await fetch(`/api/aliases/${a.id}`, {
+                            method: "DELETE",
+                          });
+                          if (!res.ok)
+                            throw new Error(
+                              (await res.json()).error || "Failed to delete",
+                            );
+                          toast.success(`Alias "${a.email}" deleted`);
+                          setTimeout(() => onDelete(a.id), 400);
+                          return "success";
+                        } catch (err: any) {
+                          toast.error(err.message || "Failed to delete alias");
+                          return "error";
+                        }
+                      }}
+                    />
                   </td>
                 )}
               </tr>
 
               {/* Inline edit row */}
               {mode === "edit" && expandedId === a.id && (
-                <tr key={`${a.id}-edit`} className="border-t border-sky-200 dark:border-sky-800 bg-sky-50/50 dark:bg-sky-900/5">
+                <tr
+                  key={`${a.id}-edit`}
+                  className="border-t border-sky-200 dark:border-sky-800 bg-sky-50/50 dark:bg-sky-900/5"
+                >
                   <td colSpan={5} className="px-4 py-3">
                     <motion.div
                       initial={{ opacity: 0, y: -6 }}
@@ -522,12 +808,17 @@ function AliasesTable({
                       className="flex items-center gap-3 flex-wrap"
                     >
                       <div className="flex flex-col gap-1">
-                        <label className="text-xs font-schibsted font-semibold text-neutral-500">Integration</label>
+                        <label className="text-xs font-schibsted font-semibold text-neutral-500">
+                          Integration
+                        </label>
                         <AnimatedDropdown
                           label=""
                           options={[
                             { value: "", label: "None" },
-                            ...integrations.map((i) => ({ value: i.id, label: `${i.name} (${i.type})` })),
+                            ...integrations.map((i) => ({
+                              value: i.id,
+                              label: `${i.name} (${i.type})`,
+                            })),
                           ]}
                           value={editIntegration}
                           onChange={setEditIntegration}
@@ -585,8 +876,13 @@ function EmptyState() {
         <IconMail size={18} className="text-white" />
       </div>
       <Paragraph variant="muted" className="text-center max-w-lg">
-        No aliases yet. Go to Add Alias to create your first one. <br/>
-        <CustomLink href="/docs/aliases" className="text-sky-800 underline font-schibsted font-bold ">Read our docs</CustomLink>
+        No aliases yet. Go to Add Alias to create your first one. <br />
+        <CustomLink
+          href="/docs/aliases"
+          className="text-sky-800 underline font-schibsted font-bold "
+        >
+          Read our docs
+        </CustomLink>
       </Paragraph>
     </motion.div>
   );
@@ -609,20 +905,31 @@ function MobileBottomSheet({
     <>
       <motion.div
         className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]"
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }} onClick={onClose}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
       />
       <motion.div
         className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-neutral-900 rounded-t-2xl border-t border-neutral-200 dark:border-neutral-700 shadow-xl"
-        initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
         <div className="flex justify-center pt-3 pb-1">
           <div className="w-10 h-1 rounded-full bg-neutral-300 dark:bg-neutral-600" />
         </div>
         <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-100 dark:border-neutral-800">
-          <p className="text-sm font-schibsted font-semibold text-neutral-900 dark:text-neutral-100">{alias.email}</p>
-          <button type="button" onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none">
+          <p className="text-sm font-schibsted font-semibold text-neutral-900 dark:text-neutral-100">
+            {alias.email}
+          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer focus:outline-none"
+          >
             <IconX size={15} className="text-neutral-500" />
           </button>
         </div>
@@ -632,33 +939,59 @@ function MobileBottomSheet({
             ["Domain", alias.domain],
             ["Integration", alias.integrationName ?? "—"],
             ["Status", alias.status],
-            ["Created At", new Date(alias.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })],
+            [
+              "Created At",
+              new Date(alias.createdAt).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              }),
+            ],
           ].map(([label, value]) => (
             <div key={label}>
-              <p className="text-xs font-schibsted font-semibold text-neutral-400 mb-0.5">{label}</p>
-              <p className="text-sm font-schibsted text-neutral-800 dark:text-neutral-200">{value}</p>
+              <p className="text-xs font-schibsted font-semibold text-neutral-400 mb-0.5">
+                {label}
+              </p>
+              <p className="text-sm font-schibsted text-neutral-800 dark:text-neutral-200">
+                {value}
+              </p>
             </div>
           ))}
         </div>
         <div className="px-5 pb-8 pt-2 border-t border-neutral-100 dark:border-neutral-800 flex items-center gap-3">
-          <button type="button" onClick={() => { onCannedOpen(alias.id); onClose(); }}
+          <button
+            type="button"
+            onClick={() => {
+              onCannedOpen(alias.id);
+              onClose();
+            }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-schibsted font-semibold text-neutral-600 dark:text-neutral-400 border border-neutral-300 dark:border-neutral-700 hover:border-neutral-600 transition-colors cursor-pointer focus:outline-none"
           >
-            <IconMessageFilled size={12} />Canned Responses
+            <IconMessageFilled size={12} />
+            Canned Responses
           </button>
-          <button type="button"
+          <button
+            type="button"
             onClick={async () => {
               try {
-                const res = await fetch(`/api/aliases/${alias.id}`, { method: "DELETE" });
-                if (!res.ok) throw new Error((await res.json()).error || "Failed to delete");
+                const res = await fetch(`/api/aliases/${alias.id}`, {
+                  method: "DELETE",
+                });
+                if (!res.ok)
+                  throw new Error(
+                    (await res.json()).error || "Failed to delete",
+                  );
                 toast.success(`Alias "${alias.email}" deleted`);
                 onDelete(alias.id);
                 onClose();
-              } catch (err: any) { toast.error(err.message || "Failed to delete alias"); }
+              } catch (err: any) {
+                toast.error(err.message || "Failed to delete alias");
+              }
             }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-schibsted font-semibold text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900 hover:bg-red-50 transition-colors cursor-pointer focus:outline-none"
           >
-            <IconTrash size={12} />Delete
+            <IconTrash size={12} />
+            Delete
           </button>
         </div>
       </motion.div>
@@ -685,14 +1018,18 @@ export default function AliasesPage() {
   const [activePageTab, setActivePageTab] = useState<PageTab>("add");
 
   // Add form state
-  const [addStatus, setAddStatus] = useState<"idle" | "loading" | "success">("idle");
+  const [addStatus, setAddStatus] = useState<"idle" | "loading" | "success">(
+    "idle",
+  );
   const [selectedDomainId, setSelectedDomainId] = useState("");
   const [localPart, setLocalPart] = useState("");
   const [selectedIntegrationId, setSelectedIntegrationId] = useState("");
 
   // Canned modal
   const [cannedAliasId, setCannedAliasId] = useState<string | null>(null);
-  const cannedTriggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const cannedTriggerRefs = useRef<Record<string, HTMLButtonElement | null>>(
+    {},
+  );
 
   // Mobile
   const [mobileAlias, setMobileAlias] = useState<Alias | null>(null);
@@ -706,13 +1043,22 @@ export default function AliasesPage() {
           fetch("/api/aliases"),
           fetch("/api/integrations"),
         ]);
-        if (!domainsRes.ok || !aliasesRes.ok || !integrationsRes.ok) throw new Error("Failed to load");
+        if (!domainsRes.ok || !aliasesRes.ok || !integrationsRes.ok)
+          throw new Error("Failed to load");
         const domainsData = await domainsRes.json();
         const aliasesData: Alias[] = await aliasesRes.json();
         const integrationsData = await integrationsRes.json();
-        setDomains(domainsData.map((d: any) => ({ id: d.id, domain: d.domain })));
+        setDomains(
+          domainsData.map((d: any) => ({ id: d.id, domain: d.domain })),
+        );
         setAliases(aliasesData);
-        setIntegrations(integrationsData.map((i: any) => ({ id: i.id, name: i.name, type: i.type })));
+        setIntegrations(
+          integrationsData.map((i: any) => ({
+            id: i.id,
+            name: i.name,
+            type: i.type,
+          })),
+        );
         setSelectedDomainId(domainsData[0]?.id ?? "");
         setSelectedIntegrationId(integrationsData[0]?.id ?? "");
       } catch (err) {
@@ -724,8 +1070,10 @@ export default function AliasesPage() {
     fetchInitial();
   }, []);
 
-  const handleDelete = (id: string) => setAliases((prev) => prev.filter((a) => a.id !== id));
-  const handleUpdate = (updated: Alias) => setAliases((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+  const handleDelete = (id: string) =>
+    setAliases((prev) => prev.filter((a) => a.id !== id));
+  const handleUpdate = (updated: Alias) =>
+    setAliases((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -735,33 +1083,46 @@ export default function AliasesPage() {
       const res = await fetch("/api/aliases", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domainId: selectedDomainId, localPart: localPart.trim(), integrationId: selectedIntegrationId || undefined }),
+        body: JSON.stringify({
+          domainId: selectedDomainId,
+          localPart: localPart.trim(),
+          integrationId: selectedIntegrationId || undefined,
+        }),
       });
-      if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error(body.error || "Failed to create alias"); }
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Failed to create alias");
+      }
       const created: Alias = await res.json();
       setTimeout(() => {
         setAddStatus("success");
         toast.success(`Alias "${created.email}" created`);
         setLocalPart("");
         setAliases((prev) => [created, ...prev]);
-        setActivePageTab("aliases")
+        setActivePageTab("aliases");
         setTimeout(() => setAddStatus("idle"), 2500);
       }, 1000);
     } catch (err) {
       setAddStatus("idle");
-      toast.error(err instanceof Error ? err.message : "Failed to create alias");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to create alias",
+      );
     }
   };
 
   return (
-    <div className="space-y-6 border border-neutral-400 rounded-lg p-4 min-h-screen">
+    <div className="space-y-6 border border-neutral-400 rounded-lg p-4 h-[calc(100dvh-56px-48px)]">
       {/* Page heading */}
       <div>
-        <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
+        <Heading
+          variant="muted"
+          className="font-bold text-neutral-900 dark:text-neutral-100"
+        >
           Create Email Aliases for Your Domains
         </Heading>
         <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-          Set up email addresses like support@yourdomain.com and route them to your Slack or Discord channels.
+          Set up email addresses like support@yourdomain.com and route them to
+          your Slack or Discord channels.
         </Paragraph>
       </div>
 
@@ -784,7 +1145,12 @@ export default function AliasesPage() {
                 <motion.span
                   layoutId="page-tab-bg"
                   className="absolute inset-0 bg-gradient-to-r from-sky-800 to-cyan-700 rounded-lg z-0 shadow-sm"
-                  transition={{ type: "spring", stiffness: 280, damping: 30, duration: 0.3 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 280,
+                    damping: 30,
+                    duration: 0.3,
+                  }}
                 />
               )}
               <span className="relative z-10 flex items-center gap-2">
@@ -801,11 +1167,13 @@ export default function AliasesPage() {
         {/* Tab content */}
         <div className="pt-4">
           <AnimatePresence mode="wait" initial={false}>
-
             {/* ── Email Aliases tab ── */}
             {activePageTab === "aliases" && (
-              <motion.div key="aliases"
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              <motion.div
+                key="aliases"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18, ease: easeOutQuint }}
               >
                 {loading ? (
@@ -817,23 +1185,35 @@ export default function AliasesPage() {
                     {/* Desktop table */}
                     <div className="hidden md:block">
                       <AliasesTable
-                        aliases={aliases} mode="view" integrations={integrations}
+                        aliases={aliases}
+                        mode="view"
+                        integrations={integrations}
                         cannedTriggerRefs={cannedTriggerRefs}
                         onCannedOpen={(id) => setCannedAliasId(id)}
-                        onDelete={handleDelete} onUpdate={handleUpdate}
+                        onDelete={handleDelete}
+                        onUpdate={handleUpdate}
                       />
                     </div>
                     {/* Mobile list */}
                     <div className="block md:hidden space-y-px rounded-lg border border-neutral-900 dark:border-neutral-700 overflow-hidden">
                       {aliases.map((a) => (
-                        <button key={a.id} type="button" onClick={() => setMobileAlias(a)}
+                        <button
+                          key={a.id}
+                          type="button"
+                          onClick={() => setMobileAlias(a)}
                           className="w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-neutral-100 dark:border-neutral-800 last:border-0 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors cursor-pointer focus:outline-none"
                         >
                           <div className="min-w-0 text-left">
-                            <p className="text-xs font-schibsted font-semibold text-neutral-800 dark:text-neutral-200 truncate">{a.email}</p>
-                            <p className="text-xs font-schibsted text-neutral-400 truncate">{a.domain}</p>
+                            <p className="text-xs font-schibsted font-semibold text-neutral-800 dark:text-neutral-200 truncate">
+                              {a.email}
+                            </p>
+                            <p className="text-xs font-schibsted text-neutral-400 truncate">
+                              {a.domain}
+                            </p>
                           </div>
-                          <span className={`ml-3 shrink-0 inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-schibsted font-semibold border ${a.status === "active" ? "bg-green-50 border-green-900 text-green-800" : "bg-neutral-100 border-neutral-400 text-neutral-600"}`}>
+                          <span
+                            className={`ml-3 shrink-0 inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-schibsted font-semibold border ${a.status === "active" ? "bg-green-50 border-green-900 text-green-800" : "bg-neutral-100 border-neutral-400 text-neutral-600"}`}
+                          >
                             {a.status === "active" ? "Active" : "Inactive"}
                           </span>
                         </button>
@@ -846,50 +1226,100 @@ export default function AliasesPage() {
 
             {/* ── Add Alias tab ── */}
             {activePageTab === "add" && (
-              <motion.div key="add"
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              <motion.div
+                key="add"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18, ease: easeOutQuint }}
               >
                 <form onSubmit={handleAddSubmit} className="space-y-4">
                   <div className="flex flex-wrap gap-3 items-end">
                     <div className="flex flex-col space-y-1">
-                      <label className="block text-lg font-schibsted font-regular text-neutral-700 dark:text-neutral-300 mb-1">Local part</label>
-                      <input type="text" value={localPart} onChange={(e) => setLocalPart(e.target.value)}
-                        placeholder="support" required disabled={addStatus !== "idle" || domains.length === 0}
+                      <label className="block text-lg font-schibsted font-regular text-neutral-700 dark:text-neutral-300 mb-1">
+                        Local part
+                      </label>
+                      <input
+                        type="text"
+                        value={localPart}
+                        onChange={(e) => setLocalPart(e.target.value)}
+                        placeholder="support"
+                        required
+                        disabled={addStatus !== "idle" || domains.length === 0}
                         className="w-40 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-schibsted text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 transition-colors focus:border-sky-800 outline-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                     </div>
-                    <AnimatedDropdown label="Domain" options={domains.map((d) => ({ value: d.id, label: d.domain }))}
-                      value={selectedDomainId} onChange={setSelectedDomainId} placeholder="No domains available"
-                      disabled={addStatus !== "idle" || domains.length === 0} width="w-48" />
-                    <AnimatedDropdown label="Integration"
-                      options={[{ value: "", label: "None" }, ...integrations.map((i) => ({ value: i.id, label: `${i.name} (${i.type})` }))]}
-                      value={selectedIntegrationId} onChange={setSelectedIntegrationId} placeholder="Select integration"
-                      disabled={addStatus !== "idle"} width="w-48" />
-                    <AnimatedSubmitButton idleLabel="Add Alias" loadingLabel="Adding..." successLabel="Added!"
-                      idleIcon={<IconPlus size={16} strokeWidth={2.5} />} state={addStatus}
-                      idleWidth={110} loadingWidth={110} successWidth={90}
+                    <AnimatedDropdown
+                      label="Domain"
+                      options={domains.map((d) => ({
+                        value: d.id,
+                        label: d.domain,
+                      }))}
+                      value={selectedDomainId}
+                      onChange={setSelectedDomainId}
+                      placeholder="No domains available"
                       disabled={addStatus !== "idle" || domains.length === 0}
-                      className="font-schibsted px-4 py-2 rounded-md bg-gradient-to-t from-sky-900 to-cyan-600 text-white border-0 focus:outline-none cursor-pointer flex items-center justify-center gap-2 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed" />
+                      width="w-48"
+                    />
+                    <AnimatedDropdown
+                      label="Integration"
+                      options={[
+                        { value: "", label: "None" },
+                        ...integrations.map((i) => ({
+                          value: i.id,
+                          label: `${i.name} (${i.type})`,
+                        })),
+                      ]}
+                      value={selectedIntegrationId}
+                      onChange={setSelectedIntegrationId}
+                      placeholder="Select integration"
+                      disabled={addStatus !== "idle"}
+                      width="w-48"
+                    />
+                    <AnimatedSubmitButton
+                      idleLabel="Add Alias"
+                      loadingLabel="Adding..."
+                      successLabel="Added!"
+                      idleIcon={<IconPlus size={16} strokeWidth={2.5} />}
+                      state={addStatus}
+                      idleWidth={110}
+                      loadingWidth={110}
+                      successWidth={90}
+                      disabled={addStatus !== "idle" || domains.length === 0}
+                      className="font-schibsted px-4 py-2 rounded-md bg-gradient-to-t from-sky-900 to-cyan-600 text-white border-0 focus:outline-none cursor-pointer flex items-center justify-center gap-2 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
                   </div>
-                 
                 </form>
               </motion.div>
             )}
 
             {/* ── Edit tab ── */}
             {activePageTab === "edit" && (
-              <motion.div key="edit"
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              <motion.div
+                key="edit"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18, ease: easeOutQuint }}
               >
-                {loading ? <AliasesPageSkeleton /> : aliases.length === 0 ? <EmptyState /> : (
+                {loading ? (
+                  <AliasesPageSkeleton />
+                ) : aliases.length === 0 ? (
+                  <EmptyState />
+                ) : (
                   <div className="hidden md:block">
-                    <p className="text-xs font-schibsted text-neutral-400 mb-3">Click a row to edit its integration.</p>
-                    <AliasesTable aliases={aliases} mode="edit" integrations={integrations}
+                    <p className="text-xs font-schibsted text-neutral-400 mb-3">
+                      Click a row to edit its integration.
+                    </p>
+                    <AliasesTable
+                      aliases={aliases}
+                      mode="edit"
+                      integrations={integrations}
                       cannedTriggerRefs={cannedTriggerRefs}
                       onCannedOpen={(id) => setCannedAliasId(id)}
-                      onDelete={handleDelete} onUpdate={handleUpdate} />
+                      onDelete={handleDelete}
+                      onUpdate={handleUpdate}
+                    />
                   </div>
                 )}
               </motion.div>
@@ -897,35 +1327,47 @@ export default function AliasesPage() {
 
             {/* ── Delete tab ── */}
             {activePageTab === "delete" && (
-              <motion.div key="delete"
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              <motion.div
+                key="delete"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18, ease: easeOutQuint }}
               >
-                {loading ? <AliasesPageSkeleton /> : aliases.length === 0 ? <EmptyState /> : (
+                {loading ? (
+                  <AliasesPageSkeleton />
+                ) : aliases.length === 0 ? (
+                  <EmptyState />
+                ) : (
                   <div className="hidden md:block">
-                    <p className="text-xs font-schibsted text-neutral-400 mb-3">Select an alias to delete it permanently.</p>
-                    <AliasesTable aliases={aliases} mode="delete" integrations={integrations}
+                    <p className="text-xs font-schibsted text-neutral-400 mb-3">
+                      Select an alias to delete it permanently.
+                    </p>
+                    <AliasesTable
+                      aliases={aliases}
+                      mode="delete"
+                      integrations={integrations}
                       cannedTriggerRefs={cannedTriggerRefs}
                       onCannedOpen={(id) => setCannedAliasId(id)}
-                      onDelete={handleDelete} onUpdate={handleUpdate} />
+                      onDelete={handleDelete}
+                      onUpdate={handleUpdate}
+                    />
                   </div>
                 )}
               </motion.div>
             )}
-
           </AnimatePresence>
         </div>
-        
       </Card>
-
-      
 
       {/* Canned responses modal */}
       <AnimatePresence>
         {cannedAliasId && (
           <CannedResponseModal
             aliasId={cannedAliasId}
-            aliasEmail={aliases.find((a) => a.id === cannedAliasId)?.email ?? ""}
+            aliasEmail={
+              aliases.find((a) => a.id === cannedAliasId)?.email ?? ""
+            }
             onClose={() => setCannedAliasId(null)}
           />
         )}

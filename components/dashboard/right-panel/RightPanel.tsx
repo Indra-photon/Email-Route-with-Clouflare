@@ -23,7 +23,7 @@
 //       <RecentTickets />
 
 //       <div className="border-t-2 border-neutral-100 mx-0" />
-      
+
 //       {/* Heavy divider between sections */}
 //       <div className="border-t-2 border-neutral-100 mx-0" />
 
@@ -46,31 +46,36 @@
 //   );
 // }
 
-
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useTicketPanelStore } from "./useTicketPanelStore";
 import { motion } from "motion/react";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import { IconRefresh } from "@tabler/icons-react";
-import { RecentTickets } from "./RecentTickets";
-import { LiveChatNotifications } from "./LiveChatNotifications";
-import { IntegrationHealth } from "./IntegrationHealth";
 import { Heading } from "@/components/Heading";
 import { useRefreshStore } from "./useRefresh";
+import type { PanelConfig } from "./rightPanelConfig";
 
 const EASE_OUT_QUART: [number, number, number, number] = [0.165, 0.84, 0.44, 1];
 
-export function RightPanel() {
-  const [collapsed, setCollapsed] = useState(false);
+export function RightPanel({ config }: { config: PanelConfig | null }) {
+  const [collapsed, setCollapsed] = useState(true);
   const triggerRefresh = useRefreshStore((s) => s.triggerRefresh);
   const isAnyLoading = useRefreshStore((s) => s.isAnyLoading);
   const spinning = isAnyLoading();
+  const selectedTicket = useTicketPanelStore((s) => s.selectedTicket);
+
+  // Auto-expand when a ticket is selected
+  useEffect(() => {
+    if (selectedTicket) setCollapsed(false);
+  }, [selectedTicket]);
+
+  if (!config) return null;
 
   return (
     // Outer wrapper is relative so the edge trigger can anchor to the left edge of this panel
     <div className="relative hidden xl:flex shrink-0 h-full">
-
       {/* ── Edge trigger — only visible when collapsed ── */}
       {collapsed && (
         <button
@@ -96,7 +101,7 @@ export function RightPanel() {
         animate={{ width: collapsed ? 0 : 360 }}
         transition={{ duration: 0.3, ease: EASE_OUT_QUART }}
         // overflow-hidden clips content during width animation — no flash, no wrap
-        className="flex flex-col border-l border-neutral-200 bg-white h-full overflow-hidden"
+        className="flex flex-col border-l border-neutral-200 bg-white h-full overflow-x-hidden"
       >
         {/* ── Header — h-14 matches DashboardBreadcrumb ── */}
         <div className="flex items-center justify-between px-5 h-14 shrink-0 bg-neutral-50 border-b border-neutral-200">
@@ -105,7 +110,7 @@ export function RightPanel() {
             variant="small"
             className="text-xs font-bold tracking-widest text-sky-900 uppercase whitespace-nowrap"
           >
-            Live Overview
+            {config.title}
           </Heading>
 
           {/* Right controls */}
@@ -134,19 +139,15 @@ export function RightPanel() {
         </div>
 
         {/* ── Content — fixed width so it doesn't reflow during animation ── */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden w-[360px]">
-          <RecentTickets />
-
-          <div className="border-t-2 border-neutral-100" />
-
-          <LiveChatNotifications />
-
-          <div className="border-t-2 border-neutral-100" />
-
-          {/* <IntegrationHealth /> */}
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden w-[360px]">
+          {config.sections.map((Section, i) => (
+            <div key={i} className="flex-1 min-h-0 flex flex-col">
+              {i > 0 && <div className="border-t-2 border-neutral-100" />}
+              <Section />
+            </div>
+          ))}
         </div>
       </motion.aside>
-
     </div>
   );
 }

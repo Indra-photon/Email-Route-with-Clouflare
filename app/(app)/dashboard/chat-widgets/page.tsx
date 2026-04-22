@@ -1,6 +1,3 @@
-
-
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -66,7 +63,12 @@ const easeOutQuint = [0.23, 1, 0.32, 1] as const;
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const COLORS = [
-  "#0ea5e9", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444", "#ec4899",
+  "#0ea5e9",
+  "#8b5cf6",
+  "#10b981",
+  "#f59e0b",
+  "#ef4444",
+  "#ec4899",
 ];
 
 const PAGE_TABS: { id: PageTab; label: string }[] = [
@@ -97,8 +99,13 @@ function NewKeyBanner({
 
   const handleCopy = (text: string, type: "key" | "script") => {
     navigator.clipboard.writeText(text);
-    if (type === "key") { setCopiedKey(true); setTimeout(() => setCopiedKey(false), 2000); }
-    else { setCopiedScript(true); setTimeout(() => setCopiedScript(false), 2000); }
+    if (type === "key") {
+      setCopiedKey(true);
+      setTimeout(() => setCopiedKey(false), 2000);
+    } else {
+      setCopiedScript(true);
+      setTimeout(() => setCopiedScript(false), 2000);
+    }
     toast.success("Copied!");
   };
 
@@ -132,9 +139,13 @@ function NewKeyBanner({
 
       {/* Activation Key */}
       <div className="space-y-1.5">
-        <p className="text-xs font-schibsted font-semibold text-green-800 dark:text-green-400">Activation Key</p>
+        <p className="text-xs font-schibsted font-semibold text-green-800 dark:text-green-400">
+          Activation Key
+        </p>
         <div className="flex items-center gap-2 rounded-md border border-green-200 dark:border-green-800 bg-white dark:bg-neutral-900 px-3 py-2">
-          <code className="flex-1 text-xs font-mono text-neutral-700 dark:text-neutral-300 truncate">{activationKey}</code>
+          <code className="flex-1 text-xs font-mono text-neutral-700 dark:text-neutral-300 truncate">
+            {activationKey}
+          </code>
           <button
             type="button"
             onClick={() => handleCopy(activationKey, "key")}
@@ -148,7 +159,9 @@ function NewKeyBanner({
       {/* Embed Script */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <p className="text-xs font-schibsted font-semibold text-green-800 dark:text-green-400">Embed Script</p>
+          <p className="text-xs font-schibsted font-semibold text-green-800 dark:text-green-400">
+            Embed Script
+          </p>
           <button
             type="button"
             onClick={() => handleCopy(script, "script")}
@@ -216,14 +229,18 @@ function WidgetCard({
               {widget.domain}
             </p>
             <div className="mt-0.5 flex items-center gap-2">
-              <Badge className={`border-0 font-schibsted tracking-tight rounded-sm ${
-                isActive
-                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                  : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"
-              }`}>
+              <Badge
+                className={`border-0 font-schibsted tracking-tight rounded-sm ${
+                  isActive
+                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                    : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"
+                }`}
+              >
                 {isActive ? "Active" : "Inactive"}
               </Badge>
-              <span className="text-xs font-schibsted text-neutral-500 truncate">{widget.welcomeMessage}</span>
+              <span className="text-xs font-schibsted text-neutral-500 truncate">
+                {widget.welcomeMessage}
+              </span>
             </div>
           </button>
 
@@ -249,7 +266,9 @@ function WidgetCard({
           <AnimatedDeleteButton
             onDelete={async () => {
               try {
-                const res = await fetch(`/api/chat/widgets/${widget.id}`, { method: "DELETE" });
+                const res = await fetch(`/api/chat/widgets/${widget.id}`, {
+                  method: "DELETE",
+                });
                 if (!res.ok) throw new Error("Failed to delete");
                 toast.success("Widget deleted");
                 setTimeout(() => onDelete(widget.id), 400);
@@ -273,26 +292,47 @@ function WidgetCard({
             <div className="px-4 pb-4 pt-1 border-t border-neutral-200 dark:border-neutral-800 mt-1 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Domain</p>
-                  <p className="text-sm font-schibsted font-medium text-neutral-900 dark:text-neutral-100">{widget.domain}</p>
+                  <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
+                    Domain
+                  </p>
+                  <p className="text-sm font-schibsted font-medium text-neutral-900 dark:text-neutral-100">
+                    {widget.domain}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Status</p>
-                  <p className="text-sm font-schibsted font-medium text-neutral-900 dark:text-neutral-100 capitalize">{widget.status}</p>
+                  <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
+                    Status
+                  </p>
+                  <p className="text-sm font-schibsted font-medium text-neutral-900 dark:text-neutral-100 capitalize">
+                    {widget.status}
+                  </p>
                 </div>
                 <div className="col-span-2">
-                  <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Welcome Message</p>
-                  <p className="text-sm font-schibsted text-neutral-700 dark:text-neutral-300">{widget.welcomeMessage}</p>
+                  <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
+                    Welcome Message
+                  </p>
+                  <p className="text-sm font-schibsted text-neutral-700 dark:text-neutral-300">
+                    {widget.welcomeMessage}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Accent Color</p>
+                  <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
+                    Accent Color
+                  </p>
                   <div className="flex items-center gap-2">
-                    <span className="w-4 h-4 rounded-full border border-neutral-200" style={{ background: widget.accentColor }} />
-                    <p className="text-sm font-schibsted font-mono text-neutral-700 dark:text-neutral-300">{widget.accentColor}</p>
+                    <span
+                      className="w-4 h-4 rounded-full border border-neutral-200"
+                      style={{ background: widget.accentColor }}
+                    />
+                    <p className="text-sm font-schibsted font-mono text-neutral-700 dark:text-neutral-300">
+                      {widget.accentColor}
+                    </p>
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Created</p>
+                  <p className="text-xs font-schibsted font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
+                    Created
+                  </p>
                   <p className="text-sm font-schibsted text-neutral-700 dark:text-neutral-300 tabular-nums">
                     {new Date(widget.createdAt).toLocaleString()}
                   </p>
@@ -301,16 +341,22 @@ function WidgetCard({
 
               {/* Activation Key */}
               <div className="space-y-1.5">
-                <p className="text-xs font-schibsted font-semibold text-neutral-700 dark:text-neutral-300">Activation Key</p>
+                <p className="text-xs font-schibsted font-semibold text-neutral-700 dark:text-neutral-300">
+                  Activation Key
+                </p>
                 <div className="flex items-center gap-2 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800/50 px-3 py-2">
-                  <code className="flex-1 text-xs font-mono text-neutral-700 dark:text-neutral-300 truncate">{widget.activationKey}</code>
+                  <code className="flex-1 text-xs font-mono text-neutral-700 dark:text-neutral-300 truncate">
+                    {widget.activationKey}
+                  </code>
                   <CopyIconButton value={widget.activationKey} />
                 </div>
               </div>
 
               {/* Embed Script */}
               <div className="space-y-1.5">
-                <p className="text-xs font-schibsted font-semibold text-neutral-700 dark:text-neutral-300">Embed Script</p>
+                <p className="text-xs font-schibsted font-semibold text-neutral-700 dark:text-neutral-300">
+                  Embed Script
+                </p>
                 <div className="flex items-between justify-between rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800/50 px-3 py-2 text-xs font-mono text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap overflow-auto max-h-28">
                   {script}
                   <CopyIconButton value={script} />
@@ -338,17 +384,25 @@ function WidgetAddForm({
   onWidgetAdded: (widget: ChatWidget) => void;
 }) {
   const [status, setStatus] = useState<FormStatus>("idle");
-  const [selectedDomain, setSelectedDomain] = useState(domains[0]?.domain ?? "");
-  const [selectedIntegrationId, setSelectedIntegrationId] = useState(integrations[0]?.id ?? "");
-  const [welcomeMessage, setWelcomeMessage] = useState("Hi! How can we help you today? 👋");
+  const [selectedDomain, setSelectedDomain] = useState(
+    domains[0]?.domain ?? "",
+  );
+  const [selectedIntegrationId, setSelectedIntegrationId] = useState(
+    integrations[0]?.id ?? "",
+  );
+  const [welcomeMessage, setWelcomeMessage] = useState(
+    "Hi! How can we help you today? 👋",
+  );
   const [accentColor, setAccentColor] = useState("#0ea5e9");
 
   useEffect(() => {
-    if (!selectedDomain && domains.length > 0) setSelectedDomain(domains[0].domain);
+    if (!selectedDomain && domains.length > 0)
+      setSelectedDomain(domains[0].domain);
   }, [domains, selectedDomain]);
 
   useEffect(() => {
-    if (!selectedIntegrationId && integrations.length > 0) setSelectedIntegrationId(integrations[0].id);
+    if (!selectedIntegrationId && integrations.length > 0)
+      setSelectedIntegrationId(integrations[0].id);
   }, [integrations, selectedIntegrationId]);
 
   const isBusy = status !== "idle";
@@ -381,7 +435,9 @@ function WidgetAddForm({
       }, 1000);
     } catch (err) {
       setStatus("idle");
-      toast.error(err instanceof Error ? err.message : "Failed to create widget");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to create widget",
+      );
     }
   };
 
@@ -399,7 +455,10 @@ function WidgetAddForm({
         />
         <AnimatedDropdown
           label="Integration"
-          options={integrations.map((i) => ({ value: i.id, label: `${i.name} (${i.type})` }))}
+          options={integrations.map((i) => ({
+            value: i.id,
+            label: `${i.name} (${i.type})`,
+          }))}
           value={selectedIntegrationId}
           onChange={setSelectedIntegrationId}
           placeholder="No integrations"
@@ -407,7 +466,9 @@ function WidgetAddForm({
           width="w-52"
         />
         <div className="flex flex-col space-y-1">
-          <label className="block text-lg font-schibsted font-regular text-neutral-700 dark:text-neutral-300 mb-1">Welcome Message</label>
+          <label className="block text-lg font-schibsted font-regular text-neutral-700 dark:text-neutral-300 mb-1">
+            Welcome Message
+          </label>
           <input
             type="text"
             value={welcomeMessage}
@@ -419,7 +480,7 @@ function WidgetAddForm({
         </div>
         <div className="flex flex-col space-y-1">
           <label className="block text-lg font-schibsted font-regular text-neutral-700 dark:text-neutral-300 mb-1">
-            Your Brand Color 
+            Your Brand Color
           </label>
           <div className="flex items-center gap-1.5 h-[38px]">
             {COLORS.map((c) => (
@@ -429,7 +490,9 @@ function WidgetAddForm({
                 disabled={isBusy}
                 onClick={() => setAccentColor(c)}
                 className={`w-6 h-6 rounded-full border-2 transition-all duration-150 focus:outline-none cursor-pointer disabled:opacity-50 ${
-                  accentColor === c ? "border-neutral-800 dark:border-neutral-200 scale-110" : "border-transparent hover:scale-105"
+                  accentColor === c
+                    ? "border-neutral-800 dark:border-neutral-200 scale-110"
+                    : "border-transparent hover:scale-105"
                 }`}
                 style={{ background: c }}
               />
@@ -495,7 +558,9 @@ export default function ChatWidgetsDashboard() {
   const [domains, setDomains] = useState<Domain[]>([]);
   const [loading, setLoading] = useState(true);
   const [activePageTab, setActivePageTab] = useState<PageTab>("create");
-  const [newKey, setNewKey] = useState<{ key: string; script: string } | null>(null);
+  const [newKey, setNewKey] = useState<{ key: string; script: string } | null>(
+    null,
+  );
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -509,7 +574,14 @@ export default function ChatWidgetsDashboard() {
       if (iRes.ok) setIntegrations(await iRes.json());
       if (dRes.ok) {
         const allDomains = await dRes.json();
-        setDomains(allDomains.filter((d: Domain) => d.verifiedForSending || d.status === "verified" || d.status === "active"));
+        setDomains(
+          allDomains.filter(
+            (d: Domain) =>
+              d.verifiedForSending ||
+              d.status === "verified" ||
+              d.status === "active",
+          ),
+        );
       }
     } catch {
       toast.error("Failed to load data");
@@ -518,14 +590,17 @@ export default function ChatWidgetsDashboard() {
     }
   }, []);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
 
   // Dismiss banner when switching away from create tab
   useEffect(() => {
     if (activePageTab !== "create") setNewKey(null);
   }, [activePageTab]);
 
-  const handleDelete = (id: string) => setWidgets((prev) => prev.filter((w) => w.id !== id));
+  const handleDelete = (id: string) =>
+    setWidgets((prev) => prev.filter((w) => w.id !== id));
 
   const handleWidgetAdded = (widget: ChatWidget) => {
     setWidgets((prev) => [widget, ...prev]);
@@ -539,14 +614,21 @@ export default function ChatWidgetsDashboard() {
   };
 
   return (
-    <div className="space-y-6 border border-neutral-400 rounded-lg p-4 min-h-screen">
+    <div className="space-y-6 border border-neutral-400 rounded-lg p-4 h-[calc(100dvh-56px-48px)]">
       {/* Page heading */}
       <div>
-        <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
+        <Heading
+          variant="muted"
+          className="font-bold text-neutral-900 dark:text-neutral-100"
+        >
           Chat Widgets
         </Heading>
-        <Paragraph variant="default" className="text-neutral-600 dark:text-neutral-400 mt-1">
-          Create embeddable live chat widgets for your verified domains. Each widget routes conversations to a Slack or Discord integration.
+        <Paragraph
+          variant="default"
+          className="text-neutral-600 dark:text-neutral-400 mt-1"
+        >
+          Create embeddable live chat widgets for your verified domains. Each
+          widget routes conversations to a Slack or Discord integration.
         </Paragraph>
       </div>
 
@@ -569,7 +651,12 @@ export default function ChatWidgetsDashboard() {
                 <motion.span
                   layoutId="widgets-tab-bg"
                   className="absolute inset-0 bg-gradient-to-r from-sky-800 to-cyan-700 rounded-lg z-0 shadow-sm"
-                  transition={{ type: "spring", stiffness: 280, damping: 30, duration: 0.3 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 280,
+                    damping: 30,
+                    duration: 0.3,
+                  }}
                 />
               )}
               <span className="relative z-10 flex items-center gap-2">
@@ -585,11 +672,13 @@ export default function ChatWidgetsDashboard() {
         {/* Tab content */}
         <div className="pt-4">
           <AnimatePresence mode="wait" initial={false}>
-
             {/* ── Widgets tab ── */}
             {activePageTab === "widgets" && (
-              <motion.div key="widgets"
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              <motion.div
+                key="widgets"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18, ease: easeOutQuint }}
               >
                 {loading ? (
@@ -600,7 +689,11 @@ export default function ChatWidgetsDashboard() {
                   <motion.div layout className="space-y-2">
                     <AnimatePresence mode="popLayout">
                       {widgets.map((w) => (
-                        <WidgetCard key={w.id} widget={w} onDelete={handleDelete} />
+                        <WidgetCard
+                          key={w.id}
+                          widget={w}
+                          onDelete={handleDelete}
+                        />
                       ))}
                     </AnimatePresence>
                   </motion.div>
@@ -610,8 +703,11 @@ export default function ChatWidgetsDashboard() {
 
             {/* ── Create tab ── */}
             {activePageTab === "create" && (
-              <motion.div key="create"
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              <motion.div
+                key="create"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18, ease: easeOutQuint }}
                 className="space-y-4"
               >
@@ -636,8 +732,11 @@ export default function ChatWidgetsDashboard() {
 
             {/* ── Delete tab ── */}
             {activePageTab === "delete" && (
-              <motion.div key="delete"
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              <motion.div
+                key="delete"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18, ease: easeOutQuint }}
               >
                 {loading ? (
@@ -646,11 +745,18 @@ export default function ChatWidgetsDashboard() {
                   <EmptyState />
                 ) : (
                   <>
-                    <p className="text-xs font-schibsted text-neutral-400 mb-3">Select a widget to delete it permanently.</p>
+                    <p className="text-xs font-schibsted text-neutral-400 mb-3">
+                      Select a widget to delete it permanently.
+                    </p>
                     <motion.div layout className="space-y-2">
                       <AnimatePresence mode="popLayout">
                         {widgets.map((w) => (
-                          <WidgetCard key={w.id} widget={w} onDelete={handleDelete} deleteMode />
+                          <WidgetCard
+                            key={w.id}
+                            widget={w}
+                            onDelete={handleDelete}
+                            deleteMode
+                          />
                         ))}
                       </AnimatePresence>
                     </motion.div>
@@ -658,7 +764,6 @@ export default function ChatWidgetsDashboard() {
                 )}
               </motion.div>
             )}
-
           </AnimatePresence>
         </div>
       </Card>

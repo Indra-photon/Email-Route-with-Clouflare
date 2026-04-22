@@ -1,6 +1,3 @@
-
-
-
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -49,13 +46,17 @@ async function DomainListLoader() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function DomainsPage() {
   return (
-    <div className="space-y-6 border border-neutral-400 rounded-lg p-4 min-h-screen">
+    <div className="space-y-6 border border-neutral-400 rounded-lg p-4 h-[calc(100dvh-56px-48px)]">
       <div>
-        <Heading variant="muted" className="font-bold text-neutral-900 dark:text-neutral-100">
+        <Heading
+          variant="muted"
+          className="font-bold text-neutral-900 dark:text-neutral-100"
+        >
           Add Your Domains
         </Heading>
         <Paragraph className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-          Add and verify your domains to use for email aliases and receive emails at your custom address.
+          Add and verify your domains to use for email aliases and receive
+          emails at your custom address.
         </Paragraph>
       </div>
 

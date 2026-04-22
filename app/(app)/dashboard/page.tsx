@@ -1,7 +1,3 @@
-
-
-
-
 import { Suspense } from "react";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -13,7 +9,13 @@ import { Container } from "@/components/Container";
 import { DashboardClient } from "@/components/dashboard/overview/DashboardClient";
 
 // Shadcn UI components
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 // Import optimized components (we'll create these next)
@@ -32,20 +34,20 @@ export const revalidate = 60;
 
 export default async function DashboardPage() {
   const { userId } = await auth();
-  
+
   if (!userId) {
     redirect("/sign-in");
   }
 
   return (
     <div className="min-h-dvh">
-      <Container className="py-0">
+      <div className="py-0">
         {/* <Heading className="text-neutral-900">
           Welcome back, <span className="text-neutral-900">Indranil</span>!
         </Heading> */}
 
         <DashboardClient />
-      </Container>
+      </div>
     </div>
   );
 }

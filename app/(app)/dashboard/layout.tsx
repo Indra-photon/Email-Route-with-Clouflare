@@ -7,7 +7,11 @@ import AgentPresenceProvider from "@/components/dashboard/AgentPresenceProvider"
 import { DashboardSubscriptionGuard } from "@/components/dashboard/DashboardSubscriptionGuard";
 import { PlanGuardProvider } from "@/components/billing/PlanGuardProvider";
 
-export default async function DashboardLayout({ children }: { children: ReactNode }) {
+export default async function DashboardLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
