@@ -633,16 +633,19 @@ ${snippet}
       // ── Fetch domain customization settings ──
       let customBotName: string | null = null;
       let customBotAvatar: string | null = null;
+      let customBotDescription: string | null = null;
 
       try {
         const domain = await Domain.findById(alias.domainId).lean().exec();
         if (domain) {
           customBotName = domain.botName || null;
           customBotAvatar = domain.botAvatar || null;
+          customBotDescription = (domain as any).botDescription || null;
           console.log("🎨 Domain customization:", {
             domain: domain.domain,
             botName: customBotName,
-            botAvatar: customBotAvatar
+            botAvatar: customBotAvatar,
+            botDescription: customBotDescription,
           });
         }
       } catch (err) {
@@ -655,12 +658,21 @@ ${snippet}
         ...messagePayload,
       };
 
-      // Add custom bot name and avatar if set
+      // Add custom bot name, avatar and description if set
       if (customBotName) {
         postMessageBody.username = customBotName;
       }
       if (customBotAvatar) {
         postMessageBody.icon_url = customBotAvatar;
+      }
+      // Append description as a Slack context block (small grey text under the message)
+      if (customBotDescription && Array.isArray(postMessageBody.blocks)) {
+        postMessageBody.blocks.splice(1, 0, {
+          type: "context",
+          elements: [
+            { type: "mrkdwn", text: `_${customBotDescription}_` },
+          ],
+        });
       }
 
       const slackRes = await fetch("https://slack.com/api/chat.postMessage", {
