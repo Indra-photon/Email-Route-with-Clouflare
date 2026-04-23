@@ -6,6 +6,7 @@ import dbConnect from '@/lib/dbConnect'
 import { PricingPlan } from '@/app/api/models/PricingPlanModel'
 import { seedPricingPlans } from '@/lib/seedPricingPlans'
 import { Footer } from '@/components/Footer'
+import { EarlyBirdBanner } from './EarlyBirdBanner'
 
 async function page() {
   await dbConnect()
@@ -18,6 +19,7 @@ async function page() {
 
   return (
     <div>
+        <EarlyBirdBanner />
         <PricingTableSection plans={JSON.parse(JSON.stringify(plans))} />
         {/* <KeyFeaturesSection /> */}
         <ComparisonTableSection />
