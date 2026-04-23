@@ -63,8 +63,8 @@
 //         <Grid.System unstable_useContainer>
 //           <div className="w-full">
 //             <div className="max-w-7xl mx-auto px-4 sm:px-6 xl:px-0 ">
-//               <Heading 
-//                   as="h3" 
+//               <Heading
+//                   as="h3"
 //                   className="text-neutral-900 mb-6 leading-tight font-semibold"
 //               >
 //                   Solve your customer tickets, resolve customer queries, and get billing, leads, seperately
@@ -72,7 +72,7 @@
 //               <h4 className="text-xl md:text-2xl text-neutral-900 font-schibsted font-regular mb-8 leading-relaxed">
 //                 Support teams deliver faster responses with Slack integration.
 //               </h4>
-              
+
 //               <div className="border-y border-neutral-200">
 //                 <div className="grid grid-cols-3 border-x border-neutral-200">
 //                   {benefits.map((benefit, index) => (
@@ -112,7 +112,7 @@
 //           <h2 className="text-2xl md:text-3xl font-schibsted font-semibold tracking-tight leading-tight mb-10 text-neutral-900">
 //             Support teams deliver faster responses with Slack integration.
 //           </h2>
-          
+
 //           <div className="border-y border-neutral-200">
 //             <div className="grid grid-cols-2 border-x border-neutral-200">
 //               {benefits.map((benefit, index) => (
@@ -133,7 +133,7 @@
 //                       {benefit.description}
 //                     </p>
 //                   </div>
-                  
+
 //                   <div className="absolute bottom-6 left-6">
 //                     <span className="text-xs font-schibsted font-medium text-neutral-500">
 //                       {benefit.company}
@@ -152,7 +152,7 @@
 //           <h2 className="text-xl sm:text-2xl font-schibsted font-semibold tracking-tight leading-tight mb-8 text-neutral-900">
 //             Support teams deliver faster responses with Slack integration.
 //           </h2>
-          
+
 //           <div className="border-y border-neutral-200">
 //             <div className="grid grid-cols-1 border-x border-neutral-200">
 //               {benefits.map((benefit, index) => (
@@ -173,7 +173,7 @@
 //                       {benefit.description}
 //                     </p>
 //                   </div>
-                  
+
 //                   <div className="absolute bottom-6 left-6">
 //                     <span className="text-xs font-schibsted font-medium text-neutral-500">
 //                       {benefit.company}
@@ -189,14 +189,62 @@
 //   );
 // }
 
-
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Grid } from "@/components/VercelGrid";
 import { Heading } from "@/components/Heading";
 import { motion } from "framer-motion";
 import { Paragraph } from "@/components/Paragraph";
+import { CopyIcon } from "@/constants/icons";
+import Link from "next/link";
+
+const CODE = "EARLYBIRD20";
+
+function EarlyBirdStrip() {
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy() {
+    navigator.clipboard.writeText(CODE);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <div className="border-t border-x border-neutral-200 bg-gradient-to-r from-amber-400 via-orange-400 to-orange-500 px-8 py-2 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
+        <p className="font-schibsted text-[16px] tracking-tighter font-light text-amber-950">
+          Early bird offer — get{" "}
+          <strong className="text-white px-1 font-bold text-[18px]">
+            20% off
+          </strong>{" "}
+          for your first 3 months
+        </p>
+        <button
+          type="button"
+          onClick={handleCopy}
+          aria-label={copied ? "Copied!" : "Copy code EARLYBIRD20"}
+          className="inline-flex items-center gap-1.5 font-mono text-xs font-bold tracking-widest text-amber-950 bg-white/40 hover:bg-white/60 rounded px-3 py-1 uppercase cursor-pointer transition-colors"
+        >
+          {CODE}
+          <CopyIcon copied={copied} size={12} />
+        </button>
+      </div>
+      <div className="p-[3px] rounded-[14px] inline-flex shrink-0">
+        <Link
+          href="/pricing"
+          className="group block p-[3px] rounded-[11px] bg-gradient-to-b from-white to-stone-200/40 shadow-[0_1px_3px_rgba(0,0,0,0.5)] active:shadow-[0_0px_1px_rgba(0,0,0,0.5)] active:scale-[0.995] cursor-pointer"
+        >
+          <div className="bg-gradient-to-b from-stone-200/40 to-white/80 rounded-[8px] px-4 py-[3px]">
+            <span className="font-schibsted font-semibold tracking-wide uppercase text-neutral-900 text-sm select-none whitespace-nowrap">
+              See plans
+            </span>
+          </div>
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 const benefits = [
   {
@@ -257,27 +305,54 @@ const benefits = [
 
 // Decoration Components
 const WavesDecoration = ({ isHovered }: { isHovered: boolean }) => (
-  <svg width="120" height="120" viewBox="0 0 120 120" className="absolute top-0 right-0">
+  <svg
+    width="120"
+    height="120"
+    viewBox="0 0 120 120"
+    className="absolute top-0 right-0"
+  >
     <motion.path
       d="M 60 0 A 60 60 0 0 1 120 60 L 120 0 Z"
       fill="#E0F2FE"
       initial={{ scale: 1, opacity: 0.3 }}
-      animate={isHovered ? { scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] } : { scale: 1, opacity: 0.3 }}
+      animate={
+        isHovered
+          ? { scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }
+          : { scale: 1, opacity: 0.3 }
+      }
       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
     />
     <motion.path
       d="M 80 0 A 40 40 0 0 1 120 40 L 120 0 Z"
       fill="#38BDF8"
       initial={{ scale: 1, opacity: 0.4 }}
-      animate={isHovered ? { scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] } : { scale: 1, opacity: 0.4 }}
-      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+      animate={
+        isHovered
+          ? { scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }
+          : { scale: 1, opacity: 0.4 }
+      }
+      transition={{
+        duration: 2,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: 0.3,
+      }}
     />
     <motion.path
       d="M 100 0 A 20 20 0 0 1 120 20 L 120 0 Z"
       fill="#0EA5E9"
       initial={{ scale: 1, opacity: 0.5 }}
-      animate={isHovered ? { scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] } : { scale: 1, opacity: 0.5 }}
-      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
+      animate={
+        isHovered
+          ? { scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }
+          : { scale: 1, opacity: 0.5 }
+      }
+      transition={{
+        duration: 2,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: 0.6,
+      }}
     />
   </svg>
 );
@@ -304,7 +379,7 @@ const WavesDecoration = ({ isHovered }: { isHovered: boolean }) => (
 //       strokeWidth="2"
 //       strokeLinecap="round"
 //       strokeLinejoin="round"
-//       style={{ 
+//       style={{
 //         transformBox: "fill-box",
 //         transformOrigin: "bottom" }}
 //       initial={{ rotate: 0 }}
@@ -338,35 +413,66 @@ const WavesDecoration = ({ isHovered }: { isHovered: boolean }) => (
 //   </svg>
 // );
 
-
 const BubblesDecoration = ({ isHovered }: { isHovered: boolean }) => (
-  <svg width="120" height="120" viewBox="0 0 120 120" className="absolute top-0 right-0">
+  <svg
+    width="120"
+    height="120"
+    viewBox="0 0 120 120"
+    className="absolute top-0 right-0"
+  >
     <motion.path
       d="M 80 0 A 40 40 0 0 1 120 40 L 120 0 Z"
       fill="#FED7AA"
       initial={{ rotate: 0, scale: 1 }}
-      animate={isHovered ? { rotate: [0, 5, 0], scale: [1, 1.05, 1] } : { rotate: 0, scale: 1 }}
+      animate={
+        isHovered
+          ? { rotate: [0, 5, 0], scale: [1, 1.05, 1] }
+          : { rotate: 0, scale: 1 }
+      }
       transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
     />
     <motion.path
       d="M 90 10 A 30 30 0 0 1 120 40 L 120 10 Z"
       fill="#FB923C"
       initial={{ rotate: 0, scale: 1 }}
-      animate={isHovered ? { rotate: [0, -5, 0], scale: [1, 1.08, 1] } : { rotate: 0, scale: 1 }}
-      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+      animate={
+        isHovered
+          ? { rotate: [0, -5, 0], scale: [1, 1.08, 1] }
+          : { rotate: 0, scale: 1 }
+      }
+      transition={{
+        duration: 3,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: 0.5,
+      }}
     />
     <motion.path
       d="M 100 20 A 20 20 0 0 1 120 40 L 120 20 Z"
       fill="#F97316"
       initial={{ rotate: 0, scale: 1 }}
-      animate={isHovered ? { rotate: [0, 3, 0], scale: [1, 1.1, 1] } : { rotate: 0, scale: 1 }}
-      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+      animate={
+        isHovered
+          ? { rotate: [0, 3, 0], scale: [1, 1.1, 1] }
+          : { rotate: 0, scale: 1 }
+      }
+      transition={{
+        duration: 3,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: 1,
+      }}
     />
   </svg>
 );
 
 const LayersDecoration = ({ isHovered }: { isHovered: boolean }) => (
-  <svg width="120" height="100" viewBox="0 0 120 100" className="absolute top-0 right-0">
+  <svg
+    width="120"
+    height="100"
+    viewBox="0 0 120 100"
+    className="absolute top-0 right-0"
+  >
     <motion.rect
       x="40"
       y="0"
@@ -375,7 +481,11 @@ const LayersDecoration = ({ isHovered }: { isHovered: boolean }) => (
       rx="15"
       fill="#E0E7FF"
       initial={{ x: 40, opacity: 0.4 }}
-      animate={isHovered ? { x: [40, 35, 40], opacity: [0.4, 0.7, 0.4] } : { x: 40, opacity: 0.4 }}
+      animate={
+        isHovered
+          ? { x: [40, 35, 40], opacity: [0.4, 0.7, 0.4] }
+          : { x: 40, opacity: 0.4 }
+      }
       transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
     />
     <motion.rect
@@ -386,8 +496,17 @@ const LayersDecoration = ({ isHovered }: { isHovered: boolean }) => (
       rx="15"
       fill="#A78BFA"
       initial={{ x: 50, opacity: 0.5 }}
-      animate={isHovered ? { x: [50, 45, 50], opacity: [0.5, 0.8, 0.5] } : { x: 50, opacity: 0.5 }}
-      transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
+      animate={
+        isHovered
+          ? { x: [50, 45, 50], opacity: [0.5, 0.8, 0.5] }
+          : { x: 50, opacity: 0.5 }
+      }
+      transition={{
+        duration: 2.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: 0.4,
+      }}
     />
     <motion.rect
       x="60"
@@ -397,21 +516,39 @@ const LayersDecoration = ({ isHovered }: { isHovered: boolean }) => (
       rx="15"
       fill="#7C3AED"
       initial={{ x: 60, opacity: 0.6 }}
-      animate={isHovered ? { x: [60, 55, 60], opacity: [0.6, 0.9, 0.6] } : { x: 60, opacity: 0.6 }}
-      transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
+      animate={
+        isHovered
+          ? { x: [60, 55, 60], opacity: [0.6, 0.9, 0.6] }
+          : { x: 60, opacity: 0.6 }
+      }
+      transition={{
+        duration: 2.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: 0.8,
+      }}
     />
   </svg>
 );
 
 const TargetDecoration = ({ isHovered }: { isHovered: boolean }) => (
-  <svg width="120" height="120" viewBox="0 0 120 120" className="absolute -top-5 -right-5">
+  <svg
+    width="120"
+    height="120"
+    viewBox="0 0 120 120"
+    className="absolute -top-5 -right-5"
+  >
     <motion.circle
       cx="90"
       cy="30"
       r="30"
       fill="#FEF9C3"
       initial={{ scale: 1, opacity: 0.3 }}
-      animate={isHovered ? { scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] } : { scale: 1, opacity: 0.3 }}
+      animate={
+        isHovered
+          ? { scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }
+          : { scale: 1, opacity: 0.3 }
+      }
       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
     />
     <motion.circle
@@ -420,8 +557,17 @@ const TargetDecoration = ({ isHovered }: { isHovered: boolean }) => (
       r="20"
       fill="#FBBF24"
       initial={{ scale: 1, opacity: 0.5 }}
-      animate={isHovered ? { scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] } : { scale: 1, opacity: 0.5 }}
-      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+      animate={
+        isHovered
+          ? { scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }
+          : { scale: 1, opacity: 0.5 }
+      }
+      transition={{
+        duration: 2,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: 0.3,
+      }}
     />
     <motion.circle
       cx="90"
@@ -429,40 +575,81 @@ const TargetDecoration = ({ isHovered }: { isHovered: boolean }) => (
       r="10"
       fill="#F59E0B"
       initial={{ scale: 1, opacity: 0.7 }}
-      animate={isHovered ? { scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] } : { scale: 1, opacity: 0.7 }}
-      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
+      animate={
+        isHovered
+          ? { scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }
+          : { scale: 1, opacity: 0.7 }
+      }
+      transition={{
+        duration: 2,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: 0.6,
+      }}
     />
   </svg>
 );
 
 const PulseDecoration = ({ isHovered }: { isHovered: boolean }) => (
-  <svg width="120" height="120" viewBox="0 0 120 120" className="absolute top-0 right-0">
+  <svg
+    width="120"
+    height="120"
+    viewBox="0 0 120 120"
+    className="absolute top-0 right-0"
+  >
     <motion.path
       d="M 60 0 Q 120 0 120 60 L 120 0 Z"
       fill="#DBEAFE"
       initial={{ scale: 1, opacity: 0.3 }}
-      animate={isHovered ? { scale: [1, 1.05, 1], opacity: [0.3, 0.5, 0.3] } : { scale: 1, opacity: 0.3 }}
+      animate={
+        isHovered
+          ? { scale: [1, 1.05, 1], opacity: [0.3, 0.5, 0.3] }
+          : { scale: 1, opacity: 0.3 }
+      }
       transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
     />
     <motion.path
       d="M 80 0 Q 120 0 120 40 L 120 0 Z"
       fill="#93C5FD"
       initial={{ scale: 1, opacity: 0.5 }}
-      animate={isHovered ? { scale: [1, 1.1, 1], opacity: [0.5, 0.7, 0.5] } : { scale: 1, opacity: 0.5 }}
-      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
+      animate={
+        isHovered
+          ? { scale: [1, 1.1, 1], opacity: [0.5, 0.7, 0.5] }
+          : { scale: 1, opacity: 0.5 }
+      }
+      transition={{
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: 0.2,
+      }}
     />
     <motion.path
       d="M 100 0 Q 120 0 120 20 L 120 0 Z"
       fill="#3B82F6"
       initial={{ scale: 1, opacity: 0.7 }}
-      animate={isHovered ? { scale: [1, 1.15, 1], opacity: [0.7, 0.9, 0.7] } : { scale: 1, opacity: 0.7 }}
-      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
+      animate={
+        isHovered
+          ? { scale: [1, 1.15, 1], opacity: [0.7, 0.9, 0.7] }
+          : { scale: 1, opacity: 0.7 }
+      }
+      transition={{
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: 0.4,
+      }}
     />
   </svg>
 );
 
 const RingsDecoration = ({ isHovered }: { isHovered: boolean }) => (
-  <svg width="120" height="120" viewBox="0 0 120 120" className="absolute -top-5 -right-5">
+  <svg
+    width="120"
+    height="120"
+    viewBox="0 0 120 120"
+    className="absolute -top-5 -right-5"
+  >
     <motion.circle
       cx="90"
       cy="30"
@@ -471,7 +658,11 @@ const RingsDecoration = ({ isHovered }: { isHovered: boolean }) => (
       stroke="#D1FAE5"
       strokeWidth="4"
       initial={{ scale: 1, opacity: 0.4 }}
-      animate={isHovered ? { scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] } : { scale: 1, opacity: 0.4 }}
+      animate={
+        isHovered
+          ? { scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }
+          : { scale: 1, opacity: 0.4 }
+      }
       transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
     />
     <motion.circle
@@ -482,8 +673,17 @@ const RingsDecoration = ({ isHovered }: { isHovered: boolean }) => (
       stroke="#6EE7B7"
       strokeWidth="4"
       initial={{ scale: 1, opacity: 0.6 }}
-      animate={isHovered ? { scale: [1, 1.25, 1], opacity: [0.6, 0.9, 0.6] } : { scale: 1, opacity: 0.6 }}
-      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+      animate={
+        isHovered
+          ? { scale: [1, 1.25, 1], opacity: [0.6, 0.9, 0.6] }
+          : { scale: 1, opacity: 0.6 }
+      }
+      transition={{
+        duration: 3,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: 0.5,
+      }}
     />
     <motion.circle
       cx="90"
@@ -491,13 +691,28 @@ const RingsDecoration = ({ isHovered }: { isHovered: boolean }) => (
       r="8"
       fill="#10B981"
       initial={{ scale: 1, opacity: 0.8 }}
-      animate={isHovered ? { scale: [1, 1.3, 1], opacity: [0.8, 1, 0.8] } : { scale: 1, opacity: 0.8 }}
-      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+      animate={
+        isHovered
+          ? { scale: [1, 1.3, 1], opacity: [0.8, 1, 0.8] }
+          : { scale: 1, opacity: 0.8 }
+      }
+      transition={{
+        duration: 3,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: 1,
+      }}
     />
   </svg>
 );
 
-const DecorationRenderer = ({ type, isHovered }: { type: string; isHovered: boolean }) => {
+const DecorationRenderer = ({
+  type,
+  isHovered,
+}: {
+  type: string;
+  isHovered: boolean;
+}) => {
   switch (type) {
     case "waves":
       return <WavesDecoration isHovered={isHovered} />;
@@ -534,17 +749,24 @@ export function BenefitsSection() {
                 initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
                 whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, ease: [.25, .46, .45, .94], delay: 0.2 }}
+                transition={{
+                  duration: 0.4,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                  delay: 0.2,
+                }}
               >
-                <Heading as="h2" className="text-neutral-900 font-schibsted leading-tight">
-                  <span>What changes the week you switch.{" "}</span>
+                <Heading
+                  as="h2"
+                  className="text-neutral-900 font-schibsted leading-tight"
+                >
+                  <span>What changes the week you switch. </span>
                   <span className="text-sky-800 font-extralight">
                     — faster responses, fewer missed tickets, less time wasted.
                   </span>
                 </Heading>
               </motion.div>
 
-              <div className="border-y border-neutral-200 relative overflow-hidden ">
+              <div className="border-y border-neutral-200 relative overflow-hidden">
                 <div className="grid grid-cols-3 border-x border-neutral-200 overflow-hidden">
                   {benefits.map((benefit, index) => (
                     <div
@@ -552,16 +774,13 @@ export function BenefitsSection() {
                       onMouseEnter={() => setHoveredCard(benefit.id)}
                       onMouseLeave={() => setHoveredCard(null)}
                       className={`group relative p-8 pb-0 border-neutral-200 overflow-hidden ${
-                        index % 3 !== 2 ? 'border-r' : ''
-                      } ${index < 3 ? 'border-b' : ''}`}
+                        index % 3 !== 2 ? "border-r" : ""
+                      } ${index < 3 ? "border-b" : ""}`}
                     >
-                      {/* Animated Decoration */}
-                      <DecorationRenderer 
-                        type={benefit.decoration} 
+                      <DecorationRenderer
+                        type={benefit.decoration}
                         isHovered={hoveredCard === benefit.id}
                       />
-
-                      {/* Content */}
                       <div className="flex flex-col pb-16 relative z-10">
                         <span className="text-5xl font-schibsted font-bold tracking-tight mb-1 text-sky-800">
                           {benefit.metric}
@@ -573,10 +792,10 @@ export function BenefitsSection() {
                           {benefit.description}
                         </p>
                       </div>
-
                     </div>
                   ))}
                 </div>
+                <EarlyBirdStrip />
               </div>
             </div>
           </div>
@@ -590,22 +809,29 @@ export function BenefitsSection() {
             Proven impact
           </p>
           <div className="mb-10">
-            <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
+            <Heading
+              as="span"
+              className="text-neutral-900 leading-tight font-semibold"
+            >
               Real results. Real teams. Real fast.{" "}
             </Heading>
-            <Heading as="span" className="text-neutral-400 leading-tight font-semibold">
-              From startups to scale-ups, teams see dramatic improvements — without adding headcount.
+            <Heading
+              as="span"
+              className="text-neutral-400 leading-tight font-semibold"
+            >
+              From startups to scale-ups, teams see dramatic improvements —
+              without adding headcount.
             </Heading>
           </div>
-          
+
           <div className="border-y border-neutral-200">
             <div className="grid grid-cols-2 border-x border-neutral-200">
               {benefits.map((benefit, index) => (
                 <div
                   key={benefit.id}
                   className={`relative p-6 pb-0 overflow-hidden border-neutral-200 ${
-                    index % 2 !== 1 ? 'border-r' : ''
-                  } ${index < 4 ? 'border-b' : ''}`}
+                    index % 2 !== 1 ? "border-r" : ""
+                  } ${index < 4 ? "border-b" : ""}`}
                 >
                   <div className="flex flex-col pb-12">
                     <span className="text-4xl font-schibsted font-light tracking-tight mb-1 text-sky-700">
@@ -621,6 +847,7 @@ export function BenefitsSection() {
                 </div>
               ))}
             </div>
+            <EarlyBirdStrip />
           </div>
         </div>
       </div>
@@ -632,24 +859,34 @@ export function BenefitsSection() {
             Proven impact
           </p>
           <div className="mb-8">
-            <Heading as="span" className="text-neutral-900 leading-tight font-semibold">
+            <Heading
+              as="span"
+              className="text-neutral-900 leading-tight font-semibold"
+            >
               Real results. Real teams. Real fast.{" "}
             </Heading>
-            <Heading as="span" className="text-neutral-400 leading-tight font-semibold">
-              From startups to scale-ups, teams see dramatic improvements — without adding headcount.
+            <Heading
+              as="span"
+              className="text-neutral-400 leading-tight font-semibold"
+            >
+              From startups to scale-ups, teams see dramatic improvements —
+              without adding headcount.
             </Heading>
           </div>
-          
+
           <div className="border-y border-neutral-200">
             <div className="grid grid-cols-1 border-x border-neutral-200">
               {benefits.map((benefit, index) => (
                 <div
                   key={benefit.id}
                   className={`relative p-6 pb-0 overflow-hidden ${
-                    index !== benefits.length - 1 ? 'border-b' : ''
+                    index !== benefits.length - 1 ? "border-b" : ""
                   } border-neutral-200`}
                 >
-                  <DecorationRenderer type={benefit.decoration} isHovered={false} />
+                  <DecorationRenderer
+                    type={benefit.decoration}
+                    isHovered={false}
+                  />
                   <div className="flex flex-col pb-12 relative z-10">
                     <span className="text-3xl font-schibsted font-light tracking-tight mb-1 text-sky-700">
                       {benefit.metric}
@@ -664,6 +901,7 @@ export function BenefitsSection() {
                 </div>
               ))}
             </div>
+            <EarlyBirdStrip />
           </div>
         </div>
       </div>
