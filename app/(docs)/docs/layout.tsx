@@ -7,6 +7,16 @@ import React, { type ReactNode } from "react";
 import type { Metadata } from "next";
 import * as PageTree from "fumadocs-core/page-tree";
 import { CustomItem, CustomFolder } from "@/components/docs/SidebarComponents";
+import {
+  IconRocket,
+  IconWorld,
+  IconPlug,
+  IconAt,
+  IconTicket,
+  IconMessageChatbot,
+  IconTemplate,
+  IconPalette,
+} from "@tabler/icons-react";
 
 const BASE_URL = "https://www.syncsupport.app";
 
@@ -59,16 +69,18 @@ export const metadata: Metadata = {
 const tree: PageTree.Root = {
   name: "SyncSupport Docs",
   children: [
-    { type: "page", name: "Introduction", url: "/docs" },
+    { type: "page", name: "Introduction", url: "/docs", icon: <IconRocket size={16} /> },
     {
       type: "folder",
       name: "Setup",
       defaultOpen: true,
       children: [
-        { type: "page", name: "Add Your Domain", url: "/docs/domains" },
-        { type: "page", name: "Slack Integration", url: "/docs/integrations/slack" },
-        { type: "page", name: "Email Aliases", url: "/docs/aliases" },
-        { type: "page", name: "Chat Widget Integration", url: "/docs/chatbot" },
+        { type: "page", name: "Add Your Domain", url: "/docs/domains", icon: <IconWorld size={16} /> },
+        { type: "page", name: "Slack Integration", url: "/docs/integrations/slack", icon: <IconPlug size={16} /> },
+        { type: "page", name: "Email Aliases", url: "/docs/aliases", icon: <IconAt size={16} /> },
+        { type: "page", name: "Chat Widget Integration", url: "/docs/chatbot", icon: <IconMessageChatbot size={16} /> },
+        { type: "page", name: "Email Templates", url: "/docs/email-templates", icon: <IconTemplate size={16} /> },
+        { type: "page", name: "Customize App", url: "/docs/customize-app", icon: <IconPalette size={16} /> },
       ],
     },
     {
@@ -76,7 +88,7 @@ const tree: PageTree.Root = {
       name: "Features",
       defaultOpen: true,
       children: [
-        { type: "page", name: "Ticket Management", url: "/docs/tickets" },
+        { type: "page", name: "Ticket Management", url: "/docs/tickets", icon: <IconTicket size={16} /> },
       ],
     },
   ],

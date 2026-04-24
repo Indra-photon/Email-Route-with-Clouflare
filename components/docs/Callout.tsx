@@ -1,12 +1,16 @@
 "use client";
 
-import { AlertCircle, CheckCircle2, Info, Lightbulb, XCircle } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Info,
+  Lightbulb,
+  XCircle,
+} from "lucide-react";
 import { Paragraph } from "@/components/Paragraph";
 import { IconBulb } from "@/constants/icons";
 import { useState } from "react";
 import { InfoIconAnimated } from "@/constants/icons";
-
-
 
 interface CalloutProps {
   type?: "info" | "warning" | "success" | "error" | "tip";
@@ -70,8 +74,15 @@ export function Callout({
     },
   };
 
-  const { icon: Icon, bgColor, borderColor, iconColor, ringColor, titleColor, textColor } =
-    config[type];
+  const {
+    icon: Icon,
+    bgColor,
+    borderColor,
+    iconColor,
+    ringColor,
+    titleColor,
+    textColor,
+  } = config[type];
 
   return (
     <div
@@ -93,11 +104,14 @@ export function Callout({
       {/* Content */}
       <div>
         {title && (
-          <Paragraph variant="small" className={`font-semibold mb-2 ${titleColor}`}>
+          <Paragraph
+            variant="small"
+            className={`font-semibold mb-2 ${titleColor}`}
+          >
             {title}
           </Paragraph>
         )}
-        <Paragraph variant="small" className={textColor}>
+        <Paragraph variant="small" className={`${textColor} `}>
           {children}
         </Paragraph>
       </div>

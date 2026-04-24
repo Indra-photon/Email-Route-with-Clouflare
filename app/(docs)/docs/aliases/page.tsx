@@ -1,125 +1,3 @@
-// import { Heading } from "@/components/Heading";
-// import { Paragraph } from "@/components/Paragraph";
-// import { Highlight } from "@/components/Highlight";
-// import { CustomLink } from "@/components/CustomLink";
-// import { Callout } from "@/components/docs/Callout";
-// import { DocsNavigation } from "@/components/docs/DocsNavigation";
-// import { Badge } from "@/components/ui/badge";
-// import { Card, CardContent } from "@/components/ui/card";
-// import { DocsBody } from "fumadocs-ui/page";
-
-// export default function AliasesPage() {
-//   return (
-//     <DocsPage toc={[]}>
-//     <DocsBody className="prose prose-neutral max-w-none">
-
-//       {/* ── Header ── */}
-//       <div className="mb-8">
-//         <Badge className="mb-4 bg-sky-100 text-sky-800 font-schibsted font-medium">
-//           Email Aliases
-//         </Badge>
-//         <Heading as="h1" className="text-neutral-900 mb-4">
-//           Create Email Aliases
-//         </Heading>
-//         <Paragraph variant="default" className="text-neutral-600 font-schibsted leading-relaxed">
-//           Map email addresses to Slack or Discord channels. Route support@,
-//           sales@, billing@ and more to different teams.
-//         </Paragraph>
-//       </div>
-
-//       {/* ── Prerequisites ── */}
-//       <div className="mb-8">
-//         <Callout type="info" title="Before You Start">
-//           <ul className="list-disc list-inside space-y-1 text-sm">
-//             <li>
-//               Domain must be added and configured.{" "}
-//               <CustomLink
-//                 href="/docs/domains"
-//                 className="text-sky-800 hover:text-sky-900 underline"
-//               >
-//                 How to add a domain
-//               </CustomLink>
-//             </li>
-//             <li>
-//               At least one integration (Slack or Discord) must be set up.{" "}
-//               <CustomLink
-//                 href="/docs/integrations"
-//                 className="text-sky-800 hover:text-sky-900 underline"
-//               >
-//                 How to set up an integration
-//               </CustomLink>
-//             </li>
-//           </ul>
-//         </Callout>
-//       </div>
-
-//       {/* ── Steps ── */}
-//       <div className="relative mb-12">
-
-//         {/* Vertical connecting line */}
-//         <div className="absolute left-[19px] top-10 bottom-10 w-px bg-gradient-to-b from-sky-800 to-cyan-700 z-0" />
-
-//         {/* ── Step 1 ── */}
-//         <div className="relative flex gap-4">
-//           <div className="relative z-10 flex-shrink-0 pt-1">
-//             <span className="inline-flex items-center justify-center bg-gradient-to-b from-sky-800 to-cyan-700 text-white rounded-full w-10 h-10 text-sm font-schibsted font-bold">
-//               1
-//             </span>
-//           </div>
-//           <Card className="flex-1">
-//             <CardContent className="px-0">
-//               <Heading as="h2" variant="small" className="text-neutral-100 mb-4">
-//                 <div className="inline-flex items-center w-full mb-2 bg-gradient-to-b from-sky-800 to-cyan-700 rounded px-2.5 py-2">
-//                   Create an Alias
-//                 </div>
-//               </Heading>
-//               <Paragraph variant="docs-par" className="mb-0 pl-8">
-//                 <ol className="list-decimal list-inside space-y-2 font-schibsted">
-//                   <li>
-//                     Go to{" "}
-//                     <CustomLink
-//                       href="/dashboard/aliases"
-//                       className="text-sky-800 hover:text-sky-900 underline"
-//                     >
-//                       Dashboard → Aliases
-//                     </CustomLink>
-//                     .
-//                   </li>
-//                   <li>Click <Highlight>Add Alias</Highlight>.</li>
-//                   <li>Select your domain from the dropdown.</li>
-//                   <li>
-//                     Enter the local part (e.g.,{" "}
-//                     <Highlight>support</Highlight>,{" "}
-//                     <Highlight>sales</Highlight>,{" "}
-//                     <Highlight>billing</Highlight>). Your email address will be{" "}
-//                     <Highlight>localpart@yourdomain.com</Highlight> (e.g.{" "}
-//                     <Highlight>support@yourdomain.com</Highlight>,{" "}
-//                     <Highlight>sales@yourdomain.com</Highlight>,{" "}
-//                     <Highlight>billing@yourdomain.com</Highlight>).
-//                   </li>
-//                   <li>Select the target integration (Slack or Discord channel).</li>
-//                   <li>Click <Highlight>Create Alias</Highlight>.</li>
-//                 </ol>
-//               </Paragraph>
-//             </CardContent>
-//           </Card>
-//         </div>
-
-//       </div>
-
-//       {/* ── Navigation ── */}
-//       <DocsNavigation
-//         prev={{ title: "Discord Integration", href: "/docs/integrations/discord" }}
-//         next={{ title: "Ticket Management", href: "/docs/tickets" }}
-//       />
-
-//     </DocsBody>
-//     </DocsPage>
-//   );
-// }
-
-
-
 "use client";
 
 import { Heading } from "@/components/Heading";
@@ -128,7 +6,6 @@ import { Highlight } from "@/components/Highlight";
 import { CustomLink } from "@/components/CustomLink";
 import { DashboardLink } from "@/components/docs/DashboardLink";
 import { Callout } from "@/components/docs/Callout";
-import { DocsNavigation } from "@/components/docs/DocsNavigation";
 import { DocsPage, DocsBody } from "fumadocs-ui/page";
 import { DocVideo } from "@/components/docs/DocVideo";
 
@@ -171,8 +48,8 @@ const STEPS: { id: string; title: string; body: React.ReactNode }[] = [
     title: "Select your domain and enter the local part",
     body: (
       <Paragraph variant="docs-par">
-        Select your verified domain from the dropdown. Then enter the local
-        part of the email address — the part before the @. For example, enter{" "}
+        Select your verified domain from the dropdown. Then enter the local part
+        of the email address — the part before the @. For example, enter{" "}
         <Highlight>support</Highlight> to create{" "}
         <Highlight>support@yourdomain.com</Highlight>, or{" "}
         <Highlight>sales</Highlight> to create{" "}
@@ -187,8 +64,11 @@ const STEPS: { id: string; title: string; body: React.ReactNode }[] = [
     title: "Select the target integration",
     body: (
       <Paragraph variant="docs-par">
-        Choose which Slack integration this alias should route emails
-        to. Each alias routes to exactly one channel. If you want to route different aliases to different channels, simply create multiple Slack integrations (one per channel) and select the appropriate one for each alias. If you're using Discord, select the target Discord integration instead.
+        Choose which Slack integration this alias should route emails to. Each
+        alias routes to exactly one channel. If you want to route different
+        aliases to different channels, simply create multiple Slack integrations
+        (one per channel) and select the appropriate one for each alias. If
+        you're using Discord, select the target Discord integration instead.
       </Paragraph>
     ),
   },
@@ -234,9 +114,15 @@ function StepCard({
       <div className="pt-3">
         <StepBadge n={step} />
       </div>
-      <div className="flex-1 rounded-xl overflow-hidden" style={{ boxShadow: "0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 2px -1px rgba(0,0,0,0.06), 0px 2px 4px 0px rgba(0,0,0,0.04)" }}>
+      <div
+        className="flex-1 rounded-xl overflow-hidden"
+        style={{
+          boxShadow:
+            "0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 2px -1px rgba(0,0,0,0.06), 0px 2px 4px 0px rgba(0,0,0,0.04)",
+        }}
+      >
         <div className="px-4 py-2.5 bg-gradient-to-r from-sky-800 to-cyan-700">
-          <span className="font-schibsted font-semibold text-white text-sm tracking-wide">
+          <span className="font-schibsted font-light text-white text-[18px] tracking-wide">
             {title}
           </span>
         </div>
@@ -256,16 +142,22 @@ export default function AliasesPage() {
   let globalStep = 0;
 
   return (
-    <DocsPage toc={[
-      { title: "Prerequisites", url: "#prerequisites", depth: 2 },
-      { title: "Go to Aliases", url: "#go-to-aliases", depth: 4 },
-      { title: "Click Add Alias", url: "#click-add-alias", depth: 4 },
-      { title: "Select your domain", url: "#select-domain", depth: 4 },
-      { title: "Select the target integration", url: "#select-integration", depth: 4 },
-      { title: "Click Create Alias", url: "#create-alias", depth: 4 },
-    ]} tableOfContent={{ style: 'clerk' }}>
+    <DocsPage
+      toc={[
+        { title: "Prerequisites", url: "#prerequisites", depth: 2 },
+        { title: "Go to Aliases", url: "#go-to-aliases", depth: 4 },
+        { title: "Click Add Alias", url: "#click-add-alias", depth: 4 },
+        { title: "Select your domain", url: "#select-domain", depth: 4 },
+        {
+          title: "Select the target integration",
+          url: "#select-integration",
+          depth: 4,
+        },
+        { title: "Click Create Alias", url: "#create-alias", depth: 4 },
+      ]}
+      tableOfContent={{ style: "clerk" }}
+    >
       <DocsBody className="prose prose-neutral max-w-none">
-
         {/* ── Header ── */}
         <div className="mb-8">
           <Heading
@@ -278,12 +170,12 @@ export default function AliasesPage() {
           </Heading>
           <Paragraph
             variant="home-par"
-            className="text-neutral-600 font-schibsted leading-relaxed"
+            className="text-neutral-600 font-schibsted leading-relaxed tracking-tighter"
           >
             Map email addresses to Slack channels. Route{" "}
             <Highlight>support@</Highlight>, <Highlight>sales@</Highlight>,{" "}
-            <Highlight>billing@</Highlight> and more to different teams —
-            each email lands exactly where it needs to be.
+            <Highlight>billing@</Highlight> and more to different teams — each
+            email lands exactly where it needs to be.
           </Paragraph>
 
           <DocVideo
@@ -295,7 +187,7 @@ export default function AliasesPage() {
         {/* ── Prerequisites ── */}
         <div className="mb-8" id="prerequisites">
           <Callout type="info" title="Before You Start">
-            <ul className="list-disc list-inside space-y-1 text-sm">
+            <ul className="list-none pl-0 space-y-1 text-sm">
               <li>
                 Your domain must be added and verified.{" "}
                 <CustomLink
@@ -320,7 +212,6 @@ export default function AliasesPage() {
 
         {/* ══ STEPS ══ */}
         <div className="relative mb-12">
-
           {/* Absolute vertical line behind all badges */}
           <div className="absolute left-[15px] top-10 bottom-4 w-px bg-gradient-to-b from-sky-800 to-cyan-100 z-0" />
 
@@ -332,14 +223,7 @@ export default function AliasesPage() {
               </StepCard>
             );
           })}
-
         </div>
-
-        {/* ── Navigation ── */}
-        {/* <DocsNavigation
-          prev={{ title: "Discord Integration", href: "/docs/integrations/discord" }}
-          next={{ title: "Ticket Management", href: "/docs/tickets" }}
-        /> */}
 
       </DocsBody>
     </DocsPage>
