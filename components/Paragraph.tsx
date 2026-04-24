@@ -11,7 +11,8 @@ type ParagraphProps<T extends React.ElementType = "p"> = {
     | "small"
     | "docs-par"
     | "home-par"
-    | "dashboard-subHeading";
+    | "dashboard-subHeading"
+    | "docs-subPar";
 };
 
 export const Paragraph = <T extends React.ElementType = "p">({
@@ -28,9 +29,11 @@ export const Paragraph = <T extends React.ElementType = "p">({
     muted:
       "text-xs sm:text-sm md:text-base text-neutral-900 font-schibsted font-regular mb-8 leading-relaxed",
     small:
-      "text-xs sm:text-sm md:text-base text-neutral-900 font-schibsted font-regular leading-relaxed",
+      "text-xs sm:text-sm text-neutral-900 font-schibsted font-regular tracking-tighter text-sm leading-relaxed",
     "docs-par":
-      "text-sm sm:text-base md:text-lg text-neutral-900 font-schibsted font-regular mb-8 leading-relaxed",
+      "text-sm sm:text-[16px] text-neutral-900 font-schibsted font-regular mb-4 text-neutral-700 tracking-tighter leading-relaxed",
+    "docs-subPar":
+      "font-schibsted font-light text-neutral-700 tracking-tighter text-[16px]",
     "home-par":
       "text-base md:text-xl text-neutral-900 font-schibsted font-regular",
     "dashboard-subHeading":

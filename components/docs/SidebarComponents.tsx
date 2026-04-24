@@ -70,12 +70,17 @@ export function CustomItem({ item }: { item: PageItem }) {
       <SidebarItem
         href={item.url}
         className={cn(
-          "relative z-10 block rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150",
+          "relative z-10 flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150",
           isActive
             ? "text-sky-700 font-semibold"
             : "text-neutral-800 hover:text-neutral-900"
         )}
       >
+        {item.icon && (
+          <span className={cn("flex-shrink-0", isActive ? "text-sky-600" : "text-neutral-400")}>
+            {item.icon}
+          </span>
+        )}
         {item.name}
       </SidebarItem>
     </div>

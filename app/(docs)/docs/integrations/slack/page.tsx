@@ -1,151 +1,3 @@
-// import { Heading } from "@/components/Heading";
-// import { Paragraph } from "@/components/Paragraph";
-// import { Highlight } from "@/components/Highlight";
-// import { CustomLink } from "@/components/CustomLink";
-// import { DocsNavigation } from "@/components/docs/DocsNavigation";
-// import { Badge } from "@/components/ui/badge";
-// import { Card, CardContent } from "@/components/ui/card";
-
-// import { DocsBody } from "fumadocs-ui/page";
-// import { CustomDocsPage as DocsPage } from "@/components/docs/CustomDocsPage";
-
-// export default function SlackIntegrationPage() {
-//   return (
-//     <DocsPage toc={[]}>
-//     <DocsBody className="prose prose-neutral max-w-none">
-
-//       {/* ── Header ── */}
-//       <div className="mb-8">
-//         <Badge className="mb-4 bg-sky-100 text-sky-800 font-schibsted font-medium">
-//           Integrations
-//         </Badge>
-//         <Heading as="h1" className="text-neutral-900 mb-4">
-//           Slack Integration
-//         </Heading>
-//         <Paragraph variant="default" className="text-neutral-600 font-schibsted leading-relaxed">
-//           Connect Email Router to your Slack workspace and bring customer
-//           conversations directly to your team. See new emails instantly, reply
-//           via threads, and resolve tickets faster without ever changing tabs.
-//         </Paragraph>
-//       </div>
-
-//       {/* ── Steps ── */}
-//       <div className="relative mb-12">
-
-//         {/* Vertical connecting line */}
-//         <div className="absolute left-[19px] top-10 bottom-10 w-px bg-gradient-to-b from-sky-800 to-cyan-700 z-0" />
-
-//         {/* ── Step 1 ── */}
-//         <div className="relative flex gap-4 pb-3">
-//           <div className="relative z-10 flex-shrink-0 pt-1">
-//             <span className="inline-flex items-center justify-center bg-gradient-to-b from-sky-800 to-cyan-700 text-white rounded-full w-10 h-10 text-sm font-schibsted font-bold">
-//               1
-//             </span>
-//           </div>
-//           <Card className="flex-1">
-//             <CardContent className="px-0">
-//               <Heading as="h2" variant="small" className="text-neutral-100 mb-4">
-//                 <div className="inline-flex items-center w-full mb-2 bg-gradient-to-b from-sky-800 to-cyan-700 rounded px-2.5 py-2">
-//                   Connect your Workspace
-//                 </div>
-//               </Heading>
-//               <Paragraph variant="docs-par" className="mb-4 pl-8">
-//                 Link your Email Router account to your Slack workspace from the
-//                 dashboard.
-//               </Paragraph>
-//               <Paragraph variant="docs-par" className="mb-0 pl-8">
-//                 <ol className="list-decimal list-inside space-y-2 font-schibsted">
-//                   <li>
-//                     Go to{" "}
-//                     <CustomLink
-//                       href="/dashboard/integrations"
-//                       className="text-sky-800 hover:text-sky-900 underline font-semibold"
-//                     >
-//                       Dashboard → Integrations
-//                     </CustomLink>
-//                     .
-//                   </li>
-//                   <li>Click <Highlight>Add Integration</Highlight>.</li>
-//                   <li>Select <Highlight>Slack</Highlight> as the integration type.</li>
-//                   <li>
-//                     Click <Highlight>Connect with Slack</Highlight> to authorize our app
-//                     to post messages into your channels securely.
-//                   </li>
-//                 </ol>
-//               </Paragraph>
-//             </CardContent>
-//           </Card>
-//         </div>
-
-//         {/* ── Step 2 ── */}
-//         <div className="relative flex gap-4">
-//           <div className="relative z-10 flex-shrink-0 pt-1">
-//             <span className="inline-flex items-center justify-center bg-gradient-to-b from-sky-800 to-cyan-700 text-white rounded-full w-10 h-10 text-sm font-schibsted font-bold">
-//               2
-//             </span>
-//           </div>
-//           <Card className="flex-1">
-//             <CardContent className="px-0">
-//               <Heading as="h2" variant="small" className="text-neutral-100 mb-4">
-//                 <div className="inline-flex items-center w-full mb-2 bg-gradient-to-b from-sky-800 to-cyan-700 rounded px-2.5 py-2">
-//                   Start Routing
-//                 </div>
-//               </Heading>
-//               <Paragraph variant="docs-par" className="mb-0 pl-8">
-//                 Your Slack integration is now active! Once you connect an{" "}
-//                 <CustomLink
-//                   href="/docs/aliases"
-//                   className="text-sky-800 hover:text-sky-900 font-semibold underline"
-//                 >
-//                   Email Alias
-//                 </CustomLink>{" "}
-//                 to this integration, all incoming emails will instantly pop up
-//                 in your selected Slack channel.
-//               </Paragraph>
-//             </CardContent>
-//           </Card>
-//         </div>
-
-//       </div>
-
-//       {/* ── Routing Examples ── */}
-//       <div className="mb-12">
-//         <Heading as="h2" variant="muted" className="text-neutral-900 mb-4">
-//           Routing Examples
-//         </Heading>
-//         <Paragraph variant="docs-par" className="mb-4">
-//           You can create multiple integrations to route different types of
-//           inquiries to specific channels to keep your team organized:
-//         </Paragraph>
-//         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-schibsted">
-//           <div className="p-4 border border-neutral-200 rounded-lg bg-white">
-//             <div className="font-semibold text-neutral-900 mb-1">support@</div>
-//             <div className="text-sm text-neutral-500">→ <Highlight>#customer-support</Highlight></div>
-//           </div>
-//           <div className="p-4 border border-neutral-200 rounded-lg bg-white">
-//             <div className="font-semibold text-neutral-900 mb-1">sales@</div>
-//             <div className="text-sm text-neutral-500">→ <Highlight>#sales-inquiries</Highlight></div>
-//           </div>
-//           <div className="p-4 border border-neutral-200 rounded-lg bg-white">
-//             <div className="font-semibold text-neutral-900 mb-1">billing@</div>
-//             <div className="text-sm text-neutral-500">→ <Highlight>#billing</Highlight></div>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* ── Navigation ── */}
-//       <DocsNavigation
-//         prev={{ title: "Integrations Overview", href: "/docs/integrations" }}
-//         next={{ title: "Setup Chat Widgets", href: "/docs/chatbot" }}
-//       />
-
-//     </DocsBody>
-//     </DocsPage>
-//   );
-// }
-
-
-
 "use client";
 
 import { Heading } from "@/components/Heading";
@@ -154,10 +6,8 @@ import { Highlight } from "@/components/Highlight";
 import { CustomLink } from "@/components/CustomLink";
 import { DashboardLink } from "@/components/docs/DashboardLink";
 import { Callout } from "@/components/docs/Callout";
-import { DocsNavigation } from "@/components/docs/DocsNavigation";
 import { DocsPage, DocsBody } from "fumadocs-ui/page";
 import { DocVideo } from "@/components/docs/DocVideo";
-
 
 /* ═══════════════════════════════════════════════════════════════
    1. CONTENT — all raw data lives here, no JSX yet
@@ -170,9 +20,14 @@ const STEPS: { id: string; title: string; body: React.ReactNode }[] = [
     title: "Go to Integrations",
     body: (
       <Paragraph variant="docs-par">
-        Once you have added your domain and verified it <CustomLink href="/docs/domains" className="text-sky-800 hover:text-sky-900 underline">How to Add and Configure Your Domain</CustomLink>, 
-        you can set up your Slack integration. From the dashboard,
-        navigate to{" "}
+        Once you have added your domain and verified it{" "}
+        <CustomLink
+          href="/docs/domains"
+          className="text-sky-800 hover:text-sky-900 underline"
+        >
+          How to Add and Configure Your Domain
+        </CustomLink>
+        , you can set up your Slack integration. From the dashboard, navigate to{" "}
         <DashboardLink
           href="/dashboard/integrations"
           className="text-sky-800 hover:text-sky-900 underline"
@@ -188,9 +43,10 @@ const STEPS: { id: string; title: string; body: React.ReactNode }[] = [
     title: "Add a Slack integration",
     body: (
       <Paragraph variant="docs-par">
-        Click <Highlight>Add Integration</Highlight>. You can create
-        multiple Slack integrations. Each one can be linked to a different channel, so you can route
-        different types of emails to the right teams (e.g., support@ to #customer-support, sales@ to #sales, etc.).
+        Click <Highlight>Add Integration</Highlight>. You can create multiple
+        Slack integrations. Each one can be linked to a different channel, so
+        you can route different types of emails to the right teams (e.g.,
+        support@ to #customer-support, sales@ to #sales, etc.).
       </Paragraph>
     ),
   },
@@ -228,9 +84,9 @@ const STEPS: { id: string; title: string; body: React.ReactNode }[] = [
 
 // ── Routing examples ─────────────────────────────────────────────
 const ROUTING_EXAMPLES: { alias: string; channel: string }[] = [
-  { alias: "support@",  channel: "#customer-support" },
-  { alias: "sales@",    channel: "#sales-inquiries"  },
-  { alias: "billing@",  channel: "#billing"          },
+  { alias: "support@", channel: "#customer-support" },
+  { alias: "sales@", channel: "#sales-inquiries" },
+  { alias: "billing@", channel: "#billing" },
 ];
 
 /* ═══════════════════════════════════════════════════════════════
@@ -261,9 +117,15 @@ function StepCard({
       <div className="pt-3">
         <StepBadge n={step} />
       </div>
-      <div className="flex-1 rounded-xl overflow-hidden" style={{ boxShadow: "0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 2px -1px rgba(0,0,0,0.06), 0px 2px 4px 0px rgba(0,0,0,0.04)" }}>
+      <div
+        className="flex-1 rounded-xl overflow-hidden"
+        style={{
+          boxShadow:
+            "0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 2px -1px rgba(0,0,0,0.06), 0px 2px 4px 0px rgba(0,0,0,0.04)",
+        }}
+      >
         <div className="px-4 py-2.5 bg-gradient-to-r from-sky-800 to-cyan-700">
-          <span className="font-schibsted font-semibold text-white text-sm tracking-wide">
+          <span className="font-schibsted font-light text-white text-[18px] tracking-wide">
             {title}
           </span>
         </div>
@@ -283,18 +145,27 @@ export default function SlackIntegrationPage() {
   let globalStep = 0;
 
   return (
-    <DocsPage toc={[
-      { title: "Prerequisites", url: "#prerequisites", depth: 2 },
-      { title: "Go to Integrations", url: "#go-to-integrations", depth: 4 },
-      { title: "Add a Slack integration", url: "#add-slack-integration", depth: 4 },
-      { title: "Authorize with Slack", url: "#authorize-slack", depth: 4 },
-      { title: "Connect an email alias", url: "#connect-email-alias", depth: 4 },
-    ]}
-    tableOfContent={{
-    style: 'clerk',
-  }}>
+    <DocsPage
+      toc={[
+        { title: "Prerequisites", url: "#prerequisites", depth: 2 },
+        { title: "Go to Integrations", url: "#go-to-integrations", depth: 4 },
+        {
+          title: "Add a Slack integration",
+          url: "#add-slack-integration",
+          depth: 4,
+        },
+        { title: "Authorize with Slack", url: "#authorize-slack", depth: 4 },
+        {
+          title: "Connect an email alias",
+          url: "#connect-email-alias",
+          depth: 4,
+        },
+      ]}
+      tableOfContent={{
+        style: "clerk",
+      }}
+    >
       <DocsBody className="prose prose-neutral max-w-none">
-
         {/* ── Header ── */}
         <div className="mb-8">
           <Heading
@@ -307,7 +178,7 @@ export default function SlackIntegrationPage() {
           </Heading>
           <Paragraph
             variant="home-par"
-            className="text-neutral-600 font-schibsted leading-relaxed"
+            className="text-neutral-600 font-schibsted leading-relaxed tracking-tighter"
           >
             Connect SyncSupport to your Slack workspace and bring customer
             conversations directly to your team. See new emails the moment they
@@ -324,7 +195,7 @@ export default function SlackIntegrationPage() {
         {/* ── Prerequisites ── */}
         <div className="mb-8" id="prerequisites">
           <Callout type="info" title="Before You Start">
-            <ul className="list-disc list-inside space-y-1 text-sm">
+            <ul className="list-none pl-0 space-y-1 text-sm">
               <li>
                 You must be a Slack workspace admin, or have permission to
                 install apps in your workspace.
@@ -344,7 +215,6 @@ export default function SlackIntegrationPage() {
 
         {/* ══ STEPS — single relative wrapper, absolute line runs full height ══ */}
         <div className="relative mb-12">
-
           {/* Absolute vertical line behind all badges */}
           <div className="absolute left-[15px] top-10 bottom-4 w-px bg-gradient-to-b from-sky-800 to-cyan-100 z-0" />
 
@@ -356,46 +226,7 @@ export default function SlackIntegrationPage() {
               </StepCard>
             );
           })}
-
         </div>
-
-        {/* ── Routing Examples ── */}
-        {/* <div className="mb-12">
-          <Heading
-            as="h2"
-            className="text-neutral-900 mb-2 font-schibsted text-lg font-semibold"
-          >
-            Routing Examples
-          </Heading>
-          <Paragraph variant="docs-par" className="mb-4">
-            You can create multiple Slack integrations to route different email
-            addresses to different channels — keeping each team focused on what
-            matters to them:
-          </Paragraph>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 font-schibsted">
-            {ROUTING_EXAMPLES.map(({ alias, channel }) => (
-              <div
-                key={alias}
-                className="p-4 rounded-xl bg-white"
-                style={{ boxShadow: "0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 2px -1px rgba(0,0,0,0.06), 0px 2px 4px 0px rgba(0,0,0,0.04)" }}
-              >
-                <div className="font-semibold text-neutral-900 mb-1 text-sm">
-                  {alias}
-                </div>
-                <div className="text-sm text-neutral-500">
-                  →{" "}
-                  <Highlight>{channel}</Highlight>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div> */}
-
-        {/* ── Navigation ── */}
-        {/* <DocsNavigation
-          prev={{ title: "Integrations Overview", href: "/docs/integrations" }}
-          next={{ title: "Setup Chat Widgets", href: "/docs/chatbot" }}
-        /> */}
 
       </DocsBody>
     </DocsPage>
