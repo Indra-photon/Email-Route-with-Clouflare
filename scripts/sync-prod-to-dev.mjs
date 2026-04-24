@@ -11,7 +11,7 @@ import { randomBytes } from "crypto";
 import { MongoClient, ObjectId } from "mongodb";
 
 const PROD_USER_ID = "user_3BpwdqPgdTzsuLk1sAFNgixyZZH";
-const DEV_USER_ID  = "user_3Cl3uiIc1c4mDrMQLuybKWp7UvM";
+const DEV_USER_ID = "user_3Cl3uiIc1c4mDrMQLuybKWp7UvM";
 
 function loadEnv() {
   try {
@@ -20,9 +20,13 @@ function loadEnv() {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith("#")) continue;
       const eq = trimmed.indexOf("=");
+      t;
       if (eq === -1) continue;
       const key = trimmed.slice(0, eq).trim();
-      const val = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, "");
+      const val = trimmed
+        .slice(eq + 1)
+        .trim()
+        .replace(/^["']|["']$/g, "");
       if (!process.env[key]) process.env[key] = val;
     }
   } catch {}
@@ -50,7 +54,9 @@ async function run() {
   const db = client.db(dbName);
 
   // 1. Find prod workspace
-  const prodWorkspace = await db.collection("workspaces").findOne({ ownerUserId: PROD_USER_ID });
+  const prodWorkspace = await db
+    .collection("workspaces")
+    .findOne({ ownerUserId: PROD_USER_ID });
   if (!prodWorkspace) {
     console.error("No production workspace found.");
     process.exit(1);
@@ -58,14 +64,22 @@ async function run() {
   const prodWorkspaceId = prodWorkspace._id;
 
   // 2. Wipe existing dev workspace and all its children
-  const devWorkspace = await db.collection("workspaces").findOne({ ownerUserId: DEV_USER_ID });
+  const devWorkspace = await db
+    .collection("workspaces")
+    .findOne({ ownerUserId: DEV_USER_ID });
   if (devWorkspace) {
     console.log("Wiping existing dev workspace...");
     const devId = new ObjectId(devWorkspace._id);
     const childCollections = [
-      "aliases", "domains", "integrations", "emailthreads",
-      "cannedresponses", "receivingrequests", "chatwidgets",
-      "chatconversations", "subscriptions",
+      "aliases",
+      "domains",
+      "integrations",
+      "emailthreads",
+      "cannedresponses",
+      "receivingrequests",
+      "chatwidgets",
+      "chatconversations",
+      "subscriptions",
     ];
     for (const col of childCollections) {
       await db.collection(col).deleteMany({ workspaceId: devId });
@@ -84,19 +98,28 @@ async function run() {
 
   // 4. Copy child collections
   const childCollections = [
-    "aliases", "domains", "integrations", "emailthreads",
-    "cannedresponses", "receivingrequests", "chatwidgets",
-    "chatconversations", "subscriptions",
+    "aliases",
+    "domains",
+    "integrations",
+    "emailthreads",
+    "cannedresponses",
+    "receivingrequests",
+    "chatwidgets",
+    "chatconversations",
+    "subscriptions",
   ];
 
   for (const col of childCollections) {
-    const docs = await db.collection(col).find({ workspaceId: prodWorkspaceId }).toArray();
+    const docs = await db
+      .collection(col)
+      .find({ workspaceId: prodWorkspaceId })
+      .toArray();
     if (docs.length === 0) continue;
     const clones = docs.map((doc) => {
       const clone = cloneDoc(doc);
       clone.workspaceId = newWorkspaceId;
       if (clone.assignedTo === PROD_USER_ID) clone.assignedTo = DEV_USER_ID;
-      if (clone.createdBy  === PROD_USER_ID) clone.createdBy  = DEV_USER_ID;
+      if (clone.createdBy === PROD_USER_ID) clone.createdBy = DEV_USER_ID;
       if (col === "chatwidgets" && clone.activationKey) {
         clone.activationKey = "cw_" + randomBytes(12).toString("hex");
       }
@@ -107,7 +130,9 @@ async function run() {
   }
 
   // 5. Copy user record
-  const prodUser = await db.collection("users").findOne({ clerkUserId: PROD_USER_ID });
+  const prodUser = await db
+    .collection("users")
+    .findOne({ clerkUserId: PROD_USER_ID });
   if (prodUser) {
     const newUser = cloneDoc(prodUser);
     newUser.clerkUserId = DEV_USER_ID;
