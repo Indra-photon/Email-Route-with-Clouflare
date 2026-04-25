@@ -105,7 +105,7 @@ export async function postToSlackLiveChat(
         const response = await fetch("https://slack.com/api/chat.postMessage", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type": "application/json; charset=utf-8",
                 Authorization: `Bearer ${botToken}`,
             },
             body: JSON.stringify(payload),
@@ -173,7 +173,7 @@ export async function postAgentReplyToSlack(params: {
         const response = await fetch("https://slack.com/api/chat.postMessage", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type": "application/json; charset=utf-8",
                 Authorization: `Bearer ${botToken}`,
             },
             body: JSON.stringify({
