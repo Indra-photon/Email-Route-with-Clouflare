@@ -208,7 +208,7 @@ export async function POST(request: Request) {
           await fetch("https://slack.com/api/chat.postMessage", {
             method: "POST",
             headers: {
-              "Content-Type": "application/json",
+              "Content-Type": "application/json; charset=utf-8",
               Authorization: `Bearer ${notifyIntegration.slackAccessToken}`,
             },
             body: JSON.stringify({
@@ -406,7 +406,16 @@ export async function POST(request: Request) {
     const fromName = fromNameMatch ? fromNameMatch[1].trim() : "";
     const fromEmail = fromRaw;
     const subject = emailData.subject || "(no subject)";
-    const snippet = textBody.slice(0, 500) || htmlBody.slice(0, 500) || "(No body content)";
+    // Strip Gmail-style quoted history ("On ... wrote:" + everything after) so Slack
+    // shows only the new message content, not the entire thread repeated below it.
+    const stripQuotedReply = (text: string): string => {
+      // Match "On <date>, <name> wrote:" pattern (Gmail / Outlook style)
+      const quoteMarker = text.search(/^On .+wrote:\s*$/m);
+      return quoteMarker > 0 ? text.slice(0, quoteMarker).trimEnd() : text;
+    };
+    const cleanText = stripQuotedReply(textBody);
+    // Use the full cleaned text — chunking below splits it into multiple Slack blocks
+    const snippet = cleanText || htmlBody || "(No body content)";
     const attachmentNote = attachmentMetas.length > 0
       ? `\n📎 _${attachmentMetas.length} attachment(s): ${attachmentMetas.map(a => a.filename).join(", ")}_`
       : "";
@@ -555,13 +564,24 @@ export async function POST(request: Request) {
           });
         }
 
+        // Slack hard-limits each section block text to 3000 chars.
+        // Split the full body into 2900-char chunks so the entire email always shows.
         if (snippet) {
-          blocks.push({
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: `>${snippet.replace(/\n/g, "\n>")}${attachmentNote}`,
-            },
+          const CHUNK = 2900;
+          const bodyText = snippet.replace(/\n/g, "\n>");
+          const chunks: string[] = [];
+          for (let i = 0; i < bodyText.length; i += CHUNK) {
+            chunks.push(bodyText.slice(i, i + CHUNK));
+          }
+          chunks.forEach((chunk, idx) => {
+            const isLast = idx === chunks.length - 1;
+            blocks.push({
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `>${chunk}${isLast ? attachmentNote : ""}`,
+              },
+            });
           });
         } else if (attachmentNote) {
           blocks.push({ type: "section", text: { type: "mrkdwn", text: attachmentNote } });
@@ -678,7 +698,7 @@ ${snippet}
       const slackRes = await fetch("https://slack.com/api/chat.postMessage", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json; charset=utf-8",
           Authorization: `Bearer ${integration.slackAccessToken}`,
         },
         body: JSON.stringify(postMessageBody),
@@ -762,7 +782,7 @@ ${snippet}
       // ── Discord or legacy Slack webhook ──
       const webhookResponse = await fetch(integration.webhookUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json; charset=utf-8" },
         body: JSON.stringify(messagePayload),
       });
 

@@ -70,7 +70,6 @@ const EmailThreadSchema = new Schema<IEmailThread>(
     originalEmailId: {
       type: String,
       required: true,
-      index: true,
     },
     messageId: {
       type: String,
@@ -153,7 +152,7 @@ const EmailThreadSchema = new Schema<IEmailThread>(
     // Slack thread tracking
     slackMessageTs: { type: String, default: null, index: true },
     slackChannelId: { type: String, default: null },
-    slackEventId:   { type: String, default: null, index: true, sparse: true },
+    slackEventId:   { type: String, default: null },
 
     // Ticket assignment fields
     assignedTo: {
