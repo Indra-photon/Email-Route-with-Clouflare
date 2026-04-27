@@ -1198,18 +1198,20 @@ function NavGroup({
     <div className="flex flex-col gap-0.5">
       <div className="flex flex-col gap-px p-1">
         {expanded && (
-          <p className="px-2.5 pt-1.5 pb-1 text-[11px] font-schibsted font-light tracking-[0.20em] text-sky-100 uppercase select-none">
+          <p className="px-2.5 pt-1.5 pb-3 text-[14px] font-schibsted font-light tracking-[0.20em] text-sky-100 uppercase select-none">
             {group.label}
           </p>
         )}
-        {group.items.map((item) => (
-          <NavPill
-            key={item.href}
-            item={item}
-            isActive={isActive(item.href, item.exact)}
-            expanded={expanded}
-          />
-        ))}
+        <div className={expanded ? "" : ""}>
+          {group.items.map((item) => (
+            <NavPill
+              key={item.href}
+              item={item}
+              isActive={isActive(item.href, item.exact)}
+              expanded={expanded}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -1265,10 +1267,10 @@ function UserProfileCard({ expanded }: { expanded: boolean }) {
         </Avatar>
         {expanded && (
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-schibsted font-semibold text-white/90 truncate leading-tight">
+            <p className="text-[18px] font-schibsted font-semibold text-white uppercase tracking-wide truncate leading-tight">
               {user?.name || "User"}
             </p>
-            <p className="text-[11px] font-schibsted text-sky-300/50 truncate leading-tight">
+            <p className="text-[11px] font-schibsted tracking-tighter text-white/80 truncate leading-tight">
               {user?.email || ""}
             </p>
           </div>
@@ -1287,7 +1289,7 @@ function Sidebar({
   expanded: boolean;
 }) {
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-sky-800 to-sky-900">
+    <div className="flex flex-col h-full bg-gradient-to-r from-sky-800 to-sky-900">
       <UserProfileCard expanded={expanded} />
       <nav className="flex-1 px-2 py-3 overflow-y-auto overflow-x-hidden scrollbar-none">
         <div className="flex flex-col h-full gap-8">
@@ -1309,7 +1311,7 @@ function Sidebar({
 export default function DashboardNav({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [expanded, setExpanded] = useState(true);
+  // const [expanded, setExpanded] = useState(true);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -1325,7 +1327,7 @@ export default function DashboardNav({ children }: { children: ReactNode }) {
       <div className="flex h-dvh">
         {/* ── Desktop Sidebar ─────────────────────────────────────────────── */}
         <div className="relative hidden md:flex shrink-0">
-          <motion.aside
+          {/* <motion.aside
             animate={{ width: expanded ? 210 : 68 }}
             transition={{ duration: 0.3, ease: EASE_OUT_QUART }}
             className="flex flex-col border-r border-sky-900/40 shadow-xl shadow-sky-900/10 overflow-hidden"
@@ -1335,7 +1337,10 @@ export default function DashboardNav({ children }: { children: ReactNode }) {
           <EdgeToggle
             expanded={expanded}
             onToggle={() => setExpanded((e) => !e)}
-          />
+          /> */}
+          <aside className="flex flex-col w-[210px] border-r border-sky-900/40 shadow-xl shadow-sky-900/10 overflow-hidden">
+            <Sidebar isActive={isActive} expanded={true} />
+          </aside>
         </div>
 
         {/* ── Mobile Hamburger ───────────────────────────────────────────── */}

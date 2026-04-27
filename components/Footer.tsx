@@ -38,7 +38,11 @@ const footerSections: FooterSection[] = [
       { label: "About Us", href: "/about", icon: IconInfoCircle },
       { label: "Pricing", href: "/pricing", icon: IconTag },
       { label: "Documentation", href: "/docs", icon: IconBook2 },
-      { label: "AI Visibility Audit", href: "https://webaudits.dev", icon: IconExternalLink },
+      {
+        label: "AI Visibility Audit",
+        href: "https://webaudits.dev",
+        icon: IconExternalLink,
+      },
     ],
   },
   {
@@ -48,7 +52,11 @@ const footerSections: FooterSection[] = [
       { label: "Domains", href: "/docs/domains", icon: IconWorld },
       { label: "Email Aliases", href: "/docs/aliases", icon: IconAt },
       { label: "Tickets", href: "/docs/tickets", icon: IconTicket },
-      { label: "Slack Integration", href: "/docs/integrations/slack", icon: IconBrandSlack },
+      {
+        label: "Slack Integration",
+        href: "/docs/integrations/slack",
+        icon: IconBrandSlack,
+      },
       { label: "Live Chat", href: "/docs/chatbot", icon: IconMessageChatbot },
     ],
   },
@@ -57,15 +65,31 @@ const footerSections: FooterSection[] = [
     links: [
       { label: "Blog", href: "/blog", icon: IconWriting },
       { label: "Privacy Policy", href: "/privacy", icon: IconShieldLock },
-      { label: "Terms of Service", href: "/terms-of-service", icon: IconFileText },
-      { label: "Terms and Conditions", href: "/terms-and-conditions", icon: IconFileText },
+      {
+        label: "Terms of Service",
+        href: "/terms-of-service",
+        icon: IconFileText,
+      },
+      {
+        label: "Terms and Conditions",
+        href: "/terms-and-conditions",
+        icon: IconFileText,
+      },
     ],
   },
   {
     title: "Support",
     links: [
-      { label: "FAQ", href: "/frequently-asked-questions", icon: IconHelpCircle },
-      { label: "Contact Support", href: "mailto:support@syncsupport.app", icon: IconMail },
+      {
+        label: "FAQ",
+        href: "/frequently-asked-questions",
+        icon: IconHelpCircle,
+      },
+      {
+        label: "Contact Support",
+        href: "mailto:support@syncsupport.app",
+        icon: IconMail,
+      },
     ],
   },
 ];
@@ -83,12 +107,25 @@ export function Footer() {
             <div className="mb-4">
               <Link href="/" className="flex items-center gap-2 group w-fit">
                 <Logo />
-                <span className="font-schibsted text-lg font-semibold text-white transition-colors duration-150">SyncSupport</span>
+                <span className="font-schibsted text-lg font-semibold text-white transition-colors duration-150">
+                  SyncSupport
+                </span>
               </Link>
               <p className="text-sm font-schibsted font-normal text-white mt-2 max-w-xs">
-                Route your support emails directly to Slack. Fast, collaborative,
-                and built for teams who want to work smarter.
+                Route your support emails directly to Slack. Fast,
+                collaborative, and built for teams who want to manage and
+                resolve customer tickets fast.
               </p>
+              <div className="pt-4">
+                <a href="https://marketingdb.live" target="_blank">
+                  <img
+                    src="https://marketingdb.live/badge.svg"
+                    alt="Listed on MarketingDB"
+                    width="190"
+                    height="44"
+                  />
+                </a>
+              </div>
             </div>
           </div>
 
@@ -109,8 +146,15 @@ export function Footer() {
                   );
                   return (
                     <li key={link.label}>
-                      {link.href.startsWith("http") || link.href.startsWith("mailto") ? (
-                        <a href={link.href} target={link.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer">
+                      {link.href.startsWith("http") ||
+                      link.href.startsWith("mailto") ? (
+                        <a
+                          href={link.href}
+                          target={
+                            link.href.startsWith("http") ? "_blank" : undefined
+                          }
+                          rel="noopener noreferrer"
+                        >
                           {inner}
                         </a>
                       ) : (
@@ -131,17 +175,33 @@ export function Footer() {
               © {currentYear} SyncSupport. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
-              <Link href="/terms-of-service" className="text-xs font-schibsted font-normal text-sky-300 hover:text-white transition-colors">
+              <Link
+                href="/terms-of-service"
+                className="text-xs font-schibsted font-normal text-sky-300 hover:text-white transition-colors"
+              >
                 Terms of Service
               </Link>
-              <Link href="/privacy" className="text-xs font-schibsted font-normal text-sky-300 hover:text-white transition-colors">
+              <Link
+                href="/privacy"
+                className="text-xs font-schibsted font-normal text-sky-300 hover:text-white transition-colors"
+              >
                 Privacy Policy
               </Link>
             </div>
           </div>
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
             <span className="hidden sm:block text-xs font-schibsted font-normal text-neutral-100 hover:text-white transition-colors">
-              Built by <Link href="https://x.com/Nil_phy_dreamer" className="hover:underline">Indranil</Link> and <Link href="" className="hover:underline">Aditya</Link>
+              Built by{" "}
+              <Link
+                href="https://x.com/Nil_phy_dreamer"
+                className="hover:underline"
+              >
+                Indranil
+              </Link>{" "}
+              and{" "}
+              <Link href="" className="hover:underline">
+                Aditya
+              </Link>
             </span>
           </div>
         </div>
