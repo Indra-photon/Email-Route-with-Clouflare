@@ -163,10 +163,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "No integration" }, { status: 200 });
     }
 
+    console.log("🔗 alias.integrationId raw value:", alias.integrationId, "type:", typeof alias.integrationId);
+
     const integration = await Integration.findById(alias.integrationId).lean().exec();
 
     if (!integration) {
-      console.warn("⚠️ Integration not found for alias:", alias.email);
+      const totalIntegrations = await Integration.countDocuments({});
+      console.warn("⚠️ Integration not found for alias:", alias.email, {
+        integrationId: alias.integrationId?.toString(),
+        totalIntegrationsInDB: totalIntegrations,
+      });
       return NextResponse.json({ message: "No integration" }, { status: 200 });
     }
 

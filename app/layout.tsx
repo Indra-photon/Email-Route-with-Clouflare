@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   // ── Core ──────────────────────────────────────────────────────────────────
   title: {
     default:
-      "SyncSupport | Slack-Native Helpdesk — Email, Live Chat & Canned Responses",
+      "SyncSupport | Slack-Native Helpdesk — Manage customer tickets fast",
     template: "%s | SyncSupport",
   },
   description:
@@ -120,7 +120,7 @@ export const metadata: Metadata = {
 
   // ── Open Graph ────────────────────────────────────────────────────────────
   openGraph: {
-    title: "SyncSupport — Email, Live Chat & Canned Responses, All From Slack",
+    title: "SyncSupport | Slack-Native Helpdesk — Manage customer tickets fast",
     description:
       "Route support emails to Slack, embed live chat on your website, reply with canned responses in one click, and track every ticket — without ever leaving Slack. From $19/mo flat.",
     url: "https://www.syncsupport.app",
@@ -141,7 +141,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     site: "@syncsupportapp",
-    title: "SyncSupport — Email, Live Chat & Canned Responses, All From Slack",
+    title: "SyncSupport | Slack-Native Helpdesk — Manage customer tickets fast",
     description:
       "Route emails to Slack, embed live chat on your site, reply with canned responses — flat-rate from $19/mo. No per-user fees.",
     images: ["/images/og-image.png"],

@@ -241,7 +241,7 @@ function TotalHeroCard({
 
       {/* Big number — fixed height prevents layout shift */}
       <div className="flex-1 flex items-center">
-        <div className="relative w-full h-12 xl:h-[60px]">
+        <div className="relative w-full h-16">
           <AnimatePresence mode="wait" initial={false}>
             {loading ? (
               <motion.div
@@ -249,16 +249,16 @@ function TotalHeroCard({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
                 className="absolute inset-0 rounded-xl bg-neutral-100 animate-pulse"
               />
             ) : (
               <motion.p
                 key={`${tab}-${value}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial={{ opacity: 0, filter: "blur(4px)" }}
+                animate={{ opacity: 1, filter: "blur(0px)" }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
                 className="absolute inset-0 flex items-center text-5xl xl:text-6xl font-schibsted font-bold text-neutral-900 tabular-nums leading-none tracking-tighter truncate"
               >
                 {value}
@@ -327,21 +327,64 @@ function MetricCard({
         <span className="font-schibsted text-[10.5px] font-semibold uppercase tracking-[0.07em] text-neutral-100">
           {label}
         </span>
-        {loading ? (
-          <div className="h-[18px] w-24 rounded-full animate-pulse bg-sky-700" />
-        ) : (
-          <DeltaPill delta={delta} label={deltaLabel} invert={invert} light />
-        )}
+        <div className="relative h-[18px] w-24">
+          <AnimatePresence mode="wait" initial={false}>
+            {loading ? (
+              <motion.div
+                key="delta-skeleton"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="absolute inset-0 rounded-full animate-pulse bg-sky-700"
+              />
+            ) : (
+              <motion.div
+                key="delta-value"
+                initial={{ opacity: 0, filter: "blur(4px)" }}
+                animate={{ opacity: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="absolute inset-0 flex items-center justify-end"
+              >
+                <DeltaPill
+                  delta={delta}
+                  label={deltaLabel}
+                  invert={invert}
+                  light
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       {/* Value */}
-      {loading ? (
-        <div className="my-3 h-[30px] w-16 rounded-lg animate-pulse bg-sky-700" />
-      ) : (
-        <p className="relative z-10 my-3 font-schibsted font-bold leading-none tabular-nums text-white text-3xl">
-          {value}
-        </p>
-      )}
+      <div className="relative z-10 h-[38px] my-1">
+        <AnimatePresence mode="wait" initial={false}>
+          {loading ? (
+            <motion.div
+              key="value-skeleton"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              className="absolute inset-0 rounded-lg animate-pulse bg-sky-700"
+            />
+          ) : (
+            <motion.p
+              key={`value-${value}`}
+              initial={{ opacity: 0, filter: "blur(4px)" }}
+              animate={{ opacity: 1, filter: "blur(0px)" }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              className="absolute inset-0 flex items-center font-schibsted font-bold leading-none tabular-nums text-white text-3xl"
+            >
+              {value}
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
@@ -483,13 +526,9 @@ function RecentActivityBox({ loading }: { loading: boolean }) {
   );
 }
 
-// ─── Main StatCards export ────────────────────────────────────────────────────
-
-// ─── Filter options (fetched once on mount) ───────────────────────────────────
-
 const rangeOptions = [
-  { value: "7d",  label: "Last 7 days",  icon: IconCalendarWeek  },
-  { value: "14d", label: "Last 14 days", icon: IconCalendar      },
+  { value: "7d", label: "Last 7 days", icon: IconCalendarWeek },
+  { value: "14d", label: "Last 14 days", icon: IconCalendar },
   { value: "30d", label: "Last 30 days", icon: IconCalendarMonth },
 ];
 
@@ -562,15 +601,18 @@ export function StatCards() {
 
   const aliasOptions = [
     { value: "all", label: "All Aliases", icon: IconAt },
-    ...visibleAliases.map((a) => ({ value: a.id, label: a.label, icon: IconAt })),
+    ...visibleAliases.map((a) => ({
+      value: a.id,
+      label: a.label,
+      icon: IconAt,
+    })),
   ];
 
   return (
-    <div className="flex flex-col gap-3 py-5">
-      {/* Filter row — right-aligned, visually sits above col 1+2 only */}
-      <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-7 flex justify-start items-center gap-2">
-          {/* <span className="text-xs font-schibsted text-neutral-400 mr-1">Filter by</span> */}
+    <div className="py-5">
+      <div className="grid grid-cols-12 grid-rows-[auto_260px] gap-x-4 gap-y-3">
+        {/* Row 1 — filters */}
+        <div className="col-span-7 row-span-1 flex justify-start items-center gap-2">
           <AnimatedDropdown
             options={domainOptions}
             value={filters.domainId}
@@ -603,18 +645,17 @@ export function StatCards() {
             compact
           />
         </div>
-        {/* <div className="col-span-5" /> */}
-      </div>
+        {/* Row 1 col 8–12 — empty placeholder to complete the row */}
+        <div className="col-span-5 row-span-1" />
 
-      {/* Cards row — fixed height prevents layout shift */}
-      <div className="grid grid-cols-12 gap-4" style={{ height: 260 }}>
-        <div className="col-span-2 h-full">
+        {/* Row 2 — cards (height locked by grid-rows definition) */}
+        <div className="col-span-2 row-span-1">
           <TotalHeroCard stats={stats} loading={loading} />
         </div>
-        <div className="col-span-5 h-full">
+        <div className="col-span-5 row-span-1">
           <MetricGrid stats={stats} loading={loading} />
         </div>
-        <div className="col-span-5 h-full">
+        <div className="col-span-5 row-span-1">
           <RecentActivityBox loading={loading} />
         </div>
       </div>

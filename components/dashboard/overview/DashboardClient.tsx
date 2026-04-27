@@ -116,7 +116,9 @@ export function DashboardClient() {
   return (
     <div className="flex flex-col gap-4">
       {/* Row 1 — StatCards (self-contained with own filters) */}
-      <StatCards />
+      <div className="">
+        <StatCards />
+      </div>
 
       {/* Row 2 — Ticket Volume (3/4) + Status Breakdown (1/4) */}
       <div className="py-4 grid grid-cols-5 gap-4" style={{ minHeight: 360 }}>

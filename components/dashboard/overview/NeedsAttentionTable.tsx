@@ -23,70 +23,84 @@ import { useAuth } from "@clerk/nextjs";
 
 // ── Easing ────────────────────────────────────────────────────────────────────
 
-const EASE_SETTLE = [0.16, 1, 0.3, 1] as const;
+const EASE_OUT_QUART = [0.165, 0.84, 0.44, 1] as const;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type UrgencyReason = "no_response" | "agent_inactive" | "waiting_too_long";
 
 interface AttentionTicket {
-  id:             string;
-  fromName:       string;
-  fromEmail:      string;
-  subject:        string;
-  alias:          string;       // e.g. "support@"
-  status:         "open" | "in_progress" | "waiting";
-  assignedTo:     string | null;
-  reason:         UrgencyReason;
-  stuckFor:       string;       // e.g. "3h 20m"
-  receivedAt:     string;       // e.g. "Today, 9:14 AM"
+  id: string;
+  fromName: string;
+  fromEmail: string;
+  subject: string;
+  alias: string; // e.g. "support@"
+  status: "open" | "in_progress" | "waiting";
+  assignedTo: string | null;
+  reason: UrgencyReason;
+  stuckFor: string; // e.g. "3h 20m"
+  receivedAt: string; // e.g. "Today, 9:14 AM"
 }
 
 // ── Reason config ─────────────────────────────────────────────────────────────
 
-const REASON_CONFIG: Record<UrgencyReason, {
-  label: string;
-  icon:  React.ElementType;
-  color: string;
-  bg:    string;
-}> = {
+const REASON_CONFIG: Record<
+  UrgencyReason,
+  {
+    label: string;
+    icon: React.ElementType;
+    color: string;
+    bg: string;
+  }
+> = {
   no_response: {
     label: "No response > 2h",
-    icon:  IconClock,
+    icon: IconClock,
     color: "text-red-600",
-    bg:    "bg-red-50 border-red-200",
+    bg: "bg-red-50 border-red-200",
   },
   agent_inactive: {
     label: "Assigned, no activity > 24h",
-    icon:  IconUserOff,
+    icon: IconUserOff,
     color: "text-amber-600",
-    bg:    "bg-amber-50 border-amber-200",
+    bg: "bg-amber-50 border-amber-200",
   },
   waiting_too_long: {
     label: "Waiting > 3 days",
-    icon:  IconHourglass,
+    icon: IconHourglass,
     color: "text-orange-600",
-    bg:    "bg-orange-50 border-orange-200",
+    bg: "bg-orange-50 border-orange-200",
   },
 };
 
 const STATUS_CONFIG = {
-  open:        { label: "Open",        classes: "bg-sky-50 text-sky-800 border border-sky-200"     },
-  in_progress: { label: "In Progress", classes: "bg-amber-50 text-amber-700 border border-amber-200" },
-  waiting:     { label: "Waiting",     classes: "bg-neutral-100 text-neutral-600 border border-neutral-200" },
+  open: {
+    label: "Open",
+    classes: "bg-sky-50 text-sky-800 border border-sky-200",
+  },
+  in_progress: {
+    label: "In Progress",
+    classes: "bg-amber-50 text-amber-700 border border-amber-200",
+  },
+  waiting: {
+    label: "Waiting",
+    classes: "bg-neutral-100 text-neutral-600 border border-neutral-200",
+  },
 };
 
 // ── Real API fetch ────────────────────────────────────────────────────────────
 
 async function fetchAttentionTickets(
-  filters: FilterState
+  filters: FilterState,
 ): Promise<AttentionTicket[]> {
   const params = new URLSearchParams({
     domainId: filters.domainId,
-    aliasId:  filters.aliasId,
-    range:    filters.range,
+    aliasId: filters.aliasId,
+    range: filters.range,
   });
-  const res = await fetch(`/api/dashboard/needs-attention?${params.toString()}`);
+  const res = await fetch(
+    `/api/dashboard/needs-attention?${params.toString()}`,
+  );
   if (!res.ok) throw new Error("Failed to fetch attention tickets");
   return res.json();
 }
@@ -113,7 +127,7 @@ function Avatar({ name }: { name: string }) {
 function SkeletonRow() {
   return (
     <tr className="border-b border-neutral-100">
-      {[40, 60, 20, 25, 20, 15, 20].map((w, i) => (
+      {[40, 60, 20, 25, 15].map((w, i) => (
         <td key={i} className="px-4 py-3.5">
           <div
             className="h-3 bg-neutral-100 animate-pulse rounded"
@@ -130,10 +144,14 @@ function SkeletonRow() {
 function EmptyState() {
   return (
     <tr>
-      <td colSpan={7} className="px-4 py-12 text-center">
+      <td colSpan={5} className="px-4 py-12 text-center">
         <div className="flex flex-col items-center gap-2">
           <div className="size-10 rounded-full bg-emerald-50 flex items-center justify-center">
-            <IconMail size={20} className="text-emerald-500" strokeWidth={1.5} />
+            <IconMail
+              size={20}
+              className="text-emerald-500"
+              strokeWidth={1.5}
+            />
           </div>
           <p className="text-sm font-schibsted font-semibold text-neutral-700">
             All caught up!
@@ -150,23 +168,27 @@ function EmptyState() {
 // ── Summary pills ─────────────────────────────────────────────────────────────
 
 function SummaryPills({ tickets }: { tickets: AttentionTicket[] }) {
-  const noResponse    = tickets.filter((t) => t.reason === "no_response").length;
-  const agentInactive = tickets.filter((t) => t.reason === "agent_inactive").length;
-  const waitingLong   = tickets.filter((t) => t.reason === "waiting_too_long").length;
+  const noResponse = tickets.filter((t) => t.reason === "no_response").length;
+  const agentInactive = tickets.filter(
+    (t) => t.reason === "agent_inactive",
+  ).length;
+  const waitingLong = tickets.filter(
+    (t) => t.reason === "waiting_too_long",
+  ).length;
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex items-center gap-2 flex-wrap tracking-tight">
       <span className="flex items-center gap-1.5 text-xs font-schibsted font-medium bg-red-50 text-red-600 border border-red-200 rounded-full px-2.5 py-1">
         <IconClock size={11} strokeWidth={2.5} />
-        {noResponse} unresponded &gt;2h
+        {noResponse + " "} unresponded &gt; <span>2h</span>
       </span>
       <span className="flex items-center gap-1.5 text-xs font-schibsted font-medium bg-amber-50 text-amber-600 border border-amber-200 rounded-full px-2.5 py-1">
         <IconUserOff size={11} strokeWidth={2.5} />
-        {agentInactive} agent inactive &gt;24h
+        {agentInactive + " "} agent inactive &gt; <span>24h</span>
       </span>
       <span className="flex items-center gap-1.5 text-xs font-schibsted font-medium bg-orange-50 text-orange-600 border border-orange-200 rounded-full px-2.5 py-1">
         <IconHourglass size={11} strokeWidth={2.5} />
-        {waitingLong} waiting &gt;3 days
+        {waitingLong + " "} waiting &gt; <span>3 days</span>
       </span>
     </div>
   );
@@ -177,12 +199,12 @@ function SummaryPills({ tickets }: { tickets: AttentionTicket[] }) {
 export function NeedsAttentionTable() {
   const [filters, setFilters] = useState<FilterState>({
     domainId: "all",
-    aliasId:  "all",
-    range:    "7d",
+    aliasId: "all",
+    range: "7d",
   });
   const [domains, setDomains] = useState<DomainOption[]>([]);
   const [aliases, setAliases] = useState<AliasOption[]>([]);
-  const [tickets, setTickets]   = useState<AttentionTicket[]>([]);
+  const [tickets, setTickets] = useState<AttentionTicket[]>([]);
   const [isLoading, setLoading] = useState(true);
   const [tableKey, setTableKey] = useState(0);
   const { isLoaded, isSignedIn } = useAuth();
@@ -198,7 +220,13 @@ export function NeedsAttentionTable() {
         }
         if (ar.ok) {
           const a = await ar.json();
-          setAliases(a.map((x: any) => ({ id: x.id, label: x.email, domainId: x.domainId ?? "unknown" })));
+          setAliases(
+            a.map((x: any) => ({
+              id: x.id,
+              label: x.email,
+              domainId: x.domainId ?? "unknown",
+            })),
+          );
         }
       })
       .catch(() => {});
@@ -208,7 +236,6 @@ export function NeedsAttentionTable() {
     if (!isLoaded || !isSignedIn) return;
     let cancelled = false;
     setLoading(true);
-
     fetchAttentionTickets(filters)
       .then((data) => {
         if (!cancelled) {
@@ -221,67 +248,92 @@ export function NeedsAttentionTable() {
         console.error("NeedsAttentionTable fetch error:", err);
         if (!cancelled) setLoading(false);
       });
-
     return () => { cancelled = true; };
   }, [isLoaded, isSignedIn, filters.domainId, filters.aliasId, filters.range]);
 
   return (
     <div className="bg-white rounded-4xl border border-neutral-200 flex flex-col">
-
       {/* Header */}
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-neutral-100 flex-wrap">
-        <div className="flex items-center gap-2.5">
-          <div className="size-8 rounded-lg bg-red-50 flex items-center justify-center">
-            <IconAlertTriangle size={16} className="text-red-500" strokeWidth={2} />
+      <div className="flex flex-col gap-2 px-5 py-4 border-b border-neutral-100">
+        {/* Row 1 — title left, pills right */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="size-8 rounded-lg bg-red-50 flex items-center justify-center">
+              <IconAlertTriangle
+                size={16}
+                className="text-red-500"
+                strokeWidth={2}
+              />
+            </div>
+            <div>
+              <h3 className="font-schibsted text-[18.5px] font-semibold uppercase tracking-[0.07em] text-neutral-700">
+                Needs Attention
+              </h3>
+              <p className="text-xs font-schibsted text-neutral-700 tracking-tighter mt-0.5">
+                Tickets that are stuck or overdue
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-schibsted text-[18.5px] font-semibold uppercase tracking-[0.07em] text-neutral-700">
-              Needs Attention
-            </h3>
-            <p className="text-xs font-schibsted text-neutral-700 tracking-tighter mt-0.5">
-              Tickets that are stuck or overdue
-            </p>
-          </div>
-        </div>
-
-        {/* Right side — pills + filters */}
-        <div className="flex items-center gap-3 flex-wrap">
           {!isLoading && tickets.length > 0 && (
             <SummaryPills tickets={tickets} />
           )}
-          <div className="flex items-center gap-2">
-            <AnimatedDropdown
-              options={[{ value: "all", label: "All Domains", icon: IconWorld }, ...domains.map((d) => ({ value: d.id, label: d.label, icon: IconWorld }))]}
-              value={filters.domainId}
-              onChange={(domainId) => setFilters((f) => ({ ...f, domainId, aliasId: "all" }))}
-              placeholder="All Domains"
-              width="w-36"
-              compact
-            />
-            <AnimatedDropdown
-              options={[{ value: "all", label: "All Aliases", icon: IconAt }, ...(filters.domainId === "all" ? aliases : aliases.filter((a) => a.domainId === filters.domainId)).map((a) => ({ value: a.id, label: a.label, icon: IconAt }))]}
-              value={filters.aliasId}
-              onChange={(aliasId) => setFilters((f) => ({ ...f, aliasId }))}
-              placeholder="All Aliases"
-              width="w-40"
-              compact
-            />
-            <AnimatedDropdown
-              options={[{ value: "7d", label: "Last 7 days", icon: IconCalendarWeek }, { value: "14d", label: "Last 14 days", icon: IconCalendar }, { value: "30d", label: "Last 30 days", icon: IconCalendarMonth }]}
-              value={filters.range}
-              onChange={(range) => setFilters((f) => ({ ...f, range: range as FilterState["range"] }))}
-              placeholder="Last 7 days"
-              width="w-32"
-              compact
-            />
-          </div>
+        </div>
+
+        {/* Row 2 — filters */}
+        <div className="flex items-center gap-2 pt-5">
+          <AnimatedDropdown
+            options={[
+              { value: "all", label: "All Domains", icon: IconWorld },
+              ...domains.map((d) => ({
+                value: d.id,
+                label: d.label,
+                icon: IconWorld,
+              })),
+            ]}
+            value={filters.domainId}
+            onChange={(domainId) =>
+              setFilters((f) => ({ ...f, domainId, aliasId: "all" }))
+            }
+            placeholder="All Domains"
+            width="w-36"
+            compact
+          />
+          <AnimatedDropdown
+            options={[
+              { value: "all", label: "All Aliases", icon: IconAt },
+              ...(filters.domainId === "all"
+                ? aliases
+                : aliases.filter((a) => a.domainId === filters.domainId)
+              ).map((a) => ({ value: a.id, label: a.label, icon: IconAt })),
+            ]}
+            value={filters.aliasId}
+            onChange={(aliasId) => setFilters((f) => ({ ...f, aliasId }))}
+            placeholder="All Aliases"
+            width="w-40"
+            compact
+          />
+          <AnimatedDropdown
+            options={[
+              { value: "7d", label: "Last 7 days", icon: IconCalendarWeek },
+              { value: "14d", label: "Last 14 days", icon: IconCalendar },
+              { value: "30d", label: "Last 30 days", icon: IconCalendarMonth },
+            ]}
+            value={filters.range}
+            onChange={(range) =>
+              setFilters((f) => ({
+                ...f,
+                range: range as FilterState["range"],
+              }))
+            }
+            placeholder="Last 7 days"
+            width="w-32"
+            compact
+          />
         </div>
       </div>
 
       {/* Table */}
       <div className="relative overflow-x-auto">
-
         {/* Blur overlay */}
         {isLoading && (
           <div className="absolute inset-0 z-10 backdrop-blur-sm bg-white/40 rounded-b-xl" />
@@ -290,10 +342,10 @@ export function NeedsAttentionTable() {
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-neutral-100 bg-neutral-50/60">
-              {["From", "Subject", "Alias", "Status", "Assigned", "Stuck For", "Reason"].map((h) => (
+              {["From", "Subject", "Alias", "Status", "Stuck For"].map((h) => (
                 <th
                   key={h}
-                  className="px-4 py-2.5 text-[11px] font-schibsted font-semibold text-neutral-400 uppercase tracking-wide whitespace-nowrap"
+                  className="px-4 py-2.5 text-[11px] font-schibsted font-semibold text-neutral-800 uppercase tracking-wide whitespace-nowrap"
                 >
                   {h}
                 </th>
@@ -316,12 +368,12 @@ export function NeedsAttentionTable() {
                   return (
                     <motion.tr
                       key={`${tableKey}-${ticket.id}`}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
                       transition={{
-                        duration: 0.3,
-                        delay: i * 0.05,
-                        ease: EASE_SETTLE,
+                        duration: 0.2,
+                        delay: i * 0.03,
+                        ease: EASE_OUT_QUART,
                       }}
                       className="border-b border-neutral-100 hover:bg-neutral-50/80 transition-colors group"
                     >
@@ -330,10 +382,10 @@ export function NeedsAttentionTable() {
                         <div className="flex items-center gap-2.5">
                           <Avatar name={ticket.fromName} />
                           <div className="min-w-0">
-                            <p className="text-xs font-schibsted font-semibold text-neutral-800 truncate">
+                            <p className="text-xs font-schibsted font-semibold text-neutral-500 truncate">
                               {ticket.fromName}
                             </p>
-                            <p className="text-[11px] font-schibsted text-neutral-400 truncate">
+                            <p className="text-[11px] font-schibsted text-neutral-800 truncate">
                               {ticket.fromEmail}
                             </p>
                           </div>
@@ -359,36 +411,19 @@ export function NeedsAttentionTable() {
 
                       {/* Status */}
                       <td className="px-4 py-3.5">
-                        <span className={`text-[11px] font-schibsted font-medium px-2 py-0.5 rounded-full ${status.classes}`}>
+                        <span
+                          className={`text-[11px] font-schibsted font-medium px-2 py-0.5 rounded-full ${status.classes}`}
+                        >
                           {status.label}
                         </span>
                       </td>
 
-                      {/* Assigned */}
-                      <td className="px-4 py-3.5">
-                        {ticket.assignedTo ? (
-                          <span className="text-xs font-schibsted text-neutral-700">
-                            {ticket.assignedTo}
-                          </span>
-                        ) : (
-                          <span className="text-xs font-schibsted text-neutral-400 italic">
-                            Unassigned
-                          </span>
-                        )}
-                      </td>
-
                       {/* Stuck For */}
                       <td className="px-4 py-3.5">
-                        <span className={`text-xs font-schibsted font-bold ${reason.color}`}>
+                        <span
+                          className={`text-xs font-schibsted font-bold ${reason.color}`}
+                        >
                           {ticket.stuckFor}
-                        </span>
-                      </td>
-
-                      {/* Reason */}
-                      <td className="px-4 py-3.5">
-                        <span className={`flex items-center gap-1.5 text-[11px] font-schibsted font-medium border rounded-full px-2 py-0.5 w-fit ${reason.bg} ${reason.color}`}>
-                          <ReasonIcon size={10} strokeWidth={2.5} />
-                          {reason.label}
                         </span>
                       </td>
                     </motion.tr>
