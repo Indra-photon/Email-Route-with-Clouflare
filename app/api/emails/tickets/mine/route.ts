@@ -55,6 +55,15 @@ export async function GET(request: NextRequest) {
     //  • repliedAt          — most recent outbound message timestamp
     //  • lastMessageDirection — direction of the chronologically last message
     //  • attachmentCount    — attachments on the root inbound message
+    //  • status             — derived from the most "advanced" status in the chain
+    //                         (handles stale data where status was set on a reply doc)
+    const STATUS_PRIORITY: Record<string, number> = {
+      open: 0,
+      in_progress: 1,
+      waiting: 2,
+      resolved: 3,
+    };
+
     const formattedTickets = await Promise.all(
       rootTickets.map(async (ticket) => {
         // Fetch all messages linked to this root (same logic as threads/[id])
@@ -78,12 +87,31 @@ export async function GET(request: NextRequest) {
         const repliedAt =
           latestOutbound?.receivedAt ?? ticket.repliedAt ?? null;
 
+        // Derive the effective status from the most advanced status across the whole chain.
+        // This handles stale data where a reply email was resolved but the root wasn't updated.
+        const effectiveStatus = chainMessages.reduce(
+          (best, msg) => {
+            const p = STATUS_PRIORITY[msg.status] ?? 0;
+            return p > (STATUS_PRIORITY[best] ?? 0) ? msg.status : best;
+          },
+          ticket.status as string
+        );
+
+        // Auto-heal: if the root doc's status is stale, sync it back so future
+        // reads are fast and consistent (fire-and-forget, don't block the response)
+        if (effectiveStatus !== ticket.status) {
+          EmailThread.updateOne(
+            { _id: ticket._id },
+            { $set: { status: effectiveStatus, statusUpdatedAt: new Date() } }
+          ).catch(() => {/* silent */});
+        }
+
         return {
           id: ticket._id.toString(),
           from: ticket.from,
           fromName: ticket.fromName,
           subject: ticket.subject,
-          status: ticket.status,
+          status: effectiveStatus as "open" | "in_progress" | "waiting" | "resolved",
           receivedAt: ticket.receivedAt,
           repliedAt,
           lastMessageDirection,

@@ -71,24 +71,44 @@ export async function POST(request: NextRequest) {
       statusFields.resolvedBy = null;
     }
 
+    // ── Walk UP the reference chain to find the true root inbound ticket ──
+    // The threadId we receive is always the root in normal kanban usage, but
+    // we walk up anyway so the cascade is correct in all cases.
+    let rootThread: typeof thread = thread;
+    const refsToCheck = [
+      thread.inReplyTo,
+      ...(thread.references || []),
+    ].filter(Boolean) as string[];
+
+    if (refsToCheck.length > 0) {
+      const ancestor = await EmailThread.findOne({
+        workspaceId: workspace._id,
+        messageId: { $in: refsToCheck },
+        direction: "inbound",
+      })
+        .sort({ createdAt: 1 })
+        .lean();
+      if (ancestor && ancestor.workspaceId.toString() === workspace._id.toString()) {
+        rootThread = await EmailThread.findById(ancestor._id) as typeof thread;
+      }
+    }
+
     // ── Cascade status to ALL messages in this conversation chain ──────────
-    // This ensures that when you resolve/reopen a root ticket, the reply
-    // email documents in the same thread are updated too. Without this,
-    // reply emails would remain in a stale status and appear in wrong columns.
+    // Covers: root ticket + all reply emails in both directions.
     await EmailThread.updateMany(
       {
         workspaceId: workspace._id,
         $or: [
-          { _id: thread._id },
-          { inReplyTo: thread.messageId },
-          { references: thread.messageId },
+          { _id: rootThread._id },
+          { inReplyTo: rootThread.messageId },
+          { references: rootThread.messageId },
         ],
       },
       { $set: statusFields }
     );
 
     // Re-fetch the root thread to return accurate data
-    const updated = await EmailThread.findById(threadId).lean();
+    const updated = await EmailThread.findById(rootThread._id).lean();
 
     const posthog = getPostHogClient();
     posthog.capture({

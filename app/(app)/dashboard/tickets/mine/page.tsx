@@ -1258,7 +1258,7 @@ function KanbanColumn({
   const Icon = col.icon;
 
   return (
-    <div className="flex flex-col min-w-[290px] max-w-[290px] bg-neutral-50 border border-neutral-200 rounded-xl overflow-hidden">
+    <div className="flex flex-col min-w-[320px] max-w-[320px] bg-neutral-50 border border-neutral-200 rounded-xl overflow-hidden">
       {/* Column header */}
       <div
         className={`flex items-center justify-between px-3.5 py-3 border-b ${col.headerBorder} ${col.headerBg} flex-shrink-0`}
