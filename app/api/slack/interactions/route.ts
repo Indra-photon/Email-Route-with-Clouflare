@@ -149,16 +149,38 @@ export async function POST(request: Request) {
 
       await dbConnect();
 
-      // Find root thread to get its messageId for cascading
-      const rootThread = await EmailThread.findById(threadId).lean();
-      if (rootThread) {
+      // The threadId embedded in the Slack button may be ANY message in the chain
+      // (e.g. a customer reply email). We must walk UP the reference chain to
+      // find the true root inbound ticket, then cascade downward from there.
+      const clickedThread = await EmailThread.findById(threadId).lean();
+      if (clickedThread) {
         const statusFields: Record<string, unknown> = {
           status,
           statusUpdatedAt: new Date(),
           ...(status === "resolved" ? { resolvedAt: new Date(), resolvedBy: payload.user?.id } : {}),
           ...(status !== "resolved" ? { resolvedAt: null, resolvedBy: null } : {}),
         };
-        // Cascade status to all messages in the conversation chain
+
+        // Walk up: if this message has references/inReplyTo, look for an ancestor
+        // inbound ticket that is the real root of the conversation.
+        let rootThread: typeof clickedThread = clickedThread;
+        const refsToCheck = [
+          clickedThread.inReplyTo,
+          ...(clickedThread.references || []),
+        ].filter(Boolean) as string[];
+
+        if (refsToCheck.length > 0) {
+          const ancestor = await EmailThread.findOne({
+            workspaceId: clickedThread.workspaceId,
+            messageId: { $in: refsToCheck },
+            direction: "inbound",
+          })
+            .sort({ createdAt: 1 })
+            .lean();
+          if (ancestor) rootThread = ancestor;
+        }
+
+        // Cascade status to all messages in the conversation chain from the root
         await EmailThread.updateMany(
           {
             workspaceId: rootThread.workspaceId,
