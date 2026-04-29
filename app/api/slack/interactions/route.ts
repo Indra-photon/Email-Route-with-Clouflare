@@ -144,7 +144,7 @@ export async function POST(request: Request) {
       const [status, threadId] = (rawValue || "").split("__");
       if (!status || !threadId) return NextResponse.json({ error: "Invalid value" }, { status: 400 });
 
-      const validStatuses = ["open", "in_progress", "resolved"];
+      const validStatuses = ["open", "in_progress", "waiting", "resolved"];
       if (!validStatuses.includes(status)) return NextResponse.json({ error: "Invalid status" }, { status: 400 });
 
       await dbConnect();
