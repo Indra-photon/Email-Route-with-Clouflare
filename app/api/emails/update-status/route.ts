@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     if (hasNoPlan) return NextResponse.json({ error: "No active plan. Please purchase a plan.", upgradeRequired: true }, { status: 403 });
     if (isExpired) return NextResponse.json({ error: "Your plan has expired. Please renew.", upgradeRequired: true }, { status: 403 });
 
-    // Find thread and verify access
+    // Find root thread and verify access
     const thread = await EmailThread.findById(threadId);
     if (!thread) {
       return NextResponse.json({ error: "Thread not found" }, { status: 404 });
@@ -57,17 +57,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update status
-    thread.status = status;
-    thread.statusUpdatedAt = new Date();
+    const now = new Date();
+    const statusFields: Record<string, unknown> = {
+      status,
+      statusUpdatedAt: now,
+    };
 
-    // If resolved, track who and when
     if (status === 'resolved') {
-      thread.resolvedAt = new Date();
-      thread.resolvedBy = userId;
+      statusFields.resolvedAt = now;
+      statusFields.resolvedBy = userId;
+    } else {
+      statusFields.resolvedAt = null;
+      statusFields.resolvedBy = null;
     }
 
-    await thread.save();
+    // ── Cascade status to ALL messages in this conversation chain ──────────
+    // This ensures that when you resolve/reopen a root ticket, the reply
+    // email documents in the same thread are updated too. Without this,
+    // reply emails would remain in a stale status and appear in wrong columns.
+    await EmailThread.updateMany(
+      {
+        workspaceId: workspace._id,
+        $or: [
+          { _id: thread._id },
+          { inReplyTo: thread.messageId },
+          { references: thread.messageId },
+        ],
+      },
+      { $set: statusFields }
+    );
+
+    // Re-fetch the root thread to return accurate data
+    const updated = await EmailThread.findById(threadId).lean();
 
     const posthog = getPostHogClient();
     posthog.capture({
@@ -83,11 +104,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       thread: {
-        id: thread._id.toString(),
-        status: thread.status,
-        statusUpdatedAt: thread.statusUpdatedAt,
-        resolvedAt: thread.resolvedAt,
-        resolvedBy: thread.resolvedBy,
+        id: updated!._id.toString(),
+        status: updated!.status,
+        statusUpdatedAt: updated!.statusUpdatedAt,
+        resolvedAt: updated!.resolvedAt,
+        resolvedBy: updated!.resolvedBy,
       }
     });
   } catch (error) {

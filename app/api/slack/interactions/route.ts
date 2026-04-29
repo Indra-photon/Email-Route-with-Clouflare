@@ -148,12 +148,29 @@ export async function POST(request: Request) {
       if (!validStatuses.includes(status)) return NextResponse.json({ error: "Invalid status" }, { status: 400 });
 
       await dbConnect();
-      await EmailThread.findByIdAndUpdate(threadId, {
-        status,
-        statusUpdatedAt: new Date(),
-        ...(status === "resolved" ? { resolvedAt: new Date(), resolvedBy: payload.user?.id } : {}),
-        ...(status !== "resolved" ? { resolvedAt: null, resolvedBy: null } : {}),
-      });
+
+      // Find root thread to get its messageId for cascading
+      const rootThread = await EmailThread.findById(threadId).lean();
+      if (rootThread) {
+        const statusFields: Record<string, unknown> = {
+          status,
+          statusUpdatedAt: new Date(),
+          ...(status === "resolved" ? { resolvedAt: new Date(), resolvedBy: payload.user?.id } : {}),
+          ...(status !== "resolved" ? { resolvedAt: null, resolvedBy: null } : {}),
+        };
+        // Cascade status to all messages in the conversation chain
+        await EmailThread.updateMany(
+          {
+            workspaceId: rootThread.workspaceId,
+            $or: [
+              { _id: rootThread._id },
+              { inReplyTo: rootThread.messageId },
+              { references: rootThread.messageId },
+            ],
+          },
+          { $set: statusFields }
+        );
+      }
 
       return NextResponse.json({ ok: true });
     }
