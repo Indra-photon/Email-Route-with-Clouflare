@@ -708,10 +708,10 @@ ${snippet}
         ...messagePayload,
       };
 
-      // Add custom bot name, avatar and description if set
-      if (customBotName) {
-        postMessageBody.username = customBotName;
-      }
+      // Override the default Slack Bot User name (which was defaulting to "email sender")
+      // with our true app name, unless the user configured a custom name for this domain.
+      postMessageBody.username = customBotName || "SyncSupport";
+
       if (customBotAvatar) {
         postMessageBody.icon_url = customBotAvatar;
       }
