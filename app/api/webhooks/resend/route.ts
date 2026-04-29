@@ -474,7 +474,8 @@ export async function POST(request: Request) {
       ).lean();
       if (updatedWorkspace) {
         ticketNumber = updatedWorkspace.ticketCounter;
-        ticketLabel = `#${ticketNumber} - ${emailLower}`;
+        const emailPrefix = emailLower.split("@")[0];
+        ticketLabel = `#${ticketNumber} - ${emailPrefix}@`;
         console.log("🎫 Assigned ticket number:", ticketLabel);
       }
     }
