@@ -120,6 +120,8 @@ export async function GET(request: NextRequest) {
           assignedToName: ticket.assignedToName,
           claimedAt: ticket.claimedAt,
           attachmentCount: (ticket.attachments ?? []).length,
+          ticketNumber: ticket.ticketNumber ?? null,
+          ticketLabel: ticket.ticketLabel ?? null,
         };
       })
     );
