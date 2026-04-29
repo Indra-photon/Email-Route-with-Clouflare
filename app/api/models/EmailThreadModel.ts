@@ -47,6 +47,10 @@ export interface IEmailThread extends Document {
   resolvedAt?: Date;
   resolvedBy?: string;
 
+  // Ticket numbering — only set on ROOT inbound emails (not replies)
+  ticketNumber?: number | null;   // e.g. 42  (sequential per workspace)
+  ticketLabel?: string | null;    // e.g. "#42 - support@syncsupport.app"
+
   receivedAt: Date;
   repliedAt: Date | null;
   createdAt: Date;
@@ -193,6 +197,16 @@ const EmailThreadSchema = new Schema<IEmailThread>(
     },
     repliedAt: {
       type: Date,
+      default: null,
+    },
+    // Ticket numbering — only set on ROOT inbound emails (not replies)
+    ticketNumber: {
+      type: Number,
+      default: null,
+      index: true,
+    },
+    ticketLabel: {
+      type: String,
       default: null,
     },
   },

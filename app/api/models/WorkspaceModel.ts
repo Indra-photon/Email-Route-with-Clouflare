@@ -7,6 +7,7 @@ export interface IWorkspace extends Document {
   name: string;
   planId: PlanId | null;           // null = no paid plan yet
   subscriptionId?: Types.ObjectId;
+  ticketCounter: number;           // auto-increments per workspace for ticket numbering
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,6 +34,10 @@ const WorkspaceSchema = new Schema<IWorkspace>(
       ref: "Subscription",
       default: null,
     },
+    ticketCounter: {
+      type: Number,
+      default: 0,   // incremented atomically via $inc on each new root ticket
+    },
   },
   {
     timestamps: true,
@@ -42,4 +47,3 @@ const WorkspaceSchema = new Schema<IWorkspace>(
 export const Workspace: Model<IWorkspace> =
   (mongoose.models.Workspace as Model<IWorkspace>) ||
   mongoose.model<IWorkspace>("Workspace", WorkspaceSchema);
-
