@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     await dbConnect();
 
     // Find all unassigned inbound threads
-    const unassignedTickets = await EmailThread.find({
+    const allInbound = await EmailThread.find({
       workspaceId: workspace._id,
       direction: "inbound",
       $or: [
@@ -37,11 +37,24 @@ export async function GET(request: NextRequest) {
       ],
     })
       .sort({ receivedAt: -1 })
-      .limit(100)
+      .limit(200)
       .lean();
 
+    // Build a set of all known inbound messageIds to detect reply emails
+    const allInboundMessageIds = new Set(
+      allInbound.map((t) => t.messageId).filter(Boolean)
+    );
+
+    // Keep only ROOT threads (same deduplication logic as /tickets/mine)
+    const rootTickets = allInbound.filter((t) => {
+      if (!t.inReplyTo) return true;
+      if (allInboundMessageIds.has(t.inReplyTo)) return false;
+      if (t.references?.some((ref) => allInboundMessageIds.has(ref))) return false;
+      return true;
+    });
+
     // Format response
-    const formattedTickets = unassignedTickets.map((ticket) => ({
+    const formattedTickets = rootTickets.map((ticket) => ({
       id: ticket._id.toString(),
       from: ticket.from,
       fromName: ticket.fromName,

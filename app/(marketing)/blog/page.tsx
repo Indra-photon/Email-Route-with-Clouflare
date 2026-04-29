@@ -7,6 +7,9 @@ import { Footer } from "@/components/Footer";
 import Image from "next/image";
 import Link from "next/link";
 
+// Rebuild every hour so Googlebot always sees fresh post links
+export const revalidate = 3600;
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatDate(iso: string) {
