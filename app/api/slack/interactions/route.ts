@@ -144,16 +144,55 @@ export async function POST(request: Request) {
       const [status, threadId] = (rawValue || "").split("__");
       if (!status || !threadId) return NextResponse.json({ error: "Invalid value" }, { status: 400 });
 
-      const validStatuses = ["open", "in_progress", "resolved"];
+      const validStatuses = ["open", "in_progress", "waiting", "resolved"];
       if (!validStatuses.includes(status)) return NextResponse.json({ error: "Invalid status" }, { status: 400 });
 
       await dbConnect();
-      await EmailThread.findByIdAndUpdate(threadId, {
-        status,
-        statusUpdatedAt: new Date(),
-        ...(status === "resolved" ? { resolvedAt: new Date(), resolvedBy: payload.user?.id } : {}),
-        ...(status !== "resolved" ? { resolvedAt: null, resolvedBy: null } : {}),
-      });
+
+      // The threadId embedded in the Slack button may be ANY message in the chain
+      // (e.g. a customer reply email). We must walk UP the reference chain to
+      // find the true root inbound ticket, then cascade downward from there.
+      const clickedThread = await EmailThread.findById(threadId).lean();
+      if (clickedThread) {
+        const statusFields: Record<string, unknown> = {
+          status,
+          statusUpdatedAt: new Date(),
+          ...(status === "resolved" ? { resolvedAt: new Date(), resolvedBy: payload.user?.id } : {}),
+          ...(status !== "resolved" ? { resolvedAt: null, resolvedBy: null } : {}),
+        };
+
+        // Walk up: if this message has references/inReplyTo, look for an ancestor
+        // inbound ticket that is the real root of the conversation.
+        let rootThread: typeof clickedThread = clickedThread;
+        const refsToCheck = [
+          clickedThread.inReplyTo,
+          ...(clickedThread.references || []),
+        ].filter(Boolean) as string[];
+
+        if (refsToCheck.length > 0) {
+          const ancestor = await EmailThread.findOne({
+            workspaceId: clickedThread.workspaceId,
+            messageId: { $in: refsToCheck },
+            direction: "inbound",
+          })
+            .sort({ createdAt: 1 })
+            .lean();
+          if (ancestor) rootThread = ancestor;
+        }
+
+        // Cascade status to all messages in the conversation chain from the root
+        await EmailThread.updateMany(
+          {
+            workspaceId: rootThread.workspaceId,
+            $or: [
+              { _id: rootThread._id },
+              { inReplyTo: rootThread.messageId },
+              { references: rootThread.messageId },
+            ],
+          },
+          { $set: statusFields }
+        );
+      }
 
       return NextResponse.json({ ok: true });
     }

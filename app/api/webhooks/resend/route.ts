@@ -5,8 +5,10 @@ import { Integration } from "@/app/api/models/IntegrationModel";
 import { EmailThread } from "@/app/api/models/EmailThreadModel";
 import { Subscription } from "@/app/api/models/SubscriptionModel";
 import { Domain } from "@/app/api/models/DomainModel";
+import { Workspace } from "@/app/api/models/WorkspaceModel";
 import { checkTicketLimit } from "@/lib/checkPlanLimits";
 import { getSubscriptionGuard } from "@/lib/checkSubscriptionStatus";
+
 
 type ResendAttachmentMeta = {
   id: string;
@@ -459,6 +461,25 @@ export async function POST(request: Request) {
       }
     }
 
+    // ── Assign ticket number for ROOT inbound emails (no inReplyTo) ────────
+    // Atomically increment the workspace's ticketCounter so numbers are
+    // always sequential and there are no race conditions.
+    let ticketNumber: number | null = null;
+    let ticketLabel: string | null = null;
+    if (!inReplyTo) {
+      const updatedWorkspace = await Workspace.findOneAndUpdate(
+        { _id: alias.workspaceId },
+        { $inc: { ticketCounter: 1 } },
+        { new: true, upsert: false }
+      ).lean();
+      if (updatedWorkspace) {
+        ticketNumber = updatedWorkspace.ticketCounter;
+        const emailPrefix = emailLower.split("@")[0];
+        ticketLabel = `#${ticketNumber} - ${emailPrefix}@`;
+        console.log("🎫 Assigned ticket number:", ticketLabel);
+      }
+    }
+
     const emailThread = await EmailThread.create({
       workspaceId: alias.workspaceId,
       aliasId: alias._id,
@@ -483,6 +504,7 @@ export async function POST(request: Request) {
       status: "open",
       statusUpdatedAt: new Date(),
       receivedAt: new Date(emailData.created_at || Date.now()),
+      ...(ticketNumber !== null ? { ticketNumber, ticketLabel } : {}),
     });
     console.log("💾 Email saved to database:", emailThread._id);
 
@@ -565,6 +587,9 @@ export async function POST(request: Request) {
               { type: "mrkdwn", text: `*From:*\n${fromEmail}` },
               { type: "mrkdwn", text: `*Subject:*\n${subject}` },
               { type: "mrkdwn", text: `*Status:*\n${statusEmoji} ${statusLabel}` },
+              ...(emailThread.ticketLabel
+                ? [{ type: "mrkdwn", text: `*Ticket:*\n${emailThread.ticketLabel}` }]
+                : []),
               ...(claimField ? [claimField] : []),
             ],
           });
@@ -684,10 +709,10 @@ ${snippet}
         ...messagePayload,
       };
 
-      // Add custom bot name, avatar and description if set
-      if (customBotName) {
-        postMessageBody.username = customBotName;
-      }
+      // Override the default Slack Bot User name (which was defaulting to "email sender")
+      // with our true app name, unless the user configured a custom name for this domain.
+      postMessageBody.username = customBotName || "SyncSupport";
+
       if (customBotAvatar) {
         postMessageBody.icon_url = customBotAvatar;
       }

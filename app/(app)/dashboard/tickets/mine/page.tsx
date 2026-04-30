@@ -1005,6 +1005,8 @@ interface Ticket {
   aliasId?: string;
   attachmentCount?: number;
   lastMessageDirection?: "inbound" | "outbound";
+  ticketNumber?: number | null;
+  ticketLabel?: string | null;
 }
 
 interface ThreadDetail {
@@ -1188,9 +1190,15 @@ function TicketCard({
         className="cursor-pointer border border-neutral-200 bg-white hover:border-neutral-600 rounded-2xl p-1.5 transition-all duration-150 group"
       >
         <CardContent className="p-3 rounded-[10px] bg-neutral-50">
-          {/* Top row — mail icon + urgency time */}
+          {/* Top row — ticket label (if set) + urgency time */}
           <div className="flex items-center justify-between mb-2.5">
-            <Mail size={13} className="text-neutral-300 shrink-0" />
+            {ticket.ticketLabel ? (
+              <span className="text-[10px] font-schibsted font-semibold text-sky-600 bg-sky-50 border border-sky-100 rounded-full px-2 py-0.5 truncate max-w-[160px]">
+                {ticket.ticketLabel}
+              </span>
+            ) : (
+              <Mail size={13} className="text-neutral-300 shrink-0" />
+            )}
             <span
               className={`flex items-center gap-1.5 text-[10px] font-schibsted font-medium ${timeColor}`}
             >
@@ -1654,6 +1662,11 @@ function ConversationSheet({
             <p className="text-xs font-schibsted font-medium text-neutral-700 leading-snug mt-2 line-clamp-2">
               {thread?.subject}
             </p>
+            {ticket?.ticketLabel && (
+              <span className="inline-flex items-center mt-1.5 text-[10px] font-schibsted font-semibold text-sky-600 bg-sky-50 border border-sky-100 rounded-full px-2 py-0.5">
+                {ticket.ticketLabel}
+              </span>
+            )}
           </div>
 
           {/* Close */}

@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     if (hasNoPlan) return NextResponse.json({ error: "No active plan. Please purchase a plan.", upgradeRequired: true }, { status: 403 });
     if (isExpired) return NextResponse.json({ error: "Your plan has expired. Please renew.", upgradeRequired: true }, { status: 403 });
 
-    // Find thread and verify access
+    // Find root thread and verify access
     const thread = await EmailThread.findById(threadId);
     if (!thread) {
       return NextResponse.json({ error: "Thread not found" }, { status: 404 });
@@ -57,17 +57,58 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update status
-    thread.status = status;
-    thread.statusUpdatedAt = new Date();
+    const now = new Date();
+    const statusFields: Record<string, unknown> = {
+      status,
+      statusUpdatedAt: now,
+    };
 
-    // If resolved, track who and when
     if (status === 'resolved') {
-      thread.resolvedAt = new Date();
-      thread.resolvedBy = userId;
+      statusFields.resolvedAt = now;
+      statusFields.resolvedBy = userId;
+    } else {
+      statusFields.resolvedAt = null;
+      statusFields.resolvedBy = null;
     }
 
-    await thread.save();
+    // ── Walk UP the reference chain to find the true root inbound ticket ──
+    // The threadId we receive is always the root in normal kanban usage, but
+    // we walk up anyway so the cascade is correct in all cases.
+    let rootThread: typeof thread = thread;
+    const refsToCheck = [
+      thread.inReplyTo,
+      ...(thread.references || []),
+    ].filter(Boolean) as string[];
+
+    if (refsToCheck.length > 0) {
+      const ancestor = await EmailThread.findOne({
+        workspaceId: workspace._id,
+        messageId: { $in: refsToCheck },
+        direction: "inbound",
+      })
+        .sort({ createdAt: 1 })
+        .lean();
+      if (ancestor && ancestor.workspaceId.toString() === workspace._id.toString()) {
+        rootThread = await EmailThread.findById(ancestor._id) as typeof thread;
+      }
+    }
+
+    // ── Cascade status to ALL messages in this conversation chain ──────────
+    // Covers: root ticket + all reply emails in both directions.
+    await EmailThread.updateMany(
+      {
+        workspaceId: workspace._id,
+        $or: [
+          { _id: rootThread._id },
+          { inReplyTo: rootThread.messageId },
+          { references: rootThread.messageId },
+        ],
+      },
+      { $set: statusFields }
+    );
+
+    // Re-fetch the root thread to return accurate data
+    const updated = await EmailThread.findById(rootThread._id).lean();
 
     const posthog = getPostHogClient();
     posthog.capture({
@@ -83,11 +124,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       thread: {
-        id: thread._id.toString(),
-        status: thread.status,
-        statusUpdatedAt: thread.statusUpdatedAt,
-        resolvedAt: thread.resolvedAt,
-        resolvedBy: thread.resolvedBy,
+        id: updated!._id.toString(),
+        status: updated!.status,
+        statusUpdatedAt: updated!.statusUpdatedAt,
+        resolvedAt: updated!.resolvedAt,
+        resolvedBy: updated!.resolvedBy,
       }
     });
   } catch (error) {
