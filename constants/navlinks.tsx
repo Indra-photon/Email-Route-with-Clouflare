@@ -4,7 +4,7 @@ import {
   IconWriting,
   IconCurrencyDollar,
   IconBook2,
-  IconLayoutList,
+  IconHelpCircle,
   IconTag,
 } from "@tabler/icons-react";
 
@@ -30,8 +30,8 @@ export const navlinks = [
     icon: IconWriting,
   },
   {
-    url: "/about",
-    label: "About",
-    icon: IconLayoutList,
+    url: "/frequently-asked-questions",
+    label: "FAQ",
+    icon: IconHelpCircle,
   },
 ];

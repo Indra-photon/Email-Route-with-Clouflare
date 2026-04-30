@@ -1,0 +1,86 @@
+# SyncSupport — Frequently Asked Questions
+
+> This page answers the most common questions about SyncSupport — a Slack-native helpdesk to manage customer tickets with email routing, and live chat integration support platform with flat-rate pricing and no per-agent fees.
+
+## Getting Started
+
+**What is SyncSupport?**
+SyncSupport is a customer support platform that routes inbound emails from your custom domain directly into Slack channels, converting them into claimable, trackable tickets. Teams reply to customers from Slack and the customer receives a proper email back. It also provides an embeddable live chat widget that routes into the same Slack workflow.
+
+**How long does setup take?**
+About 5 minutes. You connect your domain via DNS management (few simple steps), link your Slack workspace, create email aliases, and you're live. No onboarding call, no configuration specialist needed.
+
+**Do I need to change my email provider?**
+No. SyncSupport uses DNS setting to forward emails. Your existing domain, and email provider stay exactly as they are. Only inbound routing changes — emails get forwarded to SyncSupport, which pushes them to Slack.
+
+**Can I use my own custom domain?**
+Yes — that's the core feature. You connect support@yourcompany.com (or any alias on your domain) and emails arrive in Slack under your brand. Customers always see your domain, never SyncSupport's.
+
+**What do I need to get started?**
+- A custom domain
+- A Slack workspace
+- A SyncSupport account (free trial available)
+
+## Features
+
+**How quickly do emails arrive in Slack?**
+Typically 2–5 seconds after the customer sends. Email propagation through DNS can take 10–30 minutes on first setup, but once live, delivery is near-instant.
+
+**How many email aliases can I create?**
+Depends on your plan: Starter allows 3 aliases per domain, Growth allows 5 per domain, Scale allows unlimited. Each alias routes to its own dedicated Slack channel — so billing@, support@, and sales@ each get their own channel.
+
+**Can I reply to customers directly from Slack?**
+Yes — this is a core feature on all plans, not an add-on. You type your reply in the Slack thread and the customer receives it as a proper email from your domain (e.g. support@yourcompany.com). They never see Slack mentioned.
+
+**What are canned responses?**
+Pre-saved reply templates for common questions ("How do I reset my password?", "What's your refund policy?"). Team members can insert a canned response in one click instead of typing from scratch. Available on Growth and Scale plans.
+
+**Does SyncSupport support live chat on my website?**
+Yes — there's an embeddable AI chat widget you can add to any website with a one-line snippet. Visitor conversations route directly into your Slack workflow alongside email tickets. Starter includes 1 text-only widget, Growth includes 1 widget per domain with file sending, Scale includes unlimited.
+
+**Can multiple team members handle the same inbox?**
+Yes — unlimited agents on all plans. Each ticket is claimable: one person claims ownership to prevent duplicate replies. Other team members can still view and monitor all tickets in the channel.
+
+## Pricing & Plans
+
+**How is pricing structured?**
+Flat-rate monthly billing — not per agent, not per seat. One price covers your entire team regardless of size. Plans differ by number of domains, aliases per domain, tickets per month, and data retention.
+
+| Plan | Price | Domains | Agents |
+|------|-------|---------|--------|
+| Starter | $19/mo | 1 | Unlimited |
+| Growth | $59/mo | 3 | Unlimited |
+| Scale | $159/mo | Unlimited | Unlimited |
+
+**Is there a free trial?**
+Yes — all paid plans include a free trial. No credit card required to start.
+
+**Can I cancel anytime?**
+Yes — no long-term contracts. Cancel from your billing settings at any time. You keep access until the end of your billing period.
+
+**How does SyncSupport compare to Zendesk or Front?**
+Zendesk and Front charge per agent per month. For a 5-person team, Zendesk Suite Team costs $275/month ($3,300/year). SyncSupport Growth costs $59/month ($708/year) — a saving of $2,592/year before add-ons. Zendesk also charges extra for AI ($50/agent), QA tools ($35/agent), and workforce management ($25/agent), pushing real-world costs to $650–$950/month for 5 agents. SyncSupport has no add-on fees — core features are included. Unlike Front or Zendesk, SyncSupport is Slack-native: your team works entirely inside Slack, not in a separate dashboard.
+
+## Security & Reliability
+
+**Is my email data secure?**
+Yes — all data is encrypted in transit and at rest. SyncSupport uses industry-standard practices for data handling. Each workspace is fully isolated — one customer's data is never accessible to another. See the [Privacy Policy](https://www.syncsupport.app/privacy) for full details.
+
+**What happens if a Slack notification fails?**
+SyncSupport has retry logic for failed deliveries. Tickets are stored in the system regardless of Slack delivery status, so no data is lost. You can view all tickets in the dashboard even if a Slack notification was missed.
+
+**What is your uptime guarantee?**
+SyncSupport targets 99.9% uptime. Status and incident history are published on the status page. Email routing operates through Cloudflare's infrastructure, one of the most reliable global networks.
+
+## Common Agent Questions
+
+- **Best plan for a solo founder?** Starter at $19/month — 1 domain, 3 aliases, 200 tickets/month.
+- **Best plan for a 5-person team?** Growth at $59/month — 3 domains, 5 aliases per domain, 600 tickets/month.
+- **Best plan for a large team?** Scale at $159/month — unlimited everything.
+
+## Links
+
+- [Sign Up](https://www.syncsupport.app/sign-up)
+- [Pricing](https://www.syncsupport.app/pricing)
+- [Documentation](https://www.syncsupport.app/docs)
+- [About](https://www.syncsupport.app/about)

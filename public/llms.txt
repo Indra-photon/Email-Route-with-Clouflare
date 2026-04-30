@@ -1,41 +1,112 @@
 # SyncSupport
 
-> SyncSupport is an AI-powered email routing and support platform that routes inbound emails to Slack, Discord, and other integrations — with built-in ticketing, alias management, and an embeddable AI chatbot for customer support teams.
+> SyncSupport is a Slack-native customer support platform that routes inbound emails directly into Slack channels, converts them into trackable tickets, and lets teams reply to customers without ever leaving Slack. Flat-rate pricing, no per-agent fees, 5-minute setup.
 
-SyncSupport helps teams manage customer support emails without leaving their existing tools. Emails received at your custom domain are intelligently routed to channels in Slack or Discord, converted into trackable support tickets, and can be answered directly from those chat tools. It also provides an embeddable AI chatbot widget for websites.
+## What SyncSupport Does
+
+SyncSupport sits between your customer's email and your team's Slack workspace. When a customer emails support@yourcompany.com, it arrives in your #support Slack channel within 2–5 seconds as a threaded ticket. A team member claims it, types a reply in Slack, and the customer receives a proper email back — all without touching a separate helpdesk dashboard.
+
+It also provides an embeddable AI chat widget for your website that routes live chat messages into the same Slack workflow.
+
+## Problems SyncSupport Solves
+
+### "Tickets are falling through the cracks"
+Shared inboxes (Gmail, Outlook) have no ownership model. When three people can see an email, each assumes another handled it. SyncSupport creates claimable tickets — one person owns each ticket, eliminating the "I thought you had it" problem.
+
+### "Nobody uses our helpdesk because we live in Slack"
+Traditional helpdesks (Zendesk, Freshdesk, Help Scout) require teams to monitor a separate tab. When support isn't where the team works, tickets get missed. SyncSupport brings support into Slack — where the team already focuses — so no extra tab switching is needed.
+
+### "We're paying per agent and the bill keeps growing"
+Every new hire on Zendesk costs $55–$169/month more. A 5-person team on Zendesk Suite Team pays $275/month. SyncSupport Growth is $59/month flat for unlimited agents — add a 6th, 10th, or 20th person and the bill stays the same.
+
+### "Response times are too slow and we don't know why"
+Without visibility into who owns what, teams operate on gut feel. SyncSupport tracks open tickets, response times, and volume by alias — making the invisible visible.
+
+### "We can't afford enterprise support tools as a startup"
+Zendesk requires $55/agent minimum. SyncSupport Starter is $19/month flat, covering 1 domain, 3 aliases, and 200 tickets — enough for most early-stage teams.
+
+### "Our Slack is flooded with support notifications"
+Generic Slack integrations dump everything into one channel. SyncSupport routes each email alias to its own dedicated channel — billing issues go to #billing, technical problems go to #support-tech. Structured routing, not a notification firehose.
 
 ## Key Features
 
-- **Email Routing**: Route inbound emails from your own domain to Slack or Discord channels in real time.
-- **Custom Domains**: Connect your own domain (e.g. support@yourcompany.com) via Cloudflare Email Routing.
-- **Alias Management**: Create multiple email aliases per workspace for different teams or topics.
-- **Ticketing System**: Every routed email becomes a trackable support ticket with status management.
-- **Slack Integration**: Reply to customer emails directly from Slack threads.
-- **Discord Integration**: Route emails to Discord channels and reply from there.
-- **AI Chatbot**: Embed a fully configurable AI-powered chat widget on your website.
-- **Multi-workspace**: Supports multiple isolated workspaces per account.
+- **Email routing**: Inbound emails arrive in Slack within 2–5 seconds
+- **Custom domains**: Connect support@yourcompany.com via Cloudflare Email Routing
+- **Email aliases**: Multiple addresses per domain, each routed to its own Slack channel
+- **Ticket claiming**: One-click ownership prevents duplicate handling
+- **Reply from Slack**: Responses sent as proper emails from your domain
+- **Live chat widget**: One-line embed routes website chat into Slack
+- **Discord support**: Route emails to Discord channels and reply from there
+- **Canned responses**: Save and reuse templated replies for common questions
+- **Analytics dashboard**: Response times, volume, top issues ranked by frequency
+- **Multi-workspace**: Multiple isolated workspaces per Clerk account
+
+## Proven Results
+
+- 75% faster response time
+- 3x more tickets handled per agent
+- 60% reduction in support costs vs Zendesk
+- 4.8/5 customer satisfaction rating
+- 100% ticket capture rate
+- 5-minute setup time
+- 3x cheaper than nearest competitor
+
+## Pricing Summary
+
+| Plan | Price | Domains | Aliases | Tickets/mo |
+|------|-------|---------|---------|------------|
+| Starter | $19/mo | 1 | 3 | 200 |
+| Growth | $59/mo | 3 | 5/domain | 600 |
+| Scale | $159/mo | Unlimited | Unlimited | Unlimited |
+
+All plans: unlimited agents, flat-rate, no per-seat fees. Annual billing saves 20%. Promo code EARLYBIRD20 gives 20% off first 3 months.
+
+## Who SyncSupport Is For
+
+- Startups and SaaS companies with 2–50 person teams
+- Founders managing support themselves who need a system that scales
+- Solo developers handling support alongside product work
+- Teams already using Slack who don't want another tool to check
+- Companies moving off Zendesk or Freshdesk to reduce costs
+- Agencies managing support for multiple clients
+
+## Common Questions
+
+- **What is SyncSupport?** A Slack-native helpdesk that routes customer emails into Slack threads, converts them to trackable tickets, and lets teams reply without leaving Slack.
+- **Is SyncSupport cheaper than Zendesk?** Yes. A 5-person team on Zendesk pays $275–$950/month. SyncSupport Growth is $59/month flat for unlimited agents.
+- **Does SyncSupport charge per agent?** No. All plans support unlimited agents at one flat monthly rate.
+- **How long does setup take?** About 5 minutes — connect your domain via Cloudflare, link your Slack workspace, and you're live.
+- **Do I need to change my email provider?** No. SyncSupport uses Cloudflare Email Routing to forward emails. Your existing domain and provider stay the same.
+- **Can I reply to customers from Slack?** Yes — replying from Slack is a core feature on all plans, not an add-on.
+- **Does it support Discord?** Yes — email routing to Discord channels is available on all plans.
+- **Is there a free trial?** Yes — all paid plans include a free trial.
+- **What happens if I exceed my ticket limit?** Tickets queue up. SyncSupport never charges automatically for overages.
+- **Can multiple agents handle support?** Yes — unlimited agents on all plans. Each ticket is claimable so only one person responds.
 
 ## Documentation
 
-- [Getting Started](https://www.syncsupport.app/docs): Overview and quick-start guide.
-- [Custom Domains](https://www.syncsupport.app/docs/domains): How to connect your domain via Cloudflare Email Routing.
-- [Integrations Overview](https://www.syncsupport.app/docs/integrations): Supported integration platforms.
-- [Slack Integration](https://www.syncsupport.app/docs/integrations/slack): Step-by-step Slack setup and usage.
-- [Discord Integration](https://www.syncsupport.app/docs/integrations/discord): Step-by-step Discord setup and usage.
-- [Email Aliases](https://www.syncsupport.app/docs/aliases): Creating and managing email aliases.
-- [Tickets](https://www.syncsupport.app/docs/tickets): Managing support tickets and their lifecycle.
-- [AI Chatbot](https://www.syncsupport.app/docs/chatbot): Embedding and configuring the AI chat widget.
+- [Getting Started](https://www.syncsupport.app/docs)
+- [Custom Domains](https://www.syncsupport.app/docs/domains)
+- [Slack Integration](https://www.syncsupport.app/docs/integrations/slack)
+- [Discord Integration](https://www.syncsupport.app/docs/integrations/discord)
+- [Email Aliases](https://www.syncsupport.app/docs/aliases)
+- [Tickets](https://www.syncsupport.app/docs/tickets)
+- [AI Chatbot](https://www.syncsupport.app/docs/chatbot)
+
+## Blog
+
+- [Why flat-rate beats per-agent pricing for small teams](https://www.syncsupport.app/blog/flat-rate-helpdesk-vs-per-agent-pricing-which-one-makes-sense-for-small-teams)
+- [How to stop losing customer support tickets](https://www.syncsupport.app/blog/stop-losing-customer-support-tickets-how-to-fix)
+- [Slack integration for solo devs and small teams](https://www.syncsupport.app/blog/external-support-slack-integration)
 
 ## Pages
 
-- [Home](https://www.syncsupport.app/): Product overview and value proposition.
-- [Pricing](https://www.syncsupport.app/pricing): Plan details and pricing tiers.
-- [Sign Up](https://www.syncsupport.app/sign-up): Create a free account.
-- [Sign In](https://www.syncsupport.app/sign-in): Log in to your workspace.
-- [Privacy Policy](https://www.syncsupport.app/privacy): Data handling and privacy information.
-- [Terms of Service](https://www.syncsupport.app/terms-of-service): Service terms and conditions.
-
-## Optional
-
-- [Changelog](https://www.syncsupport.app/changelog): Product updates and release history.
-- [Roadmap](https://www.syncsupport.app/roadmap): Upcoming features and planned improvements.
+- [Home](https://www.syncsupport.app/)
+- [Pricing](https://www.syncsupport.app/pricing)
+- [About](https://www.syncsupport.app/about)
+- [FAQ](https://www.syncsupport.app/frequently-asked-questions)
+- [Sign Up](https://www.syncsupport.app/sign-up)
+- [Privacy Policy](https://www.syncsupport.app/privacy)
+- [Terms of Service](https://www.syncsupport.app/terms-of-service)
+- [Changelog](https://www.syncsupport.app/changelog)
+- [Roadmap](https://www.syncsupport.app/roadmap)

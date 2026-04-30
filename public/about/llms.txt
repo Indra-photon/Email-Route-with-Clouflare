@@ -1,0 +1,67 @@
+# About SyncSupport
+
+> SyncSupport was built by founders who couldn't find a helpdesk that fit how small teams actually work. The mission: let support happen inside Slack — where teams already live — without the enterprise pricing that punishes growth.
+
+## Origin Story
+
+SyncSupport was built by Indranil Maiti and Aditya after experiencing the same broken workflow most small teams deal with: support emails sitting in a shared Gmail inbox, no clear ownership, tickets getting missed, and enterprise tools like Zendesk being too expensive and too complex for a 3–10 person team.
+
+The founding principle: **"We built the support tool we couldn't find anywhere."**
+
+## The Problem That Started It
+
+Small teams in Slack face a specific support failure loop:
+1. Customer emails a shared inbox (support@yourapp.com)
+2. Email sits unread — everyone assumes someone else saw it
+3. Team uses Zendesk but nobody checks it because they live in Slack
+4. Ticket falls through the cracks
+5. Customer churns
+
+Enterprise tools weren't designed for this. They assume dedicated support agents who monitor dashboards all day. Most startups don't have those. They have developers, founders, and generalists who also do support — in Slack, between everything else.
+
+## What Makes SyncSupport Different
+
+### Built for Slack, not bolted onto it
+Zendesk and Freshdesk offer Slack notifications as an afterthought — a notification that links back to their dashboard. SyncSupport routes tickets directly into Slack threads. Claiming, replying, resolving — all happen in Slack. No redirects, no external logins, no context switching.
+
+### Flat pricing that doesn't punish hiring
+Every competing helpdesk charges per agent. When you hire your 5th support person on Zendesk Suite Team, your bill jumps by $55/month. On Suite Professional it jumps by $115. SyncSupport charges one flat monthly rate — hire as many people as you need, the bill doesn't change.
+
+### Setup in minutes, not weeks
+Enterprise helpdesks require onboarding calls, configuration specialists, and multi-week rollouts. SyncSupport connects via Cloudflare Email Routing in about 5 minutes. You don't need a consultant.
+
+### Made for 2–50 person teams
+Not designed to scale to 500-agent contact centers. Designed to work perfectly for the startup founder handling support solo, the 5-person team trying to stay responsive, and the 30-person company that's grown beyond Gmail but doesn't want to pay Zendesk prices.
+
+## Who We're Built For
+
+- **Founders**: Managing support personally, need a system before they burn out
+- **Solo developers**: Building in public, can't afford to miss a single support email
+- **Small SaaS teams**: Already in Slack all day, don't want another tool to monitor
+- **Agencies**: Managing support for multiple clients across different domains
+- **Teams leaving Zendesk**: Paying enterprise prices for features they don't use
+
+## The Competitive Gap We Fill
+
+Most alternatives force a choice:
+- **Zendesk/Intercom**: Powerful but $275–$950/month for 5 agents, complex setup
+- **Shared Gmail inbox**: Free but zero accountability, tickets get missed
+- **Slack alone**: No email routing, no ticket tracking, no customer-facing replies
+
+SyncSupport sits in the gap: professional email support infrastructure, Slack as the work surface, flat pricing that fits a startup budget.
+
+## Common Questions About SyncSupport
+
+- **Who built SyncSupport?** Indranil Maiti and Aditya — founders who experienced the broken small-team support problem firsthand.
+- **Why Slack specifically?** Because that's where small teams already work. A tool your team doesn't use isn't a solution.
+- **Is this just a Zendesk clone?** No — Zendesk is a standalone helpdesk. SyncSupport turns Slack itself into the helpdesk.
+- **Why flat pricing?** Per-agent pricing punishes growth and misaligns incentives. The vendor profits when you stay inefficient.
+- **What's the target company size?** 2–50 person teams. Startups to scale-ups, not enterprise contact centers.
+- **Is SyncSupport a US-only product?** No — it works globally. Any team with Slack and a domain can use it.
+
+## Links
+
+- [Sign Up](https://www.syncsupport.app/sign-up)
+- [Pricing](https://www.syncsupport.app/pricing)
+- [Documentation](https://www.syncsupport.app/docs)
+- [Blog](https://www.syncsupport.app/blog)

@@ -341,7 +341,10 @@ export function ComparisonTableSection() {
           transition={{ duration: 0.4, delay: 0.3, ease: EASE_OUT_QUAD }}
           className="font-schibsted text-xs text-neutral-400 mt-4 text-center"
         >
-          Competitor data based on publicly available pricing and feature pages as of 2025.
+          Competitor data based on publicly available pricing and feature pages as of 2025.{" "}
+          <a href="/syncsupport-vs-zendesk" className="text-sky-600 underline underline-offset-2 hover:text-sky-800 transition-colors">
+            See full SyncSupport vs Zendesk breakdown →
+          </a>
         </motion.p>
       </div>
     </section>

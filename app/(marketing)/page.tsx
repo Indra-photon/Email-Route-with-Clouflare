@@ -13,10 +13,12 @@ import { WhySlackDeskSection } from "./Homepage/WhySlackDeskSection";
 import { DashboardShowcaseSection } from "./Homepage/DashboardShowcaseSection";
 import { OnboardingStepsSection } from "./Homepage/OnboardingStepsSection";
 import { BlogPreviewSection } from "./Homepage/BlogPreviewSection";
+import { ScrollEarlyBirdBanner } from "@/components/ScrollEarlyBirdBanner";
 
 export default function Home() {
   return (
     <div className="">
+      <ScrollEarlyBirdBanner />
       <section className="flex flex-col gap-24">
         <HeroSection />
         <BenefitsSection />

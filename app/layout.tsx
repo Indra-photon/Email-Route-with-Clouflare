@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     template: "%s | SyncSupport",
   },
   description:
-    "SyncSupport is the Slack-native helpdesk for fast-moving teams. Route support emails to Slack channels, embed live chat widgets on your website, reply with canned responses in one click, claim and track tickets — all without ever leaving Slack. Flat-rate pricing from $19/mo.",
+    "SyncSupport is the Slack-native helpdesk for fast-moving teams. Handle all customer support from inside Slack. Email-to-Slack routing, live chat, ticket management. Flat-rate pricing, no per-user fees. Setup in 5 minutes.",
 
   // ── Keywords (TOFU → BOFU) ─────────────────────────────────────────────────
   keywords: [
