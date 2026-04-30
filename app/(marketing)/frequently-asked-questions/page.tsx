@@ -117,7 +117,7 @@ const categories = [
         id: "price-4",
         question: "How does SyncSupport compare to Zendesk or Front?",
         answer:
-          "SyncSupport is purpose-built for teams already living in Slack. Zendesk and Front require your team to context-switch into a separate tool. SyncSupport is 3–10x cheaper, takes minutes to set up rather than days, and has zero per-user fees — making it ideal for startups and growing teams.",
+          "SyncSupport is purpose-built for teams already living in Slack. Zendesk and Front require your team to context-switch into a separate tool. SyncSupport is 3–10x cheaper, takes minutes to set up rather than days, and has zero per-user fees — making it ideal for startups and growing teams. See the full cost breakdown on our SyncSupport vs Zendesk comparison page.",
       },
     ],
   },

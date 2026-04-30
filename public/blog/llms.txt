@@ -1,0 +1,71 @@
+# SyncSupport Blog
+
+> The SyncSupport blog covers customer support strategy, helpdesk pricing, Slack-based support workflows, and how small teams can handle more tickets without adding headcount or switching tools. Written by Indranil Maiti, founder of SyncSupport.
+
+## What This Blog Covers
+
+- Why per-agent helpdesk pricing punishes small teams
+- Real cost comparisons: SyncSupport vs Zendesk vs Freshdesk
+- How to stop losing customer support tickets
+- Slack-based support workflows for solo devs and small teams
+- Response time strategies and their impact on retention
+- Ticket management and ownership models
+
+## Blog Posts
+
+### Paying $275/Month for Zendesk With 5 Agents? There's a Cheaper Way
+**URL:** [/blog/flat-rate-helpdesk-vs-per-agent-pricing-which-one-makes-sense-for-small-teams](https://www.syncsupport.app/blog/flat-rate-helpdesk-vs-per-agent-pricing-which-one-makes-sense-for-small-teams)
+
+The definitive breakdown of why per-agent pricing is a bad deal for teams under 20 people. Includes real Zendesk cost math for a 5-person team ($275–$950/month depending on add-ons) vs SyncSupport Growth ($59/month flat). Explains why every new hire on Zendesk costs $55–$169/month more, and how flat-rate pricing aligns vendor incentives with customer success.
+
+**Answers questions like:**
+- How much does Zendesk really cost for a small team?
+- What are Zendesk's hidden add-on fees?
+- Is there a cheaper alternative to Zendesk with the same features?
+- Why does my helpdesk bill go up every time I hire someone?
+- What is flat-rate helpdesk pricing?
+
+---
+
+### How to Fix the Customer Support Ticket Issue Fast
+**URL:** [/blog/stop-losing-customer-support-tickets-how-to-fix](https://www.syncsupport.app/blog/stop-losing-customer-support-tickets-how-to-fix)
+**Date:** April 15, 2026 • 6 min read
+
+Diagnoses why support tickets fall through the cracks even when teams care. Core finding: shared inboxes have no ownership model — "a ticket that belongs to everyone belongs to no one." Explains how routing emails into Slack with a claim system fixes the root cause, not just the symptom.
+
+**Answers questions like:**
+- Why are support tickets being missed?
+- How do I stop losing customer emails?
+- What's wrong with a shared Gmail inbox for support?
+- How do I know how many tickets went unanswered?
+- How do I add accountability to customer support?
+
+---
+
+### External Support Slack Integration: How Solo Devs and Small Teams Close Tickets Without Losing Their Minds
+**URL:** [/blog/external-support-slack-integration](https://www.syncsupport.app/blog/external-support-slack-integration)
+**Date:** April 12, 2026 • 4 min read
+
+Practical guide for developers handling customer support alongside product work. Covers the three failure patterns (shared inbox, personal email, ignored helpdesk) and the four-step setup that routes all support into Slack. Emphasizes that response speed is a startup competitive advantage — customers who get a reply within an hour are far more likely to stay than those who wait four hours.
+
+**Answers questions like:**
+- How do I handle customer support as a solo developer?
+- How do I integrate customer email with Slack?
+- What's the cheapest way to set up support email routing?
+- How do I stop missing customer support emails?
+- How can a small team reply to customers from Slack?
+
+## Who This Blog Is For
+
+- Founders setting up support for the first time
+- Small team leads evaluating helpdesk alternatives to Zendesk
+- Developers who handle support alongside product work
+- Teams currently using Gmail as a shared inbox
+- Anyone frustrated by rising per-agent pricing
+
+## Links
+
+- [All Blog Posts](https://www.syncsupport.app/blog)
+- [Pricing](https://www.syncsupport.app/pricing)
+- [Sign Up](https://www.syncsupport.app/sign-up)
+- [Home](https://www.syncsupport.app/)

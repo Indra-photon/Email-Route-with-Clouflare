@@ -1,0 +1,126 @@
+# SyncSupport Pricing
+
+> This page lists all available pricing plans for SyncSupport — an AI-powered email routing and support platform. Plans differ by the number of domains, aliases, chat widgets, monthly ticket volume, and data retention. SyncSupport uses flat-rate pricing with no per-agent or per-seat fees.
+
+## Plans Overview
+
+### Starter — $19/month
+Best for solo founders and tiny teams just getting started.
+
+- 1 custom domain
+- 3 email aliases → each routes to a dedicated Slack channel
+- 1 AI chat widget (text only)
+- 200 inbound tickets per month
+- 15-day data retention
+- Reply to customers from Slack
+- Ticket claiming & assignment
+- Basic reports
+- Email support
+
+### Growth — $59/month (Recommended)
+Best for growing teams handling real support volume across multiple products.
+
+- 3 custom domains
+- 5 email aliases per domain → dedicated Slack channels
+- 1 chat widget per domain (with file sending)
+- 600 inbound tickets per month
+- 90-day (3-month) data retention
+- Reply from Slack
+- Ticket claiming & assignment
+- Detailed reports
+- Pre-filled responses
+- Priority email support
+- AI analysis — monthly digest & content suggestions (coming soon)
+
+### Scale — $159/month
+Best for teams that have outgrown the basics and need unlimited capacity.
+
+- Unlimited custom domains
+- Unlimited email aliases per domain
+- Unlimited chat widgets (with file sending)
+- Unlimited inbound tickets per month
+- Full data retention (no expiry)
+- Reply from Slack
+- Ticket claiming & assignment
+- Detailed reports
+- Pre-filled responses
+- Priority support via Slack
+- AI analysis — on-demand + weekly digest & suggestions (coming soon)
+- Book a demo to get started
+
+## Why Flat Pricing Beats Per-Agent Pricing
+
+Most helpdesks (Zendesk, Freshdesk, Intercom) charge per agent per month. That means every time you hire someone new, your support bill goes up automatically — even if ticket volume stays the same.
+
+SyncSupport charges a flat monthly rate. Your entire team uses it for one fixed price. Hire your 6th, 10th, or 20th agent — the bill stays the same.
+
+### Real-World Cost Comparison: 5-Agent Team
+
+| Tool | Monthly Cost | Annual Cost |
+|------|-------------|-------------|
+| Zendesk Suite Team (5 agents) | $275 | $3,300 |
+| Zendesk Suite Professional (5 agents) | $575 | $6,900 |
+| Zendesk Suite Pro + AI + WFM add-ons | $950 | $11,400 |
+| **SyncSupport Growth (unlimited agents)** | **$59** | **$708** |
+
+Switching from Zendesk Suite Team to SyncSupport Growth saves **$2,592/year** for a 5-person team.
+
+### The Hidden Add-On Problem with Zendesk
+
+Zendesk advertises base prices but charges separately for features teams almost always need:
+
+- AI Copilot: +$50/agent/month
+- Quality Assurance tools: +$35/agent/month
+- Workforce Management: +$25/agent/month
+
+A 5-person team advertised at $275/month ends up paying $650–$950/month once real-world add-ons are included — 2–3× the advertised price.
+
+SyncSupport has no add-on traps. Core features are included in the flat price.
+
+## Why Not Zendesk
+
+### "My bill doubles every time I hire someone"
+Zendesk charges $55–$169 per agent per month depending on plan. A team of 10 on Suite Professional pays $1,150/month just for base access — before AI, QA, or workforce tools. SyncSupport charges $59/month flat regardless of team size.
+
+### "Nobody checks the helpdesk because we live in Slack"
+The most common complaint from small teams: they pay for a separate helpdesk tool but agents forget to use it because their work happens in Slack. Tickets get missed not because people don't care — because nobody watches a separate dashboard. SyncSupport is built around Slack from day one. Support tickets appear where the team already works.
+
+### "We're getting flooded with Slack alerts from our support tool"
+Standard helpdesk-to-Slack integrations dump every notification into one channel, creating noise instead of workflow. SyncSupport routes each email alias to its own dedicated Slack channel — billing questions go to #billing, technical issues go to #support-tech. Intelligent routing, not a notification firehose.
+
+### "Zendesk is too expensive for a 2–5 person startup"
+Zendesk's cheapest plan is $55/agent/month — that's $275/month for 5 people just to get started. Some plans require a minimum of 8 seats, meaning a 3-person team pays for 8. SyncSupport Starter is $19/month flat, no minimum seat count.
+
+### "I'm paying for features I don't use yet"
+Zendesk locks AI, detailed analytics, and pre-filled responses behind higher tiers or add-ons, forcing upgrades before you're ready. SyncSupport Growth at $59 includes detailed reports, pre-filled responses, and AI analysis without forcing you up a tier.
+
+### "The vendor profits when I stay inefficient"
+Per-agent pricing means Zendesk earns more when you have more agents. If you automate or get more efficient, their revenue drops — their incentives are misaligned with yours. SyncSupport's flat pricing means we win when you handle tickets efficiently. Same bill whether you have 2 or 20 agents.
+
+## Common Questions
+
+- **Is there a free plan?** No free plan, but all paid plans include a free trial.
+- **Does SyncSupport charge per agent?** No. All plans support unlimited agents at a flat monthly rate.
+- **What happens if I exceed my ticket limit?** New tickets queue up — we never charge you automatically for overages.
+- **Can I change plans later?** Yes, upgrade or downgrade at any time.
+- **What payment methods are accepted?** Payments processed via Dodo Payments.
+- **Is there an annual discount?** Yes — annual billing saves 20% vs monthly.
+- **Is there a promo code?** Yes — use EARLYBIRD20 for 20% off your first 3 months.
+- **Which plan is recommended?** Growth at $59/month for most growing teams.
+- **Does SyncSupport support Discord?** Yes — email routing to Discord is available on all plans.
+- **What is an email alias?** A support address (e.g. billing@yourcompany.com) that routes to a specific Slack or Discord channel.
+- **What is data retention?** How long ticket history and email threads are stored. Starter: 15 days, Growth: 90 days, Scale: indefinitely.
+- **How long does setup take?** About 5 minutes. Connect your domain via Cloudflare Email Routing, add a Slack or Discord integration, and you're live.
+- **Is SyncSupport cheaper than Zendesk?** Yes. A 5-agent team on Zendesk Suite Team pays $275/month ($3,300/year). SyncSupport Growth is $59/month ($708/year) — a saving of $2,592/year before add-ons.
+- **What does Zendesk cost for a small team of 5?** $275–$950/month depending on add-ons selected.
+- **Can I reply to customers from Slack?** Yes — replying from Slack is a core feature on all plans, not an add-on.
+- **Does SyncSupport have a minimum number of agents?** No minimum. One person can use it just as well as a team of 20.
+
+## Links
+
+- [Pricing Page](https://www.syncsupport.app/pricing)
+- [Sign Up](https://www.syncsupport.app/sign-up)
+- [Full Documentation](https://www.syncsupport.app/docs)
+- [Blog: Why Flat Pricing Wins](https://www.syncsupport.app/blog/flat-rate-helpdesk-vs-per-agent-pricing-which-one-makes-sense-for-small-teams)
+- [Blog: Stop Losing Support Tickets](https://www.syncsupport.app/blog/stop-losing-customer-support-tickets-how-to-fix)
+- [Blog: Slack Integration for Small Teams](https://www.syncsupport.app/blog/external-support-slack-integration)

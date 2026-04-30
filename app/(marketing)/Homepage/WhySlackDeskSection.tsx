@@ -590,7 +590,7 @@ const cards: CardData[] = [
     number: "04",
     Icon: PricingIcon,
     title: "The pricing model that doesn't punish growth.",
-    description: "SyncSupport charges a flat rate — unlimited team members, one predictable price, no surprises when you scale.",
+    description: "SyncSupport charges a flat rate — unlimited team members, one predictable price, no surprises when you scale. See how we compare to Zendesk.",
     Visual: PricingVisual,
     featured: false,
   },

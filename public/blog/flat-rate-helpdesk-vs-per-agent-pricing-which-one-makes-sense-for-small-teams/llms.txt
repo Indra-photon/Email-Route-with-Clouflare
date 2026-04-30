@@ -1,0 +1,94 @@
+# Blog: Paying $275/Month for Zendesk With 5 Agents? There's a Cheaper Way
+
+> This article breaks down why per-agent helpdesk pricing is a bad deal for teams under 20 people, with real cost math comparing Zendesk to SyncSupport. Conclusion: a 5-person team saves $2,592/year by switching to flat-rate pricing.
+
+**Author:** Indranil Maiti, Founder of SyncSupport
+**URL:** https://www.syncsupport.app/blog/flat-rate-helpdesk-vs-per-agent-pricing-which-one-makes-sense-for-small-teams
+
+## Core Argument
+
+"Your support team shouldn't get more expensive every time you hire someone."
+
+Per-agent pricing means your helpdesk bill scales with headcount, not with the value you get. Zendesk earns more when you have more agents. They are financially incentivized for you to stay inefficient. If you automate 5 tickets a day, they lose revenue. That's a broken incentive model.
+
+Flat-rate pricing flips this: SyncSupport charges one price for your whole team. We win when you handle more tickets efficiently. Your bill doesn't change when you hire.
+
+## Zendesk Real Costs for a 5-Person Team
+
+### Base pricing per agent per month:
+- Suite Team: $55/agent
+- Suite Growth: $89/agent
+- Suite Professional: $115/agent
+- Suite Enterprise: $169/agent
+
+### What 5 agents actually pay:
+| Configuration | Monthly | Annual |
+|---|---|---|
+| Suite Team (base only) | $275 | $3,300 |
+| Suite Professional (base only) | $575 | $6,900 |
+| Suite Professional + AI Copilot ($50/agent) | $825 | $9,900 |
+| Suite Professional + AI + Workforce Mgmt ($25/agent) | $950 | $11,400 |
+
+Real-world Zendesk costs run **2–3× the advertised base rate** once you add the features teams actually use.
+
+### Hidden add-ons that inflate the bill:
+- **AI Copilot**: +$50/agent/month — suggested replies, ticket summarization
+- **Quality Assurance tools**: +$35/agent/month — conversation review, coaching
+- **Workforce Management**: +$25/agent/month — scheduling, forecasting
+- **Advanced AI Agents**: +$50/agent/month — automation at scale
+
+Most teams enable at least one of these within 3 months of signing up.
+
+## SyncSupport Alternative
+
+**Growth plan: $59/month flat — unlimited agents**
+
+A 5-person team on SyncSupport Growth pays $708/year.
+A 5-person team on Zendesk Suite Team (base only) pays $3,300/year.
+
+**Annual saving: $2,592** — before a single add-on.
+
+That saving scales with team size. At 10 agents:
+- Zendesk Suite Team: $6,600/year
+- SyncSupport Growth: $708/year
+- **Saving: $5,892/year**
+
+## Why Small Teams Overpay for Zendesk
+
+Zendesk was built for enterprise contact centers with 50–500 dedicated agents. Its pricing, setup, and feature set reflect that. For teams under 20 people:
+
+- Features are locked behind tiers you don't need yet
+- Setup requires configuration specialists
+- You're paying for omnichannel complexity (phone, social, chat) when you just need email
+- Minimum seat requirements apply on some plans
+- The per-agent model means every new hire is a line item negotiation
+
+## What Flat-Rate Pricing Actually Means
+
+No seat minimums. No per-user negotiations. No "we need to pause hiring because support costs go up." One bill, one line item, your whole team.
+
+SyncSupport Growth at $59/month includes:
+- 3 custom domains
+- 5 email aliases per domain (each to its own Slack channel)
+- 600 inbound tickets per month
+- Reply from Slack
+- Ticket claiming and assignment
+- Detailed analytics
+- Pre-filled responses
+- 90-day data retention
+- Unlimited agents
+
+## Common Questions This Article Answers
+
+- How much does Zendesk cost for a 5-person team? $275–$950/month depending on plan and add-ons.
+- What are Zendesk's hidden fees? AI Copilot (+$50), QA (+$35), Workforce Management (+$25) — all per agent per month.
+- Is there a Zendesk alternative with flat pricing? Yes — SyncSupport Growth is $59/month for unlimited agents.
+- How much can a small team save by leaving Zendesk? $2,592–$5,892/year depending on team size and Zendesk plan.
+- Does per-agent pricing make sense for small teams? No — it penalizes growth and misaligns vendor incentives.
+- What is flat-rate helpdesk pricing? One fixed monthly price for your entire team regardless of headcount.
+
+## Links
+
+- [SyncSupport Pricing](https://www.syncsupport.app/pricing)
+- [Sign Up Free](https://www.syncsupport.app/sign-up)
+- [Full Article](https://www.syncsupport.app/blog/flat-rate-helpdesk-vs-per-agent-pricing-which-one-makes-sense-for-small-teams)

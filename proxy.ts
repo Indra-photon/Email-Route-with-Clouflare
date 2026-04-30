@@ -1,5 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 const isProtectedRoute = createRouteMatcher(['/dashboard(.*)', '/profile(.*)'])
 
@@ -13,7 +13,28 @@ const isPublicRoute = createRouteMatcher([
     '/chat(.*)',
 ])
 
-export default clerkMiddleware(async (auth, req) => {
+const isMarkdownRoute = createRouteMatcher([
+    '/',
+    '/pricing',
+    '/about',
+    '/support',
+    '/privacy',
+    '/terms-of-service',
+    '/frequently-asked-questions',
+    '/blog',
+    '/blog/(.*)',
+    '/syncsupport-vs-zendesk',
+])
+
+export default clerkMiddleware(async (auth, req: NextRequest) => {
+    // Serve markdown to AI agents that request it
+    if (req.headers.get('accept')?.includes('text/markdown') && isMarkdownRoute(req)) {
+        const url = req.nextUrl.clone()
+        url.pathname = '/api/agent-markdown'
+        url.searchParams.set('path', req.nextUrl.pathname)
+        return NextResponse.rewrite(url)
+    }
+
     if (isPublicRoute(req)) {
         return NextResponse.next();
     }

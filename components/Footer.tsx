@@ -17,6 +17,7 @@ import {
   IconFileText,
   IconHelpCircle,
   IconMail,
+  IconScale,
 } from "@tabler/icons-react";
 import type { ComponentType } from "react";
 
@@ -92,6 +93,16 @@ const footerSections: FooterSection[] = [
       },
     ],
   },
+  {
+    title: "Comparisons",
+    links: [
+      {
+        label: "SyncSupport vs Zendesk",
+        href: "/syncsupport-vs-zendesk",
+        icon: IconScale,
+      },
+    ],
+  },
 ];
 
 export function Footer() {
@@ -101,7 +112,7 @@ export function Footer() {
     <footer className="bg-sky-800 border-t border-sky-700">
       <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-7 gap-8 mb-12">
           {/* Brand Column */}
           <div className="col-span-2">
             <div className="mb-4">

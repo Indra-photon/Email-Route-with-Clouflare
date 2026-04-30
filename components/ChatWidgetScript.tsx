@@ -10,7 +10,7 @@ export function ChatWidgetScript() {
   return (
     <>
       <Script id="chat-widget-key" strategy="afterInteractive">
-        {`window.CHAT_KEY = 'cw_6598007150b1828206d60a66';`}
+        {`window.CHAT_KEY = 'cw_f7b8ed242b79397bf4abb560';`}
       </Script>
       <Script
         src={`${process.env.NEXT_PUBLIC_BASE_URL}/chat/widget.js`}
