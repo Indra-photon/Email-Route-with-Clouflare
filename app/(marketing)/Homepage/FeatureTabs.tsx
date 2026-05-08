@@ -648,14 +648,36 @@ export function FeatureTabs() {
                 </div>
 
                 {/* Right — illustration ────────────────────────────── */}
-                <div className="flex flex-1 items-center justify-center bg-neutral-50 p-0 md:p-10">
-                  {illustrations[activeTab] ?? (
-                    <div className="w-full h-full bg-neutral-50 flex items-center justify-center">
-                      <span className="font-schibsted text-sm text-neutral-400">
-                        Coming soon
-                      </span>
-                    </div>
-                  )}
+                <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-gradient-to-b from-[#A8D3FF] to-[#FFF4DF] p-0 md:p-10">
+                  {/* SVG grain filter */}
+                  <svg className="absolute w-0 h-0" aria-hidden="true">
+                    <filter id="featureTabGrain">
+                      <feTurbulence
+                        type="fractalNoise"
+                        baseFrequency="0.65"
+                        numOctaves="3"
+                        stitchTiles="stitch"
+                      />
+                      <feColorMatrix type="saturate" values="0" />
+                    </filter>
+                  </svg>
+
+                  {/* Grain overlay */}
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{ background: "#8C8C8C", filter: "url(#featureTabGrain)", opacity: 0.9 }}
+                  />
+
+                  {/* Illustration — sits above grain */}
+                  <div className="relative z-10 w-full h-full flex items-center justify-center">
+                    {illustrations[activeTab] ?? (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <span className="font-schibsted text-sm text-neutral-400">
+                          Coming soon
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             </AnimatePresence>

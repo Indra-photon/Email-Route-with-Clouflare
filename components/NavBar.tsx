@@ -257,9 +257,9 @@ function SharedDropdown({
           {/* Size morph wrapper */}
           <motion.div
             layout="size"
-            initial={{ opacity: 0, scale: 0.96, y: -6 }}
+            initial={{ opacity: 0.98, scale: 0.96, y: -6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: -6 }}
+            exit={{ opacity: 0.98, scale: 0.96, y: -6 }}
             transition={{
               opacity: { duration: 0.15, ease: EASE_OUT_QUART },
               scale: { duration: 0.15, ease: EASE_OUT_QUART },
@@ -508,7 +508,7 @@ export function NavBar({
   );
   const [dropdownX, setDropdownX] = useState(0);
 
-  const user = useUserStore((state) => state.user)
+  const user = useUserStore((state) => state.user);
   const { signOut } = useClerk();
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navContainerRef = useRef<HTMLDivElement>(null);
@@ -755,7 +755,7 @@ export function NavBar({
               <nav className="flex-1 px-4 py-5 overflow-y-auto">
                 <ul className="flex flex-col gap-1">
                   {items.map((item, index) => {
-                    const Icon = item.icon
+                    const Icon = item.icon;
                     return (
                       <motion.li
                         key={item.href}
@@ -773,12 +773,17 @@ export function NavBar({
                             onClick={() => setIsMobileMenuOpen(false)}
                             className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-schibsted font-medium text-sm text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 transition-all duration-150"
                           >
-                            {Icon && <Icon size={18} className="text-sky-800 flex-shrink-0" />}
+                            {Icon && (
+                              <Icon
+                                size={18}
+                                className="text-sky-800 flex-shrink-0"
+                              />
+                            )}
                             {item.label}
                           </Link>
                         </motion.div>
                       </motion.li>
-                    )
+                    );
                   })}
                 </ul>
               </nav>
@@ -801,7 +806,10 @@ export function NavBar({
                         onClick={() => setIsMobileMenuOpen(false)}
                         className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-schibsted font-medium text-sm text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 transition-all duration-150"
                       >
-                        <IconLayoutDashboard size={18} className="text-sky-800 flex-shrink-0" />
+                        <IconLayoutDashboard
+                          size={18}
+                          className="text-sky-800 flex-shrink-0"
+                        />
                         Dashboard
                       </Link>
                     </motion.div>
@@ -811,14 +819,20 @@ export function NavBar({
                         onClick={() => setIsMobileMenuOpen(false)}
                         className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-schibsted font-medium text-sm text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 transition-all duration-150"
                       >
-                        <IconUser size={18} className="text-sky-800 flex-shrink-0" />
+                        <IconUser
+                          size={18}
+                          className="text-sky-800 flex-shrink-0"
+                        />
                         Profile
                       </Link>
                     </motion.div>
                     <div className="h-px bg-neutral-100 mx-1 my-1" />
                     <motion.div whileTap={{ scale: 0.95 }}>
                       <button
-                        onClick={() => { signOut(); setIsMobileMenuOpen(false) }}
+                        onClick={() => {
+                          signOut();
+                          setIsMobileMenuOpen(false);
+                        }}
                         className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl font-schibsted font-medium text-sm text-red-500 hover:bg-red-50 transition-all duration-150"
                       >
                         <IconLogout size={18} className="flex-shrink-0" />
