@@ -197,6 +197,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
+    // ── Assign member dropdown ───────────────────────────────────────────────
+    if (actionId === "assign_member_dropdown") {
+      const rawValue = action.selected_option?.value as string | undefined;
+      if (!rawValue) return NextResponse.json({ ok: true });
+
+      const separatorIdx = rawValue.indexOf("__");
+      if (separatorIdx === -1) return NextResponse.json({ ok: true });
+
+      const memberName = rawValue.slice(0, separatorIdx);
+      const threadId = rawValue.slice(separatorIdx + 2);
+
+      if (!threadId) return NextResponse.json({ ok: true });
+
+      await dbConnect();
+
+      const assignValue = memberName === "unassigned" ? null : memberName;
+      await EmailThread.findByIdAndUpdate(threadId, {
+        assignedMember: assignValue,
+      });
+
+      console.log(`👤 Ticket ${threadId} assigned to: ${assignValue ?? "nobody"}`);
+
+      return NextResponse.json({ ok: true });
+    }
+
     // ── New: canned response button ──────────────────────────────────────
     if (actionId === "canned_response_button") {
       const threadId = action.value;

@@ -12,6 +12,7 @@ export interface IWorkspace extends Document {
   // Seeded with DEFAULT_AI_TAGS on first use, then fully editable by the owner.
   // Users can add/remove any tag (including the defaults) via the dashboard.
   aiTags: string[];
+  members: string[];  // assignable team member names
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,6 +45,11 @@ const WorkspaceSchema = new Schema<IWorkspace>(
     },
     // Full AI tag list — empty means "not yet configured", webhook will seed from DEFAULT_AI_TAGS
     aiTags: {
+      type: [String],
+      default: [],
+    },
+    // Assignable team member names (shown as dropdown in Slack)
+    members: {
       type: [String],
       default: [],
     },

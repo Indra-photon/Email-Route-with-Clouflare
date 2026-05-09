@@ -574,6 +574,14 @@ export async function POST(request: Request) {
     }
     // ── End AI Auto-Tagging + Priority ───────────────────────────────────────────────
 
+    // ── Fetch workspace members for the Slack assign dropdown ──────────────────────────
+    let workspaceMembers: string[] = [];
+    try {
+      const ws = await Workspace.findById(alias.workspaceId).lean().exec();
+      workspaceMembers = (ws as any)?.members ?? [];
+    } catch {
+      workspaceMembers = [];
+    }
 
     const replyUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/reply/${emailThread._id}`;
 
@@ -639,12 +647,12 @@ export async function POST(request: Request) {
             ? aiTags.map(t => `\`${t}\``).join("  ")
             : null;
 
-          // Priority badge — emoji + label, consistent with the model enum
+          // Priority badge — label, consistent with the model enum
           const priorityBadge = {
-            "urgent":     "🔴 *Urgent*",
-            "moderate":   "🟡 *Moderate*",
-            "not-urgent": "🟢 *Not Urgent*",
-          }[aiPriority] ?? "🟡 *Moderate*";
+            "urgent":     "*Urgent*",
+            "moderate":   "*Moderate*",
+            "not-urgent": "*Not Urgent*",
+          }[aiPriority] ?? "*Moderate*";
 
           blocks.push({
             type: "section",
@@ -699,7 +707,7 @@ export async function POST(request: Request) {
             {
               type: "static_select",
               action_id: "set_status_dropdown",
-              placeholder: { type: "plain_text", text: "🔖 Set Status", emoji: true },
+              placeholder: { type: "plain_text", text: "Set Status", emoji: true },
               initial_option: {
                 text: { type: "plain_text", text: statusDisplayText[currentStatus], emoji: true },
                 value: `${currentStatus}__${emailThread._id.toString()}`,
@@ -711,6 +719,19 @@ export async function POST(request: Request) {
                 { text: { type: "plain_text", text: statusDisplayText.resolved, emoji: true }, value: `resolved__${emailThread._id.toString()}` },
               ],
             },
+            // Assign dropdown — only shown when workspace has members configured
+            ...(workspaceMembers.length > 0 ? [{
+              type: "static_select",
+              action_id: "assign_member_dropdown",
+              placeholder: { type: "plain_text", text: "Assign to...", emoji: true },
+              options: [
+                { text: { type: "plain_text", text: "Unassigned" }, value: `unassigned__${emailThread._id.toString()}` },
+                ...workspaceMembers.map((name) => ({
+                  text: { type: "plain_text", text: name },
+                  value: `${name}__${emailThread._id.toString()}`,
+                })),
+              ],
+            }] : []),
             {
               type: "button",
               text: { type: "plain_text", text: "Canned Responses", emoji: true },
