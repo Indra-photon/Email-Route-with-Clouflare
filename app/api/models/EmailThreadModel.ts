@@ -54,6 +54,9 @@ export interface IEmailThread extends Document {
   // AI-generated tags for this email thread
   aiTags?: string[];
 
+  // Team member assigned via Slack dropdown
+  assignedMember?: string | null;
+
   receivedAt: Date;
   repliedAt: Date | null;
   createdAt: Date;
@@ -217,6 +220,12 @@ const EmailThreadSchema = new Schema<IEmailThread>(
     aiTags: {
       type: [String],
       default: [],
+    },
+
+    // Team member assigned via Slack assign dropdown
+    assignedMember: {
+      type: String,
+      default: null,
     },
   },
   {

@@ -923,6 +923,7 @@ import {
   IconMailbox,
   IconAdjustmentsHorizontal,
   IconSparkles,
+  IconUsersGroup,
 } from "@tabler/icons-react";
 import { useUserStore } from "@/lib/store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -1023,6 +1024,13 @@ const navGroups = [
         label: "AI Features",
         icon: null,
         tablerIcon: IconSparkles,
+        exact: false,
+      },
+      {
+        href: "/dashboard/members",
+        label: "Members",
+        icon: null,
+        tablerIcon: IconUsersGroup,
         exact: false,
       },
     ],
