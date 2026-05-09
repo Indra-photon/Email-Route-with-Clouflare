@@ -4,7 +4,8 @@ import { Workspace } from "@/app/api/models/WorkspaceModel";
 
 export async function getOrCreateWorkspaceForCurrentUser(userId?: string) {
   let authUserId = userId;
-  
+
+  // finding user
   if (!authUserId) {
     const authResult = await auth();
     authUserId = authResult.userId ?? undefined;
