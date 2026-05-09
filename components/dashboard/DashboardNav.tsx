@@ -922,6 +922,7 @@ import {
   IconMail,
   IconMailbox,
   IconAdjustmentsHorizontal,
+  IconSparkles,
 } from "@tabler/icons-react";
 import { useUserStore } from "@/lib/store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -1015,6 +1016,13 @@ const navGroups = [
         label: "Email Templates",
         icon: null,
         tablerIcon: IconTemplate,
+        exact: false,
+      },
+      {
+        href: "/dashboard/ai-features",
+        label: "AI Features",
+        icon: null,
+        tablerIcon: IconSparkles,
         exact: false,
       },
     ],

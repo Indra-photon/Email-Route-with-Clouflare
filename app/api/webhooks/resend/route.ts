@@ -8,7 +8,7 @@ import { Domain } from "@/app/api/models/DomainModel";
 import { Workspace } from "@/app/api/models/WorkspaceModel";
 import { checkTicketLimit } from "@/lib/checkPlanLimits";
 import { getSubscriptionGuard } from "@/lib/checkSubscriptionStatus";
-import { getAiTagsForEmail, DEFAULT_AI_TAGS } from "@/lib/groqTagging";
+import { getAiTagsForEmail, getAiPriorityForEmail, DEFAULT_AI_TAGS } from "@/lib/groqTagging";
 
 
 type ResendAttachmentMeta = {
@@ -528,9 +528,11 @@ export async function POST(request: Request) {
       { $inc: { ticketCountInbound: 1 } }
     );
 
-    // ── AI Auto-Tagging via Groq ────────────────────────────────────────────────────────
-    // Only tag root inbound emails (not replies), since those represent new tickets.
+    // ── AI Auto-Tagging + Priority Classification via Groq ────────────────────────────
+    // Only run for root inbound emails (not replies), since those represent new tickets.
     let aiTags: string[] = [];
+    let aiPriority: "urgent" | "moderate" | "not-urgent" = "moderate";
+
     if (!inReplyTo && emailThread.direction === "inbound") {
       try {
         // workspace.aiTags is the source of truth (fully editable by the owner).
@@ -546,18 +548,31 @@ export async function POST(request: Request) {
           console.log("🌱 Seeded workspace AI tags with defaults:", tagList);
         }
 
-        aiTags = await getAiTagsForEmail(subject, cleanText || snippet, tagList);
+        // Run tag classification + priority detection in parallel for efficiency
+        const emailText = cleanText || snippet;
+        const [tags, priority] = await Promise.all([
+          getAiTagsForEmail(subject, emailText, tagList),
+          getAiPriorityForEmail(subject, emailText),
+        ]);
 
-        if (aiTags.length > 0) {
-          emailThread.aiTags = aiTags;
-          await emailThread.save();
-          console.log("🏷️ AI tags saved to DB:", aiTags);
-        }
+        aiTags = tags;
+        aiPriority = priority;
+
+        // Persist both to the email thread document
+        const updates: Partial<{ aiTags: string[]; priority: string }> = {};
+        if (aiTags.length > 0) updates.aiTags = aiTags;
+        updates.priority = aiPriority; // always persist — even default "moderate" is meaningful
+
+        Object.assign(emailThread, updates);
+        await emailThread.save();
+
+        console.log("🏷️ AI tags saved to DB:", aiTags);
+        console.log("🚨 AI priority saved to DB:", aiPriority);
       } catch (tagErr) {
-        console.warn("⚠️ AI tagging failed (non-fatal):", tagErr);
+        console.warn("⚠️ AI tagging/priority failed (non-fatal):", tagErr);
       }
     }
-    // ── End AI Auto-Tagging ──────────────────────────────────────────────────────────
+    // ── End AI Auto-Tagging + Priority ───────────────────────────────────────────────
 
 
     const replyUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/reply/${emailThread._id}`;
@@ -624,12 +639,20 @@ export async function POST(request: Request) {
             ? aiTags.map(t => `\`${t}\``).join("  ")
             : null;
 
+          // Priority badge — emoji + label, consistent with the model enum
+          const priorityBadge = {
+            "urgent":     "🔴 *Urgent*",
+            "moderate":   "🟡 *Moderate*",
+            "not-urgent": "🟢 *Not Urgent*",
+          }[aiPriority] ?? "🟡 *Moderate*";
+
           blocks.push({
             type: "section",
             fields: [
               { type: "mrkdwn", text: `*From:*\n${fromEmail}` },
               { type: "mrkdwn", text: `*Subject:*\n${subject}` },
               { type: "mrkdwn", text: `*Status:*\n${statusEmoji} ${statusLabel}` },
+              { type: "mrkdwn", text: `*Priority:*\n${priorityBadge}` },
               ...(emailThread.ticketLabel
                 ? [{ type: "mrkdwn", text: `*Ticket:*\n${emailThread.ticketLabel}` }]
                 : []),
@@ -637,6 +660,7 @@ export async function POST(request: Request) {
             ],
           });
 
+          // AI Tags block — shown below the metadata fields (matches existing style)
           if (tagsDisplay) {
             blocks.push({
               type: "section",
