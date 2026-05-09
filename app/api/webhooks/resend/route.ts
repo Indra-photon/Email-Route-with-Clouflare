@@ -581,10 +581,17 @@ export async function POST(request: Request) {
       waiting: 'Waiting',
       resolved: 'Resolved'
     } as const;
+    // Display text used in BOTH initial_option and options — must be identical for Slack to accept.
+    const statusDisplayText = {
+      open: 'Open',
+      in_progress: 'In Progress',
+      waiting: 'Waiting',
+      resolved: 'Resolved'
+    } as const;
 
     type StatusType = keyof typeof statusEmojis;
     const currentStatus = (emailThread.status || 'open') as StatusType;
-    const statusEmoji = statusEmojis[currentStatus] || '🆕';
+    const statusEmoji = statusEmojis[currentStatus] || '';
     const statusLabel = statusLabels[currentStatus] || 'Open';
 
     const statusLine = integration.type === "slack"
@@ -670,14 +677,14 @@ export async function POST(request: Request) {
               action_id: "set_status_dropdown",
               placeholder: { type: "plain_text", text: "🔖 Set Status", emoji: true },
               initial_option: {
-                text: { type: "plain_text", text: `${statusEmoji} ${statusLabel}`, emoji: true },
+                text: { type: "plain_text", text: statusDisplayText[currentStatus], emoji: true },
                 value: `${currentStatus}__${emailThread._id.toString()}`,
               },
               options: [
-                { text: { type: "plain_text", text: "Open", emoji: true }, value: `open__${emailThread._id.toString()}` },
-                { text: { type: "plain_text", text: "🔄 In Progress", emoji: true }, value: `in_progress__${emailThread._id.toString()}` },
-                { text: { type: "plain_text", text: "⏸️ Waiting", emoji: true }, value: `waiting__${emailThread._id.toString()}` },
-                { text: { type: "plain_text", text: "✅ Resolved", emoji: true }, value: `resolved__${emailThread._id.toString()}` },
+                { text: { type: "plain_text", text: statusDisplayText.open, emoji: true }, value: `open__${emailThread._id.toString()}` },
+                { text: { type: "plain_text", text: statusDisplayText.in_progress, emoji: true }, value: `in_progress__${emailThread._id.toString()}` },
+                { text: { type: "plain_text", text: statusDisplayText.waiting, emoji: true }, value: `waiting__${emailThread._id.toString()}` },
+                { text: { type: "plain_text", text: statusDisplayText.resolved, emoji: true }, value: `resolved__${emailThread._id.toString()}` },
               ],
             },
             {
