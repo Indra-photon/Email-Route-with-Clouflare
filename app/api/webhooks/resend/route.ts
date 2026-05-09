@@ -8,6 +8,7 @@ import { Domain } from "@/app/api/models/DomainModel";
 import { Workspace } from "@/app/api/models/WorkspaceModel";
 import { checkTicketLimit } from "@/lib/checkPlanLimits";
 import { getSubscriptionGuard } from "@/lib/checkSubscriptionStatus";
+import { getAiTagsForEmail, DEFAULT_AI_TAGS } from "@/lib/groqTagging";
 
 
 type ResendAttachmentMeta = {
@@ -527,6 +528,37 @@ export async function POST(request: Request) {
       { $inc: { ticketCountInbound: 1 } }
     );
 
+    // ── AI Auto-Tagging via Groq ────────────────────────────────────────────────────────
+    // Only tag root inbound emails (not replies), since those represent new tickets.
+    let aiTags: string[] = [];
+    if (!inReplyTo && emailThread.direction === "inbound") {
+      try {
+        // workspace.aiTags is the source of truth (fully editable by the owner).
+        // If empty (new workspace), seed it with DEFAULT_AI_TAGS and persist so the
+        // user can then add/remove tags from the dashboard.
+        const workspace = await Workspace.findById(alias.workspaceId).exec();
+        let tagList: string[] = workspace?.aiTags ?? [];
+
+        if (tagList.length === 0 && workspace) {
+          tagList = [...DEFAULT_AI_TAGS];
+          workspace.aiTags = tagList;
+          await workspace.save();
+          console.log("🌱 Seeded workspace AI tags with defaults:", tagList);
+        }
+
+        aiTags = await getAiTagsForEmail(subject, cleanText || snippet, tagList);
+
+        if (aiTags.length > 0) {
+          emailThread.aiTags = aiTags;
+          await emailThread.save();
+          console.log("🏷️ AI tags saved to DB:", aiTags);
+        }
+      } catch (tagErr) {
+        console.warn("⚠️ AI tagging failed (non-fatal):", tagErr);
+      }
+    }
+    // ── End AI Auto-Tagging ──────────────────────────────────────────────────────────
+
 
     const replyUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/reply/${emailThread._id}`;
 
@@ -581,6 +613,10 @@ export async function POST(request: Request) {
         ];
 
         if (!isReply) {
+          const tagsDisplay = aiTags.length > 0
+            ? aiTags.map(t => `\`${t}\``).join("  ")
+            : null;
+
           blocks.push({
             type: "section",
             fields: [
@@ -589,6 +625,9 @@ export async function POST(request: Request) {
               { type: "mrkdwn", text: `*Status:*\n${statusEmoji} ${statusLabel}` },
               ...(emailThread.ticketLabel
                 ? [{ type: "mrkdwn", text: `*Ticket:*\n${emailThread.ticketLabel}` }]
+                : []),
+              ...(tagsDisplay
+                ? [{ type: "mrkdwn", text: `*🏷️ AI Tags:*\n${tagsDisplay}` }]
                 : []),
               ...(claimField ? [claimField] : []),
             ],
