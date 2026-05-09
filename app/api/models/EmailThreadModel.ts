@@ -51,6 +51,9 @@ export interface IEmailThread extends Document {
   ticketNumber?: number | null;   // e.g. 42  (sequential per workspace)
   ticketLabel?: string | null;    // e.g. "#42 - support@syncsupport.app"
 
+  // AI-generated tags for this email thread
+  aiTags?: string[];
+
   receivedAt: Date;
   repliedAt: Date | null;
   createdAt: Date;
@@ -208,6 +211,12 @@ const EmailThreadSchema = new Schema<IEmailThread>(
     ticketLabel: {
       type: String,
       default: null,
+    },
+
+    // AI-generated tags (auto-assigned by Groq on inbound emails)
+    aiTags: {
+      type: [String],
+      default: [],
     },
   },
   {

@@ -8,6 +8,10 @@ export interface IWorkspace extends Document {
   planId: PlanId | null;           // null = no paid plan yet
   subscriptionId?: Types.ObjectId;
   ticketCounter: number;           // auto-increments per workspace for ticket numbering
+  // Full AI tag list for this workspace.
+  // Seeded with DEFAULT_AI_TAGS on first use, then fully editable by the owner.
+  // Users can add/remove any tag (including the defaults) via the dashboard.
+  aiTags: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,6 +41,11 @@ const WorkspaceSchema = new Schema<IWorkspace>(
     ticketCounter: {
       type: Number,
       default: 0,   // incremented atomically via $inc on each new root ticket
+    },
+    // Full AI tag list — empty means "not yet configured", webhook will seed from DEFAULT_AI_TAGS
+    aiTags: {
+      type: [String],
+      default: [],
     },
   },
   {
