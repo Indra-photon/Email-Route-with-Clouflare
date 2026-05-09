@@ -570,7 +570,7 @@ export async function POST(request: Request) {
     }
 
     const statusEmojis = {
-      open: '🆕',
+      open: '',
       in_progress: '🔄',
       waiting: '⏸️',
       resolved: '✅'
@@ -600,10 +600,10 @@ export async function POST(request: Request) {
         const isReply = !!parentThread?.slackMessageTs;
         const headerText = isReply
           ? `↩️ *Reply from ${fromEmail}*`
-          : `📧 *New email to \`${emailLower}\`*`;
+          : `*New email to \`${emailLower}\`*`;
         const fallbackText = isReply
           ? `↩️ Reply from ${fromEmail} — ${subject}`
-          : `📧 New email to \`${emailLower}\` — From: ${fromEmail} | Subject: ${subject}`;
+          : `New email to \`${emailLower}\` — From: ${fromEmail} | Subject: ${subject}`;
 
         const blocks: any[] = [
           {
@@ -626,12 +626,16 @@ export async function POST(request: Request) {
               ...(emailThread.ticketLabel
                 ? [{ type: "mrkdwn", text: `*Ticket:*\n${emailThread.ticketLabel}` }]
                 : []),
-              ...(tagsDisplay
-                ? [{ type: "mrkdwn", text: `*🏷️ AI Tags:*\n${tagsDisplay}` }]
-                : []),
               ...(claimField ? [claimField] : []),
             ],
           });
+
+          if (tagsDisplay) {
+            blocks.push({
+              type: "section",
+              text: { type: "mrkdwn", text: `*AI Tags:*\n${tagsDisplay}` },
+            });
+          }
         }
 
         // Slack hard-limits each section block text to 3000 chars.
@@ -670,7 +674,7 @@ export async function POST(request: Request) {
                 value: `${currentStatus}__${emailThread._id.toString()}`,
               },
               options: [
-                { text: { type: "plain_text", text: "🆕 Open", emoji: true }, value: `open__${emailThread._id.toString()}` },
+                { text: { type: "plain_text", text: "Open", emoji: true }, value: `open__${emailThread._id.toString()}` },
                 { text: { type: "plain_text", text: "🔄 In Progress", emoji: true }, value: `in_progress__${emailThread._id.toString()}` },
                 { text: { type: "plain_text", text: "⏸️ Waiting", emoji: true }, value: `waiting__${emailThread._id.toString()}` },
                 { text: { type: "plain_text", text: "✅ Resolved", emoji: true }, value: `resolved__${emailThread._id.toString()}` },
@@ -678,19 +682,19 @@ export async function POST(request: Request) {
             },
             {
               type: "button",
-              text: { type: "plain_text", text: "💬 Canned Responses", emoji: true },
+              text: { type: "plain_text", text: "Canned Responses", emoji: true },
               action_id: "canned_response_button",
               value: emailThread._id.toString(),
             },
             {
               type: "button",
-              text: { type: "plain_text", text: "📋 Templates", emoji: true },
+              text: { type: "plain_text", text: "Templates", emoji: true },
               action_id: "template_button",
               value: emailThread._id.toString(),
             },
             {
               type: "button",
-              text: { type: "plain_text", text: "✉️ Reply from SyncSupport", emoji: true },
+              text: { type: "plain_text", text: "Reply from SyncSupport", emoji: true },
               action_id: "reply_from_syncsupport",
               url: `${process.env.NEXT_PUBLIC_BASE_URL || "https://app.syncsupport.app"}/reply/${emailThread._id.toString()}`,
               style: "primary",
@@ -701,7 +705,7 @@ export async function POST(request: Request) {
         return { text: fallbackText, blocks, ...(isReply ? { thread_ts: parentThread.slackMessageTs } : {}) };
       })()
       : {
-        content: `📧 **New email to ${emailLower}**
+        content: `**New email to ${emailLower}**
 ${claimStatus}${statusLine}**From:** ${fromEmail}
 **Subject:** ${subject}
 
