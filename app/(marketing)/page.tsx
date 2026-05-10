@@ -14,6 +14,7 @@ import { DashboardShowcaseSection } from "./Homepage/DashboardShowcaseSection";
 import { OnboardingStepsSection } from "./Homepage/OnboardingStepsSection";
 import { BlogPreviewSection } from "./Homepage/BlogPreviewSection";
 import { ScrollEarlyBirdBanner } from "@/components/ScrollEarlyBirdBanner";
+import { BentoFeatures } from "./Homepage/BentoFeatures";
 
 export default function Home() {
   return (
@@ -21,10 +22,11 @@ export default function Home() {
       <ScrollEarlyBirdBanner />
       <section className="flex flex-col gap-24">
         <HeroSection />
+        <BentoFeatures />
         <BenefitsSection />
         {/* <FeaturesSection /> */}
         <DashboardShowcaseSection />
-        <WhySlackDeskSection />
+        {/* <WhySlackDeskSection /> */}
         <OnboardingStepsSection />
         {/* <TestimonialsSection /> */}
         <BlogPreviewSection />

@@ -12,9 +12,11 @@ export function BlogPreviewHeading() {
       viewport={{ once: true }}
       transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.2 }}
     >
-      <Heading as="h2" className="text-neutral-900 leading-tight">
+      <Heading as="h2" className="text-neutral-900 leading-tight px-4">
         Guides for teams{" "}
-        <span className="text-sky-800 font-extralight">that support customers from Slack.</span>
+        <span className="text-sky-800 font-extralight">
+          that support customers from Slack.
+        </span>
       </Heading>
     </motion.div>
   );

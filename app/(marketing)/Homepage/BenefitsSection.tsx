@@ -276,24 +276,6 @@ const benefits = [
   },
   {
     id: 4,
-    metric: "4.8/5",
-    title: "Customer satisfaction",
-    description: "Happy customers, loyal customers",
-    company: "CloudSync",
-    companyLogo: null,
-    decoration: "target",
-  },
-  {
-    id: 5,
-    metric: "5min",
-    title: "Setup time",
-    description: "Start supporting in minutes, not days",
-    company: "DevTools",
-    companyLogo: null,
-    decoration: "pulse",
-  },
-  {
-    id: 6,
     metric: "100%",
     title: "Ticket capture rate",
     description: "Never miss a customer inquiry",
@@ -735,176 +717,227 @@ export function BenefitsSection() {
   const [hoveredCard, setHoveredCard] = React.useState<number | null>(null);
 
   return (
-    <section className="w-full bg-white">
-      {/* Desktop Layout */}
-      <div className="hidden lg:block">
-        <Grid.System unstable_useContainer>
-          <div className="w-full">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 xl:px-0 py-16">
-              <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4">
-                Proven impact
-              </p>
-              <motion.div
-                className="mb-8"
-                initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
-                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                viewport={{ once: true }}
-                transition={{
-                  duration: 0.4,
-                  ease: [0.25, 0.46, 0.45, 0.94],
-                  delay: 0.2,
-                }}
-              >
-                <Heading
-                  as="h2"
-                  className="text-neutral-900 font-schibsted leading-tight"
-                >
-                  <span>What changes the week you switch. </span>
-                  <span className="text-sky-800 font-extralight">
-                    — faster responses, fewer missed tickets, less time wasted.
-                  </span>
-                </Heading>
-              </motion.div>
+    <div
+      className={[
+        "relative grid w-full",
+        "grid-cols-[1fr_0.75rem_auto_0.75rem_1fr] md:grid-cols-[1fr_2.5rem_auto_2.5rem_1fr]",
+        "grid-rows-[1fr_1px_auto_1px_1fr]",
+        "bg-white",
+        "[--pattern-fg:theme(colors.gray.950/5%)]",
+      ].join(" ")}
+    >
+      {/* ── Left hatched column ─────────────────────────────────────────── */}
+      <div
+        className={[
+          "col-start-2 row-span-full row-start-1",
+          "relative -right-px",
+          "border-x border-x-(--pattern-fg)",
+          "bg-[image:repeating-linear-gradient(315deg,_var(--pattern-fg)_0,_var(--pattern-fg)_1px,_transparent_0,_transparent_50%)]",
+          "bg-[size:10px_10px] bg-fixed",
+        ].join(" ")}
+      />
 
-              <div className="border-y border-neutral-200 relative overflow-hidden">
-                <div className="grid grid-cols-3 border-x border-neutral-200 overflow-hidden">
-                  {benefits.map((benefit, index) => (
-                    <div
-                      key={benefit.id}
-                      onMouseEnter={() => setHoveredCard(benefit.id)}
-                      onMouseLeave={() => setHoveredCard(null)}
-                      className={`group relative p-8 pb-0 border-neutral-200 overflow-hidden ${
-                        index % 3 !== 2 ? "border-r" : ""
-                      } ${index < 3 ? "border-b" : ""}`}
-                    >
-                      <DecorationRenderer
-                        type={benefit.decoration}
-                        isHovered={hoveredCard === benefit.id}
-                      />
-                      <div className="flex flex-col pb-16 relative z-10">
-                        <span className="text-5xl font-schibsted font-bold tracking-tight mb-1 text-sky-800">
-                          {benefit.metric}
-                        </span>
-                        <p className="text-base font-schibsted font-semibold text-neutral-900 mb-1">
-                          {benefit.title}
-                        </p>
-                        <p className="text-sm font-schibsted font-normal text-neutral-900">
-                          {benefit.description}
-                        </p>
+      {/* ── Right hatched column ────────────────────────────────────────── */}
+      <div
+        className={[
+          "col-start-4 row-span-full row-start-1",
+          "relative -left-px",
+          "border-x border-x-(--pattern-fg)",
+          "bg-[image:repeating-linear-gradient(315deg,_var(--pattern-fg)_0,_var(--pattern-fg)_1px,_transparent_0,_transparent_50%)]",
+          "bg-[size:10px_10px] bg-fixed",
+        ].join(" ")}
+      />
+
+      {/* ── Top 1px rule ────────────────────────────────────────────────── */}
+      <div className="relative -bottom-px col-span-full col-start-1 row-start-2 h-px bg-(--pattern-fg)" />
+
+      {/* ── Bottom 1px rule ─────────────────────────────────────────────── */}
+      <div className="relative -top-px col-span-full col-start-1 row-start-4 h-px bg-(--pattern-fg)" />
+
+      {/* ── Content (col 3, row 3) ──────────────────────────────────────── */}
+      <section className="col-start-3 row-start-3 w-full">
+        {/* Desktop Layout */}
+        <div className="hidden lg:block">
+          <Grid.System unstable_useContainer>
+            <div className="w-full">
+              <div className="max-w-7xl mx-auto py-8 md:py-20 lg:py-1">
+                <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 p-4">
+                  Proven impact
+                </p>
+                <motion.div
+                  className="mb-8 px-4"
+                  initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
+                  whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  viewport={{ once: true }}
+                  transition={{
+                    duration: 0.4,
+                    ease: [0.25, 0.46, 0.45, 0.94],
+                    delay: 0.2,
+                  }}
+                >
+                  <Heading
+                    as="h2"
+                    className="text-neutral-900 font-schibsted leading-tight"
+                  >
+                    <span>What changes the week you switch. </span>
+                    <span className="text-sky-800 font-extralight">
+                      — faster responses, fewer missed tickets, less time
+                      wasted.
+                    </span>
+                  </Heading>
+                </motion.div>
+
+                {/* Grain filter */}
+                <svg className="absolute w-0 h-0" aria-hidden="true">
+                  <filter id="benefitGrain">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+                    <feColorMatrix type="saturate" values="0" />
+                  </filter>
+                </svg>
+                <div className="relative overflow-hidden bg-gradient-to-b from-[#A8D3FF] to-[#FFF4DF]">
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{ background: "#8C8C8C", filter: "url(#benefitGrain)", opacity: 0.9 }}
+                  />
+                  <div className="relative z-10 grid grid-cols-4 gap-3 p-4">
+                    {benefits.map((benefit, index) => (
+                      <div
+                        key={benefit.id}
+                        onMouseEnter={() => setHoveredCard(benefit.id)}
+                        onMouseLeave={() => setHoveredCard(null)}
+                        className="group bg-white border border-neutral-200"
+                      >
+                        <div className="flex flex-col p-8 pb-16">
+                          <span className="text-5xl font-schibsted font-bold tracking-tight mb-1 text-sky-800">
+                            {benefit.metric}
+                          </span>
+                          <p className="text-base font-schibsted font-semibold text-neutral-900 mb-1">
+                            {benefit.title}
+                          </p>
+                          <p className="text-sm font-schibsted font-normal text-neutral-900">
+                            {benefit.description}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                  <div className="relative z-10">
+                    <EarlyBirdStrip />
+                  </div>
                 </div>
+              </div>
+            </div>
+          </Grid.System>
+        </div>
+
+        {/* Tablet Layout */}
+        <div className="hidden md:block lg:hidden">
+          <div className="max-w-5xl mx-auto px-6 py-12">
+            <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4">
+              Proven impact
+            </p>
+            <div className="mb-10">
+              <Heading
+                as="span"
+                className="text-neutral-900 leading-tight font-semibold"
+              >
+                Real results. Real teams. Real fast.{" "}
+              </Heading>
+              <Heading
+                as="span"
+                className="text-neutral-400 leading-tight font-semibold"
+              >
+                From startups to scale-ups, teams see dramatic improvements —
+                without adding headcount.
+              </Heading>
+            </div>
+
+            <div className="relative overflow-hidden bg-gradient-to-b from-[#A8D3FF] to-[#FFF4DF]">
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{ background: "#8C8C8C", filter: "url(#benefitGrain)", opacity: 0.9 }}
+              />
+              <div className="relative z-10 grid grid-cols-2 gap-3 p-4">
+                {benefits.map((benefit, index) => (
+                  <div
+                    key={benefit.id}
+                    className="bg-white border border-neutral-200"
+                  >
+                    <div className="flex flex-col p-6 pb-12">
+                      <span className="text-4xl font-schibsted font-light tracking-tight mb-1 text-sky-700">
+                        {benefit.metric}
+                      </span>
+                      <p className="text-sm font-schibsted font-semibold text-sky-900 mb-1">
+                        {benefit.title}
+                      </p>
+                      <p className="text-xs font-schibsted font-normal text-neutral-600">
+                        {benefit.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="relative z-10">
                 <EarlyBirdStrip />
               </div>
             </div>
           </div>
-        </Grid.System>
-      </div>
+        </div>
 
-      {/* Tablet Layout */}
-      <div className="hidden md:block lg:hidden">
-        <div className="max-w-5xl mx-auto px-6 py-12">
-          <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4">
-            Proven impact
-          </p>
-          <div className="mb-10">
-            <Heading
-              as="span"
-              className="text-neutral-900 leading-tight font-semibold"
-            >
-              Real results. Real teams. Real fast.{" "}
-            </Heading>
-            <Heading
-              as="span"
-              className="text-neutral-400 leading-tight font-semibold"
-            >
-              From startups to scale-ups, teams see dramatic improvements —
-              without adding headcount.
-            </Heading>
-          </div>
-
-          <div className="border-y border-neutral-200">
-            <div className="grid grid-cols-2 border-x border-neutral-200">
-              {benefits.map((benefit, index) => (
-                <div
-                  key={benefit.id}
-                  className={`relative p-6 pb-0 overflow-hidden border-neutral-200 ${
-                    index % 2 !== 1 ? "border-r" : ""
-                  } ${index < 4 ? "border-b" : ""}`}
-                >
-                  <div className="flex flex-col pb-12">
-                    <span className="text-4xl font-schibsted font-light tracking-tight mb-1 text-sky-700">
-                      {benefit.metric}
-                    </span>
-                    <p className="text-sm font-schibsted font-semibold text-sky-900 mb-1">
-                      {benefit.title}
-                    </p>
-                    <p className="text-xs font-schibsted font-normal text-neutral-600">
-                      {benefit.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
+        {/* Mobile Layout */}
+        <div className="block md:hidden">
+          <div className="container mx-auto px-4 py-10">
+            <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4">
+              Proven impact
+            </p>
+            <div className="mb-8">
+              <Heading
+                as="span"
+                className="text-neutral-900 leading-tight font-semibold"
+              >
+                Real results. Real teams. Real fast.{" "}
+              </Heading>
+              <Heading
+                as="span"
+                className="text-neutral-400 leading-tight font-semibold"
+              >
+                From startups to scale-ups, teams see dramatic improvements —
+                without adding headcount.
+              </Heading>
             </div>
-            <EarlyBirdStrip />
+
+            <div className="relative overflow-hidden bg-gradient-to-b from-[#A8D3FF] to-[#FFF4DF]">
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{ background: "#8C8C8C", filter: "url(#benefitGrain)", opacity: 0.9 }}
+              />
+              <div className="relative z-10 grid grid-cols-1 gap-3 p-4">
+                {benefits.map((benefit, index) => (
+                  <div
+                    key={benefit.id}
+                    className="bg-white border border-neutral-200"
+                  >
+                    <div className="flex flex-col p-6 pb-12">
+                      <span className="text-3xl font-schibsted font-light tracking-tight mb-1 text-sky-700">
+                        {benefit.metric}
+                      </span>
+                      <p className="text-sm font-schibsted font-semibold text-sky-900 mb-1">
+                        {benefit.title}
+                      </p>
+                      <p className="text-xs font-schibsted font-normal text-neutral-600">
+                        {benefit.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="relative z-10">
+                <EarlyBirdStrip />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Mobile Layout */}
-      <div className="block md:hidden">
-        <div className="container mx-auto px-4 py-10">
-          <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4">
-            Proven impact
-          </p>
-          <div className="mb-8">
-            <Heading
-              as="span"
-              className="text-neutral-900 leading-tight font-semibold"
-            >
-              Real results. Real teams. Real fast.{" "}
-            </Heading>
-            <Heading
-              as="span"
-              className="text-neutral-400 leading-tight font-semibold"
-            >
-              From startups to scale-ups, teams see dramatic improvements —
-              without adding headcount.
-            </Heading>
-          </div>
-
-          <div className="border-y border-neutral-200">
-            <div className="grid grid-cols-1 border-x border-neutral-200">
-              {benefits.map((benefit, index) => (
-                <div
-                  key={benefit.id}
-                  className={`relative p-6 pb-0 overflow-hidden ${
-                    index !== benefits.length - 1 ? "border-b" : ""
-                  } border-neutral-200`}
-                >
-                  <DecorationRenderer
-                    type={benefit.decoration}
-                    isHovered={false}
-                  />
-                  <div className="flex flex-col pb-12 relative z-10">
-                    <span className="text-3xl font-schibsted font-light tracking-tight mb-1 text-sky-700">
-                      {benefit.metric}
-                    </span>
-                    <p className="text-sm font-schibsted font-semibold text-sky-900 mb-1">
-                      {benefit.title}
-                    </p>
-                    <p className="text-xs font-schibsted font-normal text-neutral-600">
-                      {benefit.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <EarlyBirdStrip />
-          </div>
-        </div>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }
