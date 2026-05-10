@@ -22,7 +22,7 @@ function FeaturedCard({ post }: { post: Post }) {
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className="group relative flex flex-col justify-end rounded-2xl border border-neutral-200 overflow-hidden bg-neutral-900 h-full min-h-[280px] md:min-h-[200px]"
+      className="group relative flex flex-col justify-end border border-neutral-200 overflow-hidden bg-neutral-900 h-full min-h-[280px] md:min-h-[200px]"
     >
       {/* Cover image */}
       {post.coverImage?.url && (
@@ -92,7 +92,7 @@ function MiniCard({ post }: { post: Post }) {
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className="group flex gap-4 rounded-2xl border border-neutral-200 bg-white overflow-hidden hover:border-neutral-300 transition-colors duration-200 h-full"
+      className="group flex gap-4 border border-neutral-200 bg-white overflow-hidden hover:border-neutral-300 transition-colors duration-200 h-full"
     >
       {/* Thumbnail */}
       {post.coverImage?.url ? (
@@ -129,9 +129,13 @@ function MiniCard({ post }: { post: Post }) {
         </p>
 
         <div className="flex items-center gap-2 pt-1">
-          <span className="text-xs font-schibsted text-neutral-400">{formatDate(post.publishedAt)}</span>
+          <span className="text-xs font-schibsted text-neutral-400">
+            {formatDate(post.publishedAt)}
+          </span>
           <span className="text-neutral-300 text-xs">·</span>
-          <span className="text-xs font-schibsted text-neutral-400">{post.readTimeInMinutes} min read</span>
+          <span className="text-xs font-schibsted text-neutral-400">
+            {post.readTimeInMinutes} min read
+          </span>
         </div>
       </div>
     </Link>
@@ -142,11 +146,15 @@ function MiniCard({ post }: { post: Post }) {
 
 function CTACard() {
   return (
-    <div className="flex flex-col justify-center gap-4 rounded-2xl border border-neutral-200 bg-neutral-50 px-6 py-6 h-full">
+    <div className="flex flex-col justify-center gap-4 border border-neutral-200 bg-neutral-50 px-6 py-6 h-full">
       <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 text-left">
         Stay sharp
       </p>
-      <Heading as="h4" variant="small" className="text-neutral-900 leading-snug">
+      <Heading
+        as="h4"
+        variant="small"
+        className="text-neutral-900 leading-snug"
+      >
         New guides on support, Slack workflows, and SaaS growth — every week.
       </Heading>
       <div className="rounded-[16px] inline-flex self-start">
@@ -157,10 +165,19 @@ function CTACard() {
                 View all posts
               </span>
               <svg
-                width="13" height="13" viewBox="0 0 13 13" fill="none"
+                width="13"
+                height="13"
+                viewBox="0 0 13 13"
+                fill="none"
                 className="text-neutral-600 group-hover:translate-x-0.5 transition-transform duration-150"
               >
-                <path d="M2 6.5h9M7.5 3l3.5 3.5L7.5 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path
+                  d="M2 6.5h9M7.5 3l3.5 3.5L7.5 10"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </div>
           </button>
@@ -179,51 +196,85 @@ export async function BlogPreviewSection() {
   const [featured, second, third] = posts;
 
   return (
-    <section className="w-full bg-white py-8 md:py-12">
-      <Container className="px-4 md:px-0">
+    <div
+      className={[
+        "relative grid w-full",
+        "grid-cols-[1fr_0.75rem_auto_0.75rem_1fr] md:grid-cols-[1fr_2.5rem_auto_2.5rem_1fr]",
+        "grid-rows-[1fr_1px_auto_1px_1fr]",
+        "bg-white",
+        "[--pattern-fg:theme(colors.gray.950/5%)]",
+      ].join(" ")}
+    >
+      {/* ── Left hatched column ─────────────────────────────────────────── */}
+      <div
+        className={[
+          "col-start-2 row-span-full row-start-1",
+          "relative -right-px",
+          "border-x border-x-(--pattern-fg)",
+          "bg-[image:repeating-linear-gradient(315deg,_var(--pattern-fg)_0,_var(--pattern-fg)_1px,_transparent_0,_transparent_50%)]",
+          "bg-[size:10px_10px] bg-fixed",
+        ].join(" ")}
+      />
 
-        {/* Eyebrow */}
-        <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4 text-left">
-          From the blog
-        </p>
+      {/* ── Right hatched column ────────────────────────────────────────── */}
+      <div
+        className={[
+          "col-start-4 row-span-full row-start-1",
+          "relative -left-px",
+          "border-x border-x-(--pattern-fg)",
+          "bg-[image:repeating-linear-gradient(315deg,_var(--pattern-fg)_0,_var(--pattern-fg)_1px,_transparent_0,_transparent_50%)]",
+          "bg-[size:10px_10px] bg-fixed",
+        ].join(" ")}
+      />
 
-        {/* Animated heading */}
-        <BlogPreviewHeading />
+      {/* ── Top 1px rule ────────────────────────────────────────────────── */}
+      <div className="relative -bottom-px col-span-full col-start-1 row-start-2 h-px bg-(--pattern-fg)" />
 
-        {/* Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      {/* ── Bottom 1px rule ─────────────────────────────────────────────── */}
+      <div className="relative -top-px col-span-full col-start-1 row-start-4 h-px bg-(--pattern-fg)" />
 
-          {/* Left — featured card, spans all 3 rows */}
-          <div className="md:row-span-3">
-            <FeaturedCard post={featured} />
-          </div>
+      {/* ── Content (col 3, row 3) ──────────────────────────────────────── */}
+      <section className="col-start-3 row-start-3 w-full py-8 md:py-20 lg:py-1">
+        <Container className="px-4 md:px-0">
+          {/* Eyebrow */}
+          <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 p-4 text-left">
+            From the blog
+          </p>
 
-          {/* Right row 1 — second post or CTA spanning all */}
-          {second ? (
-            <MiniCard post={second} />
-          ) : (
+          {/* Animated heading */}
+          <BlogPreviewHeading />
+
+          {/* Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Left — featured card, spans all 3 rows */}
             <div className="md:row-span-3">
-              <CTACard />
+              <FeaturedCard post={featured} />
             </div>
-          )}
 
-          {/* Right row 2 — third post or CTA spanning rows 2+3 */}
-          {second && (
-            third ? (
-              <MiniCard post={third} />
+            {/* Right row 1 — second post or CTA spanning all */}
+            {second ? (
+              <MiniCard post={second} />
             ) : (
-              <div className="md:row-span-2">
+              <div className="md:row-span-3">
                 <CTACard />
               </div>
-            )
-          )}
+            )}
 
-          {/* Right row 3 — CTA (only when both second and third exist) */}
-          {second && third && <CTACard />}
+            {/* Right row 2 — third post or CTA spanning rows 2+3 */}
+            {second &&
+              (third ? (
+                <MiniCard post={third} />
+              ) : (
+                <div className="md:row-span-2">
+                  <CTACard />
+                </div>
+              ))}
 
-        </div>
-
-      </Container>
-    </section>
+            {/* Right row 3 — CTA (only when both second and third exist) */}
+            {second && third && <CTACard />}
+          </div>
+        </Container>
+      </section>
+    </div>
   );
 }

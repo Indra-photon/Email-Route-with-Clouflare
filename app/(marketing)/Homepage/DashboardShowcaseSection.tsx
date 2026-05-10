@@ -75,9 +75,9 @@ export function DashboardShowcaseSection() {
 
       {/* ── Content cell ─────────────────────────────────────────────────── */}
       <div className="col-start-3 row-start-3 w-full">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 xl:px-0 pt-6 pb-6 md:py-16">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 xl:px-0 pt-6 py-8 md:py-20 lg:py-1">
           {/* ── Eyebrow ────────────────────────────────────────────────── */}
-          <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 mb-4 sm:p-4 text-left">
+          <p className="font-schibsted text-sm md:text-xs font-semibold uppercase tracking-widest text-sky-800 p-4 text-left">
             Full visibility
           </p>
 
