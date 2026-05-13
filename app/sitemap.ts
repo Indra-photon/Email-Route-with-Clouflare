@@ -22,7 +22,7 @@ function url(
     priority: number;
     changeFreq: ChangeFreq;
     lastMod?: Date;
-  }
+  },
 ): SitemapEntry {
   return {
     url: `${BASE_URL}${path}`,
@@ -36,23 +36,27 @@ function url(
 
 const MARKETING_PAGES: SitemapEntry[] = [
   // ── Core ──
-  url("/",          { priority: 1.0, changeFreq: "weekly" }),
-  url("/pricing",   { priority: 0.9, changeFreq: "weekly" }),
-  url("/about",     { priority: 0.7, changeFreq: "monthly" }),
+  url("/", { priority: 1.0, changeFreq: "weekly" }),
+  url("/pricing", { priority: 0.9, changeFreq: "weekly" }),
+  url("/about", { priority: 0.7, changeFreq: "monthly" }),
   // url("/contact",   { priority: 0.6, changeFreq: "monthly" }),
   // url("/changelog", { priority: 0.7, changeFreq: "weekly" }),
   // url("/roadmap",   { priority: 0.7, changeFreq: "weekly" }),
-  url("/blog",      { priority: 0.8, changeFreq: "weekly" }),
+  url("/blog", { priority: 0.8, changeFreq: "weekly" }),
   url("/frequently-asked-questions", { priority: 0.8, changeFreq: "monthly" }),
 
   // ── Legal ──
-  url("/privacy",               { priority: 0.4, changeFreq: "yearly" }),
-  url("/terms-of-service",      { priority: 0.4, changeFreq: "yearly" }),
-  url("/terms-and-conditions",  { priority: 0.4, changeFreq: "yearly" }),
+  url("/privacy", { priority: 0.4, changeFreq: "yearly" }),
+  url("/terms-of-service", { priority: 0.4, changeFreq: "yearly" }),
+  url("/terms-and-conditions", { priority: 0.4, changeFreq: "yearly" }),
 
   // ── Auth ── (indexed so Google understands the funnel)
-  url("/sign-in",  { priority: 0.5, changeFreq: "yearly" }),
-  url("/sign-up",  { priority: 0.6, changeFreq: "yearly" }),
+  url("/sign-in", { priority: 0.5, changeFreq: "yearly" }),
+  url("/sign-up", { priority: 0.6, changeFreq: "yearly" }),
+
+  // ── Support & Comparisons ──
+  // url("/support",                    { priority: 0.7, changeFreq: "monthly" }),
+  url("/syncsupport-vs-zendesk", { priority: 0.8, changeFreq: "monthly" }),
 ];
 
 // ─── Docs Pages ───────────────────────────────────────────────────────────────
@@ -60,15 +64,20 @@ const MARKETING_PAGES: SitemapEntry[] = [
 // Keep them at high priority so Googlebot crawls them eagerly.
 
 const DOCS_PAGES: SitemapEntry[] = [
-  url("/docs",                          { priority: 0.9, changeFreq: "weekly" }),
-  url("/docs/domains",                  { priority: 0.8, changeFreq: "monthly" }),
-  // url("/docs/integrations",             { priority: 0.8, changeFreq: "monthly" }),
-  url("/docs/integrations/slack",       { priority: 0.8, changeFreq: "monthly" }),
-  // url("/docs/integrations/discord",     { priority: 0.7, changeFreq: "monthly" }),
-  url("/docs/aliases",                  { priority: 0.8, changeFreq: "monthly" }),
-  url("/docs/tickets",                  { priority: 0.7, changeFreq: "monthly" }),
-  url("/docs/chatbot",                  { priority: 0.7, changeFreq: "monthly" }),
-  // url("/docs/api",                      { priority: 0.7, changeFreq: "monthly" }),
+  url("/docs", { priority: 0.9, changeFreq: "weekly" }),
+  url("/docs/getting-started", { priority: 0.9, changeFreq: "monthly" }),
+  url("/docs/domains", { priority: 0.8, changeFreq: "monthly" }),
+  url("/docs/integrations", { priority: 0.8, changeFreq: "monthly" }),
+  url("/docs/integrations/slack", { priority: 0.8, changeFreq: "monthly" }),
+  // url("/docs/integrations/discord", { priority: 0.7, changeFreq: "monthly" }),
+  url("/docs/aliases", { priority: 0.8, changeFreq: "monthly" }),
+  url("/docs/tickets", { priority: 0.7, changeFreq: "monthly" }),
+  url("/docs/chatbot", { priority: 0.7, changeFreq: "monthly" }),
+  url("/docs/customize-app", { priority: 0.7, changeFreq: "monthly" }),
+  url("/docs/email-templates", { priority: 0.7, changeFreq: "monthly" }),
+  url("/docs/advanced", { priority: 0.6, changeFreq: "monthly" }),
+  url("/docs/troubleshooting", { priority: 0.6, changeFreq: "monthly" }),
+  url("/docs/api", { priority: 0.7, changeFreq: "monthly" }),
 ];
 
 // ─── Dynamic: Public workspace landing pages (future) ─────────────────────────
@@ -90,7 +99,7 @@ async function getWorkspacePages(): Promise<SitemapEntry[]> {
         priority: 0.6,
         changeFreq: "weekly",
         lastMod: new Date(ws.updatedAt),
-      })
+      }),
     );
   } catch {
     // Never let sitemap crash the build
@@ -107,7 +116,7 @@ async function getBlogPages(): Promise<SitemapEntry[]> {
         priority: 0.7,
         changeFreq: "weekly",
         lastMod: new Date(post.publishedAt),
-      })
+      }),
     );
   } catch {
     console.warn("⚠️  sitemap: could not fetch blog posts");
@@ -120,7 +129,7 @@ async function getBlogPages(): Promise<SitemapEntry[]> {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [workspacePages, blogPages] = await Promise.all([
     getWorkspacePages(),
-    getBlogPages(), 
+    getBlogPages(),
   ]);
 
   const allRoutes: MetadataRoute.Sitemap = [
@@ -135,10 +144,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   console.log(`   Marketing : ${MARKETING_PAGES.length}`);
   console.log(`   Docs      : ${DOCS_PAGES.length}`);
   console.log(`   Workspaces: ${workspacePages.length}`);
-    console.log(`   Blog posts: ${blogPages.length}`);
-    // see more details about blog pages 
-    console.log(`   Blog post URLs: ${blogPages.map(p => p.url).join(", ")}`);
-    
+  console.log(`   Blog posts: ${blogPages.length}`);
+  // see more details about blog pages
+  console.log(`   Blog post URLs: ${blogPages.map((p) => p.url).join(", ")}`);
 
   return allRoutes;
 }
